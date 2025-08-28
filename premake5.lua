@@ -10,6 +10,12 @@ workspace "GameEngine"
 
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
+-- Include directories relative to root folder (solution directory)
+IncludeDir = {}
+IncludeDir["GLFW"] = "Engine/vendor/GLFW/include"
+
+include "Engine/vendor/GLFW"
+
 project "Engine" 
 	location "Engine"
 	kind "SharedLib"
@@ -29,8 +35,16 @@ project "Engine"
 	includedirs
 	{
 		"%{prj.name}/src",
-		"%{prj.name}/vendor/spdlog/include"
+		"%{prj.name}/vendor/spdlog/include",
+		"%{IncludeDir.GLFW}"
 	}
+
+	links 
+	{ 
+		"GLFW",
+		"opengl32.lib"
+	}
+
 	filter "system:windows"
 		cppdialect "C++17"
 		staticruntime "On"
@@ -59,6 +73,7 @@ project "Engine"
 
 	filter { "system:windows", "configurations:Debug"}
 		buildoptions "/utf-8"
+		buildoptions "/MD"
 
 project "Sandbox"
 	location "Sandbox"
@@ -107,3 +122,4 @@ project "Sandbox"
 
 	filter{ "system:windows", "configurations:Debug" }
 		buildoptions "/utf-8"
+		buildoptions "/MT"
