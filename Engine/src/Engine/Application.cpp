@@ -1,6 +1,7 @@
 ﻿#include "EnginePCH.h"
 #include "Application.h"
-#include <GLFW/glfw3.h>
+#include <glad/glad.h>
+
 
 
 namespace Engine {
@@ -12,6 +13,8 @@ namespace Engine {
 		m_Window = std::unique_ptr<Window>(Window::Create());
 		// 设置事件触发时的回调函数为Application的OnEvent成员函数
 		m_Window->SetEventCallback(BIND_EVENT_FN(Application::OnEvent));
+		GLuint id;
+		glGenVertexArrays(1, &id);
 	}
 
 	Application::~Application()
