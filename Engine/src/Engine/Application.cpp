@@ -2,19 +2,21 @@
 #include "Application.h"
 #include <glad/glad.h>
 
-
-
 namespace Engine {
 
 #define BIND_EVENT_FN(x) std::bind(&x, this, std::placeholders::_1)
 
+	Application* Application::s_Instance = nullptr;
+
 	Application::Application()
 	{
+		ENGINE_CORE_ASSERT(!s_Instance, "Application already exists!");
+		s_Instance = this;
+
+
 		m_Window = std::unique_ptr<Window>(Window::Create());
 		// 设置事件触发时的回调函数为Application的OnEvent成员函数
 		m_Window->SetEventCallback(BIND_EVENT_FN(Application::OnEvent));
-		GLuint id;
-		glGenVertexArrays(1, &id);
 	}
 
 	Application::~Application()
@@ -37,11 +39,13 @@ namespace Engine {
 	void Application::PushLayer(Layer* layer)
 	{
 		m_LayerStack.PushLayer(layer);
+		layer->OnAttach();
 	}
 
 	void Application::PushOverlay(Layer* layer)
 	{
 		m_LayerStack.PushOverlay(layer);
+		layer->OnAttach();
 	}
 	bool Application::OnWindowClose(WindowCloseEvent& e)
 	{

@@ -23,3 +23,6 @@
 
 // 创建一个仅第 x 位为 1 的位掩码
 #define BIT(x) (1 << x)
+
+#define ENGINE_BIND_EVENT_FN(fn) std::bind(&fn, this, std::placeholders::_1)
+
