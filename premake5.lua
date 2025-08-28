@@ -55,25 +55,27 @@ project "Engine"
 			"ENGINE_BUILD_DLL"
 		}
 		postbuildcommands {
-			-- 从 Engine.dll 所在目录返回上一层，再进入 Sandbox 文件夹
 			("{COPY} \"%{cfg.buildtarget.relpath}\" \"%{cfg.buildtarget.directory}/../Sandbox/\"")
 		}	
 
 	filter "configurations:Debug"
 		defines "ENGINE_DEBUG"
+		defines "ENGINE_ENABLE_ASSERTS"
+		buildoptions "/MDd"
 		symbols "On"
 
 	filter "configurations:Release"
 		defines "ENGINE_RELEASE"
+		buildoptions "/MD"
 		optimize "On"
 
 	filter "configurations:Dist"
 		defines "ENGINE_DIST"
+		buildoptions "/MD"
 		optimize "On"
 
 	filter { "system:windows", "configurations:Debug"}
 		buildoptions "/utf-8"
-		buildoptions "/MD"
 
 project "Sandbox"
 	location "Sandbox"
@@ -110,16 +112,18 @@ project "Sandbox"
 
 	filter "configurations:Debug"
 		defines "ENGINE_DEBUG"
+		buildoptions "/MDd"
 		symbols "On"
 
 	filter "configurations:Release"
 		defines "ENGINE_RELEASE"
+		buildoptions "/MD"
 		optimize "On"
 
 	filter "configurations:Dist"
 		defines "ENGINE_DIST"
+		buildoptions "/MD"
 		optimize "On"
 
 	filter{ "system:windows", "configurations:Debug" }
 		buildoptions "/utf-8"
-		buildoptions "/MT"
