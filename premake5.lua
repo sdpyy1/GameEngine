@@ -16,6 +16,11 @@ project "Engine"
 	language "C++"
 	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
 	objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
+
+	pchheader "EnginePCH.h"
+	pchsource "Engine/src/EnginePCH.cpp"
+
+
 	files
 	{
 		"%{prj.name}/src/**.h",

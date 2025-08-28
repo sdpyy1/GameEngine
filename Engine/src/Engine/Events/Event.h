@@ -1,7 +1,7 @@
 ﻿#pragma once
+#include "EnginePCH.h"
+
 #include "Engine/Core.h"
-#include <string>
-#include <functional>
 namespace Engine {
 	// 事件类型，每个时间都有一个ID
 	enum class EventType
@@ -75,7 +75,6 @@ namespace Engine {
 	private:
 		Event& m_Event;
 	};
-
 
 	inline std::ostream& operator<<(std::ostream& os, const Event& e)
 	{

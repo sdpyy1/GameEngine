@@ -1,4 +1,5 @@
-﻿#include "Log.h"
+﻿#include "EnginePCH.h"
+#include "Log.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 namespace Engine{
 	std::shared_ptr<spdlog::logger> Log::s_CoreLogger;

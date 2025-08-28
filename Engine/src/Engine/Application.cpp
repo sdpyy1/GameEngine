@@ -1,4 +1,5 @@
-﻿#include "Application.h"
+﻿#include "EnginePCH.h"
+#include "Application.h"
 #include "Log.h"
 #include "Events/ApplicationEvent.h"
 
