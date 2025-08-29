@@ -1,4 +1,6 @@
 ﻿#include <Engine.h>
+#include "glm/glm.hpp"
+
 class Examplelayer : public Engine::Layer {
 public:
 	Examplelayer() :Layer("Example") {
@@ -6,6 +8,8 @@ public:
 	}
 	void OnUpdate() override {
 		ENGINE_INFO("ExampleLayer::Update");
+		if(Engine::Input::IsKeyPressed(ENGINE_KEY_TAB))
+			ENGINE_ERROR("Tab key is pressed!");
 	}
 
 	void OnEvent(Engine::Event& event) override

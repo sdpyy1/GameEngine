@@ -1,7 +1,7 @@
 ﻿#include "EnginePCH.h"
 #include "Application.h"
 #include <glad/glad.h>
-
+#include "Engine/Input.h"
 namespace Engine {
 
 #define BIND_EVENT_FN(x) std::bind(&x, this, std::placeholders::_1)
@@ -61,6 +61,8 @@ namespace Engine {
 			glClear(GL_COLOR_BUFFER_BIT);
 			for (Layer* layer : m_LayerStack) layer->OnUpdate();
 			m_Window->OnUpdate();
+			auto [x, y] = Input::GetMousePosition();
+			ENGINE_CORE_INFO("Mouse Position: {0}, {1}", x, y);
 		}
 	}
 
