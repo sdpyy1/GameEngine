@@ -1,9 +1,12 @@
 ﻿#pragma once
 #include "Core.h"
-#include "Events/Event.h"
+
+#include "Engine/Events/Event.h"
 #include "Window.h"
-#include "Events/ApplicationEvent.h"
+#include "Engine/Events/ApplicationEvent.h"
 #include "Engine/LayerStack.h"
+
+#include "Engine/ImGui/ImGuiLayer.h"
 
 
 namespace Engine {
@@ -24,6 +27,8 @@ namespace Engine {
 		std::unique_ptr<Window> m_Window;
 		bool m_Running = true;
 		LayerStack m_LayerStack;
+		ImGuiLayer* m_ImGuiLayer;
+
 
 	private:
 		static Application* s_Instance;

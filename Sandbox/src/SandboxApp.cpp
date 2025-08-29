@@ -1,20 +1,28 @@
 ﻿#include <Engine.h>
-#include "glm/glm.hpp"
-
+//#include "imgui/imgui.h"
 class Examplelayer : public Engine::Layer {
 public:
 	Examplelayer() :Layer("Example") {
-		ENGINE_INFO("ExampleLayer Constructor");
 	}
 	void OnUpdate() override {
-		ENGINE_INFO("ExampleLayer::Update");
 		if(Engine::Input::IsKeyPressed(ENGINE_KEY_TAB))
 			ENGINE_ERROR("Tab key is pressed!");
 	}
 
 	void OnEvent(Engine::Event& event) override
 	{
-		ENGINE_TRACE("{0}", event.ToString());
+		if (event.GetEventType() == Engine::EventType::KeyPressed)
+		{
+			Engine::KeyPressedEvent& e = (Engine::KeyPressedEvent&)event;
+			if (e.GetKeyCode() == ENGINE_KEY_TAB)
+				ENGINE_TRACE("Tab key is pressed (event)!");
+			ENGINE_TRACE("{0}", (char)e.GetKeyCode());
+		}
+	}
+	void OnImGuiRender() override {
+		//ImGui::Begin("Test");
+		//ImGui::Text("Hello World!");
+		//ImGui::End();
 	}
 
 };
@@ -22,7 +30,6 @@ class Sandbox : public Engine::Application {
 public:
 	Sandbox() {
 		PushLayer(new Examplelayer());
-		PushOverlay(new Engine::ImGuiLayer());
 	}
 	~Sandbox() {
 	}
