@@ -7,7 +7,12 @@ workspace "GameEngine"
 		"Release",
 		"Dist"
 	}
-
+	filter "system:windows"
+        buildoptions { 
+        "/wd4828", -- warning C4828: The file contains a character that cannot be represented in the current code page (936). Save the file in Unicode format to prevent data loss
+        "/utf-8", -- Use UTF-8 as the source file encoding
+		"/wd4005"   -- imgui.h(10): warning C4005: 'IMGUI_DISABLE_DEMO_WINDOWS': macro redefinition
+    	}
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
 -- Include directories relative to root folder (solution directory)
@@ -26,8 +31,12 @@ include "Engine/vendor/ImGui"
 
 project "Engine" 
 	location "Engine"
-	kind "SharedLib"
+	kind "StaticLib"
 	language "C++"
+	cppdialect "C++17"
+	staticruntime "on"
+
+
 	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
 	objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
 
@@ -61,8 +70,6 @@ project "Engine"
 	}
 
 	filter "system:windows"
-		cppdialect "C++17"
-		staticruntime "On"
 		systemversion "latest"
 		defines
 		{
@@ -70,35 +77,34 @@ project "Engine"
 			"ENGINE_BUILD_DLL",
 			"GLFW_INCLUDE_NONE"
 		}
-		postbuildcommands {
-			("{COPY} \"%{cfg.buildtarget.relpath}\" \"%{cfg.buildtarget.directory}/../Sandbox/\"")
-		}	
+		-- 改静态库后不需要copy了
+		-- postbuildcommands {
+		-- 	("{COPY} \"%{cfg.buildtarget.relpath}\" \"%{cfg.buildtarget.directory}/../Sandbox/\"")
+		-- }	
+
 
 	filter "configurations:Debug"
 		defines "ENGINE_DEBUG"
-		defines "ENGINE_ENABLE_ASSERTS"
-		buildoptions "/MDd"
-		symbols "On"
+		runtime "Debug"
+		symbols "on"
 
 	filter "configurations:Release"
 		defines "ENGINE_RELEASE"
-		buildoptions "/MD"
-		optimize "On"
+		runtime "Release"
+		optimize "on"
 
 	filter "configurations:Dist"
 		defines "ENGINE_DIST"
-		buildoptions "/MD"
-		optimize "On"
+		runtime "Release"
+		optimize "on"
 
-	filter { "system:windows", "configurations:Debug"}
-		buildoptions "/utf-8"
 
 project "Sandbox"
 	location "Sandbox"
 	kind "ConsoleApp"
 	language "C++"
-	-- 确保先构建Engine
-	dependson { "Engine" }
+	cppdialect "C++17"
+	staticruntime "on"
 
 	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
 	objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
@@ -112,15 +118,14 @@ project "Sandbox"
 	{
 		"Engine/vendor/spdlog/include",
 		"Engine/src",
-		"%{IncludeDir.glm}"
+		"%{IncludeDir.glm}",
+		"%{IncludeDir.ImGui}",
 	}
 	links
 	{
 		"Engine"
 	}
 	filter "system:windows"
-		cppdialect "C++17"
-		staticruntime "On"
 		systemversion "latest"
 		defines
 		{
@@ -129,18 +134,15 @@ project "Sandbox"
 
 	filter "configurations:Debug"
 		defines "ENGINE_DEBUG"
-		buildoptions "/MDd"
-		symbols "On"
+		runtime "Debug"
+		symbols "on"
 
 	filter "configurations:Release"
 		defines "ENGINE_RELEASE"
-		buildoptions "/MD"
-		optimize "On"
+		runtime "Release"
+		optimize "on"
 
 	filter "configurations:Dist"
 		defines "ENGINE_DIST"
-		buildoptions "/MD"
-		optimize "On"
-
-	filter{ "system:windows", "configurations:Debug" }
-		buildoptions "/utf-8"
+		runtime "Release"
+		optimize "on"

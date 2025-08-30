@@ -1,5 +1,5 @@
 ﻿#include <Engine.h>
-//#include "imgui/imgui.h"
+#include <imgui.h>
 class Examplelayer : public Engine::Layer {
 public:
 	Examplelayer() :Layer("Example") {
@@ -20,9 +20,9 @@ public:
 		}
 	}
 	void OnImGuiRender() override {
-		//ImGui::Begin("Test");
-		//ImGui::Text("Hello World!");
-		//ImGui::End();
+		ImGui::Begin("Hello");
+		ImGui::Text("This is some useful text.");
+		ImGui::End();
 	}
 
 };
