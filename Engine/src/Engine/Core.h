@@ -16,8 +16,7 @@
 #endif
 
 #ifdef ENGINE_DEBUG
-	#define HZ_ENABLE_ASSERTS
-    #define ENGINE_ENABLE_ASSERTS
+	#define ENGINE_ENABLE_ASSERTS
 #endif
 
 #ifdef ENGINE_ENABLE_ASSERTS

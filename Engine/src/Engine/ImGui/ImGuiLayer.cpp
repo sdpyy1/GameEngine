@@ -4,12 +4,8 @@
 
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_opengl3.h"
-
 #include "Engine/Application.h"
 
-
-
-// TEMPORARY
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
 #include <Platform/Windows/WindowsWindow.h>
@@ -54,7 +50,7 @@ namespace Engine {
 
 		// Setup Platform/Renderer bindings
 		ImGui_ImplGlfw_InitForOpenGL(window, true);
-		ImGui_ImplOpenGL3_Init("#version 410");
+		ImGui_ImplOpenGL3_Init("#version 460");
 	}
 
 	void ImGuiLayer::OnDetach()
