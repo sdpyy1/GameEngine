@@ -14,7 +14,7 @@ namespace Engine {
 		~LayerStack();
 
 		void PushLayer(Layer* layer);
-		void PushOverlay(Layer* overlay);
+		void PushOverlay(Layer* overlay);   // 覆盖层，直接栈顶
 		void PopLayer(Layer* layer);
 		void PopOverlay(Layer* overlay);
 
@@ -22,8 +22,8 @@ namespace Engine {
 		std::vector<Layer*>::iterator end() { return m_Layers.end(); }
 	private:
 		std::vector<Layer*> m_Layers;
+		// 维护普通层的插入位置，保证Overalay永远在最上边
 		unsigned int m_LayerInsertIndex = 0;
-
 	};
 
 }

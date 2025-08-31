@@ -1,4 +1,5 @@
-#include "EnginePCH.h"
+#include "pch.h"
+
 #include "WindowsWindow.h"
 #include "Engine/Events/ApplicationEvent.h"
 #include "Engine/Events/MouseEvent.h"
@@ -36,7 +37,7 @@ namespace Engine {
 		m_Data.Width = props.Width;
 		m_Data.Height = props.Height;
 
-		ENGINE_CORE_INFO("Creating window {0} ({1}, {2})", props.Title, props.Width, props.Height);
+		ENGINE_CORE_INFO("Creating Windows GLFW window，Title：{0} (Width={1}, Height={2})", props.Title, props.Width, props.Height);
 
 		if (!s_GLFWInitialized)
 		{
@@ -46,15 +47,17 @@ namespace Engine {
 			glfwSetErrorCallback(GLFWErrorCallback);
 			s_GLFWInitialized = true;
 		}
-
+		// 原生GLFW窗口创建
 		m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
+		// 关联OpenGL上下文到这个窗口
 		glfwMakeContextCurrent(m_Window);
+		// 用glad加载OpenGL函数指针
 		int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 		ENGINE_CORE_ASSERT(status, "Failed to initialize Glad!");
+		// 关联GLFW控制的一个指针到m_Data上，这样可以使用glfwGetWindowUserPointer()来访问m_Data
 		glfwSetWindowUserPointer(m_Window, &m_Data);
 		SetVSync(true);
-
-		// Set GLFW callbacks  当这些事件触发后，会打包为对应的Event对象并使用WindowData中设置好的回调函数去传递事件
+		// 设置GLFW各种事件的处理方式，都是直接转换成对应的Event，调用m_Data.EventCallback（提前设置好的）发送给Application，在Application里分发给各个Layer
 		glfwSetWindowSizeCallback(m_Window, [](GLFWwindow* window, int width, int height)
 			{
 				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
@@ -69,7 +72,6 @@ namespace Engine {
 				WindowCloseEvent event;
 				data.EventCallback(event);
 			});
-
 		glfwSetKeyCallback(m_Window, [](GLFWwindow* window, int key, int scancode, int action, int mods)
 			{
 				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
@@ -120,7 +122,6 @@ namespace Engine {
 		glfwSetCharCallback(m_Window, [](GLFWwindow* window, unsigned int keycode)
 			{
 				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
-
 				KeyTypedEvent event(keycode);
 				data.EventCallback(event);
 			});

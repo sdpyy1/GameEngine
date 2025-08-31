@@ -1,6 +1,5 @@
 #pragma once
-
-#include "EnginePCH.h"
+#include "pch.h"
 
 #include "Engine/Core.h"
 #include "Engine/Events/Event.h"
@@ -13,7 +12,7 @@ namespace Engine {
 		unsigned int Width;
 		unsigned int Height;
 
-		WindowProps(const std::string& title = "Hazel Engine",
+		WindowProps(const std::string& title = "Engine Window",
 			unsigned int width = 1280,
 			unsigned int height = 720)
 			: Title(title), Width(width), Height(height)
@@ -21,7 +20,6 @@ namespace Engine {
 		}
 	};
 
-	// Interface representing a desktop system based Window
 	class ENGINE_API Window
 	{
 	public:
@@ -38,7 +36,6 @@ namespace Engine {
 		virtual void SetEventCallback(const EventCallbackFn& callback) = 0;
 		virtual void SetVSync(bool enabled) = 0;
 		virtual bool IsVSync() const = 0;
-
 		static Window* Create(const WindowProps& props = WindowProps());
 	};
 

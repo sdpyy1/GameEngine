@@ -1,4 +1,4 @@
-﻿#include "EnginePCH.h"
+﻿#include "pch.h"
 #include "Application.h"
 
 #include <glad/glad.h>
@@ -13,11 +13,11 @@ namespace Engine {
 	{
 		ENGINE_CORE_ASSERT(!s_Instance, "Application already exists!");
 		s_Instance = this;
-
-
+		// 通过不同系统的窗口API创建GUI窗口
 		m_Window = std::unique_ptr<Window>(Window::Create());
-		// 设置事件触发时的回调函数为Application的OnEvent成员函数
+		// 绑定窗口产生的事件发送到Application::OnEvent
 		m_Window->SetEventCallback(BIND_EVENT_FN(Application::OnEvent));
+		// 直接创建ImGui层并压入栈顶
 		m_ImGuiLayer = new ImGuiLayer();
 		PushOverlay(m_ImGuiLayer);
 	}
@@ -25,17 +25,22 @@ namespace Engine {
 	Application::~Application()
 	{
 	}
+
 	void Application::OnEvent(Event& e)
 	{
+		// 事件分发器
 		EventDispatcher dispatcher(e);
-		dispatcher.Dispatch<WindowCloseEvent>(BIND_EVENT_FN(Application::OnWindowClose));
-		ENGINE_CORE_TRACE("{0}",e.ToString());
 
+		// 关窗事件直接处理
+		dispatcher.Dispatch<WindowCloseEvent>(BIND_EVENT_FN(Application::OnWindowClose));
+
+		// 从栈顶开始向下传递事件
 		for (auto it = m_LayerStack.end(); it != m_LayerStack.begin(); )
 		{
+			// 某一层进行事件处理
 			(*--it)->OnEvent(e);
-			if (e.Handled)
-				break;
+			// 如果事件被某一层处理掉了，就停止传递
+			if (e.Handled) break;
 		}
 
 	}
@@ -53,7 +58,6 @@ namespace Engine {
 	bool Application::OnWindowClose(WindowCloseEvent& e)
 	{
 		m_Running = false;
-
 		return true;
 	}
 	void Application::Run()

@@ -8,7 +8,6 @@
 
 #include "Engine/ImGui/ImGuiLayer.h"
 
-
 namespace Engine {
 	class ENGINE_API Application
 	{
@@ -16,26 +15,26 @@ namespace Engine {
 		Application();
 		virtual ~Application();
 		void Run();
-		void OnEvent(Event& e);
+		void OnEvent(Event& e);   // 窗口事件回调函数
 		void PushLayer(Layer* layer);
 		void PushOverlay(Layer* layer);
 		inline Window& GetWindow() { return *m_Window; }
-
 		inline static Application& Get() { return *s_Instance; }
 	private:
+		// 关窗事件处理函数
 		bool OnWindowClose(WindowCloseEvent& e);
+		// 通过不同系统的窗口API创建的GUI窗口
 		std::unique_ptr<Window> m_Window;
+		// 运行状态
 		bool m_Running = true;
+		// 层栈
 		LayerStack m_LayerStack;
+		// ImGui层
 		ImGuiLayer* m_ImGuiLayer;
-
 
 	private:
 		static Application* s_Instance;
 	};
-
-	// to be defined in CLIENT
-	Application* CreateApplication();
 }
 
 

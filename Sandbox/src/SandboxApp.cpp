@@ -1,5 +1,4 @@
 ﻿#include <Engine.h>
-#include <imgui.h>
 class Examplelayer : public Engine::Layer {
 public:
 	Examplelayer() :Layer("Example") {

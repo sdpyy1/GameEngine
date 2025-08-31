@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-// ENGINE_API 用来表示API是引擎API，但是如果在构建DLL，他就表示要导出，如果在引用DLL，它表示要导入
+// core.h 用于定义各种宏设置
 #ifdef ENGINE_PLATFORM_WINDOWS
 	#ifdef ENGINE_DYNAMIC_LINK
 		#ifdef ENGINE_BUILD_DLL
@@ -17,6 +17,7 @@
 
 #ifdef ENGINE_DEBUG
 	#define HZ_ENABLE_ASSERTS
+    #define ENGINE_ENABLE_ASSERTS
 #endif
 
 #ifdef ENGINE_ENABLE_ASSERTS

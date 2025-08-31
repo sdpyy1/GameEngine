@@ -13,6 +13,7 @@ workspace "GameEngine"
         "/utf-8", -- Use UTF-8 as the source file encoding
 		"/wd4005"   -- imgui.h(10): warning C4005: 'IMGUI_DISABLE_DEMO_WINDOWS': macro redefinition
     	}
+		
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
 -- Include directories relative to root folder (solution directory)
@@ -40,8 +41,8 @@ project "Engine"
 	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
 	objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
 
-	pchheader "EnginePCH.h"
-	pchsource "Engine/src/EnginePCH.cpp"
+	pchheader "pch.h"
+	pchsource "Engine/src/pch.cpp"
 
 
 	files

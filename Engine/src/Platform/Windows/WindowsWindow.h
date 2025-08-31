@@ -3,7 +3,7 @@
 
 #include <GLFW/glfw3.h>
 namespace Engine {
-
+	// Windows平台下使用GLFW创建窗口
 	class WindowsWindow : public Window
 	{
 	public:
