@@ -8,7 +8,17 @@
 #include "Engine/Layer.h"
 #include "Engine/ImGui/ImGuiLayer.h"
 #include "imgui.h"
+#include "Engine/Core/Timestep.h"
 
+
+// ---Renderer------------------------
+#include "Engine/Renderer/Renderer.h"
+#include "Engine/Renderer/RenderCommand.h"
+#include "Engine/Renderer/Buffer.h"
+#include "Engine/Renderer/Shader.h"
+#include "Engine/Renderer/VertexArray.h"
+#include "Engine/Renderer/OrthographicCamera.h"
+// -----------------------------------
 namespace Engine
 {
 	// to be defined in CLIENT

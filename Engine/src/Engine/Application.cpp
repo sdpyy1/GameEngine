@@ -3,6 +3,7 @@
 
 #include <glad/glad.h>
 #include "Engine/Input.h"
+#include <GLFW/glfw3.h>
 namespace Engine {
 
 #define BIND_EVENT_FN(x) std::bind(&x, this, std::placeholders::_1)
@@ -64,13 +65,19 @@ namespace Engine {
 	{
 		while (m_Running)
 		{
-			glClearColor(0, 0, 0, 1);
-			glClear(GL_COLOR_BUFFER_BIT);
-			for (Layer* layer : m_LayerStack) layer->OnUpdate();
+			// 计算一帧使用的时间
+			float time = (float)glfwGetTime();
+			Timestep timestep = time - m_LastFrameTime;
+			m_LastFrameTime = time;
+
+			for (Layer* layer : m_LayerStack)
+				layer->OnUpdate(timestep);
+
 			m_ImGuiLayer->Begin();
 			for (Layer* layer : m_LayerStack)
 				layer->OnImGuiRender();
 			m_ImGuiLayer->End();
+
 			m_Window->OnUpdate();
 		}
 	}

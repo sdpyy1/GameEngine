@@ -5,6 +5,7 @@
 #include "Window.h"
 #include "Engine/Events/ApplicationEvent.h"
 #include "Engine/LayerStack.h"
+#include "Engine/Core/Timestep.h"
 
 #include "Engine/ImGui/ImGuiLayer.h"
 
@@ -20,9 +21,12 @@ namespace Engine {
 		void PushOverlay(Layer* layer);
 		inline Window& GetWindow() { return *m_Window; }
 		inline static Application& Get() { return *s_Instance; }
+
 	private:
 		// 关窗事件处理函数
 		bool OnWindowClose(WindowCloseEvent& e);
+
+	private:
 		// 通过不同系统的窗口API创建的GUI窗口
 		std::unique_ptr<Window> m_Window;
 		// 运行状态
@@ -31,6 +35,9 @@ namespace Engine {
 		LayerStack m_LayerStack;
 		// ImGui层
 		ImGuiLayer* m_ImGuiLayer;
+
+		// 帧时间
+		float m_LastFrameTime = 0.0f;
 
 	private:
 		static Application* s_Instance;
