@@ -4,6 +4,7 @@
 #include <glad/glad.h>
 #include "Engine/Input.h"
 #include <GLFW/glfw3.h>
+#include "Renderer/Renderer.h"
 namespace Engine {
 
 #define BIND_EVENT_FN(x) std::bind(&x, this, std::placeholders::_1)
@@ -18,6 +19,9 @@ namespace Engine {
 		m_Window = std::unique_ptr<Window>(Window::Create());
 		// 绑定窗口产生的事件发送到Application::OnEvent
 		m_Window->SetEventCallback(BIND_EVENT_FN(Application::OnEvent));
+		Renderer::Init();
+
+
 		// 直接创建ImGui层并压入栈顶
 		m_ImGuiLayer = new ImGuiLayer();
 		PushOverlay(m_ImGuiLayer);
