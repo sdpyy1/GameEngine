@@ -2,9 +2,9 @@
 #include "Application.h"
 
 #include <glad/glad.h>
-#include "Engine/Input.h"
+#include "Engine/Core/Input.h"
 #include <GLFW/glfw3.h>
-#include "Renderer/Renderer.h"
+#include "Engine/Renderer/Renderer.h"
 namespace Engine {
 
 #define BIND_EVENT_FN(x) std::bind(&x, this, std::placeholders::_1)
@@ -20,7 +20,6 @@ namespace Engine {
 		// 绑定窗口产生的事件发送到Application::OnEvent
 		m_Window->SetEventCallback(BIND_EVENT_FN(Application::OnEvent));
 		Renderer::Init();
-
 
 		// 直接创建ImGui层并压入栈顶
 		m_ImGuiLayer = new ImGuiLayer();
@@ -38,6 +37,8 @@ namespace Engine {
 
 		// 关窗事件直接处理
 		dispatcher.Dispatch<WindowCloseEvent>(BIND_EVENT_FN(Application::OnWindowClose));
+		dispatcher.Dispatch<WindowResizeEvent>(BIND_EVENT_FN(Application::OnWindowResize));
+
 
 		// 从栈顶开始向下传递事件
 		for (auto it = m_LayerStack.end(); it != m_LayerStack.begin(); )
@@ -65,6 +66,19 @@ namespace Engine {
 		m_Running = false;
 		return true;
 	}
+	bool Application::OnWindowResize(WindowResizeEvent& e)
+	{
+		if (e.GetWidth() == 0 || e.GetHeight() == 0)
+		{
+			m_Minimized = true;
+			return false;
+		}
+
+		m_Minimized = false;
+		Renderer::OnWindowResize(e.GetWidth(), e.GetHeight());
+
+		return false;
+	}
 	void Application::Run()
 	{
 		while (m_Running)
@@ -74,8 +88,11 @@ namespace Engine {
 			Timestep timestep = time - m_LastFrameTime;
 			m_LastFrameTime = time;
 
-			for (Layer* layer : m_LayerStack)
-				layer->OnUpdate(timestep);
+			if (!m_Minimized)
+			{
+				for (Layer* layer : m_LayerStack)
+					layer->OnUpdate(timestep);
+			}
 
 			m_ImGuiLayer->Begin();
 			for (Layer* layer : m_LayerStack)

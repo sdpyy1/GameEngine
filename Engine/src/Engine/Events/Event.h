@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include "pch.h"
 
-#include "Engine/Core.h"
+#include "Engine/Core/Core.h"
 namespace Engine {
 	// 事件类型，每个时间都有一个ID
 	enum class EventType

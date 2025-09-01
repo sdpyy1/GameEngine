@@ -4,7 +4,7 @@
 
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_opengl3.h"
-#include "Engine/Application.h"
+#include "Engine/Core/Application.h"
 
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
@@ -85,12 +85,6 @@ namespace Engine {
 			ImGui::RenderPlatformWindowsDefault();
 			glfwMakeContextCurrent(backup_current_context);
 		}
-	}
-
-	void ImGuiLayer::OnImGuiRender()
-	{
-		static bool show = true;
-		ImGui::ShowDemoWindow(&show);
 	}
 
 }

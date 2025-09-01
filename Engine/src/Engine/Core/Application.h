@@ -4,7 +4,7 @@
 #include "Engine/Events/Event.h"
 #include "Window.h"
 #include "Engine/Events/ApplicationEvent.h"
-#include "Engine/LayerStack.h"
+#include "Engine/Core/LayerStack.h"
 #include "Engine/Core/Timestep.h"
 
 #include "Engine/ImGui/ImGuiLayer.h"
@@ -21,6 +21,8 @@ namespace Engine {
 		void PushOverlay(Layer* layer);
 		inline Window& GetWindow() { return *m_Window; }
 		inline static Application& Get() { return *s_Instance; }
+		bool OnWindowResize(WindowResizeEvent& e);
+
 
 	private:
 		// 关窗事件处理函数
@@ -38,6 +40,8 @@ namespace Engine {
 
 		// 帧时间
 		float m_LastFrameTime = 0.0f;
+		bool m_Minimized = false;
+
 
 	private:
 		static Application* s_Instance;

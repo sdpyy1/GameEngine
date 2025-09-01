@@ -1,14 +1,15 @@
 ﻿#pragma once
 // 存储需要对外暴漏的头文件, sandbox只要包含Engine.h就可以使用这些功能
-#include "Engine/Application.h"
-#include "Engine/Log.h"
-#include "Engine/Input.h"
-#include "Engine/KeyCodes.h"
-#include "Engine/MouseButtonCodes.h"
-#include "Engine/Layer.h"
+#include "Engine/Core/Application.h"
+#include "Engine/Core/Log.h"
+#include "Engine/Core/Input.h"
+#include "Engine/Core/KeyCodes.h"
+#include "Engine/Core/MouseButtonCodes.h"
+#include "Engine/Core/Layer.h"
 #include "Engine/ImGui/ImGuiLayer.h"
 #include "imgui.h"
 #include "Engine/Core/Timestep.h"
+
 
 
 // ---Renderer------------------------
@@ -19,6 +20,10 @@
 #include "Engine/Renderer/Texture.h"
 #include "Engine/Renderer/VertexArray.h"
 #include "Engine/Renderer/OrthographicCamera.h"
+#include "Engine/Renderer/OrthographicCameraController.h"
+#include "Engine/Renderer/Renderer2D.h"
+
+
 // -----------------------------------
 namespace Engine
 {
@@ -27,5 +32,5 @@ namespace Engine
 }
 
 // -----Entry Point-----------------
-#include "Engine/EntryPoint.h"
+//#include "Engine/Core/EntryPoint.h"   -- 写在这里会导致Sandbox中的cpp使用后重复包含main函数
 // ---------------------------------
