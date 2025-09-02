@@ -9,6 +9,12 @@
 #include "Engine/ImGui/ImGuiLayer.h"
 #include "imgui.h"
 #include "Engine/Core/Timestep.h"
+#include "Engine/Core/Base.h"
+#include "Engine/Debug/Instrumentor.h"
+#include "Engine/Renderer/Framebuffer.h"
+
+
+
 
 
 

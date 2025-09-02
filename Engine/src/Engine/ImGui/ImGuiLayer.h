@@ -5,7 +5,7 @@
 #include "Engine/Events/MouseEvent.h"
 namespace Engine {
 
-	class ENGINE_API ImGuiLayer : public Layer
+	class   ImGuiLayer : public Layer
 	{
 	public:
 		ImGuiLayer();

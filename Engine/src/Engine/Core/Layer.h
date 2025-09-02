@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Engine/Core/Core.h"
+#include "Engine/Core/Base.h"
 #include "Engine/Events/Event.h"
 #include "Engine/Core/Timestep.h"
 
@@ -10,7 +10,7 @@
 
 namespace Engine {
 
-	class ENGINE_API Layer
+	class Layer
 	{
 	public:
 		Layer(const std::string& name = "Layer");

@@ -1,7 +1,7 @@
 #pragma once
 #include "pch.h"
 
-#include "Engine/Core/Core.h"
+#include "Engine/Core/Base.h"
 #include "Engine/Events/Event.h"
 
 namespace Engine {
@@ -20,7 +20,7 @@ namespace Engine {
 		}
 	};
 
-	class ENGINE_API Window
+	class Window
 	{
 	public:
 		using EventCallbackFn = std::function<void(Event&)>;
@@ -36,7 +36,8 @@ namespace Engine {
 		virtual void SetEventCallback(const EventCallbackFn& callback) = 0;
 		virtual void SetVSync(bool enabled) = 0;
 		virtual bool IsVSync() const = 0;
-		static Window* Create(const WindowProps& props = WindowProps());
+		static Scope<Window> Create(const WindowProps& props = WindowProps());
+
 	};
 
 }

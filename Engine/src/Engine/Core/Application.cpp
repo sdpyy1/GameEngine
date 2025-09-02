@@ -16,9 +16,10 @@ namespace Engine {
 		ENGINE_CORE_ASSERT(!s_Instance, "Application already exists!");
 		s_Instance = this;
 		// 通过不同系统的窗口API创建GUI窗口
-		m_Window = std::unique_ptr<Window>(Window::Create());
+		m_Window = Window::Create();
 		// 绑定窗口产生的事件发送到Application::OnEvent
-		m_Window->SetEventCallback(BIND_EVENT_FN(Application::OnEvent));
+		m_Window->SetEventCallback(ENGINE_BIND_EVENT_FN(Application::OnEvent));
+
 		Renderer::Init();
 
 		// 直接创建ImGui层并压入栈顶
@@ -28,7 +29,9 @@ namespace Engine {
 
 	Application::~Application()
 	{
+		Renderer::Shutdown();
 	}
+
 
 	void Application::OnEvent(Event& e)
 	{
@@ -41,10 +44,10 @@ namespace Engine {
 
 
 		// 从栈顶开始向下传递事件
-		for (auto it = m_LayerStack.end(); it != m_LayerStack.begin(); )
+		for (auto it = m_LayerStack.rbegin(); it != m_LayerStack.rend(); ++it)
 		{
 			// 某一层进行事件处理
-			(*--it)->OnEvent(e);
+			(*it)->OnEvent(e);
 			// 如果事件被某一层处理掉了，就停止传递
 			if (e.Handled) break;
 		}
@@ -54,6 +57,10 @@ namespace Engine {
 	{
 		m_LayerStack.PushLayer(layer);
 		layer->OnAttach();
+	}
+	void Application::Close()
+	{
+		m_Running = false;
 	}
 
 	void Application::PushOverlay(Layer* layer)

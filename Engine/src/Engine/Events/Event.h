@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include "pch.h"
 
-#include "Engine/Core/Core.h"
+#include "Engine/Core/Base.h"
 namespace Engine {
 	// 事件类型，每个时间都有一个ID
 	enum class EventType
@@ -32,7 +32,7 @@ namespace Engine {
 #define EVENT_CLASS_CATEGORY(category) virtual int GetCategoryFlags() const override { return category; }
 
 
-	class ENGINE_API Event
+	class Event
 	{
 		friend class EventDispatcher;
 	public:

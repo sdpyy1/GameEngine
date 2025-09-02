@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include "Core.h"
+#include "Base.h"
 
 #include "Engine/Events/Event.h"
 #include "Window.h"
@@ -10,7 +10,7 @@
 #include "Engine/ImGui/ImGuiLayer.h"
 
 namespace Engine {
-	class ENGINE_API Application
+	class   Application
 	{
 	public:
 		Application();
@@ -22,6 +22,8 @@ namespace Engine {
 		inline Window& GetWindow() { return *m_Window; }
 		inline static Application& Get() { return *s_Instance; }
 		bool OnWindowResize(WindowResizeEvent& e);
+		void Close();
+
 
 
 	private:
