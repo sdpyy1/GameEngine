@@ -1,10 +1,11 @@
-#pragma once
 #include "pch.h"
-#include "OpenGLContext.h"
+#include "Platform/OpenGL/OpenGLContext.h"
+
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
 
 namespace Engine {
+
 	OpenGLContext::OpenGLContext(GLFWwindow* windowHandle)
 		: m_WindowHandle(windowHandle)
 	{
@@ -13,19 +14,32 @@ namespace Engine {
 
 	void OpenGLContext::Init()
 	{
-		// 关联OpenGL上下文到这个窗口
+		ENGINE_PROFILE_FUNCTION();
+
 		glfwMakeContextCurrent(m_WindowHandle);
-		// 用glad加载OpenGL函数指针
 		int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 		ENGINE_CORE_ASSERT(status, "Failed to initialize Glad!");
+
 		ENGINE_CORE_INFO("OpenGL Info:");
-		ENGINE_CORE_INFO("Vendor: {0}", reinterpret_cast<const char*>(glGetString(GL_VENDOR)));
-		ENGINE_CORE_INFO("Renderer: {0}", reinterpret_cast<const char*>(glGetString(GL_RENDERER)));
-		ENGINE_CORE_INFO("Version: {0}", reinterpret_cast<const char*>(glGetString(GL_VERSION)));
+		ENGINE_CORE_INFO("  Vendor: {0}", static_cast<const void*> (glGetString(GL_VENDOR)));
+		ENGINE_CORE_INFO("OpenGL Version: {}", static_cast<const void*>(glGetString(GL_VERSION)));
+		ENGINE_CORE_INFO("  Version: {0}", static_cast<const void*>(glGetString(GL_VERSION)));
+
+#ifdef ENGINE_ENABLE_ASSERTS
+		int versionMajor;
+		int versionMinor;
+		glGetIntegerv(GL_MAJOR_VERSION, &versionMajor);
+		glGetIntegerv(GL_MINOR_VERSION, &versionMinor);
+
+		ENGINE_CORE_ASSERT(versionMajor > 4 || (versionMajor == 4 && versionMinor >= 5), "Hazel requires at least OpenGL version 4.5!");
+#endif
 	}
 
 	void OpenGLContext::SwapBuffers()
 	{
+		ENGINE_PROFILE_FUNCTION();
+
 		glfwSwapBuffers(m_WindowHandle);
 	}
+
 }

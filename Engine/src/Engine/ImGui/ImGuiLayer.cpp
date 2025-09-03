@@ -1,14 +1,17 @@
 #include "pch.h"
-#include "ImGuiLayer.h"
+#include "Engine/ImGui/ImGuiLayer.h"
 
+#include <imgui.h>
+#include <backends/imgui_impl_glfw.h>
+#include <backends/imgui_impl_opengl3.h>
 
-#include "backends/imgui_impl_glfw.h"
-#include "backends/imgui_impl_opengl3.h"
 #include "Engine/Core/Application.h"
 
+// TEMPORARY
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
 #include <Platform/Windows/WindowsWindow.h>
+
 namespace Engine {
 
 	ImGuiLayer::ImGuiLayer()
@@ -16,12 +19,10 @@ namespace Engine {
 	{
 	}
 
-	ImGuiLayer::~ImGuiLayer()
-	{
-	}
-
 	void ImGuiLayer::OnAttach()
 	{
+		ENGINE_PROFILE_FUNCTION();
+
 		// Setup Dear ImGui context
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
@@ -45,23 +46,37 @@ namespace Engine {
 			style.Colors[ImGuiCol_WindowBg].w = 1.0f;
 		}
 
-		WindowsWindow& windowsWindow = (WindowsWindow&)Application::Get().GetWindow();
-		auto window = static_cast<GLFWwindow*>(windowsWindow.GetNativeWindow());
+		Application& app = Application::Get();
+		auto window = static_cast<GLFWwindow*>(static_cast<Engine::WindowsWindow*>(&Application::Get().GetWindow())->GetNativeWindow());
 
 		// Setup Platform/Renderer bindings
 		ImGui_ImplGlfw_InitForOpenGL(window, true);
-		ImGui_ImplOpenGL3_Init("#version 460");
+		ImGui_ImplOpenGL3_Init("#version 410");
 	}
 
 	void ImGuiLayer::OnDetach()
 	{
+		ENGINE_PROFILE_FUNCTION();
+
 		ImGui_ImplOpenGL3_Shutdown();
 		ImGui_ImplGlfw_Shutdown();
 		ImGui::DestroyContext();
 	}
 
+	void ImGuiLayer::OnEvent(Event& e)
+	{
+		if (m_BlockEvents)
+		{
+			ImGuiIO& io = ImGui::GetIO();
+			e.Handled |= e.IsInCategory(EventCategoryMouse) & io.WantCaptureMouse;
+			e.Handled |= e.IsInCategory(EventCategoryKeyboard) & io.WantCaptureKeyboard;
+		}
+	}
+
 	void ImGuiLayer::Begin()
 	{
+		ENGINE_PROFILE_FUNCTION();
+
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
@@ -69,10 +84,11 @@ namespace Engine {
 
 	void ImGuiLayer::End()
 	{
+		ENGINE_PROFILE_FUNCTION();
+
 		ImGuiIO& io = ImGui::GetIO();
 		Application& app = Application::Get();
 		io.DisplaySize = ImVec2((float)app.GetWindow().GetWidth(), (float)app.GetWindow().GetHeight());
-
 
 		// Rendering
 		ImGui::Render();

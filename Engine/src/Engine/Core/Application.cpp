@@ -11,12 +11,13 @@ namespace Engine {
 
 	Application* Application::s_Instance = nullptr;
 
-	Application::Application()
+	Application::Application(const std::string& name)
+
 	{
 		ENGINE_CORE_ASSERT(!s_Instance, "Application already exists!");
 		s_Instance = this;
 		// 通过不同系统的窗口API创建GUI窗口
-		m_Window = Window::Create();
+		m_Window = Window::Create(WindowProps(name));
 		// 绑定窗口产生的事件发送到Application::OnEvent
 		m_Window->SetEventCallback(ENGINE_BIND_EVENT_FN(Application::OnEvent));
 

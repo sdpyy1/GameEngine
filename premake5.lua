@@ -1,12 +1,17 @@
 workspace "GameEngine"
 	architecture "x86_64"
-	startproject "Sandbox" 
+	startproject "Editor" 
 	configurations
 	{
 		"Debug",
 		"Release",
 		"Dist"
 	}
+	flags
+	{
+		"MultiProcessorCompile"
+	}
+	-- 隐藏一些警告
 	filter "system:windows"
         buildoptions { 
         "/wd4828", -- warning C4828: The file contains a character that cannot be represented in the current code page (936). Save the file in Unicode format to prevent data loss
@@ -57,6 +62,13 @@ project "Engine"
 		"%{prj.name}/vendor/glm/glm/**.hpp",
 		"%{prj.name}/vendor/glm/glm/**.inl",
 	}
+
+	defines
+	{
+		"_CRT_SECURE_NO_WARNINGS",
+		"GLFW_INCLUDE_NONE",
+		"ENGINE_PLATFORM_WINDOWS"
+	}
 	includedirs
 	{
 		"%{prj.name}/src",
@@ -78,17 +90,6 @@ project "Engine"
 
 	filter "system:windows"
 		systemversion "latest"
-		defines
-		{
-			"ENGINE_PLATFORM_WINDOWS",
-			"ENGINE_BUILD_DLL",
-			"GLFW_INCLUDE_NONE"
-		}
-		-- 改静态库后不需要copy了
-		-- postbuildcommands {
-		-- 	("{COPY} \"%{cfg.buildtarget.relpath}\" \"%{cfg.buildtarget.directory}/../Sandbox/\"")
-		-- }	
-
 
 	filter "configurations:Debug"
 		defines "ENGINE_DEBUG"
@@ -106,50 +107,103 @@ project "Engine"
 		optimize "on"
 
 
-project "Sandbox"
-	location "Sandbox"
-	kind "ConsoleApp"
-	language "C++"
-	cppdialect "C++17"
-	staticruntime "on"
 
-	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
-	objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
-
-	files
-	{
-		"%{prj.name}/src/**.h",
-		"%{prj.name}/src/**.cpp"
-	}
-	includedirs
-	{
-		"Engine/vendor/spdlog/include",
-		"Engine/src",
-		"%{IncludeDir.glm}",
-		"%{IncludeDir.ImGui}",
-	}
-	links
-	{
-		"Engine"
-	}
-	filter "system:windows"
-		systemversion "latest"
-		defines
+		project "Editor"
+		location "Editor"
+		kind "ConsoleApp"
+		language "C++"
+		cppdialect "C++17"
+		staticruntime "on"
+	
+		targetdir ("bin/" .. outputdir .. "/%{prj.name}")
+		objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
+	
+		files
 		{
-			"ENGINE_PLATFORM_WINDOWS"
+			"%{prj.name}/src/**.h",
+			"%{prj.name}/src/**.cpp"
 		}
+	
+		includedirs
+		{
+			"Engine/vendor/spdlog/include",
+			"Engine/src",
+			"Engine/vendor",
+			"%{IncludeDir.glm}"
+		}
+	
+		links
+		{
+			"Engine"
+		}
+	
+		filter "system:windows"
+			systemversion "latest"
+			defines
+			{
+				"ENGINE_PLATFORM_WINDOWS"
+			}
+	
+		filter "configurations:Debug"
+			defines "HZ_DEBUG"
+			runtime "Debug"
+			symbols "on"
+	
+		filter "configurations:Release"
+			defines "HZ_RELEASE"
+			runtime "Release"
+			optimize "on"
+	
+		filter "configurations:Dist"
+			defines "HZ_DIST"
+			runtime "Release"
+			optimize "on"
 
-	filter "configurations:Debug"
-		defines "ENGINE_DEBUG"
-		runtime "Debug"
-		symbols "on"
+-- 被Editor取代
+-- project "Sandbox"
+-- 	location "Sandbox"
+-- 	kind "ConsoleApp"
+-- 	language "C++"
+-- 	cppdialect "C++17"
+-- 	staticruntime "on"
 
-	filter "configurations:Release"
-		defines "ENGINE_RELEASE"
-		runtime "Release"
-		optimize "on"
+-- 	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
+-- 	objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
 
-	filter "configurations:Dist"
-		defines "ENGINE_DIST"
-		runtime "Release"
-		optimize "on"
+-- 	files
+-- 	{
+-- 		"%{prj.name}/src/**.h",
+-- 		"%{prj.name}/src/**.cpp"
+-- 	}
+-- 	includedirs
+-- 	{
+-- 		"Engine/vendor/spdlog/include",
+-- 		"Engine/src",
+-- 		"%{IncludeDir.glm}",
+-- 		"%{IncludeDir.ImGui}",
+-- 	}
+-- 	links
+-- 	{
+-- 		"Engine"
+-- 	}
+-- 	filter "system:windows"
+-- 		systemversion "latest"
+-- 		defines
+-- 		{
+-- 			"ENGINE_PLATFORM_WINDOWS"
+-- 		}
+
+-- 	filter "configurations:Debug"
+-- 		defines "ENGINE_DEBUG"
+-- 		runtime "Debug"
+-- 		symbols "on"
+
+-- 	filter "configurations:Release"
+-- 		defines "ENGINE_RELEASE"
+-- 		runtime "Release"
+-- 		optimize "on"
+
+-- 	filter "configurations:Dist"
+-- 		defines "ENGINE_DIST"
+-- 		runtime "Release"
+-- 		optimize "on"
