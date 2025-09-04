@@ -10,11 +10,11 @@
 #include "Engine/ImGui/ImGuiLayer.h"
 
 namespace Engine {
+	// 将要运行的程序类
 	class Application
 	{
 	public:
-		Application(const std::string& name = "Editor App");
-
+		Application(const std::string& name = "Default App");
 		virtual ~Application();
 		void Run();
 		void OnEvent(Event& e);   // 窗口事件回调函数
@@ -25,7 +25,6 @@ namespace Engine {
 		bool OnWindowResize(WindowResizeEvent& e);
 		void Close();
 		ImGuiLayer* GetImGuiLayer() { return m_ImGuiLayer; }
-
 	private:
 		// 关窗事件处理函数
 		bool OnWindowClose(WindowCloseEvent& e);

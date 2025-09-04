@@ -1,25 +1,33 @@
 #pragma once
-// #pragma once只是防止一个cpp文件多次编译一个头文件，而pcf可以防止一个头文件被多个cpp文件编译
-#define _CRT_SECURE_NO_WARNINGS
+
+#include "Engine/Core/PlatformDetection.h"
+
+#ifdef ENGINE_PLATFORM_WINDOWS
+#ifndef NOMINMAX
+// See github.com/skypjack/entt/wiki/Frequently-Asked-Questions#warning-c4003-the-min-the-max-and-the-macro
+#define NOMINMAX
+#endif
+#endif
+
 #include <iostream>
-#include <ostream>
 #include <memory>
+#include <utility>
 #include <algorithm>
 #include <functional>
-
 
 #include <string>
 #include <sstream>
 #include <array>
-
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
+
+#include "Engine/Core/Base.h"
 
 #include "Engine/Core/Log.h"
 
 #include "Engine/Debug/Instrumentor.h"
 
 #ifdef ENGINE_PLATFORM_WINDOWS
-	#include <Windows.h>
+#include <Windows.h>
 #endif

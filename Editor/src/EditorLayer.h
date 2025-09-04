@@ -20,7 +20,12 @@ namespace Engine {
 		Engine::OrthographicCameraController m_CameraController;
 		bool m_ViewportFocused = false, m_ViewportHovered = false;
 
+		Ref<Scene> m_ActiveScene;
+		Entity m_SquareEntity;
+		Entity m_CameraEntity;
+		Entity m_SecondCamera;
 
+		bool m_PrimaryCamera = true;
 		// Temp
 		Ref<VertexArray> m_SquareVA;
 		Ref<Shader> m_FlatColorShader;

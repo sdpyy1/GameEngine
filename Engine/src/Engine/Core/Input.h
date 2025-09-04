@@ -3,6 +3,8 @@
 #include "Engine/Core/Base.h"
 #include "Engine/Core/KeyCodes.h"
 #include "Engine/Core/MouseCodes.h"
+#include <glm/glm.hpp>
+
 
 namespace Engine {
 
@@ -12,7 +14,7 @@ namespace Engine {
 		static bool IsKeyPressed(KeyCode key);
 
 		static bool IsMouseButtonPressed(MouseCode button);
-		static std::pair<float, float> GetMousePosition();
+		static glm::vec2 GetMousePosition();
 		static float GetMouseX();
 		static float GetMouseY();
 	};

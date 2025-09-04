@@ -1,5 +1,8 @@
 ﻿#pragma once
 #include<memory>
+#include "Engine/Core/PlatformDetection.h"
+
+
 // Base.h 用于定义各种宏设置
 #ifdef ENGINE_DEBUG
 	#define ENGINE_ENABLE_ASSERTS

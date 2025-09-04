@@ -12,11 +12,16 @@
 #include "Engine/Core/Base.h"
 #include "Engine/Debug/Instrumentor.h"
 #include "Engine/Renderer/Framebuffer.h"
+#include "Engine/Scene/Entity.h"
+
+#include "Engine/Scene/ScriptableEntity.h"
 
 
 
 
 
+#include "Engine/Scene/Scene.h"
+#include "Engine/Scene/Components.h"
 
 // ---Renderer------------------------
 #include "Engine/Renderer/Renderer.h"
