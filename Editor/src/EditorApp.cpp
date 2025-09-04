@@ -1,9 +1,9 @@
 ﻿#include <Engine.h>
-#include <Engine/Core/EntryPoint.h>
+#include <Hazel/Core/EntryPoint.h>
 
 #include "EditorLayer.h"
 
-namespace Engine {
+namespace Hazel {
 
 	class EngineEditor : public Application
 	{

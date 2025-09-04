@@ -1,11 +1,11 @@
-#include "pch.h"
+#include "hzpch.h"
 #include "OpenGLShader.h"
 #include <fstream>
 #include <glad/glad.h>
 
 #include <glm/gtc/type_ptr.hpp>
 
-namespace Engine {
+namespace Hazel {
 
 	static GLenum ShaderTypeFromString(const std::string& type)
 	{
@@ -14,13 +14,13 @@ namespace Engine {
 		if (type == "fragment" || type == "pixel")
 			return GL_FRAGMENT_SHADER;
 
-		ENGINE_CORE_ASSERT(false, "Unknown shader type!");
+		HZ_CORE_ASSERT(false, "Unknown shader type!");
 		return 0;
 	}
 
 	OpenGLShader::OpenGLShader(const std::string& filepath)
 	{
-		ENGINE_PROFILE_FUNCTION();
+		HZ_PROFILE_FUNCTION();
 
 		std::string source = ReadFile(filepath);
 		auto shaderSources = PreProcess(source);
@@ -37,7 +37,7 @@ namespace Engine {
 	OpenGLShader::OpenGLShader(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc)
 		: m_Name(name)
 	{
-		ENGINE_PROFILE_FUNCTION();
+		HZ_PROFILE_FUNCTION();
 
 		std::unordered_map<GLenum, std::string> sources;
 		sources[GL_VERTEX_SHADER] = vertexSrc;
@@ -47,14 +47,14 @@ namespace Engine {
 
 	OpenGLShader::~OpenGLShader()
 	{
-		ENGINE_PROFILE_FUNCTION();
+		HZ_PROFILE_FUNCTION();
 
 		glDeleteProgram(m_RendererID);
 	}
 
 	std::string OpenGLShader::ReadFile(const std::string& filepath)
 	{
-		ENGINE_PROFILE_FUNCTION();
+		HZ_PROFILE_FUNCTION();
 
 		std::string result;
 		std::ifstream in(filepath, std::ios::in | std::ios::binary); // ifstream closes itself due to RAII
@@ -70,12 +70,12 @@ namespace Engine {
 			}
 			else
 			{
-				ENGINE_CORE_ERROR("Could not read from file '{0}'", filepath);
+				HZ_CORE_ERROR("Could not read from file '{0}'", filepath);
 			}
 		}
 		else
 		{
-			ENGINE_CORE_ERROR("Could not open file '{0}'", filepath);
+			HZ_CORE_ERROR("Could not open file '{0}'", filepath);
 		}
 
 		return result;
@@ -83,7 +83,7 @@ namespace Engine {
 
 	std::unordered_map<GLenum, std::string> OpenGLShader::PreProcess(const std::string& source)
 	{
-		ENGINE_PROFILE_FUNCTION();
+		HZ_PROFILE_FUNCTION();
 
 		std::unordered_map<GLenum, std::string> shaderSources;
 
@@ -93,13 +93,13 @@ namespace Engine {
 		while (pos != std::string::npos)
 		{
 			size_t eol = source.find_first_of("\r\n", pos); //End of shader type declaration line
-			ENGINE_CORE_ASSERT(eol != std::string::npos, "Syntax error");
+			HZ_CORE_ASSERT(eol != std::string::npos, "Syntax error");
 			size_t begin = pos + typeTokenLength + 1; //Start of shader type name (after "#type " keyword)
 			std::string type = source.substr(begin, eol - begin);
-			ENGINE_CORE_ASSERT(ShaderTypeFromString(type), "Invalid shader type specified");
+			HZ_CORE_ASSERT(ShaderTypeFromString(type), "Invalid shader type specified");
 
 			size_t nextLinePos = source.find_first_not_of("\r\n", eol); //Start of shader code after shader type declaration line
-			ENGINE_CORE_ASSERT(nextLinePos != std::string::npos, "Syntax error");
+			HZ_CORE_ASSERT(nextLinePos != std::string::npos, "Syntax error");
 			pos = source.find(typeToken, nextLinePos); //Start of next shader type declaration line
 
 			shaderSources[ShaderTypeFromString(type)] = (pos == std::string::npos) ? source.substr(nextLinePos) : source.substr(nextLinePos, pos - nextLinePos);
@@ -118,10 +118,10 @@ namespace Engine {
 	}
 	void OpenGLShader::Compile(const std::unordered_map<GLenum, std::string>& shaderSources)
 	{
-		ENGINE_PROFILE_FUNCTION();
+		HZ_PROFILE_FUNCTION();
 
 		GLuint program = glCreateProgram();
-		ENGINE_CORE_ASSERT(shaderSources.size() <= 2, "We only support 2 shaders for now");
+		HZ_CORE_ASSERT(shaderSources.size() <= 2, "We only support 2 shaders for now");
 		std::array<GLenum, 2> glShaderIDs;
 		int glShaderIDIndex = 0;
 		for (auto& kv : shaderSources)
@@ -148,8 +148,8 @@ namespace Engine {
 
 				glDeleteShader(shader);
 
-				ENGINE_CORE_ERROR("{0}", infoLog.data());
-				ENGINE_CORE_ASSERT(false, "Shader compilation failure!");
+				HZ_CORE_ERROR("{0}", infoLog.data());
+				HZ_CORE_ASSERT(false, "Shader compilation failure!");
 				break;
 			}
 
@@ -180,8 +180,8 @@ namespace Engine {
 			for (auto id : glShaderIDs)
 				glDeleteShader(id);
 
-			ENGINE_CORE_ERROR("{0}", infoLog.data());
-			ENGINE_CORE_ASSERT(false, "Shader link failure!");
+			HZ_CORE_ERROR("{0}", infoLog.data());
+			HZ_CORE_ASSERT(false, "Shader link failure!");
 			return;
 		}
 
@@ -194,49 +194,49 @@ namespace Engine {
 
 	void OpenGLShader::Bind() const
 	{
-		ENGINE_PROFILE_FUNCTION();
+		HZ_PROFILE_FUNCTION();
 
 		glUseProgram(m_RendererID);
 	}
 
 	void OpenGLShader::Unbind() const
 	{
-		ENGINE_PROFILE_FUNCTION();
+		HZ_PROFILE_FUNCTION();
 
 		glUseProgram(0);
 	}
 
 	void OpenGLShader::SetInt(const std::string& name, int value)
 	{
-		ENGINE_PROFILE_FUNCTION();
+		HZ_PROFILE_FUNCTION();
 
 		UploadUniformInt(name, value);
 	}
 
 	void OpenGLShader::SetFloat(const std::string& name, float value)
 	{
-		ENGINE_PROFILE_FUNCTION();
+		HZ_PROFILE_FUNCTION();
 
 		UploadUniformFloat(name, value);
 	}
 
 	void OpenGLShader::SetFloat3(const std::string& name, const glm::vec3& value)
 	{
-		ENGINE_PROFILE_FUNCTION();
+		HZ_PROFILE_FUNCTION();
 
 		UploadUniformFloat3(name, value);
 	}
 
 	void OpenGLShader::SetFloat4(const std::string& name, const glm::vec4& value)
 	{
-		ENGINE_PROFILE_FUNCTION();
+		HZ_PROFILE_FUNCTION();
 
 		UploadUniformFloat4(name, value);
 	}
 
 	void OpenGLShader::SetMat4(const std::string& name, const glm::mat4& value)
 	{
-		ENGINE_PROFILE_FUNCTION();
+		HZ_PROFILE_FUNCTION();
 
 		UploadUniformMat4(name, value);
 	}

@@ -20,7 +20,10 @@ project "Editor"
 		"%{wks.location}/Engine/src",
 		"%{wks.location}/Engine/vendor",
 		"%{IncludeDir.glm}",
-		"%{IncludeDir.entt}"
+		"%{IncludeDir.entt}",
+		"%{IncludeDir.ImGuizmo}"
+
+
 	}
 
 	links
@@ -32,16 +35,16 @@ project "Editor"
 		systemversion "latest"
 
 	filter "configurations:Debug"
-		defines "HZ_DEBUG"
+		defines "ENGINE_DEBUG"
 		runtime "Debug"
 		symbols "on"
 
 	filter "configurations:Release"
-		defines "HZ_RELEASE"
+		defines "ENGINE_RELEASE"
 		runtime "Release"
 		optimize "on"
 
 	filter "configurations:Dist"
-		defines "HZ_DIST"
+		defines "ENGINE_DIST"
 		runtime "Release"
 		optimize "on"

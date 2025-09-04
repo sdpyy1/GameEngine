@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Engine/Renderer/Framebuffer.h"
+#include "Hazel/Renderer/Framebuffer.h"
 
-namespace Engine {
+namespace Hazel {
 
 	class OpenGLFramebuffer : public Framebuffer
 	{

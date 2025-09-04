@@ -1,11 +1,11 @@
-#include "pch.h"
+#include "hzpch.h"
 #include "OpenGLBuffer.h"
 #include <glad/glad.h>
 
-namespace Engine {
+namespace Hazel {
 	OpenGLVertexBuffer::OpenGLVertexBuffer(uint32_t size)
 	{
-		ENGINE_PROFILE_FUNCTION();
+		HZ_PROFILE_FUNCTION();
 
 		glCreateBuffers(1, &m_RendererID);
 		glBindBuffer(GL_ARRAY_BUFFER, m_RendererID);

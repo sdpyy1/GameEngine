@@ -1,9 +1,9 @@
-#include "pch.h"
+#include "hzpch.h"
 #include "Platform/OpenGL/OpenGLVertexArray.h"
 
 #include <glad/glad.h>
 
-namespace Engine {
+namespace Hazel {
 
 	static GLenum ShaderDataTypeToOpenGLBaseType(ShaderDataType type)
 	{
@@ -22,43 +22,43 @@ namespace Engine {
 		case ShaderDataType::Bool:     return GL_BOOL;
 		}
 
-		ENGINE_CORE_ASSERT(false, "Unknown ShaderDataType!");
+		HZ_CORE_ASSERT(false, "Unknown ShaderDataType!");
 		return 0;
 	}
 
 	OpenGLVertexArray::OpenGLVertexArray()
 	{
-		ENGINE_PROFILE_FUNCTION();
+		HZ_PROFILE_FUNCTION();
 
 		glCreateVertexArrays(1, &m_RendererID);
 	}
 
 	OpenGLVertexArray::~OpenGLVertexArray()
 	{
-		ENGINE_PROFILE_FUNCTION();
+		HZ_PROFILE_FUNCTION();
 
 		glDeleteVertexArrays(1, &m_RendererID);
 	}
 
 	void OpenGLVertexArray::Bind() const
 	{
-		ENGINE_PROFILE_FUNCTION();
+		HZ_PROFILE_FUNCTION();
 
 		glBindVertexArray(m_RendererID);
 	}
 
 	void OpenGLVertexArray::Unbind() const
 	{
-		ENGINE_PROFILE_FUNCTION();
+		HZ_PROFILE_FUNCTION();
 
 		glBindVertexArray(0);
 	}
 
 	void OpenGLVertexArray::AddVertexBuffer(const Ref<VertexBuffer>& vertexBuffer)
 	{
-		ENGINE_PROFILE_FUNCTION();
+		HZ_PROFILE_FUNCTION();
 
-		ENGINE_CORE_ASSERT(vertexBuffer->GetLayout().GetElements().size(), "Vertex Buffer has no layout!");
+		HZ_CORE_ASSERT(vertexBuffer->GetLayout().GetElements().size(), "Vertex Buffer has no layout!");
 
 		glBindVertexArray(m_RendererID);
 		vertexBuffer->Bind();
@@ -107,7 +107,7 @@ namespace Engine {
 				break;
 			}
 			default:
-				ENGINE_CORE_ASSERT(false, "Unknown ShaderDataType!");
+				HZ_CORE_ASSERT(false, "Unknown ShaderDataType!");
 			}
 		}
 
@@ -116,7 +116,7 @@ namespace Engine {
 
 	void OpenGLVertexArray::SetIndexBuffer(const Ref<IndexBuffer>& indexBuffer)
 	{
-		ENGINE_PROFILE_FUNCTION();
+		HZ_PROFILE_FUNCTION();
 
 		glBindVertexArray(m_RendererID);
 		indexBuffer->Bind();

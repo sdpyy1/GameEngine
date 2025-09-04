@@ -1,9 +1,9 @@
 #pragma once
-#include "Engine/Renderer/Texture.h"
+#include "Hazel/Renderer/Texture.h"
 #include <glad/glad.h>
 
 
-namespace Engine {
+namespace Hazel {
 
 	class OpenGLTexture2D : public Texture2D
 	{

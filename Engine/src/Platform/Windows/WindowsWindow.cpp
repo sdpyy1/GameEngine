@@ -1,60 +1,60 @@
-#include "pch.h"
+#include "hzpch.h"
 #include "Platform/Windows/WindowsWindow.h"
 
-#include "Engine/Core/Input.h"
+#include "Hazel/Core/Input.h"
 
-#include "Engine/Events/ApplicationEvent.h"
-#include "Engine/Events/MouseEvent.h"
-#include "Engine/Events/KeyEvent.h"
+#include "Hazel/Events/ApplicationEvent.h"
+#include "Hazel/Events/MouseEvent.h"
+#include "Hazel/Events/KeyEvent.h"
 
-#include "Engine/Renderer/Renderer.h"
+#include "Hazel/Renderer/Renderer.h"
 
 #include "Platform/OpenGL/OpenGLContext.h"
 
-namespace Engine {
+namespace Hazel {
 
 	static uint8_t s_GLFWWindowCount = 0;
 
 	static void GLFWErrorCallback(int error, const char* description)
 	{
-		ENGINE_CORE_ERROR("GLFW Error ({0}): {1}", error, description);
+		HZ_CORE_ERROR("GLFW Error ({0}): {1}", error, description);
 	}
 
 	WindowsWindow::WindowsWindow(const WindowProps& props)
 	{
-		ENGINE_PROFILE_FUNCTION();
+		HZ_PROFILE_FUNCTION();
 
 		Init(props);
 	}
 
 	WindowsWindow::~WindowsWindow()
 	{
-		ENGINE_PROFILE_FUNCTION();
+		HZ_PROFILE_FUNCTION();
 
 		Shutdown();
 	}
 
 	void WindowsWindow::Init(const WindowProps& props)
 	{
-		ENGINE_PROFILE_FUNCTION();
+		HZ_PROFILE_FUNCTION();
 
 		m_Data.Title = props.Title;
 		m_Data.Width = props.Width;
 		m_Data.Height = props.Height;
 
-		ENGINE_CORE_INFO("Creating window {0} ({1}, {2})", props.Title, props.Width, props.Height);
+		HZ_CORE_INFO("Creating window {0} ({1}, {2})", props.Title, props.Width, props.Height);
 
 		if (s_GLFWWindowCount == 0)
 		{
-			ENGINE_PROFILE_SCOPE("glfwInit");
+			HZ_PROFILE_SCOPE("glfwInit");
 			int success = glfwInit();
-			ENGINE_CORE_ASSERT(success, "Could not initialize GLFW!");
+			HZ_CORE_ASSERT(success, "Could not initialize GLFW!");
 			glfwSetErrorCallback(GLFWErrorCallback);
 		}
 
 		{
-			ENGINE_PROFILE_SCOPE("glfwCreateWindow");
-#if defined(ENGINE_DEBUG)
+			HZ_PROFILE_SCOPE("glfwCreateWindow");
+#if defined(HZ_DEBUG)
 			if (Renderer::GetAPI() == RendererAPI::API::OpenGL)
 				glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
 #endif
@@ -161,7 +161,7 @@ namespace Engine {
 
 	void WindowsWindow::Shutdown()
 	{
-		ENGINE_PROFILE_FUNCTION();
+		HZ_PROFILE_FUNCTION();
 
 		glfwDestroyWindow(m_Window);
 		--s_GLFWWindowCount;
@@ -174,7 +174,7 @@ namespace Engine {
 
 	void WindowsWindow::OnUpdate()
 	{
-		ENGINE_PROFILE_FUNCTION();
+		HZ_PROFILE_FUNCTION();
 
 		glfwPollEvents();
 		m_Context->SwapBuffers();
@@ -182,7 +182,7 @@ namespace Engine {
 
 	void WindowsWindow::SetVSync(bool enabled)
 	{
-		ENGINE_PROFILE_FUNCTION();
+		HZ_PROFILE_FUNCTION();
 
 		if (enabled)
 			glfwSwapInterval(1);

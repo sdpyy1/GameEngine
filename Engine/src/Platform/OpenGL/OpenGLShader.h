@@ -1,10 +1,10 @@
 #pragma once
-#include "Engine/Renderer/Shader.h"
+#include "Hazel/Renderer/Shader.h"
 #include <glm/glm.hpp>
 typedef unsigned int GLenum;
 
 
-namespace Engine {
+namespace Hazel {
 
 	class OpenGLShader : public Shader
 	{

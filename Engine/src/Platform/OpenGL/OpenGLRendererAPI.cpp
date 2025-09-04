@@ -1,8 +1,8 @@
-#include "pch.h"
+#include "hzpch.h"
 #include "OpenGLRendererAPI.h"
 #include <glad/glad.h>
 
-namespace Engine {
+namespace Hazel {
 	void OpenGLRendererAPI::Init()
 	{
 		glEnable(GL_BLEND);

@@ -7,8 +7,8 @@ project "Engine"
 	targetdir ("%{wks.location}/bin/" .. outputdir .. "/%{prj.name}")
 	objdir ("%{wks.location}/bin-int/" .. outputdir .. "/%{prj.name}")
 
-	pchheader "pch.h"
-	pchsource "src/pch.cpp"
+	pchheader "hzpch.h"
+	pchsource "src/hzpch.cpp"
 
 
 	files
@@ -19,6 +19,8 @@ project "Engine"
 		"vendor/stb_image/**.cpp",
 		"vendor/glm/glm/**.hpp",
 		"vendor/glm/glm/**.inl",
+		"vendor/ImGuizmo/ImGuizmo.h",
+		"vendor/ImGuizmo/ImGuizmo.cpp"
 	}
 
 	defines
@@ -35,17 +37,22 @@ project "Engine"
 		"%{IncludeDir.ImGui}",
 		"%{IncludeDir.glm}",
 		"%{IncludeDir.stb_image}",
-		"%{IncludeDir.entt}"
+		"%{IncludeDir.entt}",
+		"%{IncludeDir.yaml_cpp}",
+		"%{IncludeDir.ImGuizmo}"
 	}
 
 	links 
 	{ 
 		"GLFW",
 		"Glad",
-		"ImGui",
+		"ImGui",		
+		"yaml-cpp",
 		"opengl32.lib"
 	}
-
+	filter "files:vendor/ImGuizmo/**.cpp"
+	flags { "NoPCH" }
+	
 	filter "system:windows"
 		systemversion "latest"
 

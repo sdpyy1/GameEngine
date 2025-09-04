@@ -1,8 +1,8 @@
-#include "pch.h"
+#include "hzpch.h"
 #include "OpenGLFramebuffer.h"
 #include <glad/glad.h>
 
-namespace Engine {
+namespace Hazel {
 	static const uint32_t s_MaxFramebufferSize = 8192;
 
 
@@ -45,7 +45,7 @@ namespace Engine {
 
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, m_DepthAttachment, 0);
 
-		ENGINE_CORE_ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE, "Framebuffer is incomplete!");
+		HZ_CORE_ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE, "Framebuffer is incomplete!");
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
@@ -68,7 +68,7 @@ namespace Engine {
 
 		if (width == 0 || height == 0 || width > s_MaxFramebufferSize || height > s_MaxFramebufferSize)
 		{
-			ENGINE_CORE_WARN("Attempted to rezize framebuffer to {0}, {1}", width, height);
+			HZ_CORE_WARN("Attempted to rezize framebuffer to {0}, {1}", width, height);
 			return;
 		}
 		m_Specification.Width = width;
