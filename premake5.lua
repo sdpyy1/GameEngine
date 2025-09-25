@@ -13,6 +13,10 @@ workspace "GameEngine"
 	{
 		"MultiProcessorCompile"
 	}
+	solution_items
+	{
+		".editorconfig"
+	}
 	-- 隐藏一些警告
 	filter "system:windows"
         buildoptions { 
@@ -21,7 +25,7 @@ workspace "GameEngine"
 		"/wd4005"   -- imgui.h(10): warning C4005: 'IMGUI_DISABLE_DEMO_WINDOWS': macro redefinition
     	}
 		
-	outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
+outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
 -- Include directories relative to root folder (solution directory)
 IncludeDir = {}

@@ -150,7 +150,6 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="src\Hazel\Renderer\EditorCamera.h" />
     <ClInclude Include="src\Engine.h" />
     <ClInclude Include="src\Hazel\Core\Application.h" />
     <ClInclude Include="src\Hazel\Core\Base.h" />
@@ -173,6 +172,7 @@
     <ClInclude Include="src\Hazel\Math\Math.h" />
     <ClInclude Include="src\Hazel\Renderer\Buffer.h" />
     <ClInclude Include="src\Hazel\Renderer\Camera.h" />
+    <ClInclude Include="src\Hazel\Renderer\EditorCamera.h" />
     <ClInclude Include="src\Hazel\Renderer\Framebuffer.h" />
     <ClInclude Include="src\Hazel\Renderer\GraphicsContext.h" />
     <ClInclude Include="src\Hazel\Renderer\OrthographicCamera.h" />
@@ -622,7 +622,6 @@
     <ClInclude Include="vendor\stb_image\stb_image.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\Hazel\Renderer\EditorCamera.cpp" />
     <ClCompile Include="src\Hazel\Core\Application.cpp" />
     <ClCompile Include="src\Hazel\Core\Layer.cpp" />
     <ClCompile Include="src\Hazel\Core\LayerStack.cpp" />
@@ -633,6 +632,7 @@
     <ClCompile Include="src\Hazel\Math\Math.cpp" />
     <ClCompile Include="src\Hazel\Renderer\Buffer.cpp" />
     <ClCompile Include="src\Hazel\Renderer\Camera.cpp" />
+    <ClCompile Include="src\Hazel\Renderer\EditorCamera.cpp" />
     <ClCompile Include="src\Hazel\Renderer\Framebuffer.cpp" />
     <ClCompile Include="src\Hazel\Renderer\GraphicsContext.cpp" />
     <ClCompile Include="src\Hazel\Renderer\OrthographicCamera.cpp" />
