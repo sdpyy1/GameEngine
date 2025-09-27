@@ -123,6 +123,7 @@ namespace Hazel {
 	{
 		m_IsRunning = true;
 
+		// 开启物理世界，设置每个拥有刚体组合和碰撞器组件的实体的物理世界对象
 		OnPhysics2DStart();
 
 		// Scripting
@@ -375,7 +376,7 @@ namespace Hazel {
 	void Scene::OnPhysics2DStart()
 	{
 		m_PhysicsWorld = new b2World({ 0.0f, -9.8f });
-
+		// 获取所以拥有刚体组件的实体
 		auto view = m_Registry.view<Rigidbody2DComponent>();
 		for (auto e : view)
 		{

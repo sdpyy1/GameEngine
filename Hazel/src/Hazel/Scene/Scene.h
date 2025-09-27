@@ -30,8 +30,11 @@ namespace Hazel {
 		void OnSimulationStart();
 		void OnSimulationStop();
 
+		// 运行模式
 		void OnUpdateRuntime(Timestep ts);
+		// 模拟模式
 		void OnUpdateSimulation(Timestep ts, EditorCamera& camera);
+		// 编辑模式直接渲染场景即可
 		void OnUpdateEditor(Timestep ts, EditorCamera& camera);
 		void OnViewportResize(uint32_t width, uint32_t height);
 

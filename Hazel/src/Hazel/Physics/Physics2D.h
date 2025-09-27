@@ -8,6 +8,7 @@ namespace Hazel {
 
 	namespace Utils {
 
+		// 组件类和 Box2D 之间的转换函数
 		inline b2BodyType Rigidbody2DTypeToBox2DBody(Rigidbody2DComponent::BodyType bodyType)
 		{
 			switch (bodyType)

@@ -9,6 +9,7 @@
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
+#include <Hazel.h>
 
 namespace Hazel {
 
@@ -47,7 +48,8 @@ namespace Hazel {
 
 	float EditorCamera::RotationSpeed() const
 	{
-		return 0.8f;
+		// 基于视口高度调整旋转速度，确保不同窗口大小下体验一致
+		return 0.3f / (m_ViewportHeight / 1080.0f); // 以 1080p 为基准，窗口越小速度越慢
 	}
 
 	float EditorCamera::ZoomSpeed() const
@@ -61,20 +63,63 @@ namespace Hazel {
 
 	void EditorCamera::OnUpdate(Timestep ts)
 	{
-		if (Input::IsKeyPressed(Key::LeftAlt))
+		// 1. 处理鼠标捕获/释放（右键控制）
+		if (Input::IsMouseButtonPressed(Mouse::ButtonRight))
 		{
-			const glm::vec2& mouse{ Input::GetMouseX(), Input::GetMouseY() };
-			glm::vec2 delta = (mouse - m_InitialMousePosition) * 0.003f;
-			m_InitialMousePosition = mouse;
-
-			if (Input::IsMouseButtonPressed(Mouse::ButtonMiddle))
-				MousePan(delta);
-			else if (Input::IsMouseButtonPressed(Mouse::ButtonLeft))
-				MouseRotate(delta);
-			else if (Input::IsMouseButtonPressed(Mouse::ButtonRight))
-				MouseZoom(delta.y);
+			if (!m_IsMouseCaptured)
+			{
+				// 按下右键：捕获鼠标（隐藏+锁定）
+				m_IsMouseCaptured = true;
+				m_LastMousePosition = { Input::GetMouseX(), Input::GetMouseY() };
+				Input::SetCursorMode(Input::CursorMode::Locked); // 隐藏鼠标并锁定在窗口内
+			}
+		}
+		else if (m_IsMouseCaptured)
+		{
+			// 松开右键：释放鼠标（显示+自由）
+			m_IsMouseCaptured = false;
+			Input::SetCursorMode(Input::CursorMode::Normal); // 恢复鼠标显示
 		}
 
+		// 2. 捕获状态下：处理鼠标旋转和 WASD 移动
+		if (m_IsMouseCaptured)
+		{
+			// （1）鼠标旋转：计算鼠标位移，更新 Yaw/Pitch
+			const glm::vec2 currentMousePos = { Input::GetMouseX(), Input::GetMouseY() };
+			glm::vec2 mouseDelta = currentMousePos - m_LastMousePosition;
+			m_LastMousePosition = currentMousePos;
+
+			const float rotationSpeed = RotationSpeed() * ts; // 乘以时间步，确保帧率无关
+			m_Yaw += mouseDelta.x * rotationSpeed;    // 水平位移 → 偏航角（左右旋转）
+			m_Pitch += mouseDelta.y * rotationSpeed;  // 垂直位移 → 俯仰角（上下旋转，负号是因为鼠标上移=相机上仰）
+
+			// 限制俯仰角：避免相机翻转（-89° ~ 89°，防止万向锁）
+			m_Pitch = glm::clamp(m_Pitch, -glm::radians(89.0f), glm::radians(89.0f));
+
+			// （2）WASD 移动：基于相机方向向量计算位移
+			const float moveSpeed = 5.0f * ts; // 移动速度（可根据需求调整，乘以时间步确保帧率无关）
+			glm::vec3 moveDir = { 0.0f, 0.0f, 0.0f };
+
+			if (Input::IsKeyPressed(Key::W)) moveDir += GetForwardDirection();   // W → 前进（相机前向）
+			if (Input::IsKeyPressed(Key::S)) moveDir -= GetForwardDirection();   // S → 后退
+			if (Input::IsKeyPressed(Key::A)) moveDir -= GetRightDirection();     // A → 左移（相机右向的反方向）
+			if (Input::IsKeyPressed(Key::D)) moveDir += GetRightDirection();     // D → 右移
+			if (Input::IsKeyPressed(Key::LeftShift)) moveDir *= 2.0f;            // Shift → 加速（可选）
+			if (Input::IsKeyPressed(Key::Space)) moveDir += GetUpDirection();    // Space → 上升（可选）
+			if (Input::IsKeyPressed(Key::LeftControl)) moveDir -= GetUpDirection(); // Ctrl → 下降（可选）
+
+			// 归一化移动方向：避免斜向移动速度过快
+			if (glm::length(moveDir) > 0.0f)
+				moveDir = glm::normalize(moveDir) * moveSpeed;
+
+			// 更新焦点位置（因为 EditorCamera 是围绕焦点旋转，移动时需同步移动焦点）
+			m_FocalPoint += moveDir;
+		}
+
+		// 3. 原有滚轮缩放逻辑（保留，与右键移动不冲突）
+		// （注：滚轮缩放逻辑已在 OnMouseScroll 中处理，这里只需确保 UpdateView 被调用）
+
+		// 4. 更新视图矩阵（无论哪种操作，最终都要刷新视图）
 		UpdateView();
 	}
 
@@ -91,6 +136,7 @@ namespace Hazel {
 		UpdateView();
 		return false;
 	}
+
 
 	void EditorCamera::MousePan(const glm::vec2& delta)
 	{

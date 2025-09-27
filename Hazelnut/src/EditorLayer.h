@@ -7,7 +7,7 @@
 #include "Hazel/Renderer/EditorCamera.h"
 
 namespace Hazel {
-
+	// ±à¼­Æ÷²ã
 	class EditorLayer : public Layer
 	{
 	public:

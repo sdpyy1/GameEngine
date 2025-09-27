@@ -82,6 +82,7 @@ namespace Hazel {
 		}
 	}
 	
+	// 这一层的Begin和End就是负责在每帧渲染ImGui时的准备和结束设置
 	void ImGuiLayer::Begin()
 	{
 		HZ_PROFILE_FUNCTION();

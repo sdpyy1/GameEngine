@@ -3,6 +3,7 @@
 
 #include "Hazel/Renderer/Renderer.h"
 #include "Platform/OpenGL/OpenGLContext.h"
+#include "Platform/Vulkan/VulkanContext.h"
 
 namespace Hazel {
 
@@ -12,6 +13,7 @@ namespace Hazel {
 		{
 			case RendererAPI::API::None:    HZ_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
 			case RendererAPI::API::OpenGL:  return CreateScope<OpenGLContext>(static_cast<GLFWwindow*>(window));
+			case RendererAPI::API::Vulkan:  return CreateScope<VulkanContext>(static_cast<GLFWwindow*>(window));
 		}
 
 		HZ_CORE_ASSERT(false, "Unknown RendererAPI!");

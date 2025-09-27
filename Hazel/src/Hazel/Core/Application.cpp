@@ -26,6 +26,7 @@ namespace Hazel {
 			std::filesystem::current_path(m_Specification.WorkingDirectory);
 
 		m_Window = Window::Create(WindowProps(m_Specification.Name));
+		// 这里设置了把glfw接收到的事件转移到了Application的OnEvent函数中
 		m_Window->SetEventCallback(HZ_BIND_EVENT_FN(Application::OnEvent));
 
 		Renderer::Init();
@@ -70,6 +71,7 @@ namespace Hazel {
 		m_MainThreadQueue.emplace_back(function);
 	}
 
+	// glfw的事件处理
 	void Application::OnEvent(Event& e)
 	{
 		HZ_PROFILE_FUNCTION();
@@ -77,7 +79,7 @@ namespace Hazel {
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<WindowCloseEvent>(HZ_BIND_EVENT_FN(Application::OnWindowClose));
 		dispatcher.Dispatch<WindowResizeEvent>(HZ_BIND_EVENT_FN(Application::OnWindowResize));
-
+		// 从上到下遍历LayerStack，传递事件
 		for (auto it = m_LayerStack.rbegin(); it != m_LayerStack.rend(); ++it)
 		{
 			if (e.Handled) 
@@ -94,21 +96,23 @@ namespace Hazel {
 		{
 			HZ_PROFILE_SCOPE("RunLoop");
 
+			// 计算一帧用时
 			float time = Time::GetTime();
-			Timestep timestep = time - m_LastFrameTime;
+			Timestep timestep = time - m_LastFrameTime; // 代码中涉及Timestep ts的函数参数，都是来自这个
 			m_LastFrameTime = time;
 
 			ExecuteMainThreadQueue();
 
 			if (!m_Minimized)
 			{
+				// 更新每层
 				{
 					HZ_PROFILE_SCOPE("LayerStack OnUpdate");
 
 					for (Layer* layer : m_LayerStack)
 						layer->OnUpdate(timestep);
 				}
-
+				// 渲染ImGui
 				m_ImGuiLayer->Begin();
 				{
 					HZ_PROFILE_SCOPE("LayerStack OnImGuiRender");
@@ -118,7 +122,7 @@ namespace Hazel {
 				}
 				m_ImGuiLayer->End();
 			}
-
+			// 更新窗口
 			m_Window->OnUpdate();
 		}
 	}

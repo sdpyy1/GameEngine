@@ -41,24 +41,25 @@ namespace Hazel {
 
 		m_EditorScene = CreateRef<Scene>();
 		m_ActiveScene = m_EditorScene;
+		static std::string defalutProjectPath = "D:\\AAA_GameEngine\\Hazelnut\\SandboxProject\\Sandbox.hproj";
+		OpenProject(defalutProjectPath);
+		//auto commandLineArgs = Application::Get().GetSpecification().CommandLineArgs;
+		//if (commandLineArgs.Count > 1)
+		//{
+		//	auto projectFilePath = commandLineArgs[1];
+		//	OpenProject(projectFilePath);
+		//}
+		//else
+		//{
+		//	// TODO(Yan): prompt the user to select a directory
+		//	// NewProject();
 
-		auto commandLineArgs = Application::Get().GetSpecification().CommandLineArgs;
-		if (commandLineArgs.Count > 1)
-		{
-			auto projectFilePath = commandLineArgs[1];
-			OpenProject(projectFilePath);
-		}
-		else
-		{
-			// TODO(Yan): prompt the user to select a directory
-			// NewProject();
+		//	// If no project is opened, close Hazelnut
+		//	// NOTE: this is while we don't have a new project path
+		//	if (!OpenProject())
+		//		Application::Get().Close();
 
-			// If no project is opened, close Hazelnut
-			// NOTE: this is while we don't have a new project path
-			if (!OpenProject())
-				Application::Get().Close();
-
-		}
+		//}
 
 		m_EditorCamera = EditorCamera(30.0f, 1.778f, 0.1f, 1000.0f);
 		Renderer2D::SetLineWidth(4.0f);
@@ -102,24 +103,26 @@ namespace Hazel {
 					m_CameraController.OnUpdate(ts);
 
 				m_EditorCamera.OnUpdate(ts);
-
+				// 只渲染
 				m_ActiveScene->OnUpdateEditor(ts, m_EditorCamera);
 				break;
 			}
 			case SceneState::Simulate:
 			{
 				m_EditorCamera.OnUpdate(ts);
-
+				// 物理+渲染
 				m_ActiveScene->OnUpdateSimulation(ts, m_EditorCamera);
 				break;
 			}
 			case SceneState::Play:
 			{
+				// 脚本+物理+渲染
 				m_ActiveScene->OnUpdateRuntime(ts);
 				break;
 			}
 		}
 
+		// 鼠标位置Entity检测
 		auto[mx, my] = ImGui::GetMousePos();
 		mx -= m_ViewportBounds[0].x;
 		my -= m_ViewportBounds[0].y;
@@ -133,7 +136,7 @@ namespace Hazel {
 			int pixelData = m_Framebuffer->ReadPixel(1, mouseX, mouseY);
 			m_HoveredEntity = pixelData == -1 ? Entity() : Entity((entt::entity)pixelData, m_ActiveScene.get());
 		}
-
+		// 渲染物理碰撞盒和被选中Entity的边框
 		OnOverlayRender();
 
 		m_Framebuffer->Unbind();
@@ -142,15 +145,10 @@ namespace Hazel {
 	void EditorLayer::OnImGuiRender()
 	{
 		HZ_PROFILE_FUNCTION();
-
-		// Note: Switch this to true to enable dockspace
 		static bool dockspaceOpen = true;
 		static bool opt_fullscreen_persistant = true;
 		bool opt_fullscreen = opt_fullscreen_persistant;
 		static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
-
-		// We are using the ImGuiWindowFlags_NoDocking flag to make the parent window not dockable into,
-		// because it would be confusing to have two docking targets within each others.
 		ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
 		if (opt_fullscreen)
 		{
@@ -163,16 +161,8 @@ namespace Hazel {
 			window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
 			window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
 		}
-
-		// When using ImGuiDockNodeFlags_PassthruCentralNode, DockSpace() will render our background and handle the pass-thru hole, so we ask Begin() to not render a background.
 		if (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode)
 			window_flags |= ImGuiWindowFlags_NoBackground;
-
-		// Important: note that we proceed even if Begin() returns false (aka window is collapsed).
-		// This is because we want to keep our DockSpace() active. If a DockSpace() is inactive, 
-		// all active windows docked into it will lose their parent and become undocked.
-		// We cannot preserve the docking relationship between an active window and an inactive docking, otherwise 
-		// any change of dockspace/settings would lead to windows being stuck in limbo and never being visible.
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 		ImGui::Begin("DockSpace Demo", &dockspaceOpen, window_flags);
 		ImGui::PopStyleVar();
@@ -180,7 +170,6 @@ namespace Hazel {
 		if (opt_fullscreen)
 			ImGui::PopStyleVar(2);
 
-		// DockSpace
 		ImGuiIO& io = ImGui::GetIO();
 		ImGuiStyle& style = ImGui::GetStyle();
 		float minWinSizeX = style.WindowMinSize.x;
@@ -253,7 +242,6 @@ namespace Hazel {
 
 		ImGui::Begin("Settings");
 		ImGui::Checkbox("Show physics colliders", &m_ShowPhysicsColliders);
-
 		ImGui::Image((ImTextureID)s_Font->GetAtlasTexture()->GetRendererID(), { 512,512 }, {0, 1}, {1, 0});
 
 
@@ -269,15 +257,17 @@ namespace Hazel {
 
 		m_ViewportFocused = ImGui::IsWindowFocused();
 		m_ViewportHovered = ImGui::IsWindowHovered();
-
+		// 如果Hovered，ViewPort窗口才处理鼠标键盘事件
 		Application::Get().GetImGuiLayer()->BlockEvents(!m_ViewportHovered);
 
 		ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
 		m_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
-
+		
+		// 渲染颜色纹理 渲染结果都在FBO的颜色纹理上，用ImGui::Image显示出来
 		uint64_t textureID = m_Framebuffer->GetColorAttachmentRendererID();
 		ImGui::Image(reinterpret_cast<void*>(textureID), ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 
+		// 文件拖拽功能
 		if (ImGui::BeginDragDropTarget())
 		{
 			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))

@@ -1,7 +1,7 @@
 include "./vendor/premake/premake_customization/solution_items.lua"
 include "Dependencies.lua"
 
-workspace "Hazel"
+workspace "AAA_GameEngine"
 	architecture "x86_64"
 	startproject "Hazelnut"
 

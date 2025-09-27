@@ -13,6 +13,23 @@ namespace Hazel {
 		return state == GLFW_PRESS;
 	}
 
+	void Input::SetCursorMode(CursorMode mode)
+	{
+		auto* window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
+		switch (mode)
+		{
+		case CursorMode::Normal:
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+			break;
+		case CursorMode::Hidden:
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+			break;
+		case CursorMode::Locked:
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); // 锁定模式（GLFW 专用）
+			break;
+		}
+	}
+
 	bool Input::IsMouseButtonPressed(const MouseCode button)
 	{
 		auto* window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
