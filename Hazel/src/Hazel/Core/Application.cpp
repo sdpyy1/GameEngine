@@ -8,11 +8,15 @@
 
 #include "Hazel/Core/Input.h"
 #include "Hazel/Utils/PlatformUtils.h"
+#include <Platform/Vulkan/VulkanContext.h>
+#include <Platform/Windows/WindowsWindow.h>
 
 namespace Hazel {
 
 	Application* Application::s_Instance = nullptr;
-
+	static void framebufferResizeCallback(GLFWwindow* window, int width, int height) {
+		HZ_CORE_INFO("Vulkan Window Resize  NO HANDLE!!!");
+	}
 	Application::Application(const ApplicationSpecification& specification)
 		: m_Specification(specification)
 	{
@@ -28,6 +32,16 @@ namespace Hazel {
 		m_Window = Window::Create(WindowProps(m_Specification.Name));
 		// 这里设置了把glfw接收到的事件转移到了Application的OnEvent函数中
 		m_Window->SetEventCallback(HZ_BIND_EVENT_FN(Application::OnEvent));
+
+		// TODO:临时检测Vulkan初始化的正常不正常
+		glfwInit();
+		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+		GLFWwindow*  vulkanWindow = glfwCreateWindow(800, 600, "Vulkan", nullptr, nullptr);
+		glfwSetWindowUserPointer(vulkanWindow, this);
+		glfwSetFramebufferSizeCallback(vulkanWindow, framebufferResizeCallback);
+		VulkanContext vulkanContext = VulkanContext(vulkanWindow);
+		vulkanContext.Init();
+
 
 		Renderer::Init();
 

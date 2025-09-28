@@ -47,9 +47,14 @@ project "Hazel"
 		"%{IncludeDir.mono}",
 		"%{IncludeDir.yaml_cpp}",
 		"%{IncludeDir.ImGuizmo}",
-		"%{IncludeDir.VulkanSDK}"
+		"%{IncludeDir.VulkanSDK}/Include"
 	}
+	print("Vulkan 库路径: " .. IncludeDir.VulkanSDK .. "/Lib")
 
+	libdirs
+	{
+		"%{IncludeDir.VulkanSDK}/Lib"
+	}
 	links
 	{
 		"Box2D",
@@ -59,7 +64,7 @@ project "Hazel"
 		"msdf-atlas-gen",
 		"yaml-cpp",
 		"opengl32.lib",
-
+		"vulkan-1.lib",
 		"%{Library.mono}",
 	}
 

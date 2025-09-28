@@ -58,3 +58,16 @@ inline OStream& operator<<(OStream& os, glm::qua<T, Q> quaternion)
 #define HZ_WARN(...)          ::Hazel::Log::GetClientLogger()->warn(__VA_ARGS__)
 #define HZ_ERROR(...)         ::Hazel::Log::GetClientLogger()->error(__VA_ARGS__)
 #define HZ_CRITICAL(...)      ::Hazel::Log::GetClientLogger()->critical(__VA_ARGS__)
+// 临时修改：忽略tag参数，复用无标签宏的实现
+#define HZ_CORE_TRACE_TAG(tag, ...) HZ_CORE_TRACE(__VA_ARGS__)
+#define HZ_CORE_INFO_TAG(tag, ...)  HZ_CORE_INFO(__VA_ARGS__)
+#define HZ_CORE_WARN_TAG(tag, ...)  HZ_CORE_WARN(__VA_ARGS__)
+#define HZ_CORE_ERROR_TAG(tag, ...) HZ_CORE_ERROR(__VA_ARGS__)
+#define HZ_CORE_FATAL_TAG(tag, ...) HZ_CORE_CRITICAL(__VA_ARGS__)  // 注意原宏中CORE_CRITICAL对应Fatal级别
+
+// Client logging
+#define HZ_TRACE_TAG(tag, ...) HZ_TRACE(__VA_ARGS__)
+#define HZ_INFO_TAG(tag, ...)  HZ_INFO(__VA_ARGS__)
+#define HZ_WARN_TAG(tag, ...)  HZ_WARN(__VA_ARGS__)
+#define HZ_ERROR_TAG(tag, ...) HZ_ERROR(__VA_ARGS__)
+#define HZ_FATAL_TAG(tag, ...) HZ_CRITICAL(__VA_ARGS__)  // 注意原宏中CLIENT_CRITICAL对应Fatal级别

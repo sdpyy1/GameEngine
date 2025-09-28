@@ -7,7 +7,7 @@
 
 namespace Hazel {
 
-	Scope<GraphicsContext> GraphicsContext::Create(void* window)
+	Scope<RenderContext> RenderContext::Create(void* window)
 	{
 		switch (Renderer::GetAPI())
 		{
