@@ -21,6 +21,29 @@ namespace Hazel {
 		void createSwapChain();
 		void createImageViewsForSwapChain();
 		void createCommandPool();
+		void createDescriptorPool();
+		// TODO: 只是先跑通
+		void createDepthResources();
+		void createRenderPass();
+		void createDescriptorSetLayout();
+		void createGraphicsPipeline();
+		void createFramebuffers();
+
+		// Temp: 装数据
+		void createTextureImage();
+		void createVertexBuffer();
+		void createTextureSampler();
+		void createIndexBuffer();
+		void createUniformBuffers();
+		void createDescriptorSets();
+		void createCommandBuffers();
+		void createSyncObjects();
+	protected:
+		void recreateSwapChain();
+		void cleanupSwapChain();
+		void createImageViews();
+		void updateUniformBuffer(uint32_t currentImage);
+		void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
 	private:
 		VkInstance instance;
 		GLFWwindow* window = nullptr;
@@ -36,6 +59,35 @@ namespace Hazel {
 		VkExtent2D swapChainExtent; // Height And Width of SwapChain
 		std::vector<VkImageView> swapChainImageViews;
 		VkCommandPool commandPool;
+		VkDescriptorPool descriptorPool;
+
+		// TODO: 
+		VkDescriptorSetLayout descriptorSetLayout;
+		VkRenderPass renderPass;
+		VkPipelineLayout pipelineLayout;
+		VkPipeline graphicsPipeline;
+		VkImage depthImage;
+		VkDeviceMemory depthImageMemory;
+		VkImageView depthImageView;
+		std::vector<VkFramebuffer> swapChainFramebuffers;
+		VkImage textureImage;
+		VkDeviceMemory textureImageMemory;
+		VkImageView textureImageView;
+		VkSampler textureSampler;
+		VkBuffer vertexBuffer;
+		VkDeviceMemory vertexBufferMemory;
+		VkBuffer indexBuffer;
+		VkDeviceMemory indexBufferMemory;
+		std::vector<VkBuffer> uniformBuffers;
+		std::vector<VkDeviceMemory> uniformBuffersMemory;
+		std::vector<void*> uniformBuffersMapped;
+		std::vector<VkDescriptorSet> descriptorSets;
+		std::vector<VkCommandBuffer> commandBuffers;
+		std::vector<VkSemaphore> imageAvailableSemaphores;
+		std::vector<VkSemaphore> renderFinishedSemaphores;
+		std::vector<VkFence> inFlightFences;
+		uint32_t currentFrame = 0;
+		bool framebufferResized = false;
 
 	};
 }
