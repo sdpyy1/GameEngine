@@ -18,8 +18,8 @@ project "Hazel"
 		"vendor/stb_image/**.cpp",
 		"vendor/glm/glm/**.hpp",
 		"vendor/glm/glm/**.inl",
-		"vendor/VulkanMemoryAllocator/**.h",
-		"vendor/VulkanMemoryAllocator/**.cpp",
+		"vendor/VMA/VulkanMemoryAllocator/**.h",
+		"vendor/VMA/VulkanMemoryAllocator/**.cpp",
 		"vendor/ImGuizmo/ImGuizmo.h",
 		"vendor/ImGuizmo/ImGuizmo.cpp"
 	}
@@ -47,9 +47,9 @@ project "Hazel"
 		"%{IncludeDir.mono}",
 		"%{IncludeDir.yaml_cpp}",
 		"%{IncludeDir.ImGuizmo}",
+		"%{IncludeDir.VMA}",
 		"%{IncludeDir.VulkanSDK}/Include"
 	}
-	print("Vulkan 库路径: " .. IncludeDir.VulkanSDK .. "/Lib")
 
 	libdirs
 	{

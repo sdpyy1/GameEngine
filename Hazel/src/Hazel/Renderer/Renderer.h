@@ -5,7 +5,7 @@
 #include "Hazel/Renderer/OrthographicCamera.h"
 #include "Hazel/Renderer/Shader.h"
 #include "GraphicsContext.h"
-
+#include "Hazel/Core/Application.h"
 namespace Hazel {
 
 	class Renderer
@@ -27,7 +27,6 @@ namespace Hazel {
 		{
 			glm::mat4 ViewProjectionMatrix;
 		};
-
 		static Scope<SceneData> s_SceneData;
 	};
 }

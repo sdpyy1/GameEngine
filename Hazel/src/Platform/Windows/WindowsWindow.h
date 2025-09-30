@@ -29,7 +29,6 @@ namespace Hazel {
 		virtual void Shutdown();
 	private:
 		GLFWwindow* m_Window;
-		Scope<RenderContext> m_Context;
 
 		struct WindowData
 		{
@@ -39,7 +38,7 @@ namespace Hazel {
 
 			EventCallbackFn EventCallback;
 		};
-
+		Scope<RenderContext> m_Context;
 		WindowData m_Data;
 	};
 

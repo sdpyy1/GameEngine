@@ -7,10 +7,10 @@
 #include "Hazel/Events/Event.h"
 #include "Hazel/Events/ApplicationEvent.h"
 
+
 #include "Hazel/Core/Timestep.h"
 
 #include "Hazel/ImGui/ImGuiLayer.h"
-
 int main(int argc, char** argv);
 
 namespace Hazel {
@@ -33,7 +33,7 @@ namespace Hazel {
 		std::string WorkingDirectory;
 		ApplicationCommandLineArgs CommandLineArgs;
 	};
-
+	class VulkanContext;
 	class Application
 	{
 	public:
@@ -52,7 +52,7 @@ namespace Hazel {
 		ImGuiLayer* GetImGuiLayer() { return m_ImGuiLayer; }
 
 		static Application& Get() { return *s_Instance; }
-
+		VulkanContext *GetRenderContext() { return tempVulkanContext; }
 		const ApplicationSpecification& GetSpecification() const { return m_Specification; }
 
 		void SubmitToMainThread(const std::function<void()>& function);
@@ -76,6 +76,7 @@ namespace Hazel {
 	private:
 		static Application* s_Instance;
 		friend int ::main(int argc, char** argv);
+		VulkanContext *tempVulkanContext;  // ¡Ÿ ±¥Ê¥¢VulkanContext
 	};
 
 	// To be defined in CLIENT

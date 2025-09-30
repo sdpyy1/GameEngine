@@ -4,6 +4,7 @@
 #include "Hazel/Renderer/Renderer.h"
 #include "Platform/OpenGL/OpenGLContext.h"
 #include "Platform/Vulkan/VulkanContext.h"
+#include <Hazel/Core/Application.h>
 
 namespace Hazel {
 

@@ -5,10 +5,10 @@
 
 #include "Hazel/Renderer/Renderer.h"
 #include "Hazel/Scripting/ScriptEngine.h"
+#include <Platform/Vulkan/VulkanContext.h>
 
 #include "Hazel/Core/Input.h"
 #include "Hazel/Utils/PlatformUtils.h"
-#include <Platform/Vulkan/VulkanContext.h>
 #include <Platform/Windows/WindowsWindow.h>
 
 namespace Hazel {
@@ -39,8 +39,8 @@ namespace Hazel {
 		GLFWwindow*  vulkanWindow = glfwCreateWindow(800, 600, "Vulkan", nullptr, nullptr);
 		glfwSetWindowUserPointer(vulkanWindow, this);
 		glfwSetFramebufferSizeCallback(vulkanWindow, framebufferResizeCallback);
-		VulkanContext vulkanContext = VulkanContext(vulkanWindow);
-		vulkanContext.Init();
+		tempVulkanContext = new VulkanContext(vulkanWindow);
+		tempVulkanContext->Init();
 
 
 		Renderer::Init();
