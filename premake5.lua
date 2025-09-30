@@ -32,7 +32,7 @@ group "Dependencies"
 	include "Hazel/vendor/msdf-atlas-gen"
 	include "Hazel/vendor/imgui"
 	include "Hazel/vendor/yaml-cpp"
-
+	include "Hazel/vendor/NFD-Extended"
 group ""
 
 group "Misc"

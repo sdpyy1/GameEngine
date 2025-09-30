@@ -48,7 +48,9 @@ project "Hazel"
 		"%{IncludeDir.yaml_cpp}",
 		"%{IncludeDir.ImGuizmo}",
 		"%{IncludeDir.VMA}",
-		"%{IncludeDir.VulkanSDK}/Include"
+		"%{IncludeDir.VulkanSDK}/Include",
+		"%{IncludeDir.choc}",
+		"%{IncludeDir.nfd}"
 	}
 
 	libdirs
@@ -66,6 +68,7 @@ project "Hazel"
 		"opengl32.lib",
 		"vulkan-1.lib",
 		"%{Library.mono}",
+		"NFD-Extended"
 	}
 
 	filter "files:vendor/ImGuizmo/**.cpp"

@@ -51,3 +51,4 @@ namespace Hazel {
 				Flags &= ~(uint16_t)flag;
 		}
 	};
+}

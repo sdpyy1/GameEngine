@@ -5,6 +5,7 @@ namespace Hazel {
 	class VulkanRenderAPI : public RendererAPI
 	{
 		virtual void Init() override;
+		virtual void Clear() override;
 
 	};
 }

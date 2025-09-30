@@ -1,6 +1,7 @@
 #include "hzpch.h"
 #include "Hazel/Renderer/Renderer.h"
 #include "Hazel/Renderer/Renderer2D.h"
+#include "Platform/Vulkan/VulkanRenderAPI.h"
 
 namespace Hazel {
 
@@ -19,7 +20,7 @@ namespace Hazel {
 	{
 		switch (RendererAPI::GetAPI())
 		{
-			case RendererAPI::RenderAPI::Vulkan: return new VulkanRenderer();
+			//case RendererAPI::RenderAPI::Vulkan: return new VulkanRenderAPI();
 		}
 		HZ_CORE_ASSERT(false, "Unknown RendererAPI");
 		return nullptr;

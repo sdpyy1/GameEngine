@@ -14,6 +14,8 @@ IncludeDir["ImGui"] = "%{wks.location}/Hazel/vendor/ImGui"
 IncludeDir["ImGuizmo"] = "%{wks.location}/Hazel/vendor/ImGuizmo"
 IncludeDir["glm"] = "%{wks.location}/Hazel/vendor/glm"
 IncludeDir["VMA"] = "%{wks.location}/Hazel/vendor/VMA"
+IncludeDir["choc"] = "%{wks.location}/Hazel/vendor/choc"
+IncludeDir["nfd"] = "%{wks.location}/Hazel/vendor/NFD-Extended/NFD-Extended/src/include"
 
 IncludeDir["entt"] = "%{wks.location}/Hazel/vendor/entt/include"
 IncludeDir["mono"] = "%{wks.location}/Hazel/vendor/mono/include"
