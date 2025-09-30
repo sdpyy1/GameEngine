@@ -21,7 +21,9 @@ project "Hazelnut"
 		"%{IncludeDir.entt}",
 		"%{IncludeDir.filewatch}",
 		"%{IncludeDir.glm}",
-		"%{IncludeDir.ImGuizmo}"
+		"%{IncludeDir.ImGuizmo}",
+		"%{IncludeDir.VulkanSDK}/Include",
+
 	}
 
 	links

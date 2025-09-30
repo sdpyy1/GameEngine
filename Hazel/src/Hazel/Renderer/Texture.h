@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Hazel/Core/Base.h"
+#include "Hazel/Renderer/RendererResource.h"
 
 #include <string>
 
@@ -23,10 +24,10 @@ namespace Hazel {
 		bool GenerateMips = true;
 	};
 
-	class Texture
+	class Texture : public RendererResource
 	{
 	public:
-		virtual ~Texture() = default;
+		virtual ~Texture() {}
 
 		virtual const TextureSpecification& GetSpecification() const = 0;
 

@@ -20,7 +20,7 @@ namespace Hazel {
 	}
 	void VulkanContext::CreateDevice()
 	{
-		m_PhysicalDevice = VulkanPhysicalDevice::Select();
+		m_PhysicalDevice = VulkanPhysicalDevice::Select(m_Instance);
 		HZ_CORE_INFO("Select PhysicalDevice: {0}",m_PhysicalDevice->getDeviceName());
 		VkPhysicalDeviceFeatures enabledFeatures;
 		memset(&enabledFeatures, 0, sizeof(VkPhysicalDeviceFeatures));
@@ -74,11 +74,11 @@ namespace Hazel {
 		}
 
 		// 创建实例
-		if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS) {
+		if (vkCreateInstance(&createInfo, nullptr, &m_Instance) != VK_SUCCESS) {
 			throw std::runtime_error("failed to create instance!");
 		}
 		// 加载Debug Utils扩展函数
-		VkUtils::VulkanLoadDebugUtilsExtensions(this->instance);
+		VkUtils::VulkanLoadDebugUtilsExtensions(this->m_Instance);
 		if (enableValidationLayers) {
 			// 创建Debug Messenger
 			VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo;
@@ -87,7 +87,7 @@ namespace Hazel {
 			debugCreateInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
 			debugCreateInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
 			debugCreateInfo.pfnUserCallback = VkUtils::debugCallback;
-			if (VkUtils::CreateDebugUtilsMessengerEXT(instance, &debugCreateInfo, nullptr, &debugMessenger) != VK_SUCCESS) {
+			if (VkUtils::CreateDebugUtilsMessengerEXT(m_Instance, &debugCreateInfo, nullptr, &debugMessenger) != VK_SUCCESS) {
 				throw std::runtime_error("failed to set up debug messenger!");
 			}
 		}

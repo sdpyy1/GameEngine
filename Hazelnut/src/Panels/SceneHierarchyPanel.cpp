@@ -28,7 +28,7 @@ namespace Hazel {
 
 	void SceneHierarchyPanel::SetContext(const Ref<Scene>& context)
 	{
-		m_Context = context;
+		m_RenderContext = context;
 		m_SelectionContext = {};
 	}
 
@@ -36,11 +36,11 @@ namespace Hazel {
 	{
 		ImGui::Begin("Scene Hierarchy");
 
-		if (m_Context)
+		if (m_RenderContext)
 		{
-			m_Context->m_Registry.each([&](auto entityID)
+			m_RenderContext->m_Registry.each([&](auto entityID)
 				{
-					Entity entity{ entityID , m_Context.get() };
+					Entity entity{ entityID , m_RenderContext.get() };
 					DrawEntityNode(entity);
 				});
 
@@ -51,7 +51,7 @@ namespace Hazel {
 			if (ImGui::BeginPopupContextWindow(0, 1, false))
 			{
 				if (ImGui::MenuItem("Create Empty Entity"))
-					m_Context->CreateEntity("Empty Entity");
+					m_RenderContext->CreateEntity("Empty Entity");
 
 				ImGui::EndPopup();
 			}
@@ -105,7 +105,7 @@ namespace Hazel {
 
 		if (entityDeleted)
 		{
-			m_Context->DestroyEntity(entity);
+			m_RenderContext->DestroyEntity(entity);
 			if (m_SelectionContext == entity)
 				m_SelectionContext = {};
 		}
@@ -323,7 +323,7 @@ namespace Hazel {
 			}
 		});
 
-		DrawComponent<ScriptComponent>("Script", entity, [entity, scene = m_Context](auto& component) mutable
+		DrawComponent<ScriptComponent>("Script", entity, [entity, scene = m_RenderContext](auto& component) mutable
 		{
 			bool scriptClassExists = ScriptEngine::EntityClassExists(component.ClassName);
 

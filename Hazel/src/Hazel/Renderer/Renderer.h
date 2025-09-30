@@ -6,11 +6,13 @@
 #include "Hazel/Renderer/Shader.h"
 #include "GraphicsContext.h"
 #include "Hazel/Core/Application.h"
+#include "RendererConfig.h"
 namespace Hazel {
 
 	class Renderer
 	{
 	public:
+		static RendererConfig& GetConfig();
 		static void Init();
 		static void Shutdown();
 		
@@ -21,7 +23,7 @@ namespace Hazel {
 
 		static void Submit(const Ref<Shader>& shader, const Ref<VertexArray>& vertexArray, const glm::mat4& transform = glm::mat4(1.0f));
 
-		static RendererAPI::API GetAPI() { return RendererAPI::GetAPI(); }
+		static RendererAPI::RenderAPI GetAPI() { return RendererAPI::GetAPI(); }
 	private:
 		struct SceneData
 		{

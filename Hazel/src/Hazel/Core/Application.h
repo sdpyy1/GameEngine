@@ -11,6 +11,7 @@
 #include "Hazel/Core/Timestep.h"
 
 #include "Hazel/ImGui/ImGuiLayer.h"
+#include <Platform/Windows/WindowsWindow.h>
 int main(int argc, char** argv);
 
 namespace Hazel {
@@ -45,14 +46,14 @@ namespace Hazel {
 		void PushLayer(Layer* layer);
 		void PushOverlay(Layer* layer);
 
-		Window& GetWindow() { return *m_Window; }
+		WindowsWindow& GetWindow() { return *(WindowsWindow*) (m_Window.get()); }
 
 		void Close();
 
 		ImGuiLayer* GetImGuiLayer() { return m_ImGuiLayer; }
 
 		static Application& Get() { return *s_Instance; }
-		VulkanContext *GetRenderContext() { return tempVulkanContext; }
+		Ref<RenderContext> GetRenderContext() { return GetWindow().GetRenderContext(); }
 		const ApplicationSpecification& GetSpecification() const { return m_Specification; }
 
 		void SubmitToMainThread(const std::function<void()>& function);

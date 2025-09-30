@@ -25,7 +25,7 @@ namespace Hazel {
 		void DrawEntityNode(Entity entity);
 		void DrawComponents(Entity entity);
 	private:
-		Ref<Scene> m_Context;
+		Ref<Scene> m_RenderContext;
 		Entity m_SelectionContext;
 	};
 

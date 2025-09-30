@@ -2,9 +2,8 @@
 
 #include "Hazel/Core/Window.h"
 #include "Hazel/Renderer/GraphicsContext.h"
-
-#include <GLFW/glfw3.h>
-
+#include <Platform/Vulkan/VulkanSwapChain.h>
+struct GLFWcursor;
 namespace Hazel {
 
 	class WindowsWindow : public Window
@@ -22,11 +21,14 @@ namespace Hazel {
 		void SetEventCallback(const EventCallbackFn& callback) override { m_Data.EventCallback = callback; }
 		void SetVSync(bool enabled) override;
 		bool IsVSync() const override;
+		virtual VulkanSwapChain& GetSwapChain();
 
 		virtual void* GetNativeWindow() const { return m_Window; }
 	private:
 		virtual void Init(const WindowProps& props);
 		virtual void Shutdown();
+
+
 	private:
 		GLFWwindow* m_Window;
 
@@ -38,7 +40,9 @@ namespace Hazel {
 
 			EventCallbackFn EventCallback;
 		};
-		Scope<RenderContext> m_Context;
+		VulkanSwapChain* m_SwapChain;
+		GLFWcursor* m_ImGuiMouseCursors[9] = { 0 };
+
 		WindowData m_Data;
 	};
 

@@ -10,6 +10,9 @@
 #include "Hazel/Renderer/Renderer.h"
 
 #include "Platform/OpenGL/OpenGLContext.h"
+#include "Platform/Vulkan/VulkanContext.h"
+#include <imgui.h>
+#include <GLFW/glfw3.h>
 
 namespace Hazel {
 	
@@ -55,15 +58,32 @@ namespace Hazel {
 		{
 			HZ_PROFILE_SCOPE("glfwCreateWindow");
 		#if defined(HZ_DEBUG)
-			if (Renderer::GetAPI() == RendererAPI::API::OpenGL)
+			if (Renderer::GetAPI() == RendererAPI::RenderAPI::OpenGL)
 				glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
 		#endif
+			if (Renderer::GetAPI() == RendererAPI::RenderAPI::Vulkan)
+				glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+
 			m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
 			++s_GLFWWindowCount;
 		}
+		HZ_CORE_INFO("Create GLFW Window Done!");
 
-		m_Context = RenderContext::Create(m_Window);
-		m_Context->Init();
+		// RenderContext
+		m_RenderContext = RenderContext::Create(m_Window);
+		m_RenderContext->Init();
+		HZ_CORE_INFO("RenderContext Init Done!");
+
+		// SwapChain For Vulkan
+		if (Renderer::GetAPI() == RendererAPI::RenderAPI::Vulkan) {
+			Ref<VulkanContext> context = std::dynamic_pointer_cast<VulkanContext>(m_RenderContext);
+
+			m_SwapChain = new VulkanSwapChain(context->GetInstanceNative(), context->GetDeviceNative());
+			m_SwapChain->InitSurface(m_Window);
+
+			m_SwapChain->Create(&m_Data.Width, &m_Data.Height, true); // TODO: VSyncÐ´ËÀ
+			HZ_CORE_INFO("Create Vulkan SwapChain Done!");
+		}
 
 		glfwSetWindowUserPointer(m_Window, &m_Data);
 		SetVSync(true);
@@ -157,6 +177,30 @@ namespace Hazel {
 			MouseMovedEvent event((float)xPos, (float)yPos);
 			data.EventCallback(event);
 		});
+		glfwSetWindowIconifyCallback(m_Window, [](GLFWwindow* window, int iconified)
+			{
+				auto& data = *((WindowData*)glfwGetWindowUserPointer(window));
+				WindowMinimizeEvent event((bool)iconified);
+				data.EventCallback(event);
+			});
+
+		m_ImGuiMouseCursors[ImGuiMouseCursor_Arrow] = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
+		m_ImGuiMouseCursors[ImGuiMouseCursor_TextInput] = glfwCreateStandardCursor(GLFW_IBEAM_CURSOR);
+		m_ImGuiMouseCursors[ImGuiMouseCursor_ResizeAll] = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);   // FIXME: GLFW doesn't have this.
+		m_ImGuiMouseCursors[ImGuiMouseCursor_ResizeNS] = glfwCreateStandardCursor(GLFW_VRESIZE_CURSOR);
+		m_ImGuiMouseCursors[ImGuiMouseCursor_ResizeEW] = glfwCreateStandardCursor(GLFW_HRESIZE_CURSOR);
+		m_ImGuiMouseCursors[ImGuiMouseCursor_ResizeNESW] = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);  // FIXME: GLFW doesn't have this.
+		m_ImGuiMouseCursors[ImGuiMouseCursor_ResizeNWSE] = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);  // FIXME: GLFW doesn't have this.
+		m_ImGuiMouseCursors[ImGuiMouseCursor_Hand] = glfwCreateStandardCursor(GLFW_HAND_CURSOR);
+
+		// Update window size to actual size
+		{
+			int width, height;
+			glfwGetWindowSize(m_Window, &width, &height);
+			m_Data.Width = width;
+			m_Data.Height = height;
+		}
+
 	}
 
 	void WindowsWindow::Shutdown()
@@ -172,24 +216,34 @@ namespace Hazel {
 		}
 	}
 
+	VulkanSwapChain& WindowsWindow::GetSwapChain()
+	{
+		return *m_SwapChain;
+	}
+
 	void WindowsWindow::OnUpdate()
 	{
 		HZ_PROFILE_FUNCTION();
 
 		glfwPollEvents();
-		m_Context->SwapBuffers();
+		m_RenderContext->SwapBuffers();
 	}
 
 	void WindowsWindow::SetVSync(bool enabled)
 	{
 		HZ_PROFILE_FUNCTION();
+		if (Renderer::GetAPI() == RendererAPI::RenderAPI::OpenGL) {
+			if (enabled)
+				glfwSwapInterval(1);
+			else
+				glfwSwapInterval(0);
 
-		if (enabled)
-			glfwSwapInterval(1);
-		else
-			glfwSwapInterval(0);
-
-		m_Data.VSync = enabled;
+			m_Data.VSync = enabled;
+		}
+		if (Renderer::GetAPI() == RendererAPI::RenderAPI::Vulkan) {
+			HZ_CORE_WARN("TODO: Vulkan SetVSync");
+			m_Data.VSync = false;
+		}	
 	}
 
 	bool WindowsWindow::IsVSync() const

@@ -2486,7 +2486,7 @@ typedef struct VmaAllocatorCreateInfo
 
     Starting from version 3.0.0 this member is no longer optional, it must be set!
     */
-    VkInstance VMA_NOT_NULL instance;
+    VkInstance VMA_NOT_NULL m_Instance;
     /** \brief Optional. The highest version of Vulkan that the application is designed to use.
 
     It must be a value in the format as created by macro `VK_MAKE_VERSION` or a constant like: `VK_API_VERSION_1_1`, `VK_API_VERSION_1_0`.
@@ -2515,7 +2515,7 @@ typedef struct VmaAllocatorInfo
 
     This is the same value as has been passed through VmaAllocatorCreateInfo::instance.
     */
-    VkInstance VMA_NOT_NULL instance;
+    VkInstance VMA_NOT_NULL m_Instance;
     /** \brief Handle to Vulkan physical device object.
 
     This is the same value as has been passed through VmaAllocatorCreateInfo::physicalDevice.
@@ -15971,7 +15971,7 @@ VmaAllocator_T::VmaAllocator_T(const VmaAllocatorCreateInfo* pCreateInfo) :
     m_UseKhrBufferDeviceAddress((pCreateInfo->flags & VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT) != 0),
     m_UseExtMemoryPriority((pCreateInfo->flags & VMA_ALLOCATOR_CREATE_EXT_MEMORY_PRIORITY_BIT) != 0),
     m_hDevice(pCreateInfo->device),
-    m_hInstance(pCreateInfo->instance),
+    m_hInstance(pCreateInfo->m_Instance),
     m_AllocationCallbacksSpecified(pCreateInfo->pAllocationCallbacks != VMA_NULL),
     m_AllocationCallbacks(pCreateInfo->pAllocationCallbacks ?
         *pCreateInfo->pAllocationCallbacks : VmaEmptyAllocationCallbacks),
@@ -16000,7 +16000,7 @@ VmaAllocator_T::VmaAllocator_T(const VmaAllocatorCreateInfo* pCreateInfo) :
         VMA_ASSERT(VMA_DEBUG_MARGIN % sizeof(uint32_t) == 0);
     }
 
-    VMA_ASSERT(pCreateInfo->physicalDevice && pCreateInfo->device && pCreateInfo->instance);
+    VMA_ASSERT(pCreateInfo->physicalDevice && pCreateInfo->device && pCreateInfo->m_Instance);
 
     if(m_VulkanApiVersion < VK_MAKE_VERSION(1, 1, 0))
     {
@@ -18067,7 +18067,7 @@ VMA_CALL_PRE void VMA_CALL_POST vmaDestroyAllocator(
 VMA_CALL_PRE void VMA_CALL_POST vmaGetAllocatorInfo(VmaAllocator allocator, VmaAllocatorInfo* pAllocatorInfo)
 {
     VMA_ASSERT(allocator && pAllocatorInfo);
-    pAllocatorInfo->instance = allocator->m_hInstance;
+    pAllocatorInfo->m_Instance = allocator->m_hInstance;
     pAllocatorInfo->physicalDevice = allocator->GetPhysicalDevice();
     pAllocatorInfo->device = allocator->m_hDevice;
 }

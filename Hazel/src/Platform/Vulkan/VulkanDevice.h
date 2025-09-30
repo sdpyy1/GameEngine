@@ -1,6 +1,7 @@
 #pragma once
 #include "Vulkan.h"
 #include <map>
+#include <unordered_set>
 
 namespace Hazel {
 	class VulkanPhysicalDevice {
@@ -12,7 +13,7 @@ namespace Hazel {
 			int32_t Transfer = -1;
 		};
 	public:
-		VulkanPhysicalDevice();
+		VulkanPhysicalDevice(VkInstance vkInstance);
 		~VulkanPhysicalDevice();
 		VkPhysicalDevice GetVulkanPhysicalDevice() const { return m_PhysicalDevice; }
 		const QueueFamilyIndices& GetQueueFamilyIndices() const { return m_QueueFamilyIndices; }
@@ -20,7 +21,7 @@ namespace Hazel {
 		bool IsExtensionSupported(const std::string& extensionName) const;
 		VkFormat GetDepthFormat() const { return m_DepthFormat; }
 		std::string getDeviceName() { return std::string(m_Properties.deviceName); }
-		static Ref<VulkanPhysicalDevice> Select(); // Create Static PhysicalDevice
+		static Ref<VulkanPhysicalDevice> Select(VkInstance vkInstance); // Create Static PhysicalDevice
 
 	private:
 		VkFormat FindDepthFormat() const;

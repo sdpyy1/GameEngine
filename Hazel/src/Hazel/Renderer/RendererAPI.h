@@ -9,7 +9,7 @@ namespace Hazel {
 	class RendererAPI
 	{
 	public:
-		enum class API
+		enum class RenderAPI
 		{
 			None = 0, OpenGL = 1, Vulkan=2
 		};
@@ -26,10 +26,10 @@ namespace Hazel {
 		
 		virtual void SetLineWidth(float width) = 0;
 
-		static API GetAPI() { return s_API; }
+		static RenderAPI GetAPI() { return s_API; }
 		static Scope<RendererAPI> Create();
 	private:
-		static API s_API;
+		static RenderAPI s_API;
 	};
 
 }

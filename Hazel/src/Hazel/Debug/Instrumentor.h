@@ -97,8 +97,8 @@ namespace Hazel {
 
 		static Instrumentor& Get()
 		{
-			static Instrumentor instance;
-			return instance;
+			static Instrumentor m_Instance;
+			return m_Instance;
 		}
 	private:
 		Instrumentor()

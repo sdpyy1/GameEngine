@@ -5,7 +5,7 @@
 
 namespace Hazel {
 	
-	void OpenGLMessageCallback(
+	static void OpenGLMessageCallback(
 		unsigned source,
 		unsigned type,
 		unsigned id,

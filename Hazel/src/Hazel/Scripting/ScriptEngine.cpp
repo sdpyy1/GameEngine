@@ -297,18 +297,18 @@ namespace Hazel {
 		{
 			UUID entityID = entity.GetUUID();
 
-			Ref<ScriptInstance> instance = CreateRef<ScriptInstance>(s_Data->EntityClasses[sc.ClassName], entity);
-			s_Data->EntityInstances[entityID] = instance;
+			Ref<ScriptInstance> m_Instance = CreateRef<ScriptInstance>(s_Data->EntityClasses[sc.ClassName], entity);
+			s_Data->EntityInstances[entityID] = m_Instance;
 
 			// Copy field values
 			if (s_Data->EntityScriptFields.find(entityID) != s_Data->EntityScriptFields.end())
 			{
 				const ScriptFieldMap& fieldMap = s_Data->EntityScriptFields.at(entityID);
 				for (const auto& [name, fieldInstance] : fieldMap)
-					instance->SetFieldValueInternal(name, fieldInstance.m_Buffer);
+					m_Instance->SetFieldValueInternal(name, fieldInstance.m_Buffer);
 			}
 
-			instance->InvokeOnCreate();
+			m_Instance->InvokeOnCreate();
 		}
 	}
 
@@ -317,8 +317,8 @@ namespace Hazel {
 		UUID entityUUID = entity.GetUUID();
 		if (s_Data->EntityInstances.find(entityUUID) != s_Data->EntityInstances.end())
 		{
-			Ref<ScriptInstance> instance = s_Data->EntityInstances[entityUUID];
-			instance->InvokeOnUpdate((float)ts);
+			Ref<ScriptInstance> m_Instance = s_Data->EntityInstances[entityUUID];
+			m_Instance->InvokeOnUpdate((float)ts);
 		}
 		else
 		{
@@ -451,9 +451,9 @@ namespace Hazel {
 
 	MonoObject* ScriptEngine::InstantiateClass(MonoClass* monoClass)
 	{
-		MonoObject* instance = mono_object_new(s_Data->AppDomain, monoClass);
-		mono_runtime_object_init(instance);
-		return instance;
+		MonoObject* m_Instance = mono_object_new(s_Data->AppDomain, monoClass);
+		mono_runtime_object_init(m_Instance);
+		return m_Instance;
 	}
 
 	ScriptClass::ScriptClass(const std::string& classNamespace, const std::string& className, bool isCore)
@@ -472,10 +472,10 @@ namespace Hazel {
 		return mono_class_get_method_from_name(m_MonoClass, name.c_str(), parameterCount);
 	}
 
-	MonoObject* ScriptClass::InvokeMethod(MonoObject* instance, MonoMethod* method, void** params)
+	MonoObject* ScriptClass::InvokeMethod(MonoObject* m_Instance, MonoMethod* method, void** params)
 	{
 		MonoObject* exception = nullptr;
-		return mono_runtime_invoke(method, instance, params, &exception);
+		return mono_runtime_invoke(method, m_Instance, params, &exception);
 	}
 
 	ScriptInstance::ScriptInstance(Ref<ScriptClass> scriptClass, Entity entity)

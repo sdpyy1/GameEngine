@@ -12,21 +12,23 @@ namespace Hazel {
 	{
 	public:
 		VulkanContext(GLFWwindow* windowHandle);
-		void CheckVersion();
-		void CreateDevice();
 		virtual void Init() override;
 		virtual void SwapBuffers() override;
-		void createPipelineCache();
-		static VulkanContext Get() { return *Application::Get().GetRenderContext(); }
-		static VkInstance GetInstance() { return Get().instance; }
-
-	protected:
+		static Ref<VulkanContext> Get() { return std::dynamic_pointer_cast<VulkanContext>(Application::Get().GetRenderContext()); }
+		static VkInstance GetInstance() { return Get()->GetInstanceNative(); }
+		static Ref<VulkanDevice> GetDevice() { return Get()->GetDeviceNative(); }
+		VkInstance GetInstanceNative() { return m_Instance; }
+		Ref<VulkanDevice> GetDeviceNative() { return m_Device; }
+	private:
 		void createInstance();
+		void createPipelineCache();
+		void CreateDevice();
+		void CheckVersion();
 
 	private:
 		Ref<VulkanPhysicalDevice> m_PhysicalDevice;
 		Ref<VulkanDevice> m_Device;
-		VkInstance instance;
+		VkInstance m_Instance = nullptr;
 		GLFWwindow* window = nullptr;
 		VkDebugUtilsMessengerEXT debugMessenger;
 		VkPipelineCache m_PipelineCache = nullptr;

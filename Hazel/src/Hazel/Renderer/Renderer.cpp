@@ -5,15 +5,25 @@
 namespace Hazel {
 
 	Scope<Renderer::SceneData> Renderer::s_SceneData = CreateScope<Renderer::SceneData>();
+	static RendererConfig s_Config;
 
 	void Renderer::Init()
 	{
 		HZ_PROFILE_FUNCTION();
-
+		s_Config.FramesInFlight = glm::min<uint32_t>(s_Config.FramesInFlight, Application::Get().GetWindow().GetSwapChain().GetImageCount());
+		// 内部就是API的Init
 		RenderCommand::Init();
 		Renderer2D::Init();
 	}
-
+	static RendererAPI* InitRendererAPI()
+	{
+		switch (RendererAPI::GetAPI())
+		{
+			case RendererAPI::RenderAPI::Vulkan: return new VulkanRenderer();
+		}
+		HZ_CORE_ASSERT(false, "Unknown RendererAPI");
+		return nullptr;
+	}
 	void Renderer::Shutdown()
 	{
 		Renderer2D::Shutdown();
@@ -42,5 +52,8 @@ namespace Hazel {
 		vertexArray->Bind();
 		RenderCommand::DrawIndexed(vertexArray);
 	}
-
+	RendererConfig& Renderer::GetConfig()
+	{
+		return s_Config;
+	}
 }

@@ -3,7 +3,7 @@
 #include "VulkanUtils.h"
 #include <GLFW/glfw3.h>
 #include <spdlog/fmt/ostr.h>
-
+#include "Hazel/Renderer/Renderer.h"
 static PFN_vkGetPhysicalDeviceSurfaceSupportKHR fpGetPhysicalDeviceSurfaceSupportKHR;
 static PFN_vkGetPhysicalDeviceSurfaceCapabilitiesKHR fpGetPhysicalDeviceSurfaceCapabilitiesKHR;
 static PFN_vkGetPhysicalDeviceSurfaceFormatsKHR fpGetPhysicalDeviceSurfaceFormatsKHR;
@@ -29,13 +29,13 @@ namespace Hazel
 		GET_DEVICE_PROC_ADDR(vulkanDevice, AcquireNextImageKHR);
 		GET_DEVICE_PROC_ADDR(vulkanDevice, QueuePresentKHR);
 
-		GET_INSTANCE_PROC_ADDR(instance, GetPhysicalDeviceSurfaceSupportKHR);
-		GET_INSTANCE_PROC_ADDR(instance, GetPhysicalDeviceSurfaceCapabilitiesKHR);
-		GET_INSTANCE_PROC_ADDR(instance, GetPhysicalDeviceSurfaceFormatsKHR);
-		GET_INSTANCE_PROC_ADDR(instance, GetPhysicalDeviceSurfacePresentModesKHR);
+		GET_INSTANCE_PROC_ADDR(m_Instance, GetPhysicalDeviceSurfaceSupportKHR);
+		GET_INSTANCE_PROC_ADDR(m_Instance, GetPhysicalDeviceSurfaceCapabilitiesKHR);
+		GET_INSTANCE_PROC_ADDR(m_Instance, GetPhysicalDeviceSurfaceFormatsKHR);
+		GET_INSTANCE_PROC_ADDR(m_Instance, GetPhysicalDeviceSurfacePresentModesKHR);
 
-		GET_INSTANCE_PROC_ADDR(instance, CmdSetCheckpointNV);
-		GET_INSTANCE_PROC_ADDR(instance, GetQueueCheckpointDataNV);
+		GET_INSTANCE_PROC_ADDR(m_Instance, CmdSetCheckpointNV);
+		GET_INSTANCE_PROC_ADDR(m_Instance, GetQueueCheckpointDataNV);
 	}
 	void VulkanSwapChain::BeginFrame() {
 
@@ -361,8 +361,7 @@ namespace Hazel
 			}
 		}
 
-		//auto framesInFlight = Renderer::GetConfig().FramesInFlight;
-		auto framesInFlight = 3;  // TODO:œ»–¥À¿3
+		auto framesInFlight = Renderer::GetConfig().FramesInFlight;
 		if (m_ImageAvailableSemaphores.size() != framesInFlight)
 		{
 			m_ImageAvailableSemaphores.resize(framesInFlight);
@@ -565,8 +564,8 @@ namespace Hazel
 
 	uint32_t VulkanSwapChain::AcquireNextImage()
 	{
-		//m_CurrentFrameIndex = (m_CurrentFrameIndex + 1) % Renderer::GetConfig().FramesInFlight;
-		m_CurrentFrameIndex = (m_CurrentFrameIndex + 1) % 3; // TODO:œ»–¥À¿3
+		m_CurrentFrameIndex = (m_CurrentFrameIndex + 1) % Renderer::GetConfig().FramesInFlight;
+
 
 		// Make sure the frame we're requesting has finished rendering (from previous iterations)
 		{

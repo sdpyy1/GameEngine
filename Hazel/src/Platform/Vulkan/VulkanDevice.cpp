@@ -3,9 +3,8 @@
 #include "VulkanContext.h"
 namespace Hazel
 {
-	VulkanPhysicalDevice::VulkanPhysicalDevice()
+	VulkanPhysicalDevice::VulkanPhysicalDevice(VkInstance vkInstance)
 	{
-		VkInstance vkInstance = VulkanContext::GetInstance();
 		uint32_t gpuCount = 0;
 		// Get number of available physical devices
 		vkEnumeratePhysicalDevices(vkInstance, &gpuCount, nullptr);
@@ -168,9 +167,9 @@ namespace Hazel
 	{
 		return m_SupportedExtensions.find(extensionName) != m_SupportedExtensions.end();
 	}
-	Ref<VulkanPhysicalDevice> VulkanPhysicalDevice::Select()
+	Ref<VulkanPhysicalDevice> VulkanPhysicalDevice::Select(VkInstance vkInstance)
 	{
-		return CreateRef<VulkanPhysicalDevice>();
+		return CreateRef<VulkanPhysicalDevice>(vkInstance);
 	}
 	Ref<VulkanDevice> VulkanDevice::Create(const Ref<VulkanPhysicalDevice>& physicalDevice, VkPhysicalDeviceFeatures enabledFeatures)
 	{

@@ -77,7 +77,7 @@ namespace Hazel {
 
 		MonoObject* Instantiate();
 		MonoMethod* GetMethod(const std::string& name, int parameterCount);
-		MonoObject* InvokeMethod(MonoObject* instance, MonoMethod* method, void** params = nullptr);
+		MonoObject* InvokeMethod(MonoObject* m_Instance, MonoMethod* method, void** params = nullptr);
 
 		const std::map<std::string, ScriptField>& GetFields() const { return m_Fields; }
 	private:
