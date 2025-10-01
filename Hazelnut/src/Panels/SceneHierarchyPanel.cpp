@@ -413,7 +413,7 @@ namespace Hazel {
 					const wchar_t* path = (const wchar_t*)payload->Data;
 					std::filesystem::path texturePath(path);
 					TextureSpecification a;
-					Ref_old<Texture2D> texture = Texture2D::Create(a,texturePath.string());
+					Ref_old<Texture2D> texture = Texture2D::Create_old(a,texturePath.string());
 					if (texture->IsLoaded())
 						component.Texture = texture;
 					else

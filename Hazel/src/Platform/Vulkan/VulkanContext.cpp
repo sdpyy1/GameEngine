@@ -3,6 +3,7 @@
 #include <GLFW/glfw3.h>
 #include <stb_image.h>
 #include "VulkanUtils.h"
+#include "VulkanAllocator.h"
 namespace Hazel {
 	VulkanContext::VulkanContext(GLFWwindow* window)
 		: window(window)
@@ -17,6 +18,9 @@ namespace Hazel {
 		createInstance(); 
 		CreateDevice();
 		createPipelineCache();
+		VulkanAllocator::Init(m_Device,m_Instance);
+		// 加载Debug Utils扩展函数
+		VKUtils::VulkanLoadDebugUtilsExtensions(m_Instance, m_Device->GetVulkanDevice());
 	}
 	void VulkanContext::CreateDevice()
 	{
@@ -30,70 +34,86 @@ namespace Hazel {
 		enabledFeatures.independentBlend = true;
 		enabledFeatures.pipelineStatisticsQuery = true;
 		enabledFeatures.shaderStorageImageReadWithoutFormat = true;
-		m_Device = VulkanDevice::Create(m_PhysicalDevice, enabledFeatures);
+		m_Device = VulkanDevice::Create_old(m_PhysicalDevice, enabledFeatures);
 		HZ_CORE_INFO("Create LogicDevice");
 	}
 
 	void VulkanContext::createInstance() {
-		// App信息  可选
-		VkApplicationInfo appInfo{};
+		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				// Application Info
+				/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		VkApplicationInfo appInfo = {};
 		appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-		appInfo.pApplicationName = "MyGameEngine";
-		appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-		appInfo.pEngineName = "No Engine";
-		appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-		appInfo.apiVersion = VK_API_VERSION_1_0;
+		appInfo.pApplicationName = "Hazel";
+		appInfo.pEngineName = "Hazel";
+		appInfo.apiVersion = VK_API_VERSION_1_2;
 
-		// 创建信息
-		VkInstanceCreateInfo createInfo{};
-		createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-		createInfo.pApplicationInfo = &appInfo;
+		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		// Extensions and Validation
+		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// TODO(Emily): GLFW can handle this for us
+#ifdef HZ_PLATFORM_WINDOWS
+#define VK_KHR_WIN32_SURFACE_EXTENSION_NAME "VK_KHR_win32_surface"
+#elif defined(HZ_PLATFORM_LINUX)
+#define VK_KHR_WIN32_SURFACE_EXTENSION_NAME "VK_KHR_xcb_surface"
+#endif
+		std::vector<const char*> instanceExtensions = { VK_KHR_SURFACE_EXTENSION_NAME, VK_KHR_WIN32_SURFACE_EXTENSION_NAME };
+		instanceExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME); // Very little performance hit, can be used in Release.
+		if (s_Validation)
+		{
+			instanceExtensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
+			instanceExtensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
+		}
 
-		// 拓展
-		auto extensions = VKUtils::getRequiredExtensions();
-		createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
-		createInfo.ppEnabledExtensionNames = extensions.data();
+		VkValidationFeatureEnableEXT enables[] = { VK_VALIDATION_FEATURE_ENABLE_BEST_PRACTICES_EXT };
+		VkValidationFeaturesEXT features = {};
+		features.sType = VK_STRUCTURE_TYPE_VALIDATION_FEATURES_EXT;
+		features.enabledValidationFeatureCount = 1;
+		features.pEnabledValidationFeatures = enables;
 
-		// 验证层写入
-		VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
-		if (enableValidationLayers) {
-			if (enableValidationLayers && !VKUtils::checkValidationLayerSupport()) {
-				HZ_CORE_ASSERT("validation layers requested, but not available!");
+		VkInstanceCreateInfo instanceCreateInfo = {};
+		instanceCreateInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+		instanceCreateInfo.pNext = nullptr; // &features;
+		instanceCreateInfo.pApplicationInfo = &appInfo;
+		instanceCreateInfo.enabledExtensionCount = (uint32_t)instanceExtensions.size();
+		instanceCreateInfo.ppEnabledExtensionNames = instanceExtensions.data();
+
+		// TODO: Extract all validation into separate class
+		if (s_Validation)
+		{
+			const char* validationLayerName = "VK_LAYER_KHRONOS_validation";
+			// Check if this layer is available at instance level
+			uint32_t instanceLayerCount;
+			vkEnumerateInstanceLayerProperties(&instanceLayerCount, nullptr);
+			std::vector<VkLayerProperties> instanceLayerProperties(instanceLayerCount);
+			vkEnumerateInstanceLayerProperties(&instanceLayerCount, instanceLayerProperties.data());
+			bool validationLayerPresent = false;
+			HZ_CORE_INFO_TAG("Renderer", "Vulkan Instance Layers:");
+			for (const VkLayerProperties& layer : instanceLayerProperties)
+			{
+				HZ_CORE_INFO_TAG("Renderer", "  {0}", layer.layerName);
+				if (strcmp(layer.layerName, validationLayerName) == 0)
+				{
+					validationLayerPresent = true;
+					break;
+				}
 			}
-			createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
-			createInfo.ppEnabledLayerNames = validationLayers.data();
-			debugCreateInfo = {};
-			debugCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-			debugCreateInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
-			debugCreateInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-			debugCreateInfo.pfnUserCallback = VKUtils::debugCallback;
-			createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*)&debugCreateInfo;
-		}else {
-			createInfo.enabledLayerCount = 0;
-			createInfo.pNext = nullptr;
-		}
-
-		// 创建实例
-		if (vkCreateInstance(&createInfo, nullptr, &m_Instance) != VK_SUCCESS) {
-			throw std::runtime_error("failed to create instance!");
-		}
-		// 加载Debug Utils扩展函数
-		VKUtils::VulkanLoadDebugUtilsExtensions(this->m_Instance);
-		if (enableValidationLayers) {
-			// 创建Debug Messenger
-			VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo;
-			debugCreateInfo = {};
-			debugCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-			debugCreateInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
-			debugCreateInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-			debugCreateInfo.pfnUserCallback = VKUtils::debugCallback;
-			if (VKUtils::CreateDebugUtilsMessengerEXT(m_Instance, &debugCreateInfo, nullptr, &debugMessenger) != VK_SUCCESS) {
-				throw std::runtime_error("failed to set up debug messenger!");
+			if (validationLayerPresent)
+			{
+				instanceCreateInfo.ppEnabledLayerNames = &validationLayerName;
+				instanceCreateInfo.enabledLayerCount = 1;
+			}
+			else
+			{
+				HZ_CORE_ERROR_TAG("Renderer", "Validation layer VK_LAYER_KHRONOS_validation not present, validation is disabled");
 			}
 		}
-		HZ_CORE_INFO("Create Vulkan instance");
 
-		HZ_CORE_WARN("TODO: VMA impl");
+		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		// Instance and Surface Creation
+		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		vkCreateInstance(&instanceCreateInfo, nullptr, &m_Instance);
+
 	}
 
 	

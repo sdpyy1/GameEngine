@@ -27,7 +27,7 @@ namespace Hazel {
 		virtual void SetLineWidth(float width) = 0;
 
 		static APIType GetAPI() { return s_API; }
-		static Scope<RendererAPI> Create();
+		static Scope<RendererAPI> Create_old();
 	private:
 		static APIType s_API;
 	};

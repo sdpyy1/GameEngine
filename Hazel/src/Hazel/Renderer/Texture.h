@@ -43,10 +43,12 @@ namespace Hazel {
 	class Texture2D : public Texture
 	{
 	public:
-		static Ref_old<Texture2D> Create(const TextureSpecification& specification);
-		static Ref_old<Texture2D> Create(const TextureSpecification& specification, const std::filesystem::path& filepath);
-		static Ref_old<Texture2D> Create(const TextureSpecification& specification, Buffer1 imageData);
-
+		static Ref_old<Texture2D> Create_old(const TextureSpecification& specification);
+		static Ref_old<Texture2D> Create_old(const TextureSpecification& specification, const std::filesystem::path& filepath);
+		static Ref_old<Texture2D> Create_old(const TextureSpecification& specification, Buffer1 imageData);
+		static Ref<Texture2D> Create(const TextureSpecification& specification);
+		static Ref<Texture2D> Create(const TextureSpecification& specification, const std::filesystem::path& filepath);
+		static Ref<Texture2D> Create(const TextureSpecification& specification, Buffer1 imageData);
 		virtual void CreateFromFile(const TextureSpecification& specification, const std::filesystem::path& filepath) = 0;
 		virtual void CreateFromBuffer(const TextureSpecification& specification, Buffer1 data = Buffer1()) = 0;
 		bool  IsLoaded() const { return true; } // 需要删除，瞎写的为了编译
@@ -55,7 +57,7 @@ namespace Hazel {
 		virtual void Resize(const glm::uvec2& size) = 0;
 		virtual void Resize(const uint32_t width, const uint32_t height) = 0;
 
-		virtual Ref_old<Image2D> GetImage() const = 0;
+		virtual Ref<Image2D> GetImage() const = 0;
 		virtual uint32_t GetRendererID() const { return 1; }  // 需要删除，瞎写的为了编译
 
 		virtual void Lock() = 0;
@@ -75,7 +77,7 @@ namespace Hazel {
 	class TextureCube : public Texture
 	{
 	public:
-		static Ref_old<TextureCube> Create(const TextureSpecification& specification, Buffer1 imageData = Buffer1());
+		static Ref_old<TextureCube> Create_old(const TextureSpecification& specification, Buffer1 imageData = Buffer1());
 
 		virtual TextureType GetType() const override { return TextureType::TextureCube; }
 

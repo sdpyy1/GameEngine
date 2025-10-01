@@ -38,6 +38,8 @@ namespace Hazel {
 		static GPUMemoryStats GetStats();
 
 		static void Init(Ref_old<VulkanDevice> device);
+		static void Init(Ref_old<VulkanDevice> device, VkInstance instance);
+		//void Init(Ref_old<VulkanDevice> device, VkInstance instance);
 		static void Shutdown();
 
 		static VmaAllocator& GetVMAAllocator();

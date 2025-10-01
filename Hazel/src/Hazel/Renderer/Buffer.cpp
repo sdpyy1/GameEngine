@@ -7,7 +7,7 @@
 
 namespace Hazel {
 
-	Ref_old<VertexBuffer> VertexBuffer::Create(uint32_t size)
+	Ref_old<VertexBuffer> VertexBuffer::Create_old(uint32_t size)
 	{
 		switch (Renderer::GetAPI())
 		{
@@ -19,7 +19,7 @@ namespace Hazel {
 		return nullptr;
 	}
 
-	Ref_old<VertexBuffer> VertexBuffer::Create(float* vertices, uint32_t size)
+	Ref_old<VertexBuffer> VertexBuffer::Create_old(float* vertices, uint32_t size)
 	{
 		switch (Renderer::GetAPI())
 		{
@@ -31,7 +31,7 @@ namespace Hazel {
 		return nullptr;
 	}
 
-	Ref_old<IndexBuffer> IndexBuffer::Create(uint32_t* indices, uint32_t size)
+	Ref_old<IndexBuffer> IndexBuffer::Create_old(uint32_t* indices, uint32_t size)
 	{
 		switch (Renderer::GetAPI())
 		{

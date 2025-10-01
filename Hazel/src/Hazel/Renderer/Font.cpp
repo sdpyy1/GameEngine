@@ -31,7 +31,7 @@ namespace Hazel {
 		spec.Format = ImageFormat::RGB;
 		spec.GenerateMips = false;
 
-		Ref_old<Texture2D> texture = Texture2D::Create(spec);
+		Ref_old<Texture2D> texture = Texture2D::Create_old(spec);
 		//texture->SetData((void*)bitmap.pixels, bitmap.width * bitmap.height * 3);
 		return texture;
 	}

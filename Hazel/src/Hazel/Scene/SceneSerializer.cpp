@@ -531,7 +531,7 @@ namespace Hazel {
 						std::string texturePath = spriteRendererComponent["TexturePath"].as<std::string>();
 						auto path = Project::GetAssetFileSystemPath(texturePath);
 						TextureSpecification defaultSpec;
-						src.Texture = Texture2D::Create(defaultSpec,path.string());
+						src.Texture = Texture2D::Create_old(defaultSpec,path.string());
 					}
 
 					if (spriteRendererComponent["TilingFactor"])

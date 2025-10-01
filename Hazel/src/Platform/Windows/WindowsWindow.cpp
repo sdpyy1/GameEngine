@@ -70,7 +70,7 @@ namespace Hazel {
 		HZ_CORE_INFO("Create GLFW Window Done!");
 
 		// RenderContext
-		m_RenderContext = RenderContext::Create(m_Window);
+		m_RenderContext = RenderContext::Create_old(m_Window);
 		m_RenderContext->Init();
 		HZ_CORE_INFO("RenderContext Init Done!");
 
@@ -81,7 +81,7 @@ namespace Hazel {
 			m_SwapChain = new VulkanSwapChain(context->GetInstanceNative(), context->GetDeviceNative());
 			m_SwapChain->InitSurface(m_Window);
 
-			m_SwapChain->Create(&m_Data.Width, &m_Data.Height, true); // TODO: VSync–¥À¿
+			m_SwapChain->Create_old(&m_Data.Width, &m_Data.Height, true); // TODO: VSync–¥À¿
 			HZ_CORE_INFO("Create Vulkan SwapChain Done!");
 		}
 

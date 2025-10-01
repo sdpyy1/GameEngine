@@ -17,7 +17,7 @@ namespace Hazel {
 
 		std::wstring wName(name.begin(), name.end());
 		SetThreadDescription(threadHandle, wName.c_str());
-		SetThreadAffinityMask(threadHandle, 8);
+		SetThreadAffinityMask(threadHandle, 8); // 设置亲和力掩码为8，表示将线程绑定到第4个CPU核心（从0开始计数） 这和SetName无关
 	}
 
 	void Thread::Join()
@@ -34,12 +34,12 @@ namespace Hazel {
 
 	void ThreadSignal::Wait()
 	{
-		WaitForSingleObject(m_SignalHandle, INFINITE);
+		WaitForSingleObject(m_SignalHandle, INFINITE); // 阻塞直到事件触发
 	}
 
 	void ThreadSignal::Signal()
 	{
-		SetEvent(m_SignalHandle);
+		SetEvent(m_SignalHandle); // 触发事件，唤醒等待的线程
 	}
 
 	void ThreadSignal::Reset()

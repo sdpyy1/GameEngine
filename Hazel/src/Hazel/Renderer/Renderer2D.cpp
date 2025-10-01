@@ -123,9 +123,9 @@ namespace Hazel {
 	{
 		HZ_PROFILE_FUNCTION();
 
-		s_Data.QuadVertexArray = VertexArray::Create();
+		s_Data.QuadVertexArray = VertexArray::Create_old();
 
-		s_Data.QuadVertexBuffer = VertexBuffer::Create(s_Data.MaxVertices * sizeof(QuadVertex));
+		s_Data.QuadVertexBuffer = VertexBuffer::Create_old(s_Data.MaxVertices * sizeof(QuadVertex));
 		s_Data.QuadVertexBuffer->SetLayout({
 			{ ShaderDataType::Float3, "a_Position"     },
 			{ ShaderDataType::Float4, "a_Color"        },
@@ -154,14 +154,14 @@ namespace Hazel {
 			offset += 4;
 		}
 
-		Ref_old<IndexBuffer> quadIB = IndexBuffer::Create(quadIndices, s_Data.MaxIndices);
+		Ref_old<IndexBuffer> quadIB = IndexBuffer::Create_old(quadIndices, s_Data.MaxIndices);
 		s_Data.QuadVertexArray->SetIndexBuffer(quadIB);
 		delete[] quadIndices;
 
 		// Circles
-		s_Data.CircleVertexArray = VertexArray::Create();
+		s_Data.CircleVertexArray = VertexArray::Create_old();
 
-		s_Data.CircleVertexBuffer = VertexBuffer::Create(s_Data.MaxVertices * sizeof(CircleVertex));
+		s_Data.CircleVertexBuffer = VertexBuffer::Create_old(s_Data.MaxVertices * sizeof(CircleVertex));
 		s_Data.CircleVertexBuffer->SetLayout({
 			{ ShaderDataType::Float3, "a_WorldPosition" },
 			{ ShaderDataType::Float3, "a_LocalPosition" },
@@ -175,9 +175,9 @@ namespace Hazel {
 		s_Data.CircleVertexBufferBase = new CircleVertex[s_Data.MaxVertices];
 
 		// Lines
-		s_Data.LineVertexArray = VertexArray::Create();
+		s_Data.LineVertexArray = VertexArray::Create_old();
 
-		s_Data.LineVertexBuffer = VertexBuffer::Create(s_Data.MaxVertices * sizeof(LineVertex));
+		s_Data.LineVertexBuffer = VertexBuffer::Create_old(s_Data.MaxVertices * sizeof(LineVertex));
 		s_Data.LineVertexBuffer->SetLayout({
 			{ ShaderDataType::Float3, "a_Position" },
 			{ ShaderDataType::Float4, "a_Color"    },
@@ -187,9 +187,9 @@ namespace Hazel {
 		s_Data.LineVertexBufferBase = new LineVertex[s_Data.MaxVertices];
 
 		// Text
-		s_Data.TextVertexArray = VertexArray::Create();
+		s_Data.TextVertexArray = VertexArray::Create_old();
 
-		s_Data.TextVertexBuffer = VertexBuffer::Create(s_Data.MaxVertices * sizeof(TextVertex));
+		s_Data.TextVertexBuffer = VertexBuffer::Create_old(s_Data.MaxVertices * sizeof(TextVertex));
 		s_Data.TextVertexBuffer->SetLayout({
 			{ ShaderDataType::Float3, "a_Position"     },
 			{ ShaderDataType::Float4, "a_Color"        },
@@ -200,7 +200,7 @@ namespace Hazel {
 		s_Data.TextVertexArray->SetIndexBuffer(quadIB);
 		s_Data.TextVertexBufferBase = new TextVertex[s_Data.MaxVertices];
 
-		s_Data.WhiteTexture = Texture2D::Create(TextureSpecification());
+		s_Data.WhiteTexture = Texture2D::Create_old(TextureSpecification());
 		uint32_t whiteTextureData = 0xffffffff;
 		//s_Data.WhiteTexture->SetData(&whiteTextureData, sizeof(uint32_t));
 
@@ -208,10 +208,10 @@ namespace Hazel {
 		for (uint32_t i = 0; i < s_Data.MaxTextureSlots; i++)
 			samplers[i] = i;
 
-		s_Data.QuadShader = Shader::Create("assets/shaders/Renderer2D_Quad.glsl");
-		s_Data.CircleShader = Shader::Create("assets/shaders/Renderer2D_Circle.glsl");
-		s_Data.LineShader = Shader::Create("assets/shaders/Renderer2D_Line.glsl");
-		s_Data.TextShader = Shader::Create("assets/shaders/Renderer2D_Text.glsl");
+		s_Data.QuadShader = Shader::Create_old("assets/shaders/Renderer2D_Quad.glsl");
+		s_Data.CircleShader = Shader::Create_old("assets/shaders/Renderer2D_Circle.glsl");
+		s_Data.LineShader = Shader::Create_old("assets/shaders/Renderer2D_Line.glsl");
+		s_Data.TextShader = Shader::Create_old("assets/shaders/Renderer2D_Text.glsl");
 
 		// Set first texture slot to 0
 		//s_Data.TextureSlots[0] = s_Data.WhiteTexture;
@@ -221,7 +221,7 @@ namespace Hazel {
 		s_Data.QuadVertexPositions[2] = {  0.5f,  0.5f, 0.0f, 1.0f };
 		s_Data.QuadVertexPositions[3] = { -0.5f,  0.5f, 0.0f, 1.0f };
 
-		s_Data.CameraUniformBuffer = UniformBuffer::Create(sizeof(Renderer2DData::CameraData), 0);
+		s_Data.CameraUniformBuffer = UniformBuffer::Create_old(sizeof(Renderer2DData::CameraData), 0);
 	}
 
 	void Renderer2D::Shutdown()

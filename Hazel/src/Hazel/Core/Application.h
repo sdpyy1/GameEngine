@@ -6,7 +6,7 @@
 #include "Hazel/Core/LayerStack.h"
 #include "Hazel/Events/Event.h"
 #include "Hazel/Events/ApplicationEvent.h"
-
+#include "Hazel/core/RenderThread.h"
 
 #include "Hazel/Core/Timestep.h"
 
@@ -72,6 +72,7 @@ namespace Hazel {
 		bool m_Minimized = false;
 		LayerStack m_LayerStack;
 		float m_LastFrameTime = 0.0f;
+		RenderThread m_RenderThread;
 
 		std::vector<std::function<void()>> m_MainThreadQueue;
 		std::mutex m_MainThreadQueueMutex;

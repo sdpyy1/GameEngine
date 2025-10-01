@@ -7,7 +7,11 @@
 struct GLFWwindow;
 
 namespace Hazel {
-
+#if defined(HZ_DEBUG) || defined(HZ_RELEASE)
+	static bool s_Validation = true;
+#else
+	static bool s_Validation = false; // Let's leave this on for now...
+#endif
 	class VulkanContext : public RenderContext
 	{
 	public:

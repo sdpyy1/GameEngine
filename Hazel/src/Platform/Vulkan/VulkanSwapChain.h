@@ -10,7 +10,7 @@ namespace Hazel {
 
 		VulkanSwapChain(VkInstance m_Instance, const Ref_old<VulkanDevice>& device);
 		void InitSurface(GLFWwindow* windowHandle);
-		void Create(uint32_t* width, uint32_t* height, bool vsync);
+		void Create_old(uint32_t* width, uint32_t* height, bool vsync);
 		void BeginFrame();
 		void Present();
 

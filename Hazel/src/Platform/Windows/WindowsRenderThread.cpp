@@ -24,8 +24,8 @@ namespace Hazel {
 
 		if (m_ThreadingPolicy == ThreadingPolicy::MultiThreaded)
 		{
-			InitializeCriticalSection(&m_Data->m_CriticalSection);
-			InitializeConditionVariable(&m_Data->m_ConditionVariable);
+			InitializeCriticalSection(&m_Data->m_CriticalSection); // 创建临界区
+			InitializeConditionVariable(&m_Data->m_ConditionVariable); // 创建条件变量配套
 		}
 	}
 

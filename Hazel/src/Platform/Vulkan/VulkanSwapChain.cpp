@@ -169,7 +169,7 @@ namespace Hazel
 		FindImageFormatAndColorSpace();
 	}
 
-	void VulkanSwapChain::Create(uint32_t* width, uint32_t* height, bool vsync)
+	void VulkanSwapChain::Create_old(uint32_t* width, uint32_t* height, bool vsync)
 	{
 		m_VSync = vsync;
 
@@ -532,7 +532,7 @@ namespace Hazel
 
 		auto device = m_Device->GetVulkanDevice();
 		vkDeviceWaitIdle(device);
-		Create(&width, &height, m_VSync);
+		Create_old(&width, &height, m_VSync);
 		vkDeviceWaitIdle(device);
 	}
 

@@ -6,7 +6,7 @@
 
 namespace Hazel {
 
-	Ref_old<Shader> Shader::Create(const std::string& filepath)
+	Ref_old<Shader> Shader::Create_old(const std::string& filepath)
 	{
 		switch (Renderer::GetAPI())
 		{
@@ -18,7 +18,7 @@ namespace Hazel {
 		return nullptr;
 	}
 
-	Ref_old<Shader> Shader::Create(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc)
+	Ref_old<Shader> Shader::Create_old(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc)
 	{
 		switch (Renderer::GetAPI())
 		{
@@ -44,14 +44,14 @@ namespace Hazel {
 
 	Ref_old<Shader> ShaderLibrary::Load(const std::string& filepath)
 	{
-		auto shader = Shader::Create(filepath);
+		auto shader = Shader::Create_old(filepath);
 		Add(shader);
 		return shader;
 	}
 
 	Ref_old<Shader> ShaderLibrary::Load(const std::string& name, const std::string& filepath)
 	{
-		auto shader = Shader::Create(filepath);
+		auto shader = Shader::Create_old(filepath);
 		Add(name, shader);
 		return shader;
 	}

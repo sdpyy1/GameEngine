@@ -10,7 +10,7 @@ namespace Hazel {
 	{
 		m_CommandBuffer = new uint8_t[10 * 1024 * 1024]; // 10mb buffer
 		m_CommandBufferPtr = m_CommandBuffer;
-		memset(m_CommandBuffer, 0, 10 * 1024 * 1024);
+		memset(m_CommandBuffer, 0, 10 * 1024 * 1024); // ÃÓ≥‰0
 	}
 
 	RenderCommandQueue::~RenderCommandQueue()
@@ -18,6 +18,7 @@ namespace Hazel {
 		delete[] m_CommandBuffer;
 	}
 
+	// ª∫¥Ê√¸¡Ó∫Õ ˝æ›
 	void* RenderCommandQueue::Allocate(RenderCommandFn fn, uint32_t size)
 	{
 		// NOTE(Yan): for debugging

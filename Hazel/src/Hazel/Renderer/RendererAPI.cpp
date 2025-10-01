@@ -7,7 +7,7 @@ namespace Hazel {
 
 	RendererAPI::APIType RendererAPI::s_API = RendererAPI::APIType::Vulkan;
 
-	Scope<RendererAPI> RendererAPI::Create()
+	Scope<RendererAPI> RendererAPI::Create_old()
 	{
 		switch (s_API)
 		{

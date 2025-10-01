@@ -13,8 +13,8 @@ namespace Hazel {
 		TextureSpecification spec;
 		const std::filesystem::path& filepath1 = "Resources/Icons/ContentBrowser/DirectoryIcon.png";
 		const std::filesystem::path& filepath2 = "Resources/Icons/ContentBrowser/FileIcon.png";
-		m_DirectoryIcon = Texture2D::Create(spec, filepath1);
-		m_FileIcon = Texture2D::Create(spec, filepath2);
+		m_DirectoryIcon = Texture2D::Create_old(spec, filepath1);
+		m_FileIcon = Texture2D::Create_old(spec, filepath2);
 	}
 
 	void ContentBrowserPanel::OnImGuiRender()

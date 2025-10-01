@@ -172,7 +172,7 @@ namespace Hazel
 	{
 		return CreateRef<VulkanPhysicalDevice>(vkInstance);
 	}
-	Ref_old<VulkanDevice> VulkanDevice::Create(const Ref_old<VulkanPhysicalDevice>& physicalDevice, VkPhysicalDeviceFeatures enabledFeatures)
+	Ref_old<VulkanDevice> VulkanDevice::Create_old(const Ref_old<VulkanPhysicalDevice>& physicalDevice, VkPhysicalDeviceFeatures enabledFeatures)
 	{
 		return CreateRef<VulkanDevice>(physicalDevice, enabledFeatures);
 	}
@@ -208,7 +208,6 @@ namespace Hazel
 		// If the device will be used for presenting to a display via a swapchain we need to request the swapchain extension
 		HZ_CORE_ASSERT(m_PhysicalDevice->IsExtensionSupported(VK_KHR_SWAPCHAIN_EXTENSION_NAME));
 		deviceExtensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
-
 		if (m_PhysicalDevice->IsExtensionSupported(VK_NV_DEVICE_DIAGNOSTIC_CHECKPOINTS_EXTENSION_NAME))
 			deviceExtensions.push_back(VK_NV_DEVICE_DIAGNOSTIC_CHECKPOINTS_EXTENSION_NAME);
 		if (m_PhysicalDevice->IsExtensionSupported(VK_NV_DEVICE_DIAGNOSTICS_CONFIG_EXTENSION_NAME))
@@ -327,7 +326,15 @@ namespace Hazel
 		auto device = VulkanContext::GetCurrentDevice();
 		FlushCommandBuffer(commandBuffer, device->GetGraphicsQueue());
 	}
+	void VulkanDevice::FlushCommandBuffer(VkCommandBuffer commandBuffer)
+	{
+		GetThreadLocalCommandPool()->FlushCommandBuffer(commandBuffer);
+	}
 
+	void VulkanDevice::FlushCommandBuffer(VkCommandBuffer commandBuffer, VkQueue queue)
+	{
+		GetThreadLocalCommandPool()->FlushCommandBuffer(commandBuffer);
+	}
 	void VulkanCommandPool::FlushCommandBuffer(VkCommandBuffer commandBuffer, VkQueue queue)
 	{
 		auto device = VulkanContext::GetCurrentDevice();

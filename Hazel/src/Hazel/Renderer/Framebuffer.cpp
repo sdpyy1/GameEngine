@@ -7,7 +7,7 @@
 
 namespace Hazel {
 	
-	Ref_old<Framebuffer> Framebuffer::Create(const FramebufferSpecification& spec)
+	Ref_old<Framebuffer> Framebuffer::Create_old(const FramebufferSpecification& spec)
 	{
 		switch (Renderer::GetAPI())
 		{

@@ -137,7 +137,7 @@ namespace Hazel {
 	class Image2D : public Image
 	{
 	public:
-		static Ref_old<Image2D> Create(const ImageSpecification& specification, Buffer1 buffer = Buffer1());
+		static Ref<Image2D> Create(const ImageSpecification& specification, Buffer1 buffer = Buffer1());
 		virtual void Resize(const glm::uvec2& size) = 0;
 		virtual bool IsValid() const = 0;
 	};
@@ -226,6 +226,6 @@ namespace Hazel {
 	public:
 		virtual ~ImageView() = default;
 
-		static Ref<ImageView> Create(const ImageViewSpecification& specification);
+		static Ref<ImageView> Create_old(const ImageViewSpecification& specification);
 	};
 }

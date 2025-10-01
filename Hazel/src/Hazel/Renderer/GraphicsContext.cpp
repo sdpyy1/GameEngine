@@ -8,7 +8,7 @@
 
 namespace Hazel {
 
-	Scope<RenderContext> RenderContext::Create(void* window)
+	Scope<RenderContext> RenderContext::Create_old(void* window)
 	{
 		switch (Renderer::GetAPI())
 		{

@@ -10,7 +10,7 @@ namespace Hazel {
 		virtual void Init() = 0;
 		virtual void SwapBuffers() = 0;
 
-		static Scope<RenderContext> Create(void* window);
+		static Scope<RenderContext> Create_old(void* window);
 	};
 
 }

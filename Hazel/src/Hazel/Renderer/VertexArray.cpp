@@ -6,7 +6,7 @@
 
 namespace Hazel {
 
-	Ref_old<VertexArray> VertexArray::Create()
+	Ref_old<VertexArray> VertexArray::Create_old()
 	{
 		switch (Renderer::GetAPI())
 		{

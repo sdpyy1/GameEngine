@@ -25,11 +25,11 @@ namespace Hazel {
 
 		virtual const std::string& GetName() const = 0;
 
-		static Ref_old<Shader> Create(const std::string& filepath);
-		static Ref_old<Shader> Create(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc);
+		static Ref_old<Shader> Create_old(const std::string& filepath);
+		static Ref_old<Shader> Create_old(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc);
 	};
 
-	class ShaderLibrary
+	class ShaderLibrary : public RefCounted
 	{
 	public:
 		void Add(const std::string& name, const Ref_old<Shader>& shader);

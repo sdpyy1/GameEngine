@@ -42,7 +42,7 @@ namespace Hazel {
 		virtual void* GetNativeWindow() const = 0;
 		virtual Ref_old<RenderContext> GetRenderContext() { return m_RenderContext; }
 
-		static Scope<Window> Create(const WindowProps& props = WindowProps());
+		static Scope<Window> Create_old(const WindowProps& props = WindowProps());
 	protected:
 		Ref_old<RenderContext> m_RenderContext;
 

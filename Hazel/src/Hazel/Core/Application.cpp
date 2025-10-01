@@ -10,13 +10,14 @@
 #include "Hazel/Core/Input.h"
 #include "Hazel/Utils/PlatformUtils.h"
 #include <Platform/Windows/WindowsWindow.h>
+#include <nfd.hpp>
 
 namespace Hazel {
 
 	Application* Application::s_Instance = nullptr;
 
 	Application::Application(const ApplicationSpecification& specification)
-		: m_Specification(specification)
+		: m_Specification(specification),m_RenderThread(ThreadingPolicy::SingleThreaded)
 	{
 		HZ_PROFILE_FUNCTION();
 
@@ -27,11 +28,13 @@ namespace Hazel {
 		if (!m_Specification.WorkingDirectory.empty())
 			std::filesystem::current_path(m_Specification.WorkingDirectory);
 
-		m_Window = Window::Create(WindowProps(m_Specification.Name));
+		m_Window = Window::Create_old(WindowProps(m_Specification.Name));
 		// 这里设置了把glfw接收到的事件转移到了Application的OnEvent函数中
 		m_Window->SetEventCallback(HZ_BIND_EVENT_FN(Application::OnEvent));
+		HZ_CORE_ASSERT(NFD::Init() == NFD_OKAY);
 
 		Renderer::Init();
+		m_RenderThread.Pump();
 
 		m_ImGuiLayer = new ImGuiLayer();
 		PushOverlay(m_ImGuiLayer);

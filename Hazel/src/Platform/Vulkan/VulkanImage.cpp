@@ -228,7 +228,7 @@ namespace Hazel {
 				VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
 				subresourceRange);
 
-			VulkanContext::GetCurrentDevice()->FlushCommandBuffer(commandBuffer);
+			VulkanContext::GetCurrentDevice()->FlushCommandBuffer(commandBuffer); // 会把命令提交并等待完成
 		}
 
 		UpdateDescriptor(); // 创建好图片后，更新描述符

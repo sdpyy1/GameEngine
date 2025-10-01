@@ -276,7 +276,19 @@ namespace Hazel {
 
 		vmaCreateAllocator(&allocatorInfo, &s_Data->Allocator);
 	}
+	void VulkanAllocator::Init(Ref_old<VulkanDevice> device,VkInstance instance)
+	{
+		s_Data = new VulkanAllocatorData();
 
+		// Initialize VulkanMemoryAllocator
+		VmaAllocatorCreateInfo allocatorInfo = {};
+		allocatorInfo.vulkanApiVersion = VK_API_VERSION_1_2;
+		allocatorInfo.physicalDevice = device->GetPhysicalDevice()->GetVulkanPhysicalDevice();
+		allocatorInfo.device = device->GetVulkanDevice();
+		allocatorInfo.instance = instance;
+
+		vmaCreateAllocator(&allocatorInfo, &s_Data->Allocator);
+	}
 	void VulkanAllocator::Shutdown()
 	{
 		vmaDestroyAllocator(s_Data->Allocator);

@@ -96,6 +96,24 @@ namespace Hazel {
 		return std::filesystem::is_directory(filepath);
 	}
 
+
+	FileStatus FileSystem::TryOpenFile(const std::filesystem::path& filepath)
+	{
+		HANDLE fileHandle = CreateFile(filepath.c_str(), GENERIC_READ, 0, nullptr, OPEN_EXISTING, 0, nullptr);
+		if (fileHandle == INVALID_HANDLE_VALUE)
+		{
+			DWORD errorCode = GetLastError();
+			if (errorCode == ERROR_FILE_NOT_FOUND || errorCode == ERROR_PATH_NOT_FOUND)
+				return FileStatus::Invalid;
+			if (errorCode == ERROR_SHARING_VIOLATION)
+				return FileStatus::Locked;
+
+			return FileStatus::OtherError;
+		}
+
+		CloseHandle(fileHandle);
+		return FileStatus::Success;
+	}
 	FileStatus FileSystem::TryOpenFileAndWait(const std::filesystem::path& filepath, uint64_t waitms)
 	{
 		FileStatus fileStatus = TryOpenFile(filepath);
