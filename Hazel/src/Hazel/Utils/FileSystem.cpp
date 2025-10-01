@@ -9,7 +9,6 @@
 
 #include <nfd.hpp>
 
-#include <format>
 
 namespace Hazel {
 
@@ -154,7 +153,7 @@ namespace Hazel {
 		ShellExecute(NULL, L"open", absolutePath.c_str(), NULL, NULL, SW_SHOWNORMAL);
 		return true;
 #elif defined(HZ_PLATFORM_LINUX)
-		std::string cmd = std::format("xdg-open \"{0}\"", absolutePath.string().data());
+		std::string cmd = fmt::format("xdg-open \"{0}\"", absolutePath.string().data());
 		system(cmd.c_str());
 		return true;
 #endif
@@ -176,10 +175,10 @@ namespace Hazel {
 						return std::to_string(counter);
 					}();  // Pad with 0 if < 10;
 
-				std::string newFileName = std::format("{} ({})", Utils::RemoveExtension(filepath.filename().string()), counterStr);
+				std::string newFileName = fmt::format("{} ({})", Utils::RemoveExtension(filepath.filename().string()), counterStr);
 
 				if (filepath.has_extension())
-					newFileName = std::format("{}{}", newFileName, filepath.extension().string());
+					newFileName = fmt::format("{}{}", newFileName, filepath.extension().string());
 
 				if (std::filesystem::exists(filepath.parent_path() / newFileName))
 					return checkID(checkID);

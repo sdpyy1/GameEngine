@@ -6,12 +6,12 @@
 
 namespace Hazel {
 
-	Ref<UniformBuffer> UniformBuffer::Create(uint32_t size, uint32_t binding)
+	Ref_old<UniformBuffer> UniformBuffer::Create(uint32_t size, uint32_t binding)
 	{
 		switch (Renderer::GetAPI())
 		{
-			case RendererAPI::RenderAPI::None:    HZ_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
-			case RendererAPI::RenderAPI::OpenGL:  return CreateRef<OpenGLUniformBuffer>(size, binding);
+			case RendererAPI::APIType::None:    HZ_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
+			case RendererAPI::APIType::OpenGL:  return CreateRef<OpenGLUniformBuffer>(size, binding);
 		}
 
 		HZ_CORE_ASSERT(false, "Unknown RendererAPI!");

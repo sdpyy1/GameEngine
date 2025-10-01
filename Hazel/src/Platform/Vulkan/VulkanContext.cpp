@@ -50,14 +50,14 @@ namespace Hazel {
 		createInfo.pApplicationInfo = &appInfo;
 
 		// 拓展
-		auto extensions = VkUtils::getRequiredExtensions();
+		auto extensions = VKUtils::getRequiredExtensions();
 		createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
 		createInfo.ppEnabledExtensionNames = extensions.data();
 
 		// 验证层写入
 		VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
 		if (enableValidationLayers) {
-			if (enableValidationLayers && !VkUtils::checkValidationLayerSupport()) {
+			if (enableValidationLayers && !VKUtils::checkValidationLayerSupport()) {
 				HZ_CORE_ASSERT("validation layers requested, but not available!");
 			}
 			createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
@@ -66,7 +66,7 @@ namespace Hazel {
 			debugCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
 			debugCreateInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
 			debugCreateInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-			debugCreateInfo.pfnUserCallback = VkUtils::debugCallback;
+			debugCreateInfo.pfnUserCallback = VKUtils::debugCallback;
 			createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*)&debugCreateInfo;
 		}else {
 			createInfo.enabledLayerCount = 0;
@@ -78,7 +78,7 @@ namespace Hazel {
 			throw std::runtime_error("failed to create instance!");
 		}
 		// 加载Debug Utils扩展函数
-		VkUtils::VulkanLoadDebugUtilsExtensions(this->m_Instance);
+		VKUtils::VulkanLoadDebugUtilsExtensions(this->m_Instance);
 		if (enableValidationLayers) {
 			// 创建Debug Messenger
 			VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo;
@@ -86,8 +86,8 @@ namespace Hazel {
 			debugCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
 			debugCreateInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
 			debugCreateInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-			debugCreateInfo.pfnUserCallback = VkUtils::debugCallback;
-			if (VkUtils::CreateDebugUtilsMessengerEXT(m_Instance, &debugCreateInfo, nullptr, &debugMessenger) != VK_SUCCESS) {
+			debugCreateInfo.pfnUserCallback = VKUtils::debugCallback;
+			if (VKUtils::CreateDebugUtilsMessengerEXT(m_Instance, &debugCreateInfo, nullptr, &debugMessenger) != VK_SUCCESS) {
 				throw std::runtime_error("failed to set up debug messenger!");
 			}
 		}
@@ -115,7 +115,7 @@ namespace Hazel {
 
 	void VulkanContext::CheckVersion() {
 		HZ_CORE_ASSERT(glfwVulkanSupported(), "GLFW must support Vulkan!");
-		if (!VkUtils::CheckDriverAPIVersionSupport(VK_API_VERSION_1_2))
+		if (!VKUtils::CheckDriverAPIVersionSupport(VK_API_VERSION_1_2))
 		{
 #ifdef HZ_PLATFORM_WINDOWS
 			MessageBox(nullptr, L"Incompatible Vulkan driver version.\nUpdate your GPU drivers!", L"Hazel Error", MB_OK | MB_ICONERROR);

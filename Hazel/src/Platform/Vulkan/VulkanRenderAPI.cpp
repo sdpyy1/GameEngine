@@ -1,13 +1,13 @@
 #include "hzpch.h"
 #include "VulkanRenderAPI.h"
 #include <Hazel/Renderer/RendererCapabilities.h>
-
+#include "Vulkan.h"
 namespace Hazel {
 	struct VulkanRendererData
 	{
 		RendererCapabilities RenderCaps;
 
-		Ref<Texture2D1> BRDFLut;
+		//Ref_old<Texture2D> BRDFLut;
 
 		//Ref<VertexBuffer> QuadVertexBuffer;
 		//Ref<IndexBuffer> QuadIndexBuffer;
@@ -36,4 +36,6 @@ namespace Hazel {
 	void VulkanRenderAPI::Clear()
 	{
 	}
+
+
 }

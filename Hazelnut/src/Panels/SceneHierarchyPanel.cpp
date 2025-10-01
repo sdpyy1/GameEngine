@@ -21,12 +21,12 @@
 
 namespace Hazel {
 
-	SceneHierarchyPanel::SceneHierarchyPanel(const Ref<Scene>& context)
+	SceneHierarchyPanel::SceneHierarchyPanel(const Ref_old<Scene>& context)
 	{
 		SetContext(context);
 	}
 
-	void SceneHierarchyPanel::SetContext(const Ref<Scene>& context)
+	void SceneHierarchyPanel::SetContext(const Ref_old<Scene>& context)
 	{
 		m_RenderContext = context;
 		m_SelectionContext = {};
@@ -342,7 +342,7 @@ namespace Hazel {
 			bool sceneRunning = scene->IsRunning();
 			if (sceneRunning)
 			{
-				Ref<ScriptInstance> scriptInstance = ScriptEngine::GetEntityScriptInstance(entity.GetUUID());
+				Ref_old<ScriptInstance> scriptInstance = ScriptEngine::GetEntityScriptInstance(entity.GetUUID());
 				if (scriptInstance)
 				{
 					const auto& fields = scriptInstance->GetScriptClass()->GetFields();
@@ -363,7 +363,7 @@ namespace Hazel {
 			{
 				if (scriptClassExists)
 				{
-					Ref<ScriptClass> entityClass = ScriptEngine::GetEntityClass(component.ClassName);
+					Ref_old<ScriptClass> entityClass = ScriptEngine::GetEntityClass(component.ClassName);
 					const auto& fields = entityClass->GetFields();
 
 					auto& entityFields = ScriptEngine::GetScriptFieldMap(entity);
@@ -412,7 +412,8 @@ namespace Hazel {
 				{
 					const wchar_t* path = (const wchar_t*)payload->Data;
 					std::filesystem::path texturePath(path);
-					Ref<Texture2D> texture = Texture2D::Create(texturePath.string());
+					TextureSpecification a;
+					Ref_old<Texture2D> texture = Texture2D::Create(a,texturePath.string());
 					if (texture->IsLoaded())
 						component.Texture = texture;
 					else

@@ -4,9 +4,12 @@
 #include "Platform/Vulkan/VulkanRenderAPI.h"
 
 namespace Hazel {
-
+	constexpr static uint32_t s_RenderCommandQueueCount = 2;
+	static RenderCommandQueue* s_CommandQueue[s_RenderCommandQueueCount];
+	static std::atomic<uint32_t> s_RenderCommandQueueSubmissionIndex = 0;
 	Scope<Renderer::SceneData> Renderer::s_SceneData = CreateScope<Renderer::SceneData>();
 	static RendererConfig s_Config;
+	static RenderCommandQueue s_ResourceFreeQueue[3];
 
 	void Renderer::Init()
 	{
@@ -44,7 +47,7 @@ namespace Hazel {
 	{
 	}
 
-	void Renderer::Submit(const Ref<Shader>& shader, const Ref<VertexArray>& vertexArray, const glm::mat4& transform)
+	void Renderer::Submit(const Ref_old<Shader>& shader, const Ref_old<VertexArray>& vertexArray, const glm::mat4& transform)
 	{
 		shader->Bind();
 		shader->SetMat4("u_ViewProjection", s_SceneData->ViewProjectionMatrix);
@@ -52,6 +55,52 @@ namespace Hazel {
 
 		vertexArray->Bind();
 		RenderCommand::DrawIndexed(vertexArray);
+	}
+	void Renderer::SwapQueues()
+	{
+		s_RenderCommandQueueSubmissionIndex = (s_RenderCommandQueueSubmissionIndex + 1) % s_RenderCommandQueueCount;
+	}
+	uint32_t Renderer::RT_GetCurrentFrameIndex()
+	{
+		// Swapchain owns the Render Thread frame index
+		return Application::Get().GetWindow().GetSwapChain().GetCurrentBufferIndex();
+	}
+
+	uint32_t Renderer::GetCurrentFrameIndex()
+	{
+		return Application::Get().GetCurrentFrameIndex();
+	}
+
+	void Renderer::RenderThreadFunc(RenderThread* renderThread)
+	{
+		while (renderThread->IsRunning())
+		{
+			WaitAndRender(renderThread);
+		}
+	}
+	void Renderer::WaitAndRender(RenderThread* renderThread)
+	{
+		// Wait for kick, then set render thread to busy
+		{
+			HZ_PROFILE_SCOPE("Wait");
+			renderThread->WaitAndSet(RenderThread::State::Kick, RenderThread::State::Busy);
+		}
+		s_CommandQueue[GetRenderQueueIndex()]->Execute();
+
+		// Rendering has completed, set state to idle
+		renderThread->Set(RenderThread::State::Idle);
+	}
+	uint32_t Renderer::GetRenderQueueIndex()
+	{
+		return (s_RenderCommandQueueSubmissionIndex + 1) % s_RenderCommandQueueCount;
+	}
+	RenderCommandQueue& Renderer::GetRenderCommandQueue()
+	{
+		return *s_CommandQueue[s_RenderCommandQueueSubmissionIndex];
+	}
+	RenderCommandQueue& Renderer::GetRenderResourceReleaseQueue(uint32_t index)
+	{
+		return s_ResourceFreeQueue[index];
 	}
 	RendererConfig& Renderer::GetConfig()
 	{

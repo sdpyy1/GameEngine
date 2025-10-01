@@ -41,16 +41,16 @@ namespace Hazel {
 
 		ProjectConfig& GetConfig() { return m_Config; }
 
-		static Ref<Project> GetActive() { return s_ActiveProject; }
+		static Ref_old<Project> GetActive() { return s_ActiveProject; }
 
-		static Ref<Project> New();
-		static Ref<Project> Load(const std::filesystem::path& path);
+		static Ref_old<Project> New();
+		static Ref_old<Project> Load(const std::filesystem::path& path);
 		static bool SaveActive(const std::filesystem::path& path);
 	private:
 		ProjectConfig m_Config;
 		std::filesystem::path m_ProjectDirectory;
 
-		inline static Ref<Project> s_ActiveProject;
+		inline static Ref_old<Project> s_ActiveProject;
 	};
 
 }

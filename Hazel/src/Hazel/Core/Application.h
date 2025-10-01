@@ -53,8 +53,9 @@ namespace Hazel {
 		ImGuiLayer* GetImGuiLayer() { return m_ImGuiLayer; }
 
 		static Application& Get() { return *s_Instance; }
-		Ref<RenderContext> GetRenderContext() { return GetWindow().GetRenderContext(); }
+		Ref_old<RenderContext> GetRenderContext() { return GetWindow().GetRenderContext(); }
 		const ApplicationSpecification& GetSpecification() const { return m_Specification; }
+		uint32_t GetCurrentFrameIndex() const { return m_CurrentFrameIndex; }
 
 		void SubmitToMainThread(const std::function<void()>& function);
 	private:
@@ -78,6 +79,8 @@ namespace Hazel {
 		static Application* s_Instance;
 		friend int ::main(int argc, char** argv);
 		VulkanContext *tempVulkanContext;  // ¡Ÿ ±¥Ê¥¢VulkanContext
+		uint32_t m_CurrentFrameIndex = 0;
+
 	};
 
 	// To be defined in CLIENT

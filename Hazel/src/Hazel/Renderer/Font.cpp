@@ -11,7 +11,7 @@
 namespace Hazel {
 
 	template<typename T, typename S, int N, msdf_atlas::GeneratorFunction<S, N> GenFunc>
-	static Ref<Texture2D> CreateAndCacheAtlas(const std::string& fontName, float fontSize, const std::vector<msdf_atlas::GlyphGeometry>& glyphs,
+	static Ref_old<Texture2D> CreateAndCacheAtlas(const std::string& fontName, float fontSize, const std::vector<msdf_atlas::GlyphGeometry>& glyphs,
 		const msdf_atlas::FontGeometry& fontGeometry, uint32_t width, uint32_t height)
 	{
 		msdf_atlas::GeneratorAttributes attributes;
@@ -28,11 +28,11 @@ namespace Hazel {
 		TextureSpecification spec;
 		spec.Width = bitmap.width;
 		spec.Height = bitmap.height;
-		spec.Format = ImageFormat::RGB8;
+		spec.Format = ImageFormat::RGB;
 		spec.GenerateMips = false;
 
-		Ref<Texture2D> texture = Texture2D::Create(spec);
-		texture->SetData((void*)bitmap.pixels, bitmap.width * bitmap.height * 3);
+		Ref_old<Texture2D> texture = Texture2D::Create(spec);
+		//texture->SetData((void*)bitmap.pixels, bitmap.width * bitmap.height * 3);
 		return texture;
 	}
 
@@ -145,9 +145,9 @@ namespace Hazel {
 	}
 
 
-	Ref<Font> Font::GetDefault()
+	Ref_old<Font> Font::GetDefault()
 	{
-		static Ref<Font> DefaultFont;
+		static Ref_old<Font> DefaultFont;
 		if (!DefaultFont)
 			DefaultFont = CreateRef<Font>("assets/fonts/opensans/OpenSans-Regular.ttf");
 

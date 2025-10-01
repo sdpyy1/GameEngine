@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Hazel/Core/PlatformDetection.h"
+#include "Ref.h"
 
 #include <memory>
 
@@ -37,9 +38,9 @@ namespace Hazel {
 	using byte = uint8_t;
 
 	template<typename T>
-	using Ref = std::shared_ptr<T>;
+	using Ref_old = std::shared_ptr<T>;
 	template<typename T, typename ... Args>
-	constexpr Ref<T> CreateRef(Args&& ... args)
+	constexpr Ref_old<T> CreateRef(Args&& ... args)
 	{
 		return std::make_shared<T>(std::forward<Args>(args)...);
 	}

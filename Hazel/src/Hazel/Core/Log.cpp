@@ -6,8 +6,8 @@
 
 namespace Hazel {
 
-	Ref<spdlog::logger> Log::s_CoreLogger;
-	Ref<spdlog::logger> Log::s_ClientLogger;
+	Ref_old<spdlog::logger> Log::s_CoreLogger;
+	Ref_old<spdlog::logger> Log::s_ClientLogger;
 
 	void Log::Init()
 	{

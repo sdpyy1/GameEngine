@@ -65,22 +65,22 @@ namespace Hazel {
 		static const uint32_t MaxIndices = MaxQuads * 6;
 		static const uint32_t MaxTextureSlots = 32; // TODO: RenderCaps
 
-		Ref<VertexArray> QuadVertexArray;
-		Ref<VertexBuffer> QuadVertexBuffer;
-		Ref<Shader> QuadShader;
-		Ref<Texture2D> WhiteTexture;
+		Ref_old<VertexArray> QuadVertexArray;
+		Ref_old<VertexBuffer> QuadVertexBuffer;
+		Ref_old<Shader> QuadShader;
+		Ref_old<Texture2D> WhiteTexture;
 
-		Ref<VertexArray> CircleVertexArray;
-		Ref<VertexBuffer> CircleVertexBuffer;
-		Ref<Shader> CircleShader;
+		Ref_old<VertexArray> CircleVertexArray;
+		Ref_old<VertexBuffer> CircleVertexBuffer;
+		Ref_old<Shader> CircleShader;
 
-		Ref<VertexArray> LineVertexArray;
-		Ref<VertexBuffer> LineVertexBuffer;
-		Ref<Shader> LineShader;	
+		Ref_old<VertexArray> LineVertexArray;
+		Ref_old<VertexBuffer> LineVertexBuffer;
+		Ref_old<Shader> LineShader;	
 		
-		Ref<VertexArray> TextVertexArray;
-		Ref<VertexBuffer> TextVertexBuffer;
-		Ref<Shader> TextShader;
+		Ref_old<VertexArray> TextVertexArray;
+		Ref_old<VertexBuffer> TextVertexBuffer;
+		Ref_old<Shader> TextShader;
 
 		uint32_t QuadIndexCount = 0;
 		QuadVertex* QuadVertexBufferBase = nullptr;
@@ -100,10 +100,10 @@ namespace Hazel {
 
 		float LineWidth = 2.0f;
 
-		std::array<Ref<Texture2D>, MaxTextureSlots> TextureSlots;
+		std::array<Ref_old<Texture2D>, MaxTextureSlots> TextureSlots;
 		uint32_t TextureSlotIndex = 1; // 0 = white texture
 		
-		Ref<Texture2D> FontAtlasTexture;
+		Ref_old<Texture2D> FontAtlasTexture;
 
 		glm::vec4 QuadVertexPositions[4];
 
@@ -114,7 +114,7 @@ namespace Hazel {
 			glm::mat4 ViewProjection;
 		};
 		CameraData CameraBuffer;
-		Ref<UniformBuffer> CameraUniformBuffer;
+		Ref_old<UniformBuffer> CameraUniformBuffer;
 	};
 
 	static Renderer2DData s_Data;
@@ -154,7 +154,7 @@ namespace Hazel {
 			offset += 4;
 		}
 
-		Ref<IndexBuffer> quadIB = IndexBuffer::Create(quadIndices, s_Data.MaxIndices);
+		Ref_old<IndexBuffer> quadIB = IndexBuffer::Create(quadIndices, s_Data.MaxIndices);
 		s_Data.QuadVertexArray->SetIndexBuffer(quadIB);
 		delete[] quadIndices;
 
@@ -202,7 +202,7 @@ namespace Hazel {
 
 		s_Data.WhiteTexture = Texture2D::Create(TextureSpecification());
 		uint32_t whiteTextureData = 0xffffffff;
-		s_Data.WhiteTexture->SetData(&whiteTextureData, sizeof(uint32_t));
+		//s_Data.WhiteTexture->SetData(&whiteTextureData, sizeof(uint32_t));
 
 		int32_t samplers[s_Data.MaxTextureSlots];
 		for (uint32_t i = 0; i < s_Data.MaxTextureSlots; i++)
@@ -214,7 +214,7 @@ namespace Hazel {
 		s_Data.TextShader = Shader::Create("assets/shaders/Renderer2D_Text.glsl");
 
 		// Set first texture slot to 0
-		s_Data.TextureSlots[0] = s_Data.WhiteTexture;
+		//s_Data.TextureSlots[0] = s_Data.WhiteTexture;
 
 		s_Data.QuadVertexPositions[0] = { -0.5f, -0.5f, 0.0f, 1.0f };
 		s_Data.QuadVertexPositions[1] = {  0.5f, -0.5f, 0.0f, 1.0f };
@@ -357,12 +357,12 @@ namespace Hazel {
 		DrawQuad(transform, color);
 	}
 
-	void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size, const Ref<Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor)
+	void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size, const Ref_old<Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor)
 	{
 		DrawQuad({ position.x, position.y, 0.0f }, size, texture, tilingFactor, tintColor);
 	}
 
-	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const Ref<Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor)
+	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const Ref_old<Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor)
 	{
 		HZ_PROFILE_FUNCTION();
 
@@ -400,7 +400,7 @@ namespace Hazel {
 		s_Data.Stats.QuadCount++;
 	}
 
-	void Renderer2D::DrawQuad(const glm::mat4& transform, const Ref<Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor, int entityID)
+	void Renderer2D::DrawQuad(const glm::mat4& transform, const Ref_old<Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor, int entityID)
 	{
 		HZ_PROFILE_FUNCTION();
 
@@ -462,12 +462,12 @@ namespace Hazel {
 		DrawQuad(transform, color);
 	}
 
-	void Renderer2D::DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const Ref<Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor)
+	void Renderer2D::DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const Ref_old<Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor)
 	{
 		DrawRotatedQuad({ position.x, position.y, 0.0f }, size, rotation, texture, tilingFactor, tintColor);
 	}
 
-	void Renderer2D::DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const Ref<Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor)
+	void Renderer2D::DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const Ref_old<Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor)
 	{
 		HZ_PROFILE_FUNCTION();
 
@@ -550,11 +550,11 @@ namespace Hazel {
 			DrawQuad(transform, src.Color, entityID);
 	}
 
-	void Renderer2D::DrawString(const std::string& string, Ref<Font> font, const glm::mat4& transform, const TextParams& textParams, int entityID)
+	void Renderer2D::DrawString(const std::string& string, Ref_old<Font> font, const glm::mat4& transform, const TextParams& textParams, int entityID)
 	{
 		const auto& fontGeometry = font->GetMSDFData()->FontGeometry;
 		const auto& metrics = fontGeometry.getMetrics();
-		Ref<Texture2D> fontAtlas = font->GetAtlasTexture();
+		Ref_old<Texture2D> fontAtlas = font->GetAtlasTexture();
 
 		s_Data.FontAtlasTexture = fontAtlas;
 

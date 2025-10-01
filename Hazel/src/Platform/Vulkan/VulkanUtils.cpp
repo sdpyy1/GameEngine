@@ -2,7 +2,7 @@
 #include "VulkanUtils.h"
 #include <GLFW/glfw3.h>
 #include <set>
-bool Hazel::VkUtils::checkValidationLayerSupport() {
+bool Hazel::VKUtils::checkValidationLayerSupport() {
 	uint32_t layerCount;
 	vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
 	std::vector<VkLayerProperties> availableLayers(layerCount);
@@ -21,11 +21,11 @@ bool Hazel::VkUtils::checkValidationLayerSupport() {
 	}
 	return true;
 }
-VKAPI_ATTR VkBool32 VKAPI_CALL Hazel::VkUtils::debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
+VKAPI_ATTR VkBool32 VKAPI_CALL Hazel::VKUtils::debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
 {
 	std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl; return VK_FALSE;
 }
-void Hazel::VkUtils::SetDebugUtilsObjectName(const VkDevice device, const VkObjectType objectType, const std::string& name, const void* handle)
+void Hazel::VKUtils::SetDebugUtilsObjectName(const VkDevice device, const VkObjectType objectType, const std::string& name, const void* handle)
 {
 	VkDebugUtilsObjectNameInfoEXT nameInfo;
 	nameInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;
@@ -36,7 +36,7 @@ void Hazel::VkUtils::SetDebugUtilsObjectName(const VkDevice device, const VkObje
 
 	VK_CHECK_RESULT(fpSetDebugUtilsObjectNameEXT(device, &nameInfo));
 }
-std::vector<const char*> Hazel::VkUtils::getRequiredExtensions() {
+std::vector<const char*> Hazel::VKUtils::getRequiredExtensions() {
 	uint32_t glfwExtensionCount = 0;
 	const char** glfwExtensions;
 	glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
@@ -49,7 +49,7 @@ std::vector<const char*> Hazel::VkUtils::getRequiredExtensions() {
 
 	return extensions;
 }
-VkResult Hazel::VkUtils::CreateDebugUtilsMessengerEXT(VkInstance m_Instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger) {
+VkResult Hazel::VKUtils::CreateDebugUtilsMessengerEXT(VkInstance m_Instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger) {
 	auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(m_Instance, "vkCreateDebugUtilsMessengerEXT");
 	if (func != nullptr) {
 		return func(m_Instance, pCreateInfo, pAllocator, pDebugMessenger);
@@ -58,7 +58,7 @@ VkResult Hazel::VkUtils::CreateDebugUtilsMessengerEXT(VkInstance m_Instance, con
 		return VK_ERROR_EXTENSION_NOT_PRESENT;
 	}
 }
-void Hazel::VkUtils::VulkanLoadDebugUtilsExtensions(VkInstance m_Instance)
+void Hazel::VKUtils::VulkanLoadDebugUtilsExtensions(VkInstance m_Instance)
 {
 	fpSetDebugUtilsObjectNameEXT = (PFN_vkSetDebugUtilsObjectNameEXT)(vkGetInstanceProcAddr(m_Instance, "vkSetDebugUtilsObjectNameEXT"));
 	if (fpSetDebugUtilsObjectNameEXT == nullptr)
@@ -77,7 +77,7 @@ void Hazel::VkUtils::VulkanLoadDebugUtilsExtensions(VkInstance m_Instance)
 		fpCmdInsertDebugUtilsLabelEXT = [](VkCommandBuffer commandBuffer, const VkDebugUtilsLabelEXT* pLabelInfo) {};
 }
 
-bool Hazel::VkUtils::CheckDriverAPIVersionSupport(uint32_t minimumSupportedVersion)
+bool Hazel::VKUtils::CheckDriverAPIVersionSupport(uint32_t minimumSupportedVersion)
 {
 	uint32_t instanceVersion;
 		vkEnumerateInstanceVersion(&instanceVersion);

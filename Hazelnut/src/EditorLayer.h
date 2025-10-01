@@ -37,7 +37,7 @@ namespace Hazel {
 		void SaveScene();
 		void SaveSceneAs();
 
-		void SerializeScene(Ref<Scene> scene, const std::filesystem::path& path);
+		void SerializeScene(Ref_old<Scene> scene, const std::filesystem::path& path);
 
 		void OnScenePlay();
 		void OnSceneSimulate();
@@ -52,12 +52,12 @@ namespace Hazel {
 		Hazel::OrthographicCameraController m_CameraController;
 
 		// Temp
-		Ref<VertexArray> m_SquareVA;
-		Ref<Shader> m_FlatColorShader;
-		Ref<Framebuffer> m_Framebuffer;
+		Ref_old<VertexArray> m_SquareVA;
+		Ref_old<Shader> m_FlatColorShader;
+		Ref_old<Framebuffer> m_Framebuffer;
 
-		Ref<Scene> m_ActiveScene;
-		Ref<Scene> m_EditorScene;
+		Ref_old<Scene> m_ActiveScene;
+		Ref_old<Scene> m_EditorScene;
 		std::filesystem::path m_EditorScenePath;
 		Entity m_SquareEntity;
 		Entity m_CameraEntity;
@@ -69,7 +69,7 @@ namespace Hazel {
 
 		EditorCamera m_EditorCamera;
 
-		Ref<Texture2D> m_CheckerboardTexture;
+		Ref_old<Texture2D> m_CheckerboardTexture;
 
 		bool m_ViewportFocused = false, m_ViewportHovered = false;
 		glm::vec2 m_ViewportSize = { 0.0f, 0.0f };
@@ -92,7 +92,7 @@ namespace Hazel {
 		Scope<ContentBrowserPanel> m_ContentBrowserPanel;
 
 		// Editor resources
-		Ref<Texture2D> m_IconPlay, m_IconPause, m_IconStep, m_IconSimulate, m_IconStop;
+		Ref_old<Texture2D> m_IconPlay, m_IconPause, m_IconStep, m_IconSimulate, m_IconStop;
 	};
 
 }

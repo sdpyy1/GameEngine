@@ -40,11 +40,11 @@ namespace Hazel {
 		virtual bool IsVSync() const = 0;
 
 		virtual void* GetNativeWindow() const = 0;
-		virtual Ref<RenderContext> GetRenderContext() { return m_RenderContext; }
+		virtual Ref_old<RenderContext> GetRenderContext() { return m_RenderContext; }
 
 		static Scope<Window> Create(const WindowProps& props = WindowProps());
 	protected:
-		Ref<RenderContext> m_RenderContext;
+		Ref_old<RenderContext> m_RenderContext;
 
 	};
 

@@ -68,9 +68,9 @@ namespace Hazel {
 		CopyComponentIfExists<Component...>(dst, src);
 	}
 
-	Ref<Scene> Scene::Copy(Ref<Scene> other)
+	Ref_old<Scene> Scene::Copy(Ref_old<Scene> other)
 	{
-		Ref<Scene> newScene = CreateRef<Scene>();
+		Ref_old<Scene> newScene = CreateRef<Scene>();
 
 		newScene->m_ViewportWidth = other->m_ViewportWidth;
 		newScene->m_ViewportHeight = other->m_ViewportHeight;

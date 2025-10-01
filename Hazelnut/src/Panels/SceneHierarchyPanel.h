@@ -10,9 +10,9 @@ namespace Hazel {
 	{
 	public:
 		SceneHierarchyPanel() = default;
-		SceneHierarchyPanel(const Ref<Scene>& scene);
+		SceneHierarchyPanel(const Ref_old<Scene>& scene);
 
-		void SetContext(const Ref<Scene>& scene);
+		void SetContext(const Ref_old<Scene>& scene);
 
 		void OnImGuiRender();
 
@@ -25,7 +25,7 @@ namespace Hazel {
 		void DrawEntityNode(Entity entity);
 		void DrawComponents(Entity entity);
 	private:
-		Ref<Scene> m_RenderContext;
+		Ref_old<Scene> m_RenderContext;
 		Entity m_SelectionContext;
 	};
 

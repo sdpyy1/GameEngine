@@ -1,7 +1,7 @@
 #pragma once
 #include "RendererResource.h"
 #include <Hazel/Core/Buffer1.h>
-
+#include <glm/gtc/integer.hpp>
 namespace Hazel {
 
 	enum class ImageFormat
@@ -99,14 +99,15 @@ namespace Hazel {
 		glm::uvec4 UIntValues;
 	};
 
+	// 图片接口
 	class Image : public RendererResource
 	{
 	public:
 		virtual ~Image() = default;
 
 		virtual void Resize(const uint32_t width, const uint32_t height) = 0;
-		virtual void Invalidate() = 0;
-		virtual void Release() = 0;
+		virtual void Invalidate() = 0; // 重建
+		virtual void Release() = 0;  // 释放
 
 		virtual uint32_t GetWidth() const = 0;
 		virtual uint32_t GetHeight() const = 0;
@@ -121,14 +122,14 @@ namespace Hazel {
 		virtual Buffer1 GetBuffer() const = 0;
 		virtual Buffer1& GetBuffer() = 0;
 
-		virtual uint64_t GetGPUMemoryUsage() const = 0;
+		virtual uint64_t GetGPUMemoryUsage() const = 0; // 显存使用量
 
-		virtual void CreatePerLayerImageViews() = 0;
+		virtual void CreatePerLayerImageViews() = 0;  // 为每层图像创建视图
 
 		virtual uint64_t GetHash() const = 0;
 
 		virtual void SetData(Buffer1 buffer) = 0;
-		virtual void CopyToHostBuffer(Buffer1& buffer) const = 0;
+		virtual void CopyToHostBuffer(Buffer1& buffer) const = 0; // 复制到CPU可读的buffer
 
 		// TODO: usage (eg. shader read)
 	};
@@ -136,9 +137,95 @@ namespace Hazel {
 	class Image2D : public Image
 	{
 	public:
-		static Ref<Image2D> Create(const ImageSpecification& specification, Buffer1 buffer = Buffer1());
+		static Ref_old<Image2D> Create(const ImageSpecification& specification, Buffer1 buffer = Buffer1());
 		virtual void Resize(const glm::uvec2& size) = 0;
 		virtual bool IsValid() const = 0;
 	};
+	namespace Utils {
 
+		inline uint32_t GetImageFormatBPP(ImageFormat format)
+		{
+			switch (format)
+			{
+			case ImageFormat::RED8UN:  return 1;
+			case ImageFormat::RED8UI:  return 1;
+			case ImageFormat::RED16UI: return 2;
+			case ImageFormat::RED32UI: return 4;
+			case ImageFormat::RED32F:  return 4;
+			case ImageFormat::RGB:
+			case ImageFormat::SRGB:    return 3;
+			case ImageFormat::RGBA:    return 4;
+			case ImageFormat::SRGBA:   return 4;
+			case ImageFormat::RGBA16F: return 2 * 4;
+			case ImageFormat::RGBA32F: return 4 * 4;
+			case ImageFormat::B10R11G11UF: return 4;
+			}
+			HZ_CORE_ASSERT(false);
+			return 0;
+		}
+
+		inline bool IsIntegerBased(const ImageFormat format)
+		{
+			switch (format)
+			{
+			case ImageFormat::RED16UI:
+			case ImageFormat::RED32UI:
+			case ImageFormat::RED8UI:
+			case ImageFormat::DEPTH32FSTENCIL8UINT:
+				return true;
+			case ImageFormat::DEPTH32F:
+			case ImageFormat::RED8UN:
+			case ImageFormat::RGBA32F:
+			case ImageFormat::B10R11G11UF:
+			case ImageFormat::RG16F:
+			case ImageFormat::RG32F:
+			case ImageFormat::RED32F:
+			case ImageFormat::RG8:
+			case ImageFormat::RGBA:
+			case ImageFormat::RGBA16F:
+			case ImageFormat::RGB:
+			case ImageFormat::SRGB:
+			case ImageFormat::SRGBA:
+			case ImageFormat::DEPTH24STENCIL8:
+				return false;
+			}
+			HZ_CORE_ASSERT(false);
+			return false;
+		}
+
+		inline uint32_t CalculateMipCount(uint32_t width, uint32_t height)
+		{
+			return (uint32_t)glm::floor(glm::log2(glm::min(width, height))) + 1;
+		}
+
+		inline uint32_t GetImageMemorySize(ImageFormat format, uint32_t width, uint32_t height)
+		{
+			return width * height * GetImageFormatBPP(format);
+		}
+
+		inline bool IsDepthFormat(ImageFormat format)
+		{
+			if (format == ImageFormat::DEPTH24STENCIL8 || format == ImageFormat::DEPTH32F || format == ImageFormat::DEPTH32FSTENCIL8UINT)
+				return true;
+
+			return false;
+		}
+
+	}
+
+	struct ImageViewSpecification
+	{
+		Ref<Image2D> Image;
+		uint32_t Mip = 0;
+
+		std::string DebugName;
+	};
+
+	class ImageView : public RendererResource
+	{
+	public:
+		virtual ~ImageView() = default;
+
+		static Ref<ImageView> Create(const ImageViewSpecification& specification);
+	};
 }

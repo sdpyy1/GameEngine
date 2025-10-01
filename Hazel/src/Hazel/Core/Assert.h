@@ -18,7 +18,9 @@
 	// Currently accepts at least the condition and one additional parameter (the message) being optional
 	#define HZ_ASSERT(...) HZ_EXPAND_MACRO( HZ_INTERNAL_ASSERT_GET_MACRO(__VA_ARGS__)(_, __VA_ARGS__) )
 	#define HZ_CORE_ASSERT(...) HZ_EXPAND_MACRO( HZ_INTERNAL_ASSERT_GET_MACRO(__VA_ARGS__)(_CORE_, __VA_ARGS__) )
-	#define HZ_CORE_VERFIY(ARG ,...) HZ_EXPAND_MACRO( HZ_INTERNAL_ASSERT_GET_MACRO(__VA_ARGS__)(_CORE_, __VA_ARGS__) )
+	#define HZ_CORE_VERIFY_MESSAGE_INTERNAL(...)  ::Hazel::Log::GetCoreLogger()->critical(  "Verify Failed: {}",  fmt::format(__VA_ARGS__))
+	#define HZ_CORE_VERIFY(condition, ...) { if(!(condition)) { HZ_CORE_VERIFY_MESSAGE_INTERNAL(__VA_ARGS__); HZ_DEBUG_BREAK; } }
+	#define HZ_CORE_VERFIY(condition, fmt, ...) // Ϲд
 #else
 	#define HZ_ASSERT(...)
 	#define HZ_CORE_ASSERT(...)

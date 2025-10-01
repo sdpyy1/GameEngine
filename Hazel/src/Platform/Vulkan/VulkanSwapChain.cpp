@@ -18,7 +18,7 @@ PFN_vkCmdSetCheckpointNV fpCmdSetCheckpointNV;
 PFN_vkGetQueueCheckpointDataNV fpGetQueueCheckpointDataNV;
 namespace Hazel
 {
-	VulkanSwapChain::VulkanSwapChain(VkInstance instance, const Ref<VulkanDevice>& device)
+	VulkanSwapChain::VulkanSwapChain(VkInstance instance, const Ref_old<VulkanDevice>& device)
 	{
 		m_Instance = instance;
 		m_Device = device;
@@ -333,7 +333,7 @@ namespace Hazel
 			m_Images[i].Image = m_VulkanImages[i];
 
 			VK_CHECK_RESULT(vkCreateImageView(device, &colorAttachmentView, nullptr, &m_Images[i].ImageView));
-			VkUtils::SetDebugUtilsObjectName(device, VK_OBJECT_TYPE_IMAGE_VIEW, fmt::format("Swapchain ImageView: {}", i), m_Images[i].ImageView);
+			VKUtils::SetDebugUtilsObjectName(device, VK_OBJECT_TYPE_IMAGE_VIEW, fmt::format("Swapchain ImageView: {}", i), m_Images[i].ImageView);
 		}
 
 		// Create command buffers
@@ -371,9 +371,9 @@ namespace Hazel
 			for (size_t i = 0; i < framesInFlight; i++)
 			{
 				VK_CHECK_RESULT(vkCreateSemaphore(device, &semaphoreCreateInfo, nullptr, &m_ImageAvailableSemaphores[i]));
-				VkUtils::SetDebugUtilsObjectName(device, VK_OBJECT_TYPE_SEMAPHORE, fmt::format("Swapchain Semaphore ImageAvailable {0}", i), m_ImageAvailableSemaphores[i]);
+				VKUtils::SetDebugUtilsObjectName(device, VK_OBJECT_TYPE_SEMAPHORE, fmt::format("Swapchain Semaphore ImageAvailable {0}", i), m_ImageAvailableSemaphores[i]);
 				VK_CHECK_RESULT(vkCreateSemaphore(device, &semaphoreCreateInfo, nullptr, &m_RenderFinishedSemaphores[i]));
-				VkUtils::SetDebugUtilsObjectName(device, VK_OBJECT_TYPE_SEMAPHORE, fmt::format("Swapchain Semaphore RenderFinished {0}", i), m_RenderFinishedSemaphores[i]);
+				VKUtils::SetDebugUtilsObjectName(device, VK_OBJECT_TYPE_SEMAPHORE, fmt::format("Swapchain Semaphore RenderFinished {0}", i), m_RenderFinishedSemaphores[i]);
 			}
 		}
 
@@ -387,7 +387,7 @@ namespace Hazel
 			for (auto& fence : m_WaitFences)
 			{
 				VK_CHECK_RESULT(vkCreateFence(m_Device->GetVulkanDevice(), &fenceCreateInfo, nullptr, &fence));
-				VkUtils::SetDebugUtilsObjectName(device, VK_OBJECT_TYPE_FENCE, "Swapchain Fence", fence);
+				VKUtils::SetDebugUtilsObjectName(device, VK_OBJECT_TYPE_FENCE, "Swapchain Fence", fence);
 			}
 		}
 
@@ -443,7 +443,7 @@ namespace Hazel
 		renderPassInfo.pDependencies = &dependency;
 
 		VK_CHECK_RESULT(vkCreateRenderPass(m_Device->GetVulkanDevice(), &renderPassInfo, nullptr, &m_RenderPass));
-		VkUtils::SetDebugUtilsObjectName(device, VK_OBJECT_TYPE_RENDER_PASS, "Swapchain render pass", m_RenderPass);
+		VKUtils::SetDebugUtilsObjectName(device, VK_OBJECT_TYPE_RENDER_PASS, "Swapchain render pass", m_RenderPass);
 		// Create framebuffers for every swapchain image
 		{
 			for (auto& framebuffer : m_Framebuffers)
@@ -462,7 +462,7 @@ namespace Hazel
 			{
 				frameBufferCreateInfo.pAttachments = &m_Images[i].ImageView;
 				VK_CHECK_RESULT(vkCreateFramebuffer(m_Device->GetVulkanDevice(), &frameBufferCreateInfo, nullptr, &m_Framebuffers[i]));
-				VkUtils::SetDebugUtilsObjectName(m_Device->GetVulkanDevice(), VK_OBJECT_TYPE_FRAMEBUFFER, fmt::format("Swapchain framebuffer (Frame in flight: {})", i), m_Framebuffers[i]);
+				VKUtils::SetDebugUtilsObjectName(m_Device->GetVulkanDevice(), VK_OBJECT_TYPE_FRAMEBUFFER, fmt::format("Swapchain framebuffer (Frame in flight: {})", i), m_Framebuffers[i]);
 			}
 		}
 	}
@@ -506,7 +506,26 @@ namespace Hazel
 
 		vkDeviceWaitIdle(device);
 	}
-
+	void VulkanDevice::Destroy()
+	{
+		m_CommandPools.clear();
+		vkDeviceWaitIdle(m_LogicalDevice);
+		vkDestroyDevice(m_LogicalDevice, nullptr);
+	}
+	void VulkanDevice::LockQueue(bool compute)
+	{
+		if (compute)
+			m_ComputeQueueMutex.lock();
+		else
+			m_GraphicsQueueMutex.lock();
+	}
+	void VulkanDevice::UnlockQueue(bool compute)
+	{
+		if (compute)
+			m_ComputeQueueMutex.unlock();
+		else
+			m_GraphicsQueueMutex.unlock();
+	}
 	void VulkanSwapChain::OnResize(uint32_t width, uint32_t height)
 	{
 		HZ_CORE_WARN_TAG("Renderer", "VulkanSwapChain::OnResize");

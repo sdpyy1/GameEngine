@@ -12,9 +12,9 @@ namespace Hazel {
 	{
 		switch (Renderer::GetAPI())
 		{
-			case RendererAPI::RenderAPI::None:    HZ_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
-			case RendererAPI::RenderAPI::OpenGL:  return CreateScope<OpenGLContext>(static_cast<GLFWwindow*>(window));
-			case RendererAPI::RenderAPI::Vulkan:  return CreateScope<VulkanContext>(static_cast<GLFWwindow*>(window));
+			case RendererAPI::APIType::None:    HZ_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
+			case RendererAPI::APIType::OpenGL:  return CreateScope<OpenGLContext>(static_cast<GLFWwindow*>(window));
+			case RendererAPI::APIType::Vulkan:  return CreateScope<VulkanContext>(static_cast<GLFWwindow*>(window));
 		}
 
 		HZ_CORE_ASSERT(false, "Unknown RendererAPI!");

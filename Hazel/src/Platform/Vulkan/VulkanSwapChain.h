@@ -8,7 +8,7 @@ namespace Hazel {
 	public:
 		VulkanSwapChain() = default;
 
-		VulkanSwapChain(VkInstance m_Instance, const Ref<VulkanDevice>& device);
+		VulkanSwapChain(VkInstance m_Instance, const Ref_old<VulkanDevice>& device);
 		void InitSurface(GLFWwindow* windowHandle);
 		void Create(uint32_t* width, uint32_t* height, bool vsync);
 		void BeginFrame();
@@ -43,7 +43,7 @@ namespace Hazel {
 
 	private:
 		VkInstance m_Instance = nullptr;
-		Ref<VulkanDevice> m_Device;
+		Ref_old<VulkanDevice> m_Device;
 		VkSurfaceKHR m_Surface;
 		VkRenderPass m_RenderPass = nullptr;
 		std::vector<VkFramebuffer> m_Framebuffers;

@@ -16,12 +16,12 @@ namespace Hazel {
 		~Font();
 
 		const MSDFData* GetMSDFData() const { return m_Data; }
-		Ref<Texture2D> GetAtlasTexture() const { return m_AtlasTexture; }
+		Ref_old<Texture2D> GetAtlasTexture() const { return m_AtlasTexture; }
 
-		static Ref<Font> GetDefault();
+		static Ref_old<Font> GetDefault();
 	private:
 		MSDFData* m_Data;
-		Ref<Texture2D> m_AtlasTexture;
+		Ref_old<Texture2D> m_AtlasTexture;
 	};
 
 }

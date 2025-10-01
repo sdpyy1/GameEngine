@@ -18,7 +18,7 @@ namespace Hazel {
 		Scene();
 		~Scene();
 
-		static Ref<Scene> Copy(Ref<Scene> other);
+		static Ref_old<Scene> Copy(Ref_old<Scene> other);
 
 		Entity CreateEntity(const std::string& name = std::string());
 		Entity CreateEntityWithUUID(UUID uuid, const std::string& name = std::string());

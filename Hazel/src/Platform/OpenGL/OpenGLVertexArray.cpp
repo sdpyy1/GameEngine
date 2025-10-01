@@ -54,7 +54,7 @@ namespace Hazel {
 		glBindVertexArray(0);
 	}
 
-	void OpenGLVertexArray::AddVertexBuffer(const Ref<VertexBuffer>& vertexBuffer)
+	void OpenGLVertexArray::AddVertexBuffer(const Ref_old<VertexBuffer>& vertexBuffer)
 	{
 		HZ_PROFILE_FUNCTION();
 
@@ -124,7 +124,7 @@ namespace Hazel {
 		m_VertexBuffers.push_back(vertexBuffer);
 	}
 
-	void OpenGLVertexArray::SetIndexBuffer(const Ref<IndexBuffer>& indexBuffer)
+	void OpenGLVertexArray::SetIndexBuffer(const Ref_old<IndexBuffer>& indexBuffer)
 	{
 		HZ_PROFILE_FUNCTION();
 

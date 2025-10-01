@@ -6,7 +6,7 @@
 
 namespace Hazel {
 
-	ProjectSerializer::ProjectSerializer(Ref<Project> project)
+	ProjectSerializer::ProjectSerializer(Ref_old<Project> project)
 		: m_Project(project)
 	{
 	}

@@ -7,12 +7,12 @@
 
 namespace Hazel {
 	
-	Ref<Framebuffer> Framebuffer::Create(const FramebufferSpecification& spec)
+	Ref_old<Framebuffer> Framebuffer::Create(const FramebufferSpecification& spec)
 	{
 		switch (Renderer::GetAPI())
 		{
-			case RendererAPI::RenderAPI::None:    HZ_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
-			case RendererAPI::RenderAPI::OpenGL:  return CreateRef<OpenGLFramebuffer>(spec);
+			case RendererAPI::APIType::None:    HZ_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
+			case RendererAPI::APIType::OpenGL:  return CreateRef<OpenGLFramebuffer>(spec);
 		}
 
 		HZ_CORE_ASSERT(false, "Unknown RendererAPI!");

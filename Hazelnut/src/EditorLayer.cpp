@@ -14,7 +14,7 @@
 
 namespace Hazel {
 
-	static Ref<Font> s_Font;
+	static Ref_old<Font> s_Font;
 
 	EditorLayer::EditorLayer()
 		: Layer("EditorLayer"), m_CameraController(1280.0f / 720.0f), m_SquareColor({ 0.2f, 0.3f, 0.8f, 1.0f })
@@ -25,13 +25,13 @@ namespace Hazel {
 	void EditorLayer::OnAttach()
 	{
 		HZ_PROFILE_FUNCTION();
-
-		m_CheckerboardTexture = Texture2D::Create("assets/textures/Checkerboard.png");
-		m_IconPlay = Texture2D::Create("Resources/Icons/PlayButton.png");
-		m_IconPause = Texture2D::Create("Resources/Icons/PauseButton.png");
-		m_IconSimulate = Texture2D::Create("Resources/Icons/SimulateButton.png");
-		m_IconStep = Texture2D::Create("Resources/Icons/StepButton.png");
-		m_IconStop = Texture2D::Create("Resources/Icons/StopButton.png");
+		TextureSpecification a;
+		//m_CheckerboardTexture = Texture2D::Create(a,"assets/textures/Checkerboard.png");
+		//m_IconPlay = Texture2D::Create(a,"Resources/Icons/PlayButton.png");
+		//m_IconPause = Texture2D::Create(a,"Resources/Icons/PauseButton.png");
+		//m_IconSimulate = Texture2D::Create(a,"Resources/Icons/SimulateButton.png");
+		//m_IconStep = Texture2D::Create(a,"Resources/Icons/StepButton.png");
+		//m_IconStop = Texture2D::Create(a,"Resources/Icons/StopButton.png");
 
 		FramebufferSpecification fbSpec;
 		fbSpec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RED_INTEGER, FramebufferTextureFormat::Depth };
@@ -365,7 +365,7 @@ namespace Hazel {
 
 		if (hasPlayButton)
 		{
-			Ref<Texture2D> icon = (m_SceneState == SceneState::Edit || m_SceneState == SceneState::Simulate) ? m_IconPlay : m_IconStop;
+			Ref_old<Texture2D> icon = (m_SceneState == SceneState::Edit || m_SceneState == SceneState::Simulate) ? m_IconPlay : m_IconStop;
 			if (ImGui::ImageButton((ImTextureID)(uint64_t)icon->GetRendererID(), ImVec2(size, size), ImVec2(0, 0), ImVec2(1, 1), 0, ImVec4(0.0f, 0.0f, 0.0f, 0.0f), tintColor) && toolbarEnabled)
 			{
 				if (m_SceneState == SceneState::Edit || m_SceneState == SceneState::Simulate)
@@ -380,7 +380,7 @@ namespace Hazel {
 			if (hasPlayButton)
 				ImGui::SameLine();
 
-			Ref<Texture2D> icon = (m_SceneState == SceneState::Edit || m_SceneState == SceneState::Play) ? m_IconSimulate : m_IconStop;
+			Ref_old<Texture2D> icon = (m_SceneState == SceneState::Edit || m_SceneState == SceneState::Play) ? m_IconSimulate : m_IconStop;
 			if (ImGui::ImageButton((ImTextureID)(uint64_t)icon->GetRendererID(), ImVec2(size, size), ImVec2(0, 0), ImVec2(1, 1), 0, ImVec4(0.0f, 0.0f, 0.0f, 0.0f), tintColor) && toolbarEnabled)
 			{
 				if (m_SceneState == SceneState::Edit || m_SceneState == SceneState::Play)
@@ -394,7 +394,7 @@ namespace Hazel {
 			bool isPaused = m_ActiveScene->IsPaused();
 			ImGui::SameLine();
 			{
-				Ref<Texture2D> icon = m_IconPause;
+				Ref_old<Texture2D> icon = m_IconPause;
 				if (ImGui::ImageButton((ImTextureID)(uint64_t)icon->GetRendererID(), ImVec2(size, size), ImVec2(0, 0), ImVec2(1, 1), 0, ImVec4(0.0f, 0.0f, 0.0f, 0.0f), tintColor) && toolbarEnabled)
 				{
 					m_ActiveScene->SetPaused(!isPaused);
@@ -406,7 +406,7 @@ namespace Hazel {
 			{
 				ImGui::SameLine();
 				{
-					Ref<Texture2D> icon = m_IconStep;
+					Ref_old<Texture2D> icon = m_IconStep;
 					bool isPaused = m_ActiveScene->IsPaused();
 					if (ImGui::ImageButton((ImTextureID)(uint64_t)icon->GetRendererID(), ImVec2(size, size), ImVec2(0, 0), ImVec2(1, 1), 0, ImVec4(0.0f, 0.0f, 0.0f, 0.0f), tintColor) && toolbarEnabled)
 					{
@@ -663,7 +663,7 @@ namespace Hazel {
 			return;
 		}
 		
-		Ref<Scene> newScene = CreateRef<Scene>();
+		Ref_old<Scene> newScene = CreateRef<Scene>();
 		SceneSerializer serializer(newScene);
 		if (serializer.Deserialize(path.string()))
 		{
@@ -693,7 +693,7 @@ namespace Hazel {
 		}
 	}
 
-	void EditorLayer::SerializeScene(Ref<Scene> scene, const std::filesystem::path& path)
+	void EditorLayer::SerializeScene(Ref_old<Scene> scene, const std::filesystem::path& path)
 	{
 		SceneSerializer serializer(scene);
 		serializer.Serialize(path.string());

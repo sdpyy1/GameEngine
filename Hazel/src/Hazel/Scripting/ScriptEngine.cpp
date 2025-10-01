@@ -128,8 +128,8 @@ namespace Hazel {
 
 		ScriptClass EntityClass;
 
-		std::unordered_map<std::string, Ref<ScriptClass>> EntityClasses;
-		std::unordered_map<UUID, Ref<ScriptInstance>> EntityInstances;
+		std::unordered_map<std::string, Ref_old<ScriptClass>> EntityClasses;
+		std::unordered_map<UUID, Ref_old<ScriptInstance>> EntityInstances;
 		std::unordered_map<UUID, ScriptFieldMap> EntityScriptFields;
 
 		Scope<filewatch::FileWatch<std::string>> AppAssemblyFileWatcher;
@@ -297,7 +297,7 @@ namespace Hazel {
 		{
 			UUID entityID = entity.GetUUID();
 
-			Ref<ScriptInstance> m_Instance = CreateRef<ScriptInstance>(s_Data->EntityClasses[sc.ClassName], entity);
+			Ref_old<ScriptInstance> m_Instance = CreateRef<ScriptInstance>(s_Data->EntityClasses[sc.ClassName], entity);
 			s_Data->EntityInstances[entityID] = m_Instance;
 
 			// Copy field values
@@ -317,7 +317,7 @@ namespace Hazel {
 		UUID entityUUID = entity.GetUUID();
 		if (s_Data->EntityInstances.find(entityUUID) != s_Data->EntityInstances.end())
 		{
-			Ref<ScriptInstance> m_Instance = s_Data->EntityInstances[entityUUID];
+			Ref_old<ScriptInstance> m_Instance = s_Data->EntityInstances[entityUUID];
 			m_Instance->InvokeOnUpdate((float)ts);
 		}
 		else
@@ -331,7 +331,7 @@ namespace Hazel {
 		return s_Data->SceneContext;
 	}
 
-	Ref<ScriptInstance> ScriptEngine::GetEntityScriptInstance(UUID entityID)
+	Ref_old<ScriptInstance> ScriptEngine::GetEntityScriptInstance(UUID entityID)
 	{
 		auto it = s_Data->EntityInstances.find(entityID);
 		if (it == s_Data->EntityInstances.end())
@@ -341,7 +341,7 @@ namespace Hazel {
 	}
 
 
-	Ref<ScriptClass> ScriptEngine::GetEntityClass(const std::string& name)
+	Ref_old<ScriptClass> ScriptEngine::GetEntityClass(const std::string& name)
 	{
 		if (s_Data->EntityClasses.find(name) == s_Data->EntityClasses.end())
 			return nullptr;
@@ -356,7 +356,7 @@ namespace Hazel {
 		s_Data->EntityInstances.clear();
 	}
 
-	std::unordered_map<std::string, Ref<ScriptClass>> ScriptEngine::GetEntityClasses()
+	std::unordered_map<std::string, Ref_old<ScriptClass>> ScriptEngine::GetEntityClasses()
 	{
 		return s_Data->EntityClasses;
 	}
@@ -399,7 +399,7 @@ namespace Hazel {
 			if (!isEntity)
 				continue;
 
-			Ref<ScriptClass> scriptClass = CreateRef<ScriptClass>(nameSpace, className);
+			Ref_old<ScriptClass> scriptClass = CreateRef<ScriptClass>(nameSpace, className);
 			s_Data->EntityClasses[fullName] = scriptClass;
 
 
@@ -478,7 +478,7 @@ namespace Hazel {
 		return mono_runtime_invoke(method, m_Instance, params, &exception);
 	}
 
-	ScriptInstance::ScriptInstance(Ref<ScriptClass> scriptClass, Entity entity)
+	ScriptInstance::ScriptInstance(Ref_old<ScriptClass> scriptClass, Entity entity)
 		: m_ScriptClass(scriptClass)
 	{
 		m_Instance = scriptClass->Instantiate();

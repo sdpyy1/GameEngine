@@ -19,7 +19,7 @@ namespace Hazel {
 		"VK_LAYER_KHRONOS_validation"
 	};
 
-	namespace VkUtils {
+	namespace VKUtils {
 		VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData);
 		void SetDebugUtilsObjectName(const VkDevice device, const VkObjectType objectType, const std::string& name, const void* handle);
 		std::vector<const char*> getRequiredExtensions();

@@ -6,7 +6,7 @@ namespace Hazel {
 
 	using AssetHandle = UUID;
 
-	class Asset
+	class Asset : public RefCounted
 	{
 	public:
 		AssetHandle Handle = 0;

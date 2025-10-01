@@ -7,36 +7,36 @@
 
 namespace Hazel {
 
-	Ref<VertexBuffer> VertexBuffer::Create(uint32_t size)
+	Ref_old<VertexBuffer> VertexBuffer::Create(uint32_t size)
 	{
 		switch (Renderer::GetAPI())
 		{
-			case RendererAPI::RenderAPI::None:    HZ_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
-			case RendererAPI::RenderAPI::OpenGL:  return CreateRef<OpenGLVertexBuffer>(size);
+			case RendererAPI::APIType::None:    HZ_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
+			case RendererAPI::APIType::OpenGL:  return CreateRef<OpenGLVertexBuffer>(size);
 		}
 
 		HZ_CORE_ASSERT(false, "Unknown RendererAPI!");
 		return nullptr;
 	}
 
-	Ref<VertexBuffer> VertexBuffer::Create(float* vertices, uint32_t size)
+	Ref_old<VertexBuffer> VertexBuffer::Create(float* vertices, uint32_t size)
 	{
 		switch (Renderer::GetAPI())
 		{
-			case RendererAPI::RenderAPI::None:    HZ_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
-			case RendererAPI::RenderAPI::OpenGL:  return CreateRef<OpenGLVertexBuffer>(vertices, size);
+			case RendererAPI::APIType::None:    HZ_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
+			case RendererAPI::APIType::OpenGL:  return CreateRef<OpenGLVertexBuffer>(vertices, size);
 		}
 
 		HZ_CORE_ASSERT(false, "Unknown RendererAPI!");
 		return nullptr;
 	}
 
-	Ref<IndexBuffer> IndexBuffer::Create(uint32_t* indices, uint32_t size)
+	Ref_old<IndexBuffer> IndexBuffer::Create(uint32_t* indices, uint32_t size)
 	{
 		switch (Renderer::GetAPI())
 		{
-			case RendererAPI::RenderAPI::None:    HZ_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
-			case RendererAPI::RenderAPI::OpenGL:  return CreateRef<OpenGLIndexBuffer>(indices, size);
+			case RendererAPI::APIType::None:    HZ_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
+			case RendererAPI::APIType::OpenGL:  return CreateRef<OpenGLIndexBuffer>(indices, size);
 		}
 
 		HZ_CORE_ASSERT(false, "Unknown RendererAPI!");

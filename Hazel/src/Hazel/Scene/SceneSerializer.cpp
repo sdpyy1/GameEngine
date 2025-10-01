@@ -167,7 +167,7 @@ namespace Hazel {
 		return Rigidbody2DComponent::BodyType::Static;
 	}
 
-	SceneSerializer::SceneSerializer(const Ref<Scene>& scene)
+	SceneSerializer::SceneSerializer(const Ref_old<Scene>& scene)
 		: m_Scene(scene)
 	{
 	}
@@ -237,7 +237,7 @@ namespace Hazel {
 			out << YAML::Key << "ClassName" << YAML::Value << scriptComponent.ClassName;
 
 			// Fields
-			Ref<ScriptClass> entityClass = ScriptEngine::GetEntityClass(scriptComponent.ClassName);
+			Ref_old<ScriptClass> entityClass = ScriptEngine::GetEntityClass(scriptComponent.ClassName);
 			const auto& fields = entityClass->GetFields();
 			if (fields.size() > 0)
 			{
@@ -291,7 +291,7 @@ namespace Hazel {
 			auto& spriteRendererComponent = entity.GetComponent<SpriteRendererComponent>();
 			out << YAML::Key << "Color" << YAML::Value << spriteRendererComponent.Color;
 			if (spriteRendererComponent.Texture)
-				out << YAML::Key << "TexturePath" << YAML::Value << spriteRendererComponent.Texture->GetPath();
+				//out << YAML::Key << "TexturePath" << YAML::Value << spriteRendererComponent.Texture->GetPath();
 
 			out << YAML::Key << "TilingFactor" << YAML::Value << spriteRendererComponent.TilingFactor;
 
@@ -474,7 +474,7 @@ namespace Hazel {
 					auto scriptFields = scriptComponent["ScriptFields"];
 					if (scriptFields)
 					{
-						Ref<ScriptClass> entityClass = ScriptEngine::GetEntityClass(sc.ClassName);
+						Ref_old<ScriptClass> entityClass = ScriptEngine::GetEntityClass(sc.ClassName);
 						if (entityClass)
 						{
 							const auto& fields = entityClass->GetFields();
@@ -530,7 +530,8 @@ namespace Hazel {
 					{
 						std::string texturePath = spriteRendererComponent["TexturePath"].as<std::string>();
 						auto path = Project::GetAssetFileSystemPath(texturePath);
-						src.Texture = Texture2D::Create(path.string());
+						TextureSpecification defaultSpec;
+						src.Texture = Texture2D::Create(defaultSpec,path.string());
 					}
 
 					if (spriteRendererComponent["TilingFactor"])

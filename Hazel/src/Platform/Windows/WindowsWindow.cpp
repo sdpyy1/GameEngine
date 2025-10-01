@@ -58,10 +58,10 @@ namespace Hazel {
 		{
 			HZ_PROFILE_SCOPE("glfwCreateWindow");
 		#if defined(HZ_DEBUG)
-			if (Renderer::GetAPI() == RendererAPI::RenderAPI::OpenGL)
+			if (Renderer::GetAPI() == RendererAPI::APIType::OpenGL)
 				glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
 		#endif
-			if (Renderer::GetAPI() == RendererAPI::RenderAPI::Vulkan)
+			if (Renderer::GetAPI() == RendererAPI::APIType::Vulkan)
 				glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
 			m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
@@ -75,8 +75,8 @@ namespace Hazel {
 		HZ_CORE_INFO("RenderContext Init Done!");
 
 		// SwapChain For Vulkan
-		if (Renderer::GetAPI() == RendererAPI::RenderAPI::Vulkan) {
-			Ref<VulkanContext> context = std::dynamic_pointer_cast<VulkanContext>(m_RenderContext);
+		if (Renderer::GetAPI() == RendererAPI::APIType::Vulkan) {
+			Ref_old<VulkanContext> context = std::dynamic_pointer_cast<VulkanContext>(m_RenderContext);
 
 			m_SwapChain = new VulkanSwapChain(context->GetInstanceNative(), context->GetDeviceNative());
 			m_SwapChain->InitSurface(m_Window);
@@ -232,7 +232,7 @@ namespace Hazel {
 	void WindowsWindow::SetVSync(bool enabled)
 	{
 		HZ_PROFILE_FUNCTION();
-		if (Renderer::GetAPI() == RendererAPI::RenderAPI::OpenGL) {
+		if (Renderer::GetAPI() == RendererAPI::APIType::OpenGL) {
 			if (enabled)
 				glfwSwapInterval(1);
 			else
@@ -240,7 +240,7 @@ namespace Hazel {
 
 			m_Data.VSync = enabled;
 		}
-		if (Renderer::GetAPI() == RendererAPI::RenderAPI::Vulkan) {
+		if (Renderer::GetAPI() == RendererAPI::APIType::Vulkan) {
 			HZ_CORE_WARN("TODO: Vulkan SetVSync");
 			m_Data.VSync = false;
 		}	

@@ -7,45 +7,45 @@
 
 namespace Hazel {
 
-	Ref<Texture2D> Texture2D::Create(const TextureSpecification& specification)
+	Ref_old<Texture2D> Texture2D::Create(const TextureSpecification& specification)
 	{
 		switch (RendererAPI::GetAPI())
 		{
-		case RendererAPI::RenderAPI::None: return nullptr;
-		case RendererAPI::RenderAPI::Vulkan: return Ref<VulkanTexture2D>::Create(specification);
+		case RendererAPI::APIType::None: return nullptr;
+		//case RendererAPI::APIType::Vulkan: return Ref_old<VulkanTexture2D>::Create(specification);
 		}
 		HZ_CORE_ASSERT(false, "Unknown RendererAPI");
 		return nullptr;
 	}
 
-	Ref<Texture2D> Texture2D::Create(const TextureSpecification& specification, const std::filesystem::path& filepath)
+	Ref_old<Texture2D> Texture2D::Create(const TextureSpecification& specification, const std::filesystem::path& filepath)
 	{
 		switch (RendererAPI::GetAPI())
 		{
-		case RendererAPI::RenderAPI::None: return nullptr;
-		case RendererAPI::RenderAPI::Vulkan: return Ref<VulkanTexture2D>::Create(specification, filepath);
+		case RendererAPI::APIType::None: return nullptr;
+		//case RendererAPI::APIType::Vulkan: return Ref_old<VulkanTexture2D>::Create(specification, filepath);
 		}
 		HZ_CORE_ASSERT(false, "Unknown RendererAPI");
 		return nullptr;
 	}
 
-	Ref<Texture2D> Texture2D::Create(const TextureSpecification& specification, Buffer1 imageData)
+	Ref_old<Texture2D> Texture2D::Create(const TextureSpecification& specification, Buffer1 imageData)
 	{
 		switch (RendererAPI::GetAPI())
 		{
-		case RendererAPI::RenderAPI::None: return nullptr;
-		case RendererAPI::RenderAPI::Vulkan: return Ref<VulkanTexture2D>::Create(specification, imageData);
+		case RendererAPI::APIType::None: return nullptr;
+		//case RendererAPI::APIType::Vulkan: return Ref<VulkanTexture2D>::Create(specification, imageData);
 		}
 		HZ_CORE_ASSERT(false, "Unknown RendererAPI");
 		return nullptr;
 	}
 
-	Ref<TextureCube> TextureCube::Create(const TextureSpecification& specification, Buffer1 imageData)
+	Ref_old<TextureCube> TextureCube::Create(const TextureSpecification& specification, Buffer1 imageData)
 	{
 		switch (RendererAPI::GetAPI())
 		{
-		case RendererAPI::RenderAPI::None: return nullptr;
-		case RendererAPI::RenderAPI::Vulkan: return Ref<VulkanTextureCube>::Create(specification, imageData);
+		case RendererAPI::APIType::None: return nullptr;
+		//case RendererAPI::APIType::Vulkan: return Ref_old<VulkanTextureCube>::Create(specification, imageData);
 		}
 		HZ_CORE_ASSERT(false, "Unknown RendererAPI");
 		return nullptr;

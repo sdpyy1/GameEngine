@@ -1,4 +1,5 @@
 #include "hzpch.h"
+#include <glm/gtc/integer.hpp>
 #include "Platform/OpenGL/OpenGLTexture.h"
 
 #include <stb_image.h>
@@ -11,8 +12,8 @@ namespace Hazel {
 		{
 			switch (format)
 			{
-				case ImageFormat::RGB8:  return GL_RGB;
-				case ImageFormat::RGBA8: return GL_RGBA;
+				case ImageFormat::RGB:  return GL_RGB;
+				case ImageFormat::RGBA: return GL_RGBA;
 			}
 
 			HZ_CORE_ASSERT(false);
@@ -23,8 +24,8 @@ namespace Hazel {
 		{
 			switch (format)
 			{
-			case ImageFormat::RGB8:  return GL_RGB8;
-			case ImageFormat::RGBA8: return GL_RGBA8;
+			case ImageFormat::RGB:  return GL_RGB8;
+			case ImageFormat::RGBA: return GL_RGBA8;
 			}
 
 			HZ_CORE_ASSERT(false);
