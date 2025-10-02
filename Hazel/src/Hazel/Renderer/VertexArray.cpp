@@ -8,10 +8,10 @@ namespace Hazel {
 
 	Ref_old<VertexArray> VertexArray::Create_old()
 	{
-		switch (Renderer::GetAPI())
+		switch (Renderer::Current())
 		{
-			case RendererAPI::APIType::None:    HZ_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
-			case RendererAPI::APIType::OpenGL:  return CreateRef<OpenGLVertexArray>();
+			case RendererAPI::Type::None:    HZ_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
+			case RendererAPI::Type::OpenGL:  return CreateRef<OpenGLVertexArray>();
 		}
 
 		HZ_CORE_ASSERT(false, "Unknown RendererAPI!");

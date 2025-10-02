@@ -15,7 +15,13 @@ namespace Hazel {
 
 		virtual void DrawIndexed(const Ref_old<VertexArray>& vertexArray, uint32_t indexCount = 0) override;
 		virtual void DrawLines(const Ref_old<VertexArray>& vertexArray, uint32_t vertexCount) override;
-		
+		virtual RendererCapabilities& GetCapabilities() override;
+		virtual void Shutdown(){};
+		virtual void BeginFrame(){};
+		virtual void EndFrame(){};
+		virtual void BeginRenderPass(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<RenderPass> renderPass, bool explicitClear = false){};
+		virtual void EndRenderPass(Ref<RenderCommandBuffer> renderCommandBuffer){};
+
 		virtual void SetLineWidth(float width) override;
 	};
 

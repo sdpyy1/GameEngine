@@ -7,7 +7,7 @@
 
 namespace Hazel {
 
-	class Shader
+	class Shader : public RefCounted
 	{
 	public:
 		virtual ~Shader() = default;
@@ -27,21 +27,32 @@ namespace Hazel {
 
 		static Ref_old<Shader> Create_old(const std::string& filepath);
 		static Ref_old<Shader> Create_old(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc);
+
+
+		// 最终保留的接口
+		static Ref<Shader> Create(const std::string& filepath, bool forceCompile = false, bool disableOptimization = false);
+		virtual void Reload(bool forceCompile = false) = 0;
+		virtual void RT_Reload(bool forceCompile) = 0;
 	};
 
 	class ShaderLibrary : public RefCounted
 	{
 	public:
-		void Add(const std::string& name, const Ref_old<Shader>& shader);
-		void Add(const Ref_old<Shader>& shader);
-		Ref_old<Shader> Load(const std::string& filepath);
-		Ref_old<Shader> Load(const std::string& name, const std::string& filepath);
+		void Add_old(const std::string& name, const Ref_old<Shader>& shader);
+		void Add_old(const Ref_old<Shader>& shader);
+		void Add(const std::string& name, const Ref<Shader>& shader);
+		void Add(const Ref<Shader>& shader);
+		Ref_old<Shader> Load_old(const std::string& filepath);
+		Ref<Shader> Load(const std::string& filepath);
+		Ref_old<Shader> Load_old(const std::string& name, const std::string& filepath);
 
 		Ref_old<Shader> Get(const std::string& name);
 
+		bool Exists_old(const std::string& name) const;
 		bool Exists(const std::string& name) const;
 	private:
-		std::unordered_map<std::string, Ref_old<Shader>> m_Shaders;
+		std::unordered_map<std::string, Ref_old<Shader>> m_Shaders_old;
+		std::unordered_map<std::string, Ref<Shader>> m_Shaders;
 	};
 
 }

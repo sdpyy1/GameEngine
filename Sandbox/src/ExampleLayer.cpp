@@ -16,7 +16,7 @@ ExampleLayer::ExampleLayer()
 		 0.0f,  0.5f, 0.0f, 0.8f, 0.8f, 0.2f, 1.0f
 	};
 
-	Hazel::Ref_old<Hazel::VertexBuffer> vertexBuffer = Hazel::VertexBuffer::Create_old(vertices, sizeof(vertices));
+	Hazel::Ref_old<Hazel::VertexBuffer_old> vertexBuffer = Hazel::VertexBuffer_old::Create_old(vertices, sizeof(vertices));
 	Hazel::BufferLayout layout = {
 		{ Hazel::ShaderDataType::Float3, "a_Position" },
 		{ Hazel::ShaderDataType::Float4, "a_Color" }
@@ -25,7 +25,7 @@ ExampleLayer::ExampleLayer()
 	m_VertexArray->AddVertexBuffer(vertexBuffer);
 
 	uint32_t indices[3] = { 0, 1, 2 };
-	Hazel::Ref_old<Hazel::IndexBuffer> indexBuffer = Hazel::IndexBuffer::Create_old(indices, sizeof(indices) / sizeof(uint32_t));
+	Hazel::Ref_old<Hazel::IndexBuffer_old> indexBuffer = Hazel::IndexBuffer_old::Create_old(indices, sizeof(indices) / sizeof(uint32_t));
 	m_VertexArray->SetIndexBuffer(indexBuffer);
 
 	m_SquareVA = Hazel::VertexArray::Create_old();
@@ -37,7 +37,7 @@ ExampleLayer::ExampleLayer()
 		-0.5f,  0.5f, 0.0f, 0.0f, 1.0f
 	};
 
-	Hazel::Ref_old<Hazel::VertexBuffer> squareVB = Hazel::VertexBuffer::Create_old(squareVertices, sizeof(squareVertices));
+	Hazel::Ref_old<Hazel::VertexBuffer_old> squareVB = Hazel::VertexBuffer_old::Create_old(squareVertices, sizeof(squareVertices));
 	squareVB->SetLayout({
 		{ Hazel::ShaderDataType::Float3, "a_Position" },
 		{ Hazel::ShaderDataType::Float2, "a_TexCoord" }
@@ -45,7 +45,7 @@ ExampleLayer::ExampleLayer()
 	m_SquareVA->AddVertexBuffer(squareVB);
 
 	uint32_t squareIndices[6] = { 0, 1, 2, 2, 3, 0 };
-	Hazel::Ref_old<Hazel::IndexBuffer> squareIB = Hazel::IndexBuffer::Create_old(squareIndices, sizeof(squareIndices) / sizeof(uint32_t));
+	Hazel::Ref_old<Hazel::IndexBuffer_old> squareIB = Hazel::IndexBuffer_old::Create_old(squareIndices, sizeof(squareIndices) / sizeof(uint32_t));
 	m_SquareVA->SetIndexBuffer(squareIB);
 
 	std::string vertexSrc = R"(
@@ -119,7 +119,7 @@ ExampleLayer::ExampleLayer()
 
 	m_FlatColorShader = Hazel::Shader::Create_old("FlatColor", flatColorShaderVertexSrc, flatColorShaderFragmentSrc);
 
-	auto textureShader = m_ShaderLibrary.Load("assets/shaders/Texture.glsl");
+	auto textureShader = m_ShaderLibrary.Load_old("assets/shaders/Texture.glsl");
 
 	m_Texture = Hazel::Texture2D::Create_old("assets/textures/Checkerboard.png");
 	m_ChernoLogoTexture = Hazel::Texture2D::Create_old("assets/textures/ChernoLogo.png");

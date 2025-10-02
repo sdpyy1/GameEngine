@@ -16,6 +16,7 @@ namespace Hazel {
 		VulkanPhysicalDevice(VkInstance vkInstance);
 		~VulkanPhysicalDevice();
 		const VkPhysicalDeviceProperties& GetProperties() const { return m_Properties; }
+		const VkPhysicalDeviceLimits& GetLimits() const { return m_Properties.limits; }
 
 		VkPhysicalDevice GetVulkanPhysicalDevice() const { return m_PhysicalDevice; }
 		const QueueFamilyIndices& GetQueueFamilyIndices() const { return m_QueueFamilyIndices; }

@@ -72,6 +72,12 @@ namespace Hazel {
 		glDrawArrays(GL_LINES, 0, vertexCount);
 	}
 
+	RendererCapabilities& OpenGLRendererAPI::GetCapabilities()
+	{
+		RendererCapabilities A;
+		return A;
+	}
+
 	void OpenGLRendererAPI::SetLineWidth(float width)
 	{
 		glLineWidth(width);

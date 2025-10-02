@@ -44,7 +44,7 @@ namespace Hazel {
 		static Ref_old<Project> GetActive() { return s_ActiveProject; }
 
 		static Ref_old<Project> New();
-		static Ref_old<Project> Load(const std::filesystem::path& path);
+		static Ref_old<Project> Load_old(const std::filesystem::path& path);
 		static bool SaveActive(const std::filesystem::path& path);
 	private:
 		ProjectConfig m_Config;

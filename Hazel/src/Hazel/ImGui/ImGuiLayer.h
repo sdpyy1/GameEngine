@@ -29,5 +29,5 @@ namespace Hazel {
 	private:
 		bool m_BlockEvents = true;
 	};
-
+	
 }

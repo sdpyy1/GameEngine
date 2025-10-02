@@ -1,23 +1,21 @@
 #include "hzpch.h"
-#include "Hazel/Renderer/Framebuffer.h"
+#include "Framebuffer.h"
 
-#include "Hazel/Renderer/Renderer.h"
-
-#include "Platform/OpenGL/OpenGLFramebuffer.h"
+#include "Hazel/Renderer/RendererAPI.h"
+#include <Platform/Vulkan/VulkanFramebuffer.h>
 
 namespace Hazel {
-	
-	Ref_old<Framebuffer> Framebuffer::Create_old(const FramebufferSpecification& spec)
-	{
-		switch (Renderer::GetAPI())
-		{
-			case RendererAPI::APIType::None:    HZ_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
-			case RendererAPI::APIType::OpenGL:  return CreateRef<OpenGLFramebuffer>(spec);
-		}
 
-		HZ_CORE_ASSERT(false, "Unknown RendererAPI!");
-		return nullptr;
+	Ref<Framebuffer> Framebuffer::Create(const FramebufferSpecification& spec)
+	{
+		Ref<Framebuffer> result = nullptr;
+
+		switch (RendererAPI::Current())
+		{
+		case RendererAPI::Type::None:		return nullptr;
+		case RendererAPI::Type::Vulkan:	result = Ref<VulkanFramebuffer>::Create(spec); break;
+		}
+		return result;
 	}
 
 }
-

@@ -7,10 +7,10 @@ namespace Hazel {
 	{
 		HZ_CORE_ASSERT(!buffer);
 
-		switch (RendererAPI::GetAPI())
+		switch (RendererAPI::Current())
 		{
-			case RendererAPI::APIType::None: return nullptr;
-			case RendererAPI::APIType::Vulkan: return Ref<VulkanImage2D>::Create(specification);
+			case RendererAPI::Type::None: return nullptr;
+			case RendererAPI::Type::Vulkan: return Ref<VulkanImage2D>::Create(specification);
 		}
 		HZ_CORE_ASSERT(false, "Unknown RendererAPI");
 		return nullptr;

@@ -1,13 +1,13 @@
 #pragma once
 
-#include "Hazel/Renderer/Framebuffer.h"
+#include "Hazel/Renderer/Framebuffer_old.h"
 
 namespace Hazel {
 
-	class OpenGLFramebuffer : public Framebuffer
+	class OpenGLFramebuffer : public Framebuffer_old
 	{
 	public:
-		OpenGLFramebuffer(const FramebufferSpecification& spec);
+		OpenGLFramebuffer(const FramebufferSpecification_old& spec);
 		virtual ~OpenGLFramebuffer();
 
 		void Invalidate();
@@ -22,13 +22,13 @@ namespace Hazel {
 
 		virtual uint32_t GetColorAttachmentRendererID(uint32_t index = 0) const override { HZ_CORE_ASSERT(index < m_ColorAttachments.size()); return m_ColorAttachments[index]; }
 
-		virtual const FramebufferSpecification& GetSpecification() const override { return m_Specification; }
+		virtual const FramebufferSpecification_old& GetSpecification() const override { return m_Specification; }
 	private:
 		uint32_t m_RendererID = 0;
-		FramebufferSpecification m_Specification;
+		FramebufferSpecification_old m_Specification;
 
-		std::vector<FramebufferTextureSpecification> m_ColorAttachmentSpecifications;
-		FramebufferTextureSpecification m_DepthAttachmentSpecification = FramebufferTextureFormat::None;
+		std::vector<FramebufferTextureSpecification_old> m_ColorAttachmentSpecifications;
+		FramebufferTextureSpecification_old m_DepthAttachmentSpecification = FramebufferTextureFormat_old::None;
 
 		std::vector<uint32_t> m_ColorAttachments;
 		uint32_t m_DepthAttachment = 0;

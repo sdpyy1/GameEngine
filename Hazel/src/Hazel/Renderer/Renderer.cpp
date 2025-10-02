@@ -1,7 +1,7 @@
 #include "hzpch.h"
 #include "Hazel/Renderer/Renderer.h"
 #include "Hazel/Renderer/Renderer2D.h"
-#include "Platform/Vulkan/VulkanRenderAPI.h"
+#include "Platform/Vulkan/VulkanRenderer.h"
 #include "Hazel/Renderer/RendererAPI.h"
 #include <glm/gtc/random.hpp>
 
@@ -24,9 +24,9 @@ namespace Hazel {
 		}();
 	static RendererAPI* InitRendererAPI()
 	{
-		switch (RendererAPI::GetAPI())
+		switch (RendererAPI::Current())
 		{
-			case RendererAPI::APIType::Vulkan: return nullptr;
+			case RendererAPI::Type::Vulkan: return nullptr;
 		}
 		HZ_CORE_ASSERT(false, "Unknown RendererAPI");
 		return nullptr;
@@ -74,10 +74,8 @@ namespace Hazel {
 		//s_Data->m_ShaderLibrary = Ref<ShaderLibrary>::Create();
 
 		//if (!s_Config.ShaderPackPath.empty())
-		//	Renderer::GetShaderLibrary()->LoadShaderPack(s_Config.ShaderPackPath);
 		//// NOTE: some shaders (compute) need to have optimization disabled because of a shaderc internal error
-		//Renderer::GetShaderLibrary()->Load("Resources/Shaders/HZB.glsl");
-
+		Ref<Shader> shader = Shader::Create("assets/shaders/vert.spv");
 
 		// º”‘ÿŒ∆¿Ì
 		uint32_t whiteTextureData = 0xffffffff;
@@ -94,9 +92,44 @@ namespace Hazel {
 		Renderer2D::Shutdown();
 	}
 
+	Ref<ShaderLibrary> Renderer::GetShaderLibrary()
+	{
+		return s_Data->m_ShaderLibrary;
+	}
+
+	RendererCapabilities& Renderer::GetCapabilities()
+	{
+		return s_RendererAPI->GetCapabilities();
+	}
+
+
 	void Renderer::OnWindowResize(uint32_t width, uint32_t height)
 	{
 		RenderCommand::SetViewport(0, 0, width, height);
+	}
+	Ref<Texture2D> Renderer::GetWhiteTexture()
+	{
+		return s_Data->WhiteTexture;
+	}
+
+	Ref<Texture2D> Renderer::GetBlackTexture()
+	{
+		return s_Data->BlackTexture;
+	}
+
+	Ref<Texture2D> Renderer::GetHilbertLut()
+	{
+		return s_Data->HilbertLut;
+	}
+
+	Ref<Texture2D> Renderer::GetBRDFLutTexture()
+	{
+		return s_Data->BRDFLutTexture;
+	}
+
+	Ref<TextureCube> Renderer::GetBlackCubeTexture()
+	{
+		return s_Data->BlackCubeTexture;
 	}
 
 	void Renderer::BeginScene(OrthographicCamera& camera)
@@ -141,7 +174,7 @@ namespace Hazel {
 	}
 	void Renderer::WaitAndRender(RenderThread* renderThread)
 	{
-		// Wait for kick, then set render thread to busy
+		// Wait for kick, then set render thread to busy  
 		{
 			HZ_PROFILE_SCOPE("Wait");
 			renderThread->WaitAndSet(RenderThread::State::Kick, RenderThread::State::Busy);

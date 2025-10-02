@@ -11,7 +11,7 @@ namespace Hazel {
 		return s_ActiveProject;
 	}
 
-	Ref_old<Project> Project::Load(const std::filesystem::path& path)
+	Ref_old<Project> Project::Load_old(const std::filesystem::path& path)
 	{
 		Ref_old<Project> project = CreateRef<Project>();
 

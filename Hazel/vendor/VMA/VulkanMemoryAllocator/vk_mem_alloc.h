@@ -8495,9 +8495,9 @@ public:
     size_t GetLength() const { return m_Data.size(); }
     const char* GetData() const { return m_Data.data(); }
 
-    void Add(char ch) { m_Data.push_back(ch); }
-    void Add(const char* pStr);
-    void AddNewLine() { Add('\n'); }
+    void Add_old(char ch) { m_Data.push_back(ch); }
+    void Add_old(const char* pStr);
+    void AddNewLine() { Add_old('\n'); }
     void AddNumber(uint32_t num);
     void AddNumber(uint64_t num);
     void AddPointer(const void* ptr);
@@ -8506,7 +8506,7 @@ private:
     VmaVector< char, VmaStlAllocator<char> > m_Data;
 };
 
-void VmaStringBuilder::Add(const char* pStr)
+void VmaStringBuilder::Add_old(const char* pStr)
 {
     const size_t strLen = strlen(pStr);
     if(strLen > 0)
@@ -8528,7 +8528,7 @@ void VmaStringBuilder::AddNumber(uint32_t num)
         num /= 10;
     }
     while(num);
-    Add(p);
+    Add_old(p);
 }
 
 void VmaStringBuilder::AddNumber(uint64_t num)
@@ -8542,14 +8542,14 @@ void VmaStringBuilder::AddNumber(uint64_t num)
         num /= 10;
     }
     while(num);
-    Add(p);
+    Add_old(p);
 }
 
 void VmaStringBuilder::AddPointer(const void* ptr)
 {
     char buf[21];
     VmaPtrToStr(buf, sizeof(buf), ptr);
-    Add(buf);
+    Add_old(buf);
 }
 
 #endif // #if VMA_STATS_STRING_ENABLED
@@ -8628,7 +8628,7 @@ void VmaJsonWriter::BeginObject(bool singleLine)
     VMA_ASSERT(!m_InsideString);
 
     BeginValue(false);
-    m_SB.Add('{');
+    m_SB.Add_old('{');
 
     StackItem item;
     item.type = COLLECTION_TYPE_OBJECT;
@@ -8642,7 +8642,7 @@ void VmaJsonWriter::EndObject()
     VMA_ASSERT(!m_InsideString);
 
     WriteIndent(true);
-    m_SB.Add('}');
+    m_SB.Add_old('}');
 
     VMA_ASSERT(!m_Stack.empty() && m_Stack.back().type == COLLECTION_TYPE_OBJECT);
     m_Stack.pop_back();
@@ -8653,7 +8653,7 @@ void VmaJsonWriter::BeginArray(bool singleLine)
     VMA_ASSERT(!m_InsideString);
 
     BeginValue(false);
-    m_SB.Add('[');
+    m_SB.Add_old('[');
 
     StackItem item;
     item.type = COLLECTION_TYPE_ARRAY;
@@ -8667,7 +8667,7 @@ void VmaJsonWriter::EndArray()
     VMA_ASSERT(!m_InsideString);
 
     WriteIndent(true);
-    m_SB.Add(']');
+    m_SB.Add_old(']');
 
     VMA_ASSERT(!m_Stack.empty() && m_Stack.back().type == COLLECTION_TYPE_ARRAY);
     m_Stack.pop_back();
@@ -8684,7 +8684,7 @@ void VmaJsonWriter::BeginString(const char* pStr)
     VMA_ASSERT(!m_InsideString);
 
     BeginValue(true);
-    m_SB.Add('"');
+    m_SB.Add_old('"');
     m_InsideString = true;
     if(pStr != VMA_NULL && pStr[0] != '\0')
     {
@@ -8702,32 +8702,32 @@ void VmaJsonWriter::ContinueString(const char* pStr)
         char ch = pStr[i];
         if(ch == '\\')
         {
-            m_SB.Add("\\\\");
+            m_SB.Add_old("\\\\");
         }
         else if(ch == '"')
         {
-            m_SB.Add("\\\"");
+            m_SB.Add_old("\\\"");
         }
         else if(ch >= 32)
         {
-            m_SB.Add(ch);
+            m_SB.Add_old(ch);
         }
         else switch(ch)
         {
         case '\b':
-            m_SB.Add("\\b");
+            m_SB.Add_old("\\b");
             break;
         case '\f':
-            m_SB.Add("\\f");
+            m_SB.Add_old("\\f");
             break;
         case '\n':
-            m_SB.Add("\\n");
+            m_SB.Add_old("\\n");
             break;
         case '\r':
-            m_SB.Add("\\r");
+            m_SB.Add_old("\\r");
             break;
         case '\t':
-            m_SB.Add("\\t");
+            m_SB.Add_old("\\t");
             break;
         default:
             VMA_ASSERT(0 && "Character not currently supported.");
@@ -8761,7 +8761,7 @@ void VmaJsonWriter::EndString(const char* pStr)
     {
         ContinueString(pStr);
     }
-    m_SB.Add('"');
+    m_SB.Add_old('"');
     m_InsideString = false;
 }
 
@@ -8783,14 +8783,14 @@ void VmaJsonWriter::WriteBool(bool b)
 {
     VMA_ASSERT(!m_InsideString);
     BeginValue(false);
-    m_SB.Add(b ? "true" : "false");
+    m_SB.Add_old(b ? "true" : "false");
 }
 
 void VmaJsonWriter::WriteNull()
 {
     VMA_ASSERT(!m_InsideString);
     BeginValue(false);
-    m_SB.Add("null");
+    m_SB.Add_old("null");
 }
 
 void VmaJsonWriter::BeginValue(bool isString)
@@ -8807,11 +8807,11 @@ void VmaJsonWriter::BeginValue(bool isString)
         if(currItem.type == COLLECTION_TYPE_OBJECT &&
             currItem.valueCount % 2 != 0)
         {
-            m_SB.Add(": ");
+            m_SB.Add_old(": ");
         }
         else if(currItem.valueCount > 0)
         {
-            m_SB.Add(", ");
+            m_SB.Add_old(", ");
             WriteIndent();
         }
         else
@@ -8835,7 +8835,7 @@ void VmaJsonWriter::WriteIndent(bool oneLess)
         }
         for(size_t i = 0; i < count; ++i)
         {
-            m_SB.Add(INDENT);
+            m_SB.Add_old(INDENT);
         }
     }
 }

@@ -6,14 +6,14 @@
 
 namespace Hazel {
 
-	bool Input::IsKeyPressed(const KeyCode key)
+	bool Input_old::IsKeyPressed(const KeyCode_old key)
 	{
 		auto* window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
 		auto state = glfwGetKey(window, static_cast<int32_t>(key));
 		return state == GLFW_PRESS;
 	}
 
-	void Input::SetCursorMode(CursorMode mode)
+	void Input_old::SetCursorMode(CursorMode mode)
 	{
 		auto* window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
 		switch (mode)
@@ -30,14 +30,14 @@ namespace Hazel {
 		}
 	}
 
-	bool Input::IsMouseButtonPressed(const MouseCode button)
+	bool Input_old::IsMouseButtonPressed(const MouseCode button)
 	{
 		auto* window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
 		auto state = glfwGetMouseButton(window, static_cast<int32_t>(button));
 		return state == GLFW_PRESS;
 	}
 
-	glm::vec2 Input::GetMousePosition()
+	glm::vec2 Input_old::GetMousePosition()
 	{
 		auto* window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
 		double xpos, ypos;
@@ -46,12 +46,12 @@ namespace Hazel {
 		return { (float)xpos, (float)ypos };
 	}
 
-	float Input::GetMouseX()
+	float Input_old::GetMouseX()
 	{
 		return GetMousePosition().x;
 	}
 
-	float Input::GetMouseY()
+	float Input_old::GetMouseY()
 	{
 		return GetMousePosition().y;
 	}

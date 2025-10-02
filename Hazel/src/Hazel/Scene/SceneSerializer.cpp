@@ -177,53 +177,53 @@ namespace Hazel {
 		HZ_CORE_ASSERT(entity.HasComponent<IDComponent>());
 
 		out << YAML::BeginMap; // Entity
-		out << YAML::Key << "Entity" << YAML::Value << entity.GetUUID();
+		out << YAML::Key_old << "Entity" << YAML::Value << entity.GetUUID();
 
 		if (entity.HasComponent<TagComponent>())
 		{
-			out << YAML::Key << "TagComponent";
+			out << YAML::Key_old << "TagComponent";
 			out << YAML::BeginMap; // TagComponent
 
 			auto& tag = entity.GetComponent<TagComponent>().Tag;
-			out << YAML::Key << "Tag" << YAML::Value << tag;
+			out << YAML::Key_old << "Tag" << YAML::Value << tag;
 
 			out << YAML::EndMap; // TagComponent
 		}
 
 		if (entity.HasComponent<TransformComponent>())
 		{
-			out << YAML::Key << "TransformComponent";
+			out << YAML::Key_old << "TransformComponent";
 			out << YAML::BeginMap; // TransformComponent
 
 			auto& tc = entity.GetComponent<TransformComponent>();
-			out << YAML::Key << "Translation" << YAML::Value << tc.Translation;
-			out << YAML::Key << "Rotation" << YAML::Value << tc.Rotation;
-			out << YAML::Key << "Scale" << YAML::Value << tc.Scale;
+			out << YAML::Key_old << "Translation" << YAML::Value << tc.Translation;
+			out << YAML::Key_old << "Rotation" << YAML::Value << tc.Rotation;
+			out << YAML::Key_old << "Scale" << YAML::Value << tc.Scale;
 
 			out << YAML::EndMap; // TransformComponent
 		}
 
 		if (entity.HasComponent<CameraComponent>())
 		{
-			out << YAML::Key << "CameraComponent";
+			out << YAML::Key_old << "CameraComponent";
 			out << YAML::BeginMap; // CameraComponent
 
 			auto& cameraComponent = entity.GetComponent<CameraComponent>();
 			auto& camera = cameraComponent.Camera;
 
-			out << YAML::Key << "Camera" << YAML::Value;
+			out << YAML::Key_old << "Camera" << YAML::Value;
 			out << YAML::BeginMap; // Camera
-			out << YAML::Key << "ProjectionType" << YAML::Value << (int)camera.GetProjectionType();
-			out << YAML::Key << "PerspectiveFOV" << YAML::Value << camera.GetPerspectiveVerticalFOV();
-			out << YAML::Key << "PerspectiveNear" << YAML::Value << camera.GetPerspectiveNearClip();
-			out << YAML::Key << "PerspectiveFar" << YAML::Value << camera.GetPerspectiveFarClip();
-			out << YAML::Key << "OrthographicSize" << YAML::Value << camera.GetOrthographicSize();
-			out << YAML::Key << "OrthographicNear" << YAML::Value << camera.GetOrthographicNearClip();
-			out << YAML::Key << "OrthographicFar" << YAML::Value << camera.GetOrthographicFarClip();
+			out << YAML::Key_old << "ProjectionType" << YAML::Value << (int)camera.GetProjectionType();
+			out << YAML::Key_old << "PerspectiveFOV" << YAML::Value << camera.GetPerspectiveVerticalFOV();
+			out << YAML::Key_old << "PerspectiveNear" << YAML::Value << camera.GetPerspectiveNearClip();
+			out << YAML::Key_old << "PerspectiveFar" << YAML::Value << camera.GetPerspectiveFarClip();
+			out << YAML::Key_old << "OrthographicSize" << YAML::Value << camera.GetOrthographicSize();
+			out << YAML::Key_old << "OrthographicNear" << YAML::Value << camera.GetOrthographicNearClip();
+			out << YAML::Key_old << "OrthographicFar" << YAML::Value << camera.GetOrthographicFarClip();
 			out << YAML::EndMap; // Camera
 
-			out << YAML::Key << "Primary" << YAML::Value << cameraComponent.Primary;
-			out << YAML::Key << "FixedAspectRatio" << YAML::Value << cameraComponent.FixedAspectRatio;
+			out << YAML::Key_old << "Primary" << YAML::Value << cameraComponent.Primary;
+			out << YAML::Key_old << "FixedAspectRatio" << YAML::Value << cameraComponent.FixedAspectRatio;
 
 			out << YAML::EndMap; // CameraComponent
 		}
@@ -232,16 +232,16 @@ namespace Hazel {
 		{
 			auto& scriptComponent = entity.GetComponent<ScriptComponent>();
 
-			out << YAML::Key << "ScriptComponent";
+			out << YAML::Key_old << "ScriptComponent";
 			out << YAML::BeginMap; // ScriptComponent
-			out << YAML::Key << "ClassName" << YAML::Value << scriptComponent.ClassName;
+			out << YAML::Key_old << "ClassName" << YAML::Value << scriptComponent.ClassName;
 
 			// Fields
 			Ref_old<ScriptClass> entityClass = ScriptEngine::GetEntityClass(scriptComponent.ClassName);
 			const auto& fields = entityClass->GetFields();
 			if (fields.size() > 0)
 			{
-				out << YAML::Key << "ScriptFields" << YAML::Value;
+				out << YAML::Key_old << "ScriptFields" << YAML::Value;
 				auto& entityFields = ScriptEngine::GetScriptFieldMap(entity);
 				out << YAML::BeginSeq;
 				for (const auto& [name, field] : fields)
@@ -250,10 +250,10 @@ namespace Hazel {
 						continue;
 
 					out << YAML::BeginMap; // ScriptField
-					out << YAML::Key << "Name" << YAML::Value << name;
-					out << YAML::Key << "Type" << YAML::Value << Utils::ScriptFieldTypeToString(field.Type);
+					out << YAML::Key_old << "Name" << YAML::Value << name;
+					out << YAML::Key_old << "Type" << YAML::Value << Utils::ScriptFieldTypeToString(field.Type);
 
-					out << YAML::Key << "Data" << YAML::Value;
+					out << YAML::Key_old << "Data" << YAML::Value;
 					ScriptFieldInstance& scriptField = entityFields.at(name);
 
 					switch (field.Type)
@@ -285,87 +285,87 @@ namespace Hazel {
 
 		if (entity.HasComponent<SpriteRendererComponent>())
 		{
-			out << YAML::Key << "SpriteRendererComponent";
+			out << YAML::Key_old << "SpriteRendererComponent";
 			out << YAML::BeginMap; // SpriteRendererComponent
 
 			auto& spriteRendererComponent = entity.GetComponent<SpriteRendererComponent>();
-			out << YAML::Key << "Color" << YAML::Value << spriteRendererComponent.Color;
+			out << YAML::Key_old << "Color" << YAML::Value << spriteRendererComponent.Color;
 			if (spriteRendererComponent.Texture)
 				//out << YAML::Key << "TexturePath" << YAML::Value << spriteRendererComponent.Texture->GetPath();
 
-			out << YAML::Key << "TilingFactor" << YAML::Value << spriteRendererComponent.TilingFactor;
+			out << YAML::Key_old << "TilingFactor" << YAML::Value << spriteRendererComponent.TilingFactor;
 
 			out << YAML::EndMap; // SpriteRendererComponent
 		}
 
 		if (entity.HasComponent<CircleRendererComponent>())
 		{
-			out << YAML::Key << "CircleRendererComponent";
+			out << YAML::Key_old << "CircleRendererComponent";
 			out << YAML::BeginMap; // CircleRendererComponent
 
 			auto& circleRendererComponent = entity.GetComponent<CircleRendererComponent>();
-			out << YAML::Key << "Color" << YAML::Value << circleRendererComponent.Color;
-			out << YAML::Key << "Thickness" << YAML::Value << circleRendererComponent.Thickness;
-			out << YAML::Key << "Fade" << YAML::Value << circleRendererComponent.Fade;
+			out << YAML::Key_old << "Color" << YAML::Value << circleRendererComponent.Color;
+			out << YAML::Key_old << "Thickness" << YAML::Value << circleRendererComponent.Thickness;
+			out << YAML::Key_old << "Fade" << YAML::Value << circleRendererComponent.Fade;
 
 			out << YAML::EndMap; // CircleRendererComponent
 		}
 
 		if (entity.HasComponent<Rigidbody2DComponent>())
 		{
-			out << YAML::Key << "Rigidbody2DComponent";
+			out << YAML::Key_old << "Rigidbody2DComponent";
 			out << YAML::BeginMap; // Rigidbody2DComponent
 
 			auto& rb2dComponent = entity.GetComponent<Rigidbody2DComponent>();
-			out << YAML::Key << "BodyType" << YAML::Value << RigidBody2DBodyTypeToString(rb2dComponent.Type);
-			out << YAML::Key << "FixedRotation" << YAML::Value << rb2dComponent.FixedRotation;
+			out << YAML::Key_old << "BodyType" << YAML::Value << RigidBody2DBodyTypeToString(rb2dComponent.Type);
+			out << YAML::Key_old << "FixedRotation" << YAML::Value << rb2dComponent.FixedRotation;
 
 			out << YAML::EndMap; // Rigidbody2DComponent
 		}
 
 		if (entity.HasComponent<BoxCollider2DComponent>())
 		{
-			out << YAML::Key << "BoxCollider2DComponent";
+			out << YAML::Key_old << "BoxCollider2DComponent";
 			out << YAML::BeginMap; // BoxCollider2DComponent
 
 			auto& bc2dComponent = entity.GetComponent<BoxCollider2DComponent>();
-			out << YAML::Key << "Offset" << YAML::Value << bc2dComponent.Offset;
-			out << YAML::Key << "Size" << YAML::Value << bc2dComponent.Size;
-			out << YAML::Key << "Density" << YAML::Value << bc2dComponent.Density;
-			out << YAML::Key << "Friction" << YAML::Value << bc2dComponent.Friction;
-			out << YAML::Key << "Restitution" << YAML::Value << bc2dComponent.Restitution;
-			out << YAML::Key << "RestitutionThreshold" << YAML::Value << bc2dComponent.RestitutionThreshold;
+			out << YAML::Key_old << "Offset" << YAML::Value << bc2dComponent.Offset;
+			out << YAML::Key_old << "Size" << YAML::Value << bc2dComponent.Size;
+			out << YAML::Key_old << "Density" << YAML::Value << bc2dComponent.Density;
+			out << YAML::Key_old << "Friction" << YAML::Value << bc2dComponent.Friction;
+			out << YAML::Key_old << "Restitution" << YAML::Value << bc2dComponent.Restitution;
+			out << YAML::Key_old << "RestitutionThreshold" << YAML::Value << bc2dComponent.RestitutionThreshold;
 
 			out << YAML::EndMap; // BoxCollider2DComponent
 		}
 
 		if (entity.HasComponent<CircleCollider2DComponent>())
 		{
-			out << YAML::Key << "CircleCollider2DComponent";
+			out << YAML::Key_old << "CircleCollider2DComponent";
 			out << YAML::BeginMap; // CircleCollider2DComponent
 
 			auto& cc2dComponent = entity.GetComponent<CircleCollider2DComponent>();
-			out << YAML::Key << "Offset" << YAML::Value << cc2dComponent.Offset;
-			out << YAML::Key << "Radius" << YAML::Value << cc2dComponent.Radius;
-			out << YAML::Key << "Density" << YAML::Value << cc2dComponent.Density;
-			out << YAML::Key << "Friction" << YAML::Value << cc2dComponent.Friction;
-			out << YAML::Key << "Restitution" << YAML::Value << cc2dComponent.Restitution;
-			out << YAML::Key << "RestitutionThreshold" << YAML::Value << cc2dComponent.RestitutionThreshold;
+			out << YAML::Key_old << "Offset" << YAML::Value << cc2dComponent.Offset;
+			out << YAML::Key_old << "Radius" << YAML::Value << cc2dComponent.Radius;
+			out << YAML::Key_old << "Density" << YAML::Value << cc2dComponent.Density;
+			out << YAML::Key_old << "Friction" << YAML::Value << cc2dComponent.Friction;
+			out << YAML::Key_old << "Restitution" << YAML::Value << cc2dComponent.Restitution;
+			out << YAML::Key_old << "RestitutionThreshold" << YAML::Value << cc2dComponent.RestitutionThreshold;
 
 			out << YAML::EndMap; // CircleCollider2DComponent
 		}
 
 		if (entity.HasComponent<TextComponent>())
 		{
-			out << YAML::Key << "TextComponent";
+			out << YAML::Key_old << "TextComponent";
 			out << YAML::BeginMap; // TextComponent
 
 			auto& textComponent = entity.GetComponent<TextComponent>();
-			out << YAML::Key << "TextString" << YAML::Value << textComponent.TextString;
+			out << YAML::Key_old << "TextString" << YAML::Value << textComponent.TextString;
 			// TODO: textComponent.FontAsset
-			out << YAML::Key << "Color" << YAML::Value << textComponent.Color;
-			out << YAML::Key << "Kerning" << YAML::Value << textComponent.Kerning;
-			out << YAML::Key << "LineSpacing" << YAML::Value << textComponent.LineSpacing;
+			out << YAML::Key_old << "Color" << YAML::Value << textComponent.Color;
+			out << YAML::Key_old << "Kerning" << YAML::Value << textComponent.Kerning;
+			out << YAML::Key_old << "LineSpacing" << YAML::Value << textComponent.LineSpacing;
 
 			out << YAML::EndMap; // TextComponent
 		}
@@ -377,8 +377,8 @@ namespace Hazel {
 	{
 		YAML::Emitter out;
 		out << YAML::BeginMap;
-		out << YAML::Key << "Scene" << YAML::Value << "Untitled";
-		out << YAML::Key << "Entities" << YAML::Value << YAML::BeginSeq;
+		out << YAML::Key_old << "Scene" << YAML::Value << "Untitled";
+		out << YAML::Key_old << "Entities" << YAML::Value << YAML::BeginSeq;
 		m_Scene->m_Registry.each([&](auto entityID)
 		{
 			Entity entity = { entityID, m_Scene.get() };

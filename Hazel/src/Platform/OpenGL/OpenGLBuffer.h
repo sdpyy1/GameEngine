@@ -4,7 +4,7 @@
 
 namespace Hazel {
 
-	class OpenGLVertexBuffer : public VertexBuffer
+	class OpenGLVertexBuffer : public VertexBuffer_old
 	{
 	public:
 		OpenGLVertexBuffer(uint32_t size);
@@ -23,7 +23,7 @@ namespace Hazel {
 		BufferLayout m_Layout;
 	};
 
-	class OpenGLIndexBuffer : public IndexBuffer
+	class OpenGLIndexBuffer : public IndexBuffer_old
 	{
 	public:
 		OpenGLIndexBuffer(uint32_t* indices, uint32_t count);

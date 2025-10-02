@@ -66,22 +66,22 @@ namespace Hazel {
 			glFramebufferTexture2D(GL_FRAMEBUFFER, attachmentType, TextureTarget(multisampled), id, 0);
 		}
 
-		static bool IsDepthFormat(FramebufferTextureFormat format)
+		static bool IsDepthFormat(FramebufferTextureFormat_old format)
 		{
 			switch (format)
 			{
-				case FramebufferTextureFormat::DEPTH24STENCIL8:  return true;
+				case FramebufferTextureFormat_old::DEPTH24STENCIL8:  return true;
 			}
 
 			return false;
 		}
 
-		static GLenum HazelFBTextureFormatToGL(FramebufferTextureFormat format)
+		static GLenum HazelFBTextureFormatToGL(FramebufferTextureFormat_old format)
 		{
 			switch (format)
 			{
-				case FramebufferTextureFormat::RGBA8:       return GL_RGBA8;
-				case FramebufferTextureFormat::RED_INTEGER: return GL_RED_INTEGER;
+				case FramebufferTextureFormat_old::RGBA8:       return GL_RGBA8;
+				case FramebufferTextureFormat_old::RED_INTEGER: return GL_RED_INTEGER;
 			}
 
 			HZ_CORE_ASSERT(false);
@@ -90,7 +90,7 @@ namespace Hazel {
 
 	}
 
-	OpenGLFramebuffer::OpenGLFramebuffer(const FramebufferSpecification& spec)
+	OpenGLFramebuffer::OpenGLFramebuffer(const FramebufferSpecification_old& spec)
 		: m_Specification(spec)
 	{
 		for (auto spec : m_Specification.Attachments.Attachments)
@@ -139,23 +139,23 @@ namespace Hazel {
 				Utils::BindTexture(multisample, m_ColorAttachments[i]);
 				switch (m_ColorAttachmentSpecifications[i].TextureFormat)
 				{
-					case FramebufferTextureFormat::RGBA8:
+					case FramebufferTextureFormat_old::RGBA8:
 						Utils::AttachColorTexture(m_ColorAttachments[i], m_Specification.Samples, GL_RGBA8, GL_RGBA, m_Specification.Width, m_Specification.Height, i);
 						break;
-					case FramebufferTextureFormat::RED_INTEGER:
+					case FramebufferTextureFormat_old::RED_INTEGER:
 						Utils::AttachColorTexture(m_ColorAttachments[i], m_Specification.Samples, GL_R32I, GL_RED_INTEGER, m_Specification.Width, m_Specification.Height, i);
 						break;
 				}
 			}
 		}
 
-		if (m_DepthAttachmentSpecification.TextureFormat != FramebufferTextureFormat::None)
+		if (m_DepthAttachmentSpecification.TextureFormat != FramebufferTextureFormat_old::None)
 		{
 			Utils::CreateTextures(multisample, &m_DepthAttachment, 1);
 			Utils::BindTexture(multisample, m_DepthAttachment);
 			switch (m_DepthAttachmentSpecification.TextureFormat)
 			{
-				case FramebufferTextureFormat::DEPTH24STENCIL8:
+				case FramebufferTextureFormat_old::DEPTH24STENCIL8:
 					Utils::AttachDepthTexture(m_DepthAttachment, m_Specification.Samples, GL_DEPTH24_STENCIL8, GL_DEPTH_STENCIL_ATTACHMENT, m_Specification.Width, m_Specification.Height);
 					break;
 			}

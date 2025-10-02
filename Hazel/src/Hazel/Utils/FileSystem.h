@@ -31,8 +31,8 @@ namespace Hazel {
 		static void SetWorkingDirectory(std::filesystem::path path);
 		static bool CreateDirectory(const std::filesystem::path& directory);
 		static bool CreateDirectory(const std::string& directory);
-		static bool Exists(const std::filesystem::path& filepath);
-		static bool Exists(const std::string& filepath);
+		static bool Exists_old(const std::filesystem::path& filepath);
+		static bool Exists_old(const std::string& filepath);
 		static bool DeleteFile(const std::filesystem::path& filepath);
 		static bool MoveFile(const std::filesystem::path& filepath, const std::filesystem::path& dest);
 		static bool CopyFile(const std::filesystem::path& filepath, const std::filesystem::path& dest);

@@ -54,7 +54,7 @@ namespace Hazel {
 		// Temp
 		Ref_old<VertexArray> m_SquareVA;
 		Ref_old<Shader> m_FlatColorShader;
-		Ref_old<Framebuffer> m_Framebuffer;
+		Ref_old<Framebuffer_old> m_Framebuffer;
 
 		Ref_old<Scene> m_ActiveScene;
 		Ref_old<Scene> m_EditorScene;

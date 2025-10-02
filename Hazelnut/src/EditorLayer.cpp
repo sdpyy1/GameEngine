@@ -33,11 +33,11 @@ namespace Hazel {
 		//m_IconStep = Texture2D::Create(a,"Resources/Icons/StepButton.png");
 		//m_IconStop = Texture2D::Create(a,"Resources/Icons/StopButton.png");
 
-		FramebufferSpecification fbSpec;
-		fbSpec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RED_INTEGER, FramebufferTextureFormat::Depth };
+		FramebufferSpecification_old fbSpec;
+		fbSpec.Attachments = { FramebufferTextureFormat_old::RGBA8, FramebufferTextureFormat_old::RED_INTEGER, FramebufferTextureFormat_old::Depth };
 		fbSpec.Width = 1280;
 		fbSpec.Height = 720;
-		m_Framebuffer = Framebuffer::Create_old(fbSpec);
+		m_Framebuffer = Framebuffer_old::Create_old(fbSpec);
 
 		m_EditorScene = CreateRef<Scene>();
 		m_ActiveScene = m_EditorScene;
@@ -77,7 +77,7 @@ namespace Hazel {
 		m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 
 		// Resize
-		if (FramebufferSpecification spec = m_Framebuffer->GetSpecification();
+		if (FramebufferSpecification_old spec = m_Framebuffer->GetSpecification();
 			m_ViewportSize.x > 0.0f && m_ViewportSize.y > 0.0f && // zero sized framebuffer is invalid
 			(spec.Width != m_ViewportSize.x || spec.Height != m_ViewportSize.y))
 		{
@@ -304,7 +304,7 @@ namespace Hazel {
 			glm::mat4 transform = tc.GetTransform();
 
 			// Snapping
-			bool snap = Input::IsKeyPressed(Key::LeftControl);
+			bool snap = Input_old::IsKeyPressed(Key_old::LeftControl);
 			float snapValue = 0.5f; // Snap to 0.5m for translation/scale
 			// Snap to 45 degrees for rotation
 			if (m_GizmoType == ImGuizmo::OPERATION::ROTATE)
@@ -439,26 +439,26 @@ namespace Hazel {
 		if (e.IsRepeat())
 			return false;
 
-		bool control = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
-		bool shift = Input::IsKeyPressed(Key::LeftShift) || Input::IsKeyPressed(Key::RightShift);
+		bool control = Input_old::IsKeyPressed(Key_old::LeftControl) || Input_old::IsKeyPressed(Key_old::RightControl);
+		bool shift = Input_old::IsKeyPressed(Key_old::LeftShift) || Input_old::IsKeyPressed(Key_old::RightShift);
 
 		switch (e.GetKeyCode())
 		{
-			case Key::N:
+			case Key_old::N:
 			{
 				if (control)
 					NewScene();
 
 				break;
 			}
-			case Key::O:
+			case Key_old::O:
 			{
 				if (control)
 					OpenProject();
 
 				break;
 			}
-			case Key::S:
+			case Key_old::S:
 			{
 				if (control)
 				{
@@ -472,7 +472,7 @@ namespace Hazel {
 			}
 
 			// Scene Commands
-			case Key::D:
+			case Key_old::D:
 			{
 				if (control)
 					OnDuplicateEntity();
@@ -481,25 +481,25 @@ namespace Hazel {
 			}
 
 			// Gizmos
-			case Key::Q:
+			case Key_old::Q:
 			{
 				if (!ImGuizmo::IsUsing())
 					m_GizmoType = -1;
 				break;
 			}
-			case Key::W:
+			case Key_old::W:
 			{
 				if (!ImGuizmo::IsUsing())
 					m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
 				break;
 			}
-			case Key::E:
+			case Key_old::E:
 			{
 				if (!ImGuizmo::IsUsing())
 					m_GizmoType = ImGuizmo::OPERATION::ROTATE;
 				break;
 			}
-			case Key::R:
+			case Key_old::R:
 			{
 				if (control)
 				{
@@ -512,7 +512,7 @@ namespace Hazel {
 				}
 				break;
 			}
-			case Key::Delete:
+			case Key_old::Delete:
 			{
 				if (Application::Get().GetImGuiLayer()->GetActiveWidgetID() == 0)
 				{
@@ -534,7 +534,7 @@ namespace Hazel {
 	{
 		if (e.GetMouseButton() == Mouse::ButtonLeft)
 		{
-			if (m_ViewportHovered && !ImGuizmo::IsOver() && !Input::IsKeyPressed(Key::LeftAlt))
+			if (m_ViewportHovered && !ImGuizmo::IsOver() && !Input_old::IsKeyPressed(Key_old::LeftAlt))
 				m_SceneHierarchyPanel.SetSelectedEntity(m_HoveredEntity);
 		}
 		return false;
@@ -611,7 +611,7 @@ namespace Hazel {
 
 	void EditorLayer::OpenProject(const std::filesystem::path& path)
 	{
-		if (Project::Load(path))
+		if (Project::Load_old(path))
 		{
 			ScriptEngine::Init();
 

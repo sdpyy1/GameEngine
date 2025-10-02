@@ -64,28 +64,28 @@ namespace Hazel {
 	void EditorCamera::OnUpdate(Timestep ts)
 	{
 		// 1. 处理鼠标捕获/释放（右键控制）
-		if (Input::IsMouseButtonPressed(Mouse::ButtonRight))
+		if (Input_old::IsMouseButtonPressed(Mouse::ButtonRight))
 		{
 			if (!m_IsMouseCaptured)
 			{
 				// 按下右键：捕获鼠标（隐藏+锁定）
 				m_IsMouseCaptured = true;
-				m_LastMousePosition = { Input::GetMouseX(), Input::GetMouseY() };
-				Input::SetCursorMode(Input::CursorMode::Locked); // 隐藏鼠标并锁定在窗口内
+				m_LastMousePosition = { Input_old::GetMouseX(), Input_old::GetMouseY() };
+				Input_old::SetCursorMode(Input_old::CursorMode::Locked); // 隐藏鼠标并锁定在窗口内
 			}
 		}
 		else if (m_IsMouseCaptured)
 		{
 			// 松开右键：释放鼠标（显示+自由）
 			m_IsMouseCaptured = false;
-			Input::SetCursorMode(Input::CursorMode::Normal); // 恢复鼠标显示
+			Input_old::SetCursorMode(Input_old::CursorMode::Normal); // 恢复鼠标显示
 		}
 
 		// 2. 捕获状态下：处理鼠标旋转和 WASD 移动
 		if (m_IsMouseCaptured)
 		{
 			// （1）鼠标旋转：计算鼠标位移，更新 Yaw/Pitch
-			const glm::vec2 currentMousePos = { Input::GetMouseX(), Input::GetMouseY() };
+			const glm::vec2 currentMousePos = { Input_old::GetMouseX(), Input_old::GetMouseY() };
 			glm::vec2 mouseDelta = currentMousePos - m_LastMousePosition;
 			m_LastMousePosition = currentMousePos;
 
@@ -100,13 +100,13 @@ namespace Hazel {
 			const float moveSpeed = 5.0f * ts; // 移动速度（可根据需求调整，乘以时间步确保帧率无关）
 			glm::vec3 moveDir = { 0.0f, 0.0f, 0.0f };
 
-			if (Input::IsKeyPressed(Key::W)) moveDir += GetForwardDirection();   // W → 前进（相机前向）
-			if (Input::IsKeyPressed(Key::S)) moveDir -= GetForwardDirection();   // S → 后退
-			if (Input::IsKeyPressed(Key::A)) moveDir -= GetRightDirection();     // A → 左移（相机右向的反方向）
-			if (Input::IsKeyPressed(Key::D)) moveDir += GetRightDirection();     // D → 右移
-			if (Input::IsKeyPressed(Key::LeftShift)) moveDir *= 2.0f;            // Shift → 加速（可选）
-			if (Input::IsKeyPressed(Key::Space)) moveDir += GetUpDirection();    // Space → 上升（可选）
-			if (Input::IsKeyPressed(Key::LeftControl)) moveDir -= GetUpDirection(); // Ctrl → 下降（可选）
+			if (Input_old::IsKeyPressed(Key_old::W)) moveDir += GetForwardDirection();   // W → 前进（相机前向）
+			if (Input_old::IsKeyPressed(Key_old::S)) moveDir -= GetForwardDirection();   // S → 后退
+			if (Input_old::IsKeyPressed(Key_old::A)) moveDir -= GetRightDirection();     // A → 左移（相机右向的反方向）
+			if (Input_old::IsKeyPressed(Key_old::D)) moveDir += GetRightDirection();     // D → 右移
+			if (Input_old::IsKeyPressed(Key_old::LeftShift)) moveDir *= 2.0f;            // Shift → 加速（可选）
+			if (Input_old::IsKeyPressed(Key_old::Space)) moveDir += GetUpDirection();    // Space → 上升（可选）
+			if (Input_old::IsKeyPressed(Key_old::LeftControl)) moveDir -= GetUpDirection(); // Ctrl → 下降（可选）
 
 			// 归一化移动方向：避免斜向移动速度过快
 			if (glm::length(moveDir) > 0.0f)

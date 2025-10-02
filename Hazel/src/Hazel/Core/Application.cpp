@@ -15,6 +15,7 @@
 namespace Hazel {
 
 	Application* Application::s_Instance = nullptr;
+	static std::thread::id s_MainThreadID;
 
 	Application::Application(const ApplicationSpecification& specification)
 		: m_Specification(specification),m_RenderThread(ThreadingPolicy::SingleThreaded)
@@ -23,21 +24,29 @@ namespace Hazel {
 
 		HZ_CORE_ASSERT(!s_Instance, "Application already exists!");
 		s_Instance = this;
+		s_MainThreadID = std::this_thread::get_id();
+		m_RenderThread.Run();  // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã¶ï¿½ï¿½ß³ï¿½ï¿½ï¿½È¾ï¿½ï¿½ï¿½Í»á´´ï¿½ï¿½ï¿½ï¿½È¾ï¿½ß³Ì£ï¿½ï¿½ß³ï¿½ï¿½ï¿½ï¿½ï¿½whileÑ­ï¿½ï¿½ï¿½ï¿½ï¿½È´ï¿½Kickï¿½Åºï¿½
 
 		// Set working directory here
 		if (!m_Specification.WorkingDirectory.empty())
 			std::filesystem::current_path(m_Specification.WorkingDirectory);
 
 		m_Window = Window::Create_old(WindowProps(m_Specification.Name));
-		// ÕâÀïÉèÖÃÁË°Ñglfw½ÓÊÕµ½µÄÊÂ¼þ×ªÒÆµ½ÁËApplicationµÄOnEventº¯ÊýÖÐ
+		// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë°ï¿½glfwï¿½ï¿½ï¿½Õµï¿½ï¿½ï¿½ï¿½Â¼ï¿½×ªï¿½Æµï¿½ï¿½ï¿½Applicationï¿½ï¿½OnEventï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		m_Window->SetEventCallback(HZ_BIND_EVENT_FN(Application::OnEvent));
 		HZ_CORE_ASSERT(NFD::Init() == NFD_OKAY);
 
-		Renderer::Init();
-		m_RenderThread.Pump();
+		Renderer::Init();  // ï¿½ï¿½È¾ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Contextï¿½ï¿½ï¿½ï¿½ï¿½Ø³ï¿½Ê¼ï¿½ï¿½Shaderï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+		m_RenderThread.Pump();  // Ö´ï¿½ï¿½Ò»Ö¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¾ï¿½ï¿½ï¿½î»ºï¿½ï¿½ï¿½Ã³ï¿½ï¿½ï¿½Ö´ï¿½Ðµï¿½
 
+		// ImGuiï¿½ï¿½Ê¼ï¿½ï¿½
 		m_ImGuiLayer = new ImGuiLayer();
 		PushOverlay(m_ImGuiLayer);
+
+		// TODO:ï¿½ï¿½ï¿½ï¿½ÏµÍ³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð³ï¿½Ê¼ï¿½ï¿½
+
+
+
 	}
 
 	Application::~Application()
@@ -76,7 +85,7 @@ namespace Hazel {
 		m_MainThreadQueue.emplace_back(function);
 	}
 
-	// glfwµÄÊÂ¼þ´¦Àí
+	// glfwï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½
 	void Application::OnEvent(Event& e)
 	{
 		HZ_PROFILE_FUNCTION();
@@ -84,7 +93,7 @@ namespace Hazel {
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<WindowCloseEvent>(HZ_BIND_EVENT_FN(Application::OnWindowClose));
 		dispatcher.Dispatch<WindowResizeEvent>(HZ_BIND_EVENT_FN(Application::OnWindowResize));
-		// ´ÓÉÏµ½ÏÂ±éÀúLayerStack£¬´«µÝÊÂ¼þ
+		// ï¿½ï¿½ï¿½Ïµï¿½ï¿½Â±ï¿½ï¿½ï¿½LayerStackï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½
 		for (auto it = m_LayerStack.rbegin(); it != m_LayerStack.rend(); ++it)
 		{
 			if (e.Handled) 
@@ -101,23 +110,23 @@ namespace Hazel {
 		{
 			HZ_PROFILE_SCOPE("RunLoop");
 
-			// ¼ÆËãÒ»Ö¡ÓÃÊ±
+			// ï¿½ï¿½ï¿½ï¿½Ò»Ö¡ï¿½ï¿½Ê±
 			float time = Time::GetTime();
-			Timestep timestep = time - m_LastFrameTime; // ´úÂëÖÐÉæ¼°Timestep tsµÄº¯Êý²ÎÊý£¬¶¼ÊÇÀ´×ÔÕâ¸ö
+			Timestep timestep = time - m_LastFrameTime; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½æ¼°Timestep tsï¿½Äºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 			m_LastFrameTime = time;
 
 			ExecuteMainThreadQueue();
 
 			if (!m_Minimized)
 			{
-				// ¸üÐÂÃ¿²ã
+				// ï¿½ï¿½ï¿½ï¿½Ã¿ï¿½ï¿½
 				{
 					HZ_PROFILE_SCOPE("LayerStack OnUpdate");
 
 					for (Layer* layer : m_LayerStack)
 						layer->OnUpdate(timestep);
 				}
-				// äÖÈ¾ImGui
+				// ï¿½ï¿½È¾ImGui
 				m_ImGuiLayer->Begin();
 				{
 					HZ_PROFILE_SCOPE("LayerStack OnImGuiRender");
@@ -127,7 +136,7 @@ namespace Hazel {
 				}
 				m_ImGuiLayer->End();
 			}
-			// ¸üÐÂ´°¿Ú
+			// ï¿½ï¿½ï¿½Â´ï¿½ï¿½ï¿½
 			m_Window->OnUpdate();
 		}
 	}

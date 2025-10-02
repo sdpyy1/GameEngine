@@ -1,42 +1,220 @@
 #include "hzpch.h"
-#include "VulkanRenderAPI.h"
+#include "VulkanRenderer.h"
 #include <Hazel/Renderer/RendererCapabilities.h>
 #include "Vulkan.h"
+#include "Hazel/Renderer/Renderer.h"
+#include "VulkanContext.h"
+#include "VulkanUtils.h"
+#include <imgui.h>
+#include <Hazel/Renderer/IndexBuffer.h>
+#include "VulkanNativeCall.h"
+
 namespace Hazel {
 	struct VulkanRendererData
 	{
 		RendererCapabilities RenderCaps;
 
-		//Ref_old<Texture2D> BRDFLut;
+		Ref<Texture2D> BRDFLut;
 
-		//Ref<VertexBuffer> QuadVertexBuffer;
-		//Ref<IndexBuffer> QuadIndexBuffer;
+		Ref<VertexBuffer> QuadVertexBuffer;
+		Ref<IndexBuffer> QuadIndexBuffer;
 		//VulkanShader::ShaderMaterialDescriptorSet QuadDescriptorSet;
 
 		//std::unordered_map<SceneRenderer*, std::vector<VulkanShader::ShaderMaterialDescriptorSet>> RendererDescriptorSet;
-		//VkDescriptorSet ActiveRendererDescriptorSet = nullptr;
-		//std::vector<VkDescriptorPool> DescriptorPools;
-		//VkDescriptorPool MaterialDescriptorPool;
-		//std::vector<uint32_t> DescriptorPoolAllocationCount;
+		VkDescriptorSet ActiveRendererDescriptorSet = nullptr;
+		std::vector<VkDescriptorPool> DescriptorPools;
+		VkDescriptorPool MaterialDescriptorPool;
+		std::vector<uint32_t> DescriptorPoolAllocationCount;
 
-		//// UniformBufferSet -> Shader Hash -> Frame -> WriteDescriptor
-		//std::unordered_map<UniformBufferSet*, std::unordered_map<uint64_t, std::vector<std::vector<VkWriteDescriptorSet>>>> UniformBufferWriteDescriptorCache;
-		//std::unordered_map<StorageBufferSet*, std::unordered_map<uint64_t, std::vector<std::vector<VkWriteDescriptorSet>>>> StorageBufferWriteDescriptorCache;
+		// UniformBufferSet -> Shader Hash -> Frame -> WriteDescriptor
+		std::unordered_map<UniformBufferSet*, std::unordered_map<uint64_t, std::vector<std::vector<VkWriteDescriptorSet>>>> UniformBufferWriteDescriptorCache;
+		std::unordered_map<StorageBufferSet*, std::unordered_map<uint64_t, std::vector<std::vector<VkWriteDescriptorSet>>>> StorageBufferWriteDescriptorCache;
 
-		//// Default samplers
-		//VkSampler SamplerClamp = nullptr;
-		//VkSampler SamplerPoint = nullptr;
+		// Default samplers
+		VkSampler SamplerClamp = nullptr;
+		VkSampler SamplerPoint = nullptr;
 
 		int32_t SelectedDrawCall = -1;
 		int32_t DrawCallCount = 0;
 	};
-	void VulkanRenderAPI::Init()
-	{
+	static VulkanRendererData* s_Data = nullptr;
+
+	namespace Utils {
+
+		static const char* VulkanVendorIDToString(uint32_t vendorID)
+		{
+			switch (vendorID)
+			{
+			case 0x10DE: return "NVIDIA";
+			case 0x1002: return "AMD";
+			case 0x8086: return "INTEL";
+			case 0x13B5: return "ARM";
+			}
+			return "Unknown";
+		}
+
 	}
-	void VulkanRenderAPI::Clear()
+	void VulkanRenderer::Init()
 	{
+		s_Data = new VulkanRendererData();
+		const auto& config = Renderer::GetConfig();
+		s_Data->DescriptorPools.resize(config.FramesInFlight);
+		s_Data->DescriptorPoolAllocationCount.resize(config.FramesInFlight);
+		auto& caps = s_Data->RenderCaps;
+		auto& properties = VulkanContext::GetCurrentDevice()->GetPhysicalDevice()->GetProperties();
+		caps.Vendor = Utils::VulkanVendorIDToString(properties.vendorID);
+		caps.Device = properties.deviceName;
+		caps.Version = std::to_string(properties.driverVersion);
+		Utils::DumpGPUInfo();
+		// Create descriptor pools
+		Renderer::Submit([]() mutable
+			{
+				// Create Descriptor Pool
+				VkDescriptorPoolSize pool_sizes[] =
+				{
+					{ VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
+					{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
+					{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000 },
+					{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1000 },
+					{ VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000 },
+					{ VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1000 },
+					{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000 },
+					{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000 },
+					{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000 },
+					{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000 },
+					{ VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000 }
+				};
+				VkDescriptorPoolCreateInfo pool_info = {};
+				pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+				pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+				pool_info.maxSets = 100000;
+				pool_info.poolSizeCount = (uint32_t)IM_ARRAYSIZE(pool_sizes);
+				pool_info.pPoolSizes = pool_sizes;
+				VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+				uint32_t framesInFlight = Renderer::GetConfig().FramesInFlight;
+				for (uint32_t i = 0; i < framesInFlight; i++)
+				{
+					VK_CHECK_RESULT(vkCreateDescriptorPool(device, &pool_info, nullptr, &s_Data->DescriptorPools[i]));
+					s_Data->DescriptorPoolAllocationCount[i] = 0;
+				}
+
+				VK_CHECK_RESULT(vkCreateDescriptorPool(device, &pool_info, nullptr, &s_Data->MaterialDescriptorPool));
+			});
+
+		// Create fullscreen quad
+		float x = -1;
+		float y = -1;
+		float width = 2, height = 2;
+		struct QuadVertex
+		{
+			glm::vec3 Position;
+			glm::vec2 TexCoord;
+		};
+
+		QuadVertex* data = new QuadVertex[4];
+
+		data[0].Position = glm::vec3(x, y, 0.0f);
+		data[0].TexCoord = glm::vec2(0, 0);
+
+		data[1].Position = glm::vec3(x + width, y, 0.0f);
+		data[1].TexCoord = glm::vec2(1, 0);
+
+		data[2].Position = glm::vec3(x + width, y + height, 0.0f);
+		data[2].TexCoord = glm::vec2(1, 1);
+
+		data[3].Position = glm::vec3(x, y + height, 0.0f);
+		data[3].TexCoord = glm::vec2(0, 1);
+
+		s_Data->QuadVertexBuffer = VertexBuffer::Create(data, 4 * sizeof(QuadVertex));
+		uint32_t indices[6] = { 0, 1, 2, 2, 3, 0, };
+		s_Data->QuadIndexBuffer = IndexBuffer::Create(indices, 6 * sizeof(uint32_t));
+
+	}
+	void VulkanRenderer::Shutdown()
+	{
+		VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+		vkDeviceWaitIdle(device);
+
+		if (s_Data->SamplerPoint)
+		{
+			Vulkan::DestroySampler(s_Data->SamplerPoint);
+			s_Data->SamplerPoint = nullptr;
+		}
+
+		if (s_Data->SamplerClamp)
+		{
+			Vulkan::DestroySampler(s_Data->SamplerClamp);
+			s_Data->SamplerClamp = nullptr;
+		}
+
+#if HZ_HAS_SHADER_COMPILER
+		VulkanShaderCompiler::ClearUniformBuffers();
+#endif
+		delete s_Data;
 	}
 
+
+
+
+
+
+
+
+
+
+	RendererCapabilities& VulkanRenderer::GetCapabilities()
+	{
+		return s_Data->RenderCaps;
+	}
+	void VulkanRenderer::BeginFrame()
+	{
+		Renderer::Submit([]()
+			{
+				VulkanSwapChain& swapChain = Application::Get().GetWindow().GetSwapChain();
+
+				// Reset descriptor pools here
+				VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+				uint32_t bufferIndex = swapChain.GetCurrentBufferIndex();
+				vkResetDescriptorPool(device, s_Data->DescriptorPools[bufferIndex], 0);
+				memset(s_Data->DescriptorPoolAllocationCount.data(), 0, s_Data->DescriptorPoolAllocationCount.size() * sizeof(uint32_t));
+
+				s_Data->DrawCallCount = 0;
+
+#if 0
+				VkCommandBufferBeginInfo cmdBufInfo = {};
+				cmdBufInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+				cmdBufInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+				cmdBufInfo.pNext = nullptr;
+
+				VkCommandBuffer drawCommandBuffer = swapChain.GetCurrentDrawCommandBuffer();
+				commandBuffer = drawCommandBuffer;
+				HZ_CORE_ASSERT(commandBuffer);
+				VK_CHECK_RESULT(vkBeginCommandBuffer(drawCommandBuffer, &cmdBufInfo));
+#endif
+			});
+	}
+
+	void VulkanRenderer::EndFrame()
+	{
+#if 0
+		Renderer::Submit([]()
+			{
+				VK_CHECK_RESULT(vkEndCommandBuffer(commandBuffer));
+				commandBuffer = nullptr;
+			});
+#endif
+	}
+	VkDescriptorSet VulkanRenderer::RT_AllocateDescriptorSet(VkDescriptorSetAllocateInfo& allocInfo)
+	{
+
+		uint32_t bufferIndex = Renderer::RT_GetCurrentFrameIndex();
+		allocInfo.descriptorPool = s_Data->DescriptorPools[bufferIndex];
+		VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+		VkDescriptorSet result;
+		VK_CHECK_RESULT(vkAllocateDescriptorSets(device, &allocInfo, &result));
+		s_Data->DescriptorPoolAllocationCount[bufferIndex] += allocInfo.descriptorSetCount;
+		return result;
+	}
 	namespace Utils {
 
 		void InsertImageMemoryBarrier(

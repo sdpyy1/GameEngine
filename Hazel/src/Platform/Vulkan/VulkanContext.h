@@ -1,4 +1,5 @@
 #pragma once
+#include "Hazel/Renderer/Renderer.h"
 #include "Hazel/Renderer/GraphicsContext.h"
 #include <Hazel/Core/Application.h>
 #include "VulkanDevice.h"

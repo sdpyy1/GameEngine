@@ -261,9 +261,9 @@ namespace Hazel {
 		tc.LineSpacing = lineSpacing;
 	}
 
-	static bool Input_IsKeyDown(KeyCode keycode)
+	static bool Input_IsKeyDown(KeyCode_old keycode)
 	{
-		return Input::IsKeyPressed(keycode);
+		return Input_old::IsKeyPressed(keycode);
 	}
 
 	template<typename... Component>

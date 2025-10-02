@@ -15,23 +15,23 @@ namespace Hazel {
 	{
 		HZ_PROFILE_FUNCTION();
 
-		if (Input::IsKeyPressed(Key::A))
+		if (Input_old::IsKeyPressed(Key_old::A))
 		{
 			m_CameraPosition.x -= cos(glm::radians(m_CameraRotation)) * m_CameraTranslationSpeed * ts;
 			m_CameraPosition.y -= sin(glm::radians(m_CameraRotation)) * m_CameraTranslationSpeed * ts;
 		}
-		else if (Input::IsKeyPressed(Key::D))
+		else if (Input_old::IsKeyPressed(Key_old::D))
 		{
 			m_CameraPosition.x += cos(glm::radians(m_CameraRotation)) * m_CameraTranslationSpeed * ts;
 			m_CameraPosition.y += sin(glm::radians(m_CameraRotation)) * m_CameraTranslationSpeed * ts;
 		}
 
-		if (Input::IsKeyPressed(Key::W))
+		if (Input_old::IsKeyPressed(Key_old::W))
 		{
 			m_CameraPosition.x += -sin(glm::radians(m_CameraRotation)) * m_CameraTranslationSpeed * ts;
 			m_CameraPosition.y += cos(glm::radians(m_CameraRotation)) * m_CameraTranslationSpeed * ts;
 		}
-		else if (Input::IsKeyPressed(Key::S))
+		else if (Input_old::IsKeyPressed(Key_old::S))
 		{
 			m_CameraPosition.x -= -sin(glm::radians(m_CameraRotation)) * m_CameraTranslationSpeed * ts;
 			m_CameraPosition.y -= cos(glm::radians(m_CameraRotation)) * m_CameraTranslationSpeed * ts;
@@ -39,9 +39,9 @@ namespace Hazel {
 
 		if (m_Rotation)
 		{
-			if (Input::IsKeyPressed(Key::Q))
+			if (Input_old::IsKeyPressed(Key_old::Q))
 				m_CameraRotation += m_CameraRotationSpeed * ts;
-			if (Input::IsKeyPressed(Key::E))
+			if (Input_old::IsKeyPressed(Key_old::E))
 				m_CameraRotation -= m_CameraRotationSpeed * ts;
 
 			if (m_CameraRotation > 180.0f)
