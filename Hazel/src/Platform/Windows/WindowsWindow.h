@@ -21,7 +21,7 @@ namespace Hazel {
 		void SetEventCallback(const EventCallbackFn& callback) override { m_Data.EventCallback = callback; }
 		void SetVSync(bool enabled) override;
 		bool IsVSync() const override;
-		virtual VulkanSwapChain& GetSwapChain();
+
 
 		virtual void* GetNativeWindow() const { return m_Window; }
 	private:
@@ -40,7 +40,6 @@ namespace Hazel {
 
 			EventCallbackFn EventCallback;
 		};
-		VulkanSwapChain* m_SwapChain;
 		GLFWcursor* m_ImGuiMouseCursors[9] = { 0 };
 
 		WindowData m_Data;

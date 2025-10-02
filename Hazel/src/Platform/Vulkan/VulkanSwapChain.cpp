@@ -39,9 +39,9 @@ namespace Hazel
 	}
 	void VulkanSwapChain::BeginFrame() {
 
-		// Resource release queue
-		//auto& queue = Renderer::GetRenderResourceReleaseQueue(m_CurrentFrameIndex);
-		//queue.Execute();
+		 // Resource release queue
+		auto& queue = Renderer::GetRenderResourceReleaseQueue(m_CurrentFrameIndex);
+		queue.Execute();
 
 		m_CurrentImageIndex = AcquireNextImage();
 
@@ -67,7 +67,7 @@ namespace Hazel
 
 		VK_CHECK_RESULT(vkResetFences(m_Device->GetVulkanDevice(), 1, &m_WaitFences[m_CurrentFrameIndex]));
 
-		//m_Device->LockQueue();
+		m_Device->LockQueue();
 		VK_CHECK_RESULT(vkQueueSubmit(m_Device->GetGraphicsQueue(), 1, &submitInfo, m_WaitFences[m_CurrentFrameIndex]));
 
 		// Present the current buffer to the swap chain
@@ -88,7 +88,7 @@ namespace Hazel
 			result = fpQueuePresentKHR(m_Device->GetGraphicsQueue(), &presentInfo);
 		}
 
-		//m_Device->UnlockQueue();
+		m_Device->UnlockQueue();
 
 		if (result != VK_SUCCESS)
 		{

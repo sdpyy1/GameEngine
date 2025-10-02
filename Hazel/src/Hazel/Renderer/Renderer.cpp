@@ -26,7 +26,7 @@ namespace Hazel {
 	{
 		switch (RendererAPI::Current())
 		{
-			case RendererAPI::Type::Vulkan: return nullptr;
+		case RendererAPI::Type::Vulkan: return new VulkanRenderer();
 		}
 		HZ_CORE_ASSERT(false, "Unknown RendererAPI");
 		return nullptr;
@@ -84,7 +84,17 @@ namespace Hazel {
 		spec.Width = 1;
 		spec.Height = 1;
 		s_Data->WhiteTexture = Texture2D::Create(spec, Buffer1(&whiteTextureData, sizeof(uint32_t)));
+		s_RendererAPI->Init();
 
+	}
+	void Renderer::BeginFrame()
+	{
+		s_RendererAPI->BeginFrame();
+	}
+
+	void Renderer::EndFrame()
+	{
+		s_RendererAPI->EndFrame();
 	}
 
 	void Renderer::Shutdown()

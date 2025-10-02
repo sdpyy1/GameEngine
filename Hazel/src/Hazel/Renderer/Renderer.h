@@ -40,6 +40,8 @@ namespace Hazel {
 		static void WaitAndRender(RenderThread* renderThread);
 		static uint32_t GetRenderQueueIndex();
 
+		static void BeginFrame();
+		static void EndFrame();
 
 		template<typename FuncT>
 		static void Submit(FuncT&& func)  // FuncT&&可以接收各种类型的函数对象，包括lambda表达式、函数指针等

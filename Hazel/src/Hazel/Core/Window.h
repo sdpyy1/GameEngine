@@ -4,7 +4,7 @@
 #include "Hazel/Events/Event.h"
 #include "Hazel/Renderer/GraphicsContext.h"
 #include <sstream>
-
+#include "Platform/Vulkan/VulkanSwapChain.h"
 namespace Hazel {
 
 	struct WindowProps
@@ -38,13 +38,15 @@ namespace Hazel {
 		virtual void SetEventCallback(const EventCallbackFn& callback) = 0;
 		virtual void SetVSync(bool enabled) = 0;
 		virtual bool IsVSync() const = 0;
-
+		void SwapBuffers(){m_SwapChain->Present();}
 		virtual void* GetNativeWindow() const = 0;
 		virtual Ref_old<RenderContext> GetRenderContext() { return m_RenderContext; }
+		VulkanSwapChain& GetSwapChain() { return *m_SwapChain; };
 
 		static Scope<Window> Create_old(const WindowProps& props = WindowProps());
 	protected:
 		Ref_old<RenderContext> m_RenderContext;
+		VulkanSwapChain* m_SwapChain;
 
 	};
 

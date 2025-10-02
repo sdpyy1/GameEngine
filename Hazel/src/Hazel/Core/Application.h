@@ -33,7 +33,7 @@ namespace Hazel {
 		std::string Name = "Hazel Application";
 		std::string WorkingDirectory;
 		ApplicationCommandLineArgs CommandLineArgs;
-		bool EnableImGui = true;
+		bool EnableImGui = false;
 	};
 	class VulkanContext;
 	class Application
@@ -48,6 +48,7 @@ namespace Hazel {
 		void PushOverlay(Layer* layer);
 
 		WindowsWindow& GetWindow() { return *(WindowsWindow*) (m_Window.get()); }
+		void RenderImGui();
 
 		void Close();
 
@@ -57,7 +58,6 @@ namespace Hazel {
 		Ref_old<RenderContext> GetRenderContext() { return GetWindow().GetRenderContext(); }
 		const ApplicationSpecification& GetSpecification() const { return m_Specification; }
 		uint32_t GetCurrentFrameIndex() const { return m_CurrentFrameIndex; }
-
 		void SubmitToMainThread(const std::function<void()>& function);
 	private:
 		void Run();

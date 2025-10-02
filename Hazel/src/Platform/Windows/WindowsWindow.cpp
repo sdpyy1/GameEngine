@@ -216,17 +216,12 @@ namespace Hazel {
 		}
 	}
 
-	VulkanSwapChain& WindowsWindow::GetSwapChain()
-	{
-		return *m_SwapChain;
-	}
-
 	void WindowsWindow::OnUpdate()
 	{
 		HZ_PROFILE_FUNCTION();
 
 		glfwPollEvents();
-		m_RenderContext->SwapBuffers();
+		//m_RenderContext->SwapBuffers();
 	}
 
 	void WindowsWindow::SetVSync(bool enabled)

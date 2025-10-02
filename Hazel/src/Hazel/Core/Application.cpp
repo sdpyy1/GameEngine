@@ -25,25 +25,25 @@ namespace Hazel {
 		HZ_CORE_ASSERT(!s_Instance, "Application already exists!");
 		s_Instance = this;
 		s_MainThreadID = std::this_thread::get_id();
-		m_RenderThread.Run();  // ������ö��߳���Ⱦ���ͻᴴ����Ⱦ�̣߳��߳�����whileѭ�����ȴ�Kick�ź�
+		m_RenderThread.Run();  
 
 		// Set working directory here
 		if (!m_Specification.WorkingDirectory.empty())
 			std::filesystem::current_path(m_Specification.WorkingDirectory);
 
 		m_Window = Window::Create_old(WindowProps(m_Specification.Name));
-		// ���������˰�glfw���յ����¼�ת�Ƶ���Application��OnEvent������
+		
 		m_Window->SetEventCallback(HZ_BIND_EVENT_FN(Application::OnEvent));
 		HZ_CORE_ASSERT(NFD::Init() == NFD_OKAY);
 
-		Renderer::Init();  // ��Ⱦ����ʼ��������Context�����س�ʼ��Shader��������
-		m_RenderThread.Pump();  // ִ��һ֡�������Ⱦ������ó���ִ�е�
+		Renderer::Init();  
+		m_RenderThread.Pump();  
 
-		// ImGui��ʼ��
-		m_ImGuiLayer = new ImGuiLayer();
-		PushOverlay(m_ImGuiLayer);
+		// ImGui初始化
+		//m_ImGuiLayer = new ImGuiLayer();
+		//PushOverlay(m_ImGuiLayer);
 
-		// TODO:����ϵͳ��������г�ʼ��
+		// TODO:其他系统初始化也在这里
 
 
 
@@ -73,6 +73,15 @@ namespace Hazel {
 		layer->OnAttach();
 	}
 
+	void Application::RenderImGui()
+	{
+		// ImGUI渲染前需要的准备函数
+		m_ImGuiLayer->Begin();
+		// 渲染各层的ImGUI窗口
+		for (Layer* layer : m_LayerStack)
+			layer->OnImGuiRender();
+	}
+
 	void Application::Close()
 	{
 		m_Running = false;
@@ -85,7 +94,7 @@ namespace Hazel {
 		m_MainThreadQueue.emplace_back(function);
 	}
 
-	// glfw���¼�����
+
 	void Application::OnEvent(Event& e)
 	{
 		HZ_PROFILE_FUNCTION();
@@ -93,7 +102,7 @@ namespace Hazel {
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<WindowCloseEvent>(HZ_BIND_EVENT_FN(Application::OnWindowClose));
 		dispatcher.Dispatch<WindowResizeEvent>(HZ_BIND_EVENT_FN(Application::OnWindowResize));
-		// ���ϵ��±���LayerStack�������¼�
+
 		for (auto it = m_LayerStack.rbegin(); it != m_LayerStack.rend(); ++it)
 		{
 			if (e.Handled) 
@@ -108,35 +117,53 @@ namespace Hazel {
 
 		while (m_Running)
 		{
-			HZ_PROFILE_SCOPE("RunLoop");
+			m_RenderThread.BlockUntilRenderComplete();  // 阻塞等待渲染线程完成渲染
 
-			// ����һ֡��ʱ
 			float time = Time::GetTime();
-			Timestep timestep = time - m_LastFrameTime; // �������漰Timestep ts�ĺ��������������������
+			Timestep timestep = time - m_LastFrameTime; 
 			m_LastFrameTime = time;
-
 			ExecuteMainThreadQueue();
+			m_RenderThread.NextFrame();
+			// Start rendering previous frame
+			m_RenderThread.Kick(); // 通知渲染线程开始渲染（RenderCommandQueue缓存的命令全部执行）
 
 			if (!m_Minimized)
 			{
-				// ����ÿ��
-				{
-					HZ_PROFILE_SCOPE("LayerStack OnUpdate");
+				// On Render thread
+				Renderer::Submit([&]()
+					{
+						m_Window->GetSwapChain().BeginFrame();
+					});
+				Renderer::BeginFrame();
 
-					for (Layer* layer : m_LayerStack)
-						layer->OnUpdate(timestep);
-				}
-				// ��ȾImGui
-				m_ImGuiLayer->Begin();
+				// 更新各层
 				{
-					HZ_PROFILE_SCOPE("LayerStack OnImGuiRender");
-
 					for (Layer* layer : m_LayerStack)
-						layer->OnImGuiRender();
+						layer->OnUpdate(timestep);  // 这里就是填装渲染指令的地方
 				}
-				m_ImGuiLayer->End();
+
+				// Render ImGui on render thread
+				Application* app = this;
+				if (m_Specification.EnableImGui)
+				{
+					Renderer::Submit([app]() { app->RenderImGui(); });
+					Renderer::Submit([=]() { m_ImGuiLayer->End(); });
+				}
+				Renderer::EndFrame();  //目前啥也没干
+
+				// On Render thread
+				Renderer::Submit([&]()
+					{
+						// m_Window->GetSwapChain().BeginFrame();
+						// Renderer::WaitAndRender();
+						m_Window->SwapBuffers();  // 呈现画面的函数
+					});
 			}
-			// ���´���
+
+			m_CurrentFrameIndex = (m_CurrentFrameIndex + 1) % Renderer::GetConfig().FramesInFlight;
+			static uint64_t frameCounter = 0;
+			frameCounter++;
+
 			m_Window->OnUpdate();
 		}
 	}
