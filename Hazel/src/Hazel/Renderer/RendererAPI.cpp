@@ -1,7 +1,7 @@
 #include "hzpch.h"
 #include "Hazel/Renderer/RendererAPI.h"
+#include <Platform/Vulkan/VulkanRenderer.h>
 
-#include "Platform/OpenGL/OpenGLRendererAPI.h"
 
 namespace Hazel {
 
@@ -12,8 +12,7 @@ namespace Hazel {
 		switch (s_API)
 		{
 			case RendererAPI::Type::None:    HZ_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
-			case RendererAPI::Type::OpenGL:  return CreateScope<OpenGLRendererAPI>();
-			case RendererAPI::Type::Vulkan:  return CreateScope<OpenGLRendererAPI>();
+			case RendererAPI::Type::Vulkan:  return CreateScope<VulkanRenderer>();
 		}
 
 		HZ_CORE_ASSERT(false, "Unknown RendererAPI!");

@@ -2,7 +2,6 @@
 #include "Hazel/Renderer/Shader.h"
 
 #include "Hazel/Renderer/Renderer.h"
-#include "Platform/OpenGL/OpenGLShader.h"
 #include <Platform/Vulkan/VulkanShader.h>
 
 namespace Hazel {
@@ -12,7 +11,6 @@ namespace Hazel {
 		switch (Renderer::Current())
 		{
 			case RendererAPI::Type::None:    HZ_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
-			case RendererAPI::Type::OpenGL:  return CreateRef<OpenGLShader>(filepath);
 		}
 
 		HZ_CORE_ASSERT(false, "Unknown RendererAPI!");
@@ -24,7 +22,6 @@ namespace Hazel {
 		switch (Renderer::Current())
 		{
 			case RendererAPI::Type::None:    HZ_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
-			case RendererAPI::Type::OpenGL:  return CreateRef<OpenGLShader>(name, vertexSrc, fragmentSrc);
 		}
 
 		HZ_CORE_ASSERT(false, "Unknown RendererAPI!");

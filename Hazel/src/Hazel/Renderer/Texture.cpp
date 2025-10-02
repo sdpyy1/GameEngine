@@ -2,7 +2,6 @@
 #include "Hazel/Renderer/Texture.h"
 
 #include "Hazel/Renderer/Renderer.h"
-#include "Platform/OpenGL/OpenGLTexture.h"
 #include "Platform/Vulkan/VulkanTexture.h"
 
 namespace Hazel {

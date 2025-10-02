@@ -9,7 +9,6 @@
 
 #include "Hazel/Renderer/Renderer.h"
 
-#include "Platform/OpenGL/OpenGLContext.h"
 #include "Platform/Vulkan/VulkanContext.h"
 #include <imgui.h>
 #include <GLFW/glfw3.h>

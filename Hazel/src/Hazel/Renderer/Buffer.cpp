@@ -3,7 +3,6 @@
 
 #include "Hazel/Renderer/Renderer.h"
 
-#include "Platform/OpenGL/OpenGLBuffer.h"
 
 namespace Hazel {
 
@@ -12,7 +11,6 @@ namespace Hazel {
 		switch (Renderer::Current())
 		{
 			case RendererAPI::Type::None:    HZ_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
-			case RendererAPI::Type::OpenGL:  return CreateRef<OpenGLVertexBuffer>(size);
 		}
 
 		HZ_CORE_ASSERT(false, "Unknown RendererAPI!");
@@ -24,7 +22,6 @@ namespace Hazel {
 		switch (Renderer::Current())
 		{
 			case RendererAPI::Type::None:    HZ_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
-			case RendererAPI::Type::OpenGL:  return CreateRef<OpenGLVertexBuffer>(vertices, size);
 		}
 
 		HZ_CORE_ASSERT(false, "Unknown RendererAPI!");
@@ -36,7 +33,6 @@ namespace Hazel {
 		switch (Renderer::Current())
 		{
 			case RendererAPI::Type::None:    HZ_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
-			case RendererAPI::Type::OpenGL:  return CreateRef<OpenGLIndexBuffer>(indices, size);
 		}
 
 		HZ_CORE_ASSERT(false, "Unknown RendererAPI!");

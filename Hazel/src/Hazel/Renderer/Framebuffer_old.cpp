@@ -3,7 +3,6 @@
 
 #include "Hazel/Renderer/Renderer.h"
 
-#include "Platform/OpenGL/OpenGLFramebuffer.h"
 
 namespace Hazel {
 	
@@ -12,7 +11,6 @@ namespace Hazel {
 		switch (Renderer::Current())
 		{
 			case RendererAPI::Type::None:    HZ_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
-			case RendererAPI::Type::OpenGL:  return CreateRef<OpenGLFramebuffer>(spec);
 		}
 
 		HZ_CORE_ASSERT(false, "Unknown RendererAPI!");
