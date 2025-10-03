@@ -210,7 +210,7 @@ namespace Hazel {
 		std::map<std::string, RenderPassInputDeclaration> InputDeclarations;
 
 		// Per-frame in flight
-		std::vector<std::vector<VkDescriptorSet>> m_DescriptorSets;
+		std::vector<std::vector<VkDescriptorSet>> m_DescriptorSets;   // DescriptorSer For Per-frame In Flight
 
 		struct WriteDescriptor
 		{

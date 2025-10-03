@@ -2,13 +2,12 @@
 
 namespace Hazel {
 
-	class RenderContext
+	class RenderContext: public RefCounted
 	{
 	public:
 		virtual ~RenderContext() = default;
 
-		virtual void Init() = 0;
-		virtual void SwapBuffers() = 0;
+		virtual void Init() = 0;  // ≥ı ºªØ‰÷»æAPI
 
 		static Scope<RenderContext> Create_old(void* window);
 	};

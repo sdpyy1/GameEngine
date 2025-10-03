@@ -17,11 +17,14 @@ namespace Hazel {
 
 	void VulkanShader::Reload(bool forceCompile)
 	{
-		Renderer::Submit([instance = Ref(this), forceCompile]() mutable
-			{
-				HZ_CORE_INFO("Create Shader");
-				instance->RT_Reload(forceCompile);
-			});
+		//Renderer::Submit([instance = Ref(this), forceCompile]() mutable
+		//	{
+		//		HZ_CORE_INFO("Create Shader");
+		//		instance->RT_Reload(forceCompile);
+		//	});
+
+		RT_Reload(forceCompile);
+
 	}
 
 	static std::vector<char> readFile(const std::filesystem::path& filename) {  // 参数改为std::filesystem::path

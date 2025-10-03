@@ -59,8 +59,7 @@ namespace Hazel {
 
 	void DescriptorSetManager::Init()
 	{
-		////const auto& shaderDescriptorSets = m_Specification.Shader->GetShaderDescriptorSets(); //TODO：瞎改
-		//const auto& shaderDescriptorSets = nullptr;
+		//const auto& shaderDescriptorSets = m_Specification.Shader->GetShaderDescriptorSets();  // TODO: 还没有，这里存储Shader所有需要导入的资源
 		//uint32_t framesInFlight = Renderer::GetConfig().FramesInFlight;
 		//WriteDescriptorMap.resize(framesInFlight);
 
@@ -70,14 +69,14 @@ namespace Hazel {
 		//		break;
 
 		//	const auto& shaderDescriptor = shaderDescriptorSets[set];
-		//	for (auto&& [bname, wd] : shaderDescriptor.WriteDescriptorSets)
+		//	for (auto&& [bname, wd] : shaderDescriptor.WriteDescriptorSets)  // WriteDescriptorSets 每个对象都是一个DescriptorSet的更新信息（给了要更新哪个资源，更新成什么）
 		//	{
 		//		// NOTE(Emily): This is a hack to fix a bad input decl name
 		//		//				Coming from somewhere.
 		//		const char* broken = strrchr(bname.c_str(), '.');
 		//		std::string name = broken ? broken + 1 : bname;
 
-		//		uint32_t binding = wd.dstBinding;
+		//		uint32_t binding = wd.dstBinding;  // 绑定点，对应着色器layout(binding = 0)
 		//		RenderPassInputDeclaration& inputDecl = InputDeclarations[name];
 		//		inputDecl.Type = RenderPassInputTypeFromVulkanDescriptorType(wd.descriptorType);
 		//		inputDecl.Set = set;
@@ -148,7 +147,8 @@ namespace Hazel {
 		//			}
 		//		}
 		//	}
-		}
+		//}
+	}
 	
 
 	void DescriptorSetManager::SetInput(std::string_view name, Ref<UniformBufferSet> uniformBufferSet)

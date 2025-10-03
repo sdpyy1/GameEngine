@@ -2,7 +2,7 @@
 
 #include "Hazel/Core/Base.h"
 #include "Hazel/Events/Event.h"
-#include "Hazel/Renderer/GraphicsContext.h"
+#include "Hazel/Renderer/RenderContext.h"
 #include <sstream>
 #include "Platform/Vulkan/VulkanSwapChain.h"
 namespace Hazel {
@@ -40,7 +40,8 @@ namespace Hazel {
 		virtual bool IsVSync() const = 0;
 		void SwapBuffers(){m_SwapChain->Present();}
 		virtual void* GetNativeWindow() const = 0;
-		virtual Ref_old<RenderContext> GetRenderContext() { return m_RenderContext; }
+		virtual Ref_old<RenderContext> GetRenderContext_old() { return m_RenderContext; }
+		virtual Ref<RenderContext> GetRenderContext() { return Ref<RenderContext>(m_RenderContext.get()); }
 		VulkanSwapChain& GetSwapChain() { return *m_SwapChain; };
 
 		static Scope<Window> Create_old(const WindowProps& props = WindowProps());

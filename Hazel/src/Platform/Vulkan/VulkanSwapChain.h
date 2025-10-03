@@ -13,6 +13,13 @@ namespace Hazel {
 		void Create_old(uint32_t* width, uint32_t* height, bool vsync);
 		void BeginFrame();
 		void Present();
+		std::vector<VkImageView> GetViews() {
+			std::vector<VkImageView> res;
+			for (int i = 0; i < m_ImageCount; i++) {
+				res.push_back(m_Images[i].ImageView);
+			}
+			return res;
+		}
 
 		void Destroy();
 		void OnResize(uint32_t width, uint32_t height);

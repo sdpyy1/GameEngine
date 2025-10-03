@@ -16,13 +16,13 @@ namespace Hazel {
 
 
 	EditorLayer::EditorLayer()
-		: Layer("EditorLayer")
+		: Layer("EditorLayer"),camera(60.0f, 16.0f / 9.0f, 0.1f, 10000.0f)
 	{
 	}
 
 	void EditorLayer::OnAttach()
 	{
-		HZ_INFO("±à¼­Æ÷³õÊ¼»¯");
+		scene.CreateEntity("aaa");
 	}
 
 	void EditorLayer::OnDetach()
@@ -31,13 +31,11 @@ namespace Hazel {
 
 	void EditorLayer::OnUpdate(Timestep ts)
 	{
-
-
+		scene.RenderVukan();
 	}
 
 	void EditorLayer::OnImGuiRender()
 	{
-
 	}
 
 	void EditorLayer::OnEvent(Event& e)

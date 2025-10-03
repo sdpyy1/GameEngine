@@ -22,6 +22,8 @@ namespace Hazel {
 		void OnEvent(Event& e) override;
 
 	private:
+		Scene scene;  // ³¡¾°
+		EditorCamera camera; // ÉãÏñ»ú
 	};
 
 }

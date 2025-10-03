@@ -11,9 +11,11 @@ namespace Hazel {
 
 		void Reload(bool forceCompile = false) override;
 		void RT_Reload(bool forceCompile) override;
+		VkShaderModule GetShaderModule() { return shaderModule; }
 		virtual ~VulkanShader();
 		void Release();
 		virtual const std::string& GetName() const override { return m_Name; }
+		//const std::vector<ShaderResource::ShaderDescriptorSet>& GetShaderDescriptorSets() const { return m_ReflectionData.ShaderDescriptorSets; }
 
 	private:
 		std::string m_Name;

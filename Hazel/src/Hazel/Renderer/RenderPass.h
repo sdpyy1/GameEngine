@@ -14,7 +14,7 @@ namespace Hazel {
 
 	struct RenderPassSpecification
 	{
-		Ref<Pipeline> Pipeline;
+		Ref<Pipeline> Pipeline;  // ???: 为什么要把RenderPass和Pipeline绑定起来
 		std::string DebugName;
 		glm::vec4 MarkerColor;
 	};

@@ -1,5 +1,5 @@
 #include "hzpch.h"
-#include "Hazel/Renderer/GraphicsContext.h"
+#include "Hazel/Renderer/RenderContext.h"
 
 #include "Hazel/Renderer/Renderer.h"
 #include "Platform/Vulkan/VulkanContext.h"

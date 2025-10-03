@@ -21,7 +21,7 @@
 	#define HZ_CORE_VERIFY_MESSAGE_INTERNAL(...)  ::Hazel::Log::GetCoreLogger()->critical(  "Verify Failed: {}",  fmt::format(__VA_ARGS__))
 	#define HZ_CORE_VERIFY(condition, ...) { if(!(condition)) { HZ_CORE_VERIFY_MESSAGE_INTERNAL(__VA_ARGS__); } }
 	#define HZ_CORE_VERIFY(condition) { if(!(condition)) { HZ_CORE_VERIFY_MESSAGE_INTERNAL("ERROR"); } }
-	#define HZ_CORE_VERFIY(condition, fmt, ...) // Ϲд
+	#define HZ_CORE_VERFIY(condition, fmt, ...) 
 #else
 	#define HZ_ASSERT(...)
 	#define HZ_CORE_ASSERT(...)

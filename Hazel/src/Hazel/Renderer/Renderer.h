@@ -4,7 +4,7 @@
 
 #include "Hazel/Renderer/OrthographicCamera.h"
 #include "Hazel/Renderer/Shader.h"
-#include "GraphicsContext.h"
+#include "Hazel/Renderer/RenderContext.h"
 #include "Hazel/Core/Application.h"
 #include "RendererConfig.h"
 #include <Hazel/Core/RenderThread.h>

@@ -5,7 +5,8 @@
 #include "Hazel/Renderer/EditorCamera.h"
 
 #include "entt.hpp"
-
+#include <Hazel/Renderer/RenderContext.h>
+#include "Platform/Vulkan/VulkanContext.h"
 class b2World;
 
 namespace Hazel {
@@ -17,6 +18,26 @@ namespace Hazel {
 	public:
 		Scene();
 		~Scene();
+		
+		// 临时调试接口
+		void RenderVukan();
+
+		void createRenderPass();
+		void createGraphicsPipeline();
+		void createFramebuffers();
+	private:
+		Ref<VulkanContext> vulkanContext;
+		VkRenderPass renderPass;
+		VkPipelineLayout pipelineLayout;
+		VkPipeline graphicsPipeline;
+		std::vector<VkFramebuffer> swapChainFramebuffers;
+		std::vector<VkImageView> swapChainImageViews;
+		VulkanSwapChain swapChian;
+		VkDevice device;
+
+
+	public:
+
 
 		static Ref_old<Scene> Copy(Ref_old<Scene> other);
 
