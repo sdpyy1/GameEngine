@@ -22,7 +22,7 @@ namespace Hazel {
 	};
 
 	// Interface representing a desktop system based Window
-	class Window
+	class Window: public RefCounted
 	{
 	public:
 		using EventCallbackFn = std::function<void(Event&)>;
@@ -40,14 +40,13 @@ namespace Hazel {
 		virtual bool IsVSync() const = 0;
 		void SwapBuffers(){m_SwapChain->Present();}
 		virtual void* GetNativeWindow() const = 0;
-		virtual Ref_old<RenderContext> GetRenderContext_old() { return m_RenderContext; }
-		virtual Ref<RenderContext> GetRenderContext() { return Ref<RenderContext>(m_RenderContext.get()); }
+		virtual Ref<RenderContext> GetRenderContext() { return m_RenderContext; }
 		VulkanSwapChain& GetSwapChain() { return *m_SwapChain; };
 		VulkanSwapChain* GetSwapChainPtr() { return m_SwapChain; };
 
-		static Scope<Window> Create_old(const WindowProps& props = WindowProps());
+		static Ref<Window> Create(const WindowProps& props = WindowProps());
 	protected:
-		Ref_old<RenderContext> m_RenderContext;
+		Ref<RenderContext> m_RenderContext;
 		VulkanSwapChain* m_SwapChain;
 
 	};

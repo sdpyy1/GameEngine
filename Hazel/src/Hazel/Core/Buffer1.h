@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Hazel/Core/Assert.h"
-
 namespace Hazel {
 
 	struct Buffer1

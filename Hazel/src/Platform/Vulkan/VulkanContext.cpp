@@ -10,7 +10,7 @@ namespace Hazel {
 #else
 	static bool s_Validation = false; // Let's leave this on for now...
 #endif
-	VulkanContext::VulkanContext(GLFWwindow* window)
+	VulkanContext::VulkanContext(void* window)
 		: window(window)
 	{
 		HZ_CORE_ASSERT(window, "Window handle is null!")

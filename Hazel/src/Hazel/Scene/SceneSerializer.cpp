@@ -167,7 +167,7 @@ namespace Hazel {
 		return Rigidbody2DComponent::BodyType::Static;
 	}
 
-	SceneSerializer::SceneSerializer(const Ref_old<Scene>& scene)
+	SceneSerializer::SceneSerializer(const Ref<Scene>& scene)
 		: m_Scene(scene)
 	{
 	}
@@ -237,7 +237,7 @@ namespace Hazel {
 			out << YAML::Key_old << "ClassName" << YAML::Value << scriptComponent.ClassName;
 
 			// Fields
-			Ref_old<ScriptClass> entityClass = ScriptEngine::GetEntityClass(scriptComponent.ClassName);
+			Ref<ScriptClass> entityClass = ScriptEngine::GetEntityClass(scriptComponent.ClassName);
 			const auto& fields = entityClass->GetFields();
 			if (fields.size() > 0)
 			{
@@ -381,7 +381,7 @@ namespace Hazel {
 		out << YAML::Key_old << "Entities" << YAML::Value << YAML::BeginSeq;
 		m_Scene->m_Registry.each([&](auto entityID)
 		{
-			Entity entity = { entityID, m_Scene.get() };
+			Entity entity = { entityID, m_Scene };
 			if (!entity)
 				return;
 
@@ -474,7 +474,7 @@ namespace Hazel {
 					auto scriptFields = scriptComponent["ScriptFields"];
 					if (scriptFields)
 					{
-						Ref_old<ScriptClass> entityClass = ScriptEngine::GetEntityClass(sc.ClassName);
+						Ref<ScriptClass> entityClass = ScriptEngine::GetEntityClass(sc.ClassName);
 						if (entityClass)
 						{
 							const auto& fields = entityClass->GetFields();

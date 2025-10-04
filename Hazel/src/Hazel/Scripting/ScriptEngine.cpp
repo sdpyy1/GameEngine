@@ -128,11 +128,11 @@ namespace Hazel {
 
 		ScriptClass EntityClass;
 
-		std::unordered_map<std::string, Ref_old<ScriptClass>> EntityClasses;
-		std::unordered_map<UUID, Ref_old<ScriptInstance>> EntityInstances;
+		std::unordered_map<std::string, Ref<ScriptClass>> EntityClasses;
+		std::unordered_map<UUID, Ref<ScriptInstance>> EntityInstances;
 		std::unordered_map<UUID, ScriptFieldMap> EntityScriptFields;
 
-		Scope<filewatch::FileWatch<std::string>> AppAssemblyFileWatcher;
+		std::shared_ptr<filewatch::FileWatch<std::string>> AppAssemblyFileWatcher;
 		bool AssemblyReloadPending = false;
 
 #ifdef HZ_DEBUG
@@ -155,7 +155,7 @@ namespace Hazel {
 
 			Application::Get().SubmitToMainThread([]()
 			{
-				s_Data->AppAssemblyFileWatcher.reset();
+				//s_Data->AppAssemblyFileWatcher->reset();  // TODO:×¢ÊÍ
 				ScriptEngine::ReloadAssembly();
 			});
 		}
@@ -188,7 +188,7 @@ namespace Hazel {
 		ScriptGlue::RegisterComponents();
 
 		// Retrieve and instantiate class
-		s_Data->EntityClass = ScriptClass("Hazel", "Entity", true);
+		//s_Data->EntityClass = ScriptClass("Hazel", "Entity", true);
 	}
 
 	void ScriptEngine::Shutdown()
@@ -259,7 +259,7 @@ namespace Hazel {
 
 		s_Data->AppAssemblyImage = mono_assembly_get_image(s_Data->AppAssembly);
 
-		s_Data->AppAssemblyFileWatcher = CreateScope<filewatch::FileWatch<std::string>>(filepath.string(), OnAppAssemblyFileSystemEvent);
+		s_Data->AppAssemblyFileWatcher = std::make_shared<filewatch::FileWatch<std::string>>(filepath.string(), OnAppAssemblyFileSystemEvent);
 		s_Data->AssemblyReloadPending = false;
 		return true;
 	}
@@ -277,7 +277,7 @@ namespace Hazel {
 		ScriptGlue::RegisterComponents();
 
 		// Retrieve and instantiate class
-		s_Data->EntityClass = ScriptClass("Hazel", "Entity", true);
+		//s_Data->EntityClass = ScriptClass("Hazel", "Entity", true);
 	}
 
 	void ScriptEngine::OnRuntimeStart(Scene* scene)
@@ -297,7 +297,7 @@ namespace Hazel {
 		{
 			UUID entityID = entity.GetUUID();
 
-			Ref_old<ScriptInstance> m_Instance = CreateRef<ScriptInstance>(s_Data->EntityClasses[sc.ClassName], entity);
+			Ref<ScriptInstance> m_Instance = Ref<ScriptInstance>::Create(s_Data->EntityClasses[sc.ClassName], entity);
 			s_Data->EntityInstances[entityID] = m_Instance;
 
 			// Copy field values
@@ -317,7 +317,7 @@ namespace Hazel {
 		UUID entityUUID = entity.GetUUID();
 		if (s_Data->EntityInstances.find(entityUUID) != s_Data->EntityInstances.end())
 		{
-			Ref_old<ScriptInstance> m_Instance = s_Data->EntityInstances[entityUUID];
+			Ref<ScriptInstance> m_Instance = s_Data->EntityInstances[entityUUID];
 			m_Instance->InvokeOnUpdate((float)ts);
 		}
 		else
@@ -331,7 +331,7 @@ namespace Hazel {
 		return s_Data->SceneContext;
 	}
 
-	Ref_old<ScriptInstance> ScriptEngine::GetEntityScriptInstance(UUID entityID)
+	Ref<ScriptInstance> ScriptEngine::GetEntityScriptInstance(UUID entityID)
 	{
 		auto it = s_Data->EntityInstances.find(entityID);
 		if (it == s_Data->EntityInstances.end())
@@ -341,7 +341,7 @@ namespace Hazel {
 	}
 
 
-	Ref_old<ScriptClass> ScriptEngine::GetEntityClass(const std::string& name)
+	Ref<ScriptClass> ScriptEngine::GetEntityClass(const std::string& name)
 	{
 		if (s_Data->EntityClasses.find(name) == s_Data->EntityClasses.end())
 			return nullptr;
@@ -356,7 +356,7 @@ namespace Hazel {
 		s_Data->EntityInstances.clear();
 	}
 
-	std::unordered_map<std::string, Ref_old<ScriptClass>> ScriptEngine::GetEntityClasses()
+	std::unordered_map<std::string, Ref<ScriptClass>> ScriptEngine::GetEntityClasses()
 	{
 		return s_Data->EntityClasses;
 	}
@@ -399,7 +399,7 @@ namespace Hazel {
 			if (!isEntity)
 				continue;
 
-			Ref_old<ScriptClass> scriptClass = CreateRef<ScriptClass>(nameSpace, className);
+			Ref<ScriptClass> scriptClass = Ref<ScriptClass>::Create(nameSpace, className);
 			s_Data->EntityClasses[fullName] = scriptClass;
 
 
@@ -478,7 +478,7 @@ namespace Hazel {
 		return mono_runtime_invoke(method, m_Instance, params, &exception);
 	}
 
-	ScriptInstance::ScriptInstance(Ref_old<ScriptClass> scriptClass, Entity entity)
+	ScriptInstance::ScriptInstance(Ref<ScriptClass> scriptClass, Entity entity)
 		: m_ScriptClass(scriptClass)
 	{
 		m_Instance = scriptClass->Instantiate();

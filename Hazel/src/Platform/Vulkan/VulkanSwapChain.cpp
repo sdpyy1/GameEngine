@@ -18,7 +18,7 @@ PFN_vkCmdSetCheckpointNV fpCmdSetCheckpointNV;
 PFN_vkGetQueueCheckpointDataNV fpGetQueueCheckpointDataNV;
 namespace Hazel
 {
-	VulkanSwapChain::VulkanSwapChain(VkInstance instance, const Ref_old<VulkanDevice>& device)
+	VulkanSwapChain::VulkanSwapChain(VkInstance instance, const Ref<VulkanDevice>& device)
 	{
 		m_Instance = instance;
 		m_Device = device;

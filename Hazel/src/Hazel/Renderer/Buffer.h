@@ -101,35 +101,5 @@ namespace Hazel {
 		uint32_t m_Stride = 0;
 	};
 
-	class VertexBuffer_old
-	{
-	public:
-		virtual ~VertexBuffer_old() = default;
-
-		virtual void Bind() const = 0;
-		virtual void Unbind() const = 0;
-
-		virtual void SetData(const void* data, uint32_t size) = 0;
-
-		virtual const BufferLayout& GetLayout() const = 0;
-		virtual void SetLayout(const BufferLayout& layout) = 0;
-
-		static Ref_old<VertexBuffer_old> Create_old(uint32_t size);
-		static Ref_old<VertexBuffer_old> Create_old(float* vertices, uint32_t size);
-	};
-
-	// Currently Hazel only supports 32-bit index buffers
-	class IndexBuffer_old
-	{
-	public:
-		virtual ~IndexBuffer_old() = default;
-
-		virtual void Bind() const = 0;
-		virtual void Unbind() const = 0;
-
-		virtual uint32_t GetCount() const = 0;
-
-		static Ref_old<IndexBuffer_old> Create_old(uint32_t* indices, uint32_t count);
-	};
-
+	
 }

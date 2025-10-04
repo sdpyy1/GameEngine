@@ -10,23 +10,13 @@ namespace Hazel {
 
 		virtual RendererCapabilities& GetCapabilities() override;
 
-		virtual void BeginFrame() override;
-		virtual void EndFrame() override;
+		virtual void RT_BeginFrame() override;
+		virtual void RT_EndFrame() override;
 
 		static VkDescriptorSet RT_AllocateDescriptorSet(VkDescriptorSetAllocateInfo& allocInfo);
 
 		virtual void BeginRenderPass(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<RenderPass> renderPass, bool explicitClear = false) {};
 		virtual void EndRenderPass(Ref<RenderCommandBuffer> renderCommandBuffer) {};
-
-		// TODO:²»±¨´í
-		virtual void SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height) {};
-		virtual void SetClearColor(const glm::vec4& color) {};
-		virtual void Clear() {};
-
-		virtual void DrawIndexed(const Ref_old<VertexArray>& vertexArray, uint32_t indexCount =0) {};
-		virtual void DrawLines(const Ref_old<VertexArray>& vertexArray, uint32_t vertexCount) {};
-
-		virtual void SetLineWidth(float width) {};
 	};
 
 	namespace Utils {

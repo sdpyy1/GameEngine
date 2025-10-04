@@ -10,7 +10,7 @@ namespace Hazel {
 		switch (RendererAPI::Current())
 		{
 		case RendererAPI::Type::None: return nullptr;
-			//case RendererAPI::APIType::Vulkan: return Ref_old<VulkanTexture2D>::Create(specification);
+			//case RendererAPI::APIType::Vulkan: return Ref<VulkanTexture2D>::Create(specification);
 		}
 		HZ_CORE_ASSERT(false, "Unknown RendererAPI");
 		return nullptr;
@@ -21,7 +21,7 @@ namespace Hazel {
 		switch (RendererAPI::Current())
 		{
 		case RendererAPI::Type::None: return nullptr;
-			//case RendererAPI::APIType::Vulkan: return Ref_old<VulkanTexture2D>::Create(specification, filepath);
+			//case RendererAPI::APIType::Vulkan: return Ref<VulkanTexture2D>::Create(specification, filepath);
 		}
 		HZ_CORE_ASSERT(false, "Unknown RendererAPI");
 		return nullptr;
@@ -37,29 +37,29 @@ namespace Hazel {
 		HZ_CORE_ASSERT(false, "Unknown RendererAPI");
 		return nullptr;
 	}
-	Ref_old<Texture2D> Texture2D::Create_old(const TextureSpecification& specification)
+	Ref<Texture2D> Texture2D::Create_old(const TextureSpecification& specification)
 	{
 		switch (RendererAPI::Current())
 		{
 		case RendererAPI::Type::None: return nullptr;
-		//case RendererAPI::APIType::Vulkan: return Ref_old<VulkanTexture2D>::Create(specification);
+		//case RendererAPI::APIType::Vulkan: return Ref<VulkanTexture2D>::Create(specification);
 		}
 		HZ_CORE_ASSERT(false, "Unknown RendererAPI");
 		return nullptr;
 	}
 
-	Ref_old<Texture2D> Texture2D::Create_old(const TextureSpecification& specification, const std::filesystem::path& filepath)
+	Ref<Texture2D> Texture2D::Create_old(const TextureSpecification& specification, const std::filesystem::path& filepath)
 	{
 		switch (RendererAPI::Current())
 		{
 		case RendererAPI::Type::None: return nullptr;
-		//case RendererAPI::APIType::Vulkan: return Ref_old<VulkanTexture2D>::Create(specification, filepath);
+		//case RendererAPI::APIType::Vulkan: return Ref<VulkanTexture2D>::Create(specification, filepath);
 		}
 		HZ_CORE_ASSERT(false, "Unknown RendererAPI");
 		return nullptr;
 	}
 
-	Ref_old<Texture2D> Texture2D::Create_old(const TextureSpecification& specification, Buffer1 imageData)
+	Ref<Texture2D> Texture2D::Create_old(const TextureSpecification& specification, Buffer1 imageData)
 	{
 		switch (RendererAPI::Current())
 		{
@@ -70,12 +70,12 @@ namespace Hazel {
 		return nullptr;
 	}
 
-	Ref_old<TextureCube> TextureCube::Create_old(const TextureSpecification& specification, Buffer1 imageData)
+	Ref<TextureCube> TextureCube::Create_old(const TextureSpecification& specification, Buffer1 imageData)
 	{
 		switch (RendererAPI::Current())
 		{
 		case RendererAPI::Type::None: return nullptr;
-		//case RendererAPI::APIType::Vulkan: return Ref_old<VulkanTextureCube>::Create(specification, imageData);
+		//case RendererAPI::APIType::Vulkan: return Ref<VulkanTextureCube>::Create(specification, imageData);
 		}
 		HZ_CORE_ASSERT(false, "Unknown RendererAPI");
 		return nullptr;

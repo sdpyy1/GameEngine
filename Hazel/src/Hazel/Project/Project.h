@@ -17,7 +17,7 @@ namespace Hazel {
 		std::filesystem::path ScriptModulePath;
 	};
 
-	class Project
+	class Project: public RefCounted
 	{
 	public:
 		static const std::filesystem::path& GetProjectDirectory()
@@ -41,16 +41,16 @@ namespace Hazel {
 
 		ProjectConfig& GetConfig() { return m_Config; }
 
-		static Ref_old<Project> GetActive() { return s_ActiveProject; }
+		static Ref<Project> GetActive() { return s_ActiveProject; }
 
-		static Ref_old<Project> New();
-		static Ref_old<Project> Load_old(const std::filesystem::path& path);
+		static Ref<Project> New();
+		static Ref<Project> Load_old(const std::filesystem::path& path);
 		static bool SaveActive(const std::filesystem::path& path);
 	private:
 		ProjectConfig m_Config;
 		std::filesystem::path m_ProjectDirectory;
 
-		inline static Ref_old<Project> s_ActiveProject;
+		inline static Ref<Project> s_ActiveProject;
 	};
 
 }

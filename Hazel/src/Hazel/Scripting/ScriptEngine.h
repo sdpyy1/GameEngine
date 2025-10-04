@@ -69,7 +69,7 @@ namespace Hazel {
 
 	using ScriptFieldMap = std::unordered_map<std::string, ScriptFieldInstance>;
 
-	class ScriptClass
+	class ScriptClass : public RefCounted
 	{
 	public:
 		ScriptClass() = default;
@@ -91,15 +91,15 @@ namespace Hazel {
 		friend class ScriptEngine;
 	};
 
-	class ScriptInstance
+	class ScriptInstance:public RefCounted
 	{
 	public:
-		ScriptInstance(Ref_old<ScriptClass> scriptClass, Entity entity);
+		ScriptInstance(Ref<ScriptClass> scriptClass, Entity entity);
 
 		void InvokeOnCreate();
 		void InvokeOnUpdate(float ts);
 
-		Ref_old<ScriptClass> GetScriptClass() { return m_ScriptClass; }
+		Ref<ScriptClass> GetScriptClass() { return m_ScriptClass; }
 
 		template<typename T>
 		T GetFieldValue(const std::string& name)
@@ -126,7 +126,7 @@ namespace Hazel {
 		bool GetFieldValueInternal(const std::string& name, void* buffer);
 		bool SetFieldValueInternal(const std::string& name, const void* value);
 	private:
-		Ref_old<ScriptClass> m_ScriptClass;
+		Ref<ScriptClass> m_ScriptClass;
 
 		MonoObject* m_Instance = nullptr;
 		MonoMethod* m_Constructor = nullptr;
@@ -158,10 +158,10 @@ namespace Hazel {
 		static void OnUpdateEntity(Entity entity, Timestep ts);
 
 		static Scene* GetSceneContext();
-		static Ref_old<ScriptInstance> GetEntityScriptInstance(UUID entityID);
+		static Ref<ScriptInstance> GetEntityScriptInstance(UUID entityID);
 		
-		static Ref_old<ScriptClass> GetEntityClass(const std::string& name);
-		static std::unordered_map<std::string, Ref_old<ScriptClass>> GetEntityClasses();
+		static Ref<ScriptClass> GetEntityClass(const std::string& name);
+		static std::unordered_map<std::string, Ref<ScriptClass>> GetEntityClasses();
 		static ScriptFieldMap& GetScriptFieldMap(Entity entity);
 		
 		static MonoImage* GetCoreAssemblyImage();

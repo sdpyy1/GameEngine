@@ -13,7 +13,7 @@ namespace Hazel {
 
 	class Entity;
 
-	class Scene
+	class Scene: public RefCounted
 	{
 	public:
 		Scene();
@@ -37,26 +37,12 @@ namespace Hazel {
 
 
 	public:
-
-
-		static Ref_old<Scene> Copy(Ref_old<Scene> other);
+		static Ref<Scene> Copy(Ref<Scene> other);
 
 		Entity CreateEntity(const std::string& name = std::string());
 		Entity CreateEntityWithUUID(UUID uuid, const std::string& name = std::string());
 		void DestroyEntity(Entity entity);
 
-		void OnRuntimeStart();
-		void OnRuntimeStop();
-
-		void OnSimulationStart();
-		void OnSimulationStop();
-
-		// 运行模式
-		void OnUpdateRuntime(Timestep ts);
-		// 模拟模式
-		void OnUpdateSimulation(Timestep ts, EditorCamera& camera);
-		// 编辑模式直接渲染场景即可
-		void OnUpdateEditor(Timestep ts, EditorCamera& camera);
 		void OnViewportResize(uint32_t width, uint32_t height);
 
 		Entity DuplicateEntity(Entity entity);
@@ -82,8 +68,6 @@ namespace Hazel {
 		template<typename T>
 		void OnComponentAdded(Entity entity, T& component);
 
-		void OnPhysics2DStart();
-		void OnPhysics2DStop();
 
 		void RenderScene(EditorCamera& camera);
 	private:

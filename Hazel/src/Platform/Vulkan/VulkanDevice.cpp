@@ -168,13 +168,13 @@ namespace Hazel
 	{
 		return m_SupportedExtensions.find(extensionName) != m_SupportedExtensions.end();
 	}
-	Ref_old<VulkanPhysicalDevice> VulkanPhysicalDevice::Select(VkInstance vkInstance)
+	Ref<VulkanPhysicalDevice> VulkanPhysicalDevice::Select(VkInstance vkInstance)
 	{
-		return CreateRef<VulkanPhysicalDevice>(vkInstance);
+		return Ref<VulkanPhysicalDevice>::Create(vkInstance);
 	}
-	Ref_old<VulkanDevice> VulkanDevice::Create_old(const Ref_old<VulkanPhysicalDevice>& physicalDevice, VkPhysicalDeviceFeatures enabledFeatures)
+	Ref<VulkanDevice> VulkanDevice::Create_old(const Ref<VulkanPhysicalDevice>& physicalDevice, VkPhysicalDeviceFeatures enabledFeatures)
 	{
-		return CreateRef<VulkanDevice>(physicalDevice, enabledFeatures);
+		return Ref<VulkanDevice>::Create(physicalDevice, enabledFeatures);
 	}
 	VkFormat VulkanPhysicalDevice::FindDepthFormat() const
 	{
@@ -198,7 +198,7 @@ namespace Hazel
 		}
 		return VK_FORMAT_UNDEFINED;
 	}
-	VulkanDevice::VulkanDevice(const Ref_old<VulkanPhysicalDevice>& physicalDevice, VkPhysicalDeviceFeatures enabledFeatures) 
+	VulkanDevice::VulkanDevice(const Ref<VulkanPhysicalDevice>& physicalDevice, VkPhysicalDeviceFeatures enabledFeatures) 
 		: m_PhysicalDevice(physicalDevice), m_EnabledFeatures(enabledFeatures)
 	{
 		const bool enableAftermath = true;

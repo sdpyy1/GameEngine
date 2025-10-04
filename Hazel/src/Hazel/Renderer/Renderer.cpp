@@ -1,28 +1,10 @@
 #include "hzpch.h"
 #include "Hazel/Renderer/Renderer.h"
-#include "Hazel/Renderer/Renderer2D.h"
 #include "Platform/Vulkan/VulkanRenderer.h"
 #include "Hazel/Renderer/RendererAPI.h"
 #include <glm/gtc/random.hpp>
 
 namespace Hazel {
-	// 为了调试。瞎写
-	 // 初始化静态成员s_SceneData，并为ViewProjectionMatrix赋予随机值
-	Scope<Renderer::SceneData> Renderer::s_SceneData = []() {
-		// 创建SceneData实例
-		auto sceneData = std::make_unique<Renderer::SceneData>();
-
-		// 生成随机的4x4矩阵（值范围示例：-1000到1000之间）
-		sceneData->ViewProjectionMatrix = glm::mat4(
-			glm::linearRand(-1000.0f, 1000.0f), glm::linearRand(-1000.0f, 1000.0f), glm::linearRand(-1000.0f, 1000.0f), glm::linearRand(-1000.0f, 1000.0f),
-			glm::linearRand(-1000.0f, 1000.0f), glm::linearRand(-1000.0f, 1000.0f), glm::linearRand(-1000.0f, 1000.0f), glm::linearRand(-1000.0f, 1000.0f),
-			glm::linearRand(-1000.0f, 1000.0f), glm::linearRand(-1000.0f, 1000.0f), glm::linearRand(-1000.0f, 1000.0f), glm::linearRand(-1000.0f, 1000.0f),
-			glm::linearRand(-1000.0f, 1000.0f), glm::linearRand(-1000.0f, 1000.0f), glm::linearRand(-1000.0f, 1000.0f), glm::linearRand(-1000.0f, 1000.0f)
-		);
-
-		return sceneData;
-		}();
-
 	struct RendererData
 	{
 		Ref<ShaderLibrary> m_ShaderLibrary;
@@ -55,7 +37,7 @@ namespace Hazel {
 			s_CommandQueue[i] = new RenderCommandQueue();
 		}
 		// 并发渲染数
-		s_Config.FramesInFlight = glm::min<uint32_t>(s_Config.FramesInFlight, Application::Get().GetWindow().GetSwapChain().GetImageCount());
+		s_Config.FramesInFlight = glm::min<uint32_t>(s_Config.FramesInFlight, Application::Get().GetWindow()->GetSwapChain().GetImageCount());
 		
 		// 创建具体的渲染API对象
 		s_RendererAPI = RendererAPI::CreateAPI();
@@ -75,19 +57,18 @@ namespace Hazel {
 		s_RendererAPI->Init();
 
 	}
-	void Renderer::BeginFrame()
+	void Renderer::RT_BeginFrame()
 	{
-		s_RendererAPI->BeginFrame();
+		s_RendererAPI->RT_BeginFrame();
 	}
 
-	void Renderer::EndFrame()
+	void Renderer::RT_EndFrame()
 	{
-		s_RendererAPI->EndFrame();
+		s_RendererAPI->RT_EndFrame();
 	}
 
 	void Renderer::Shutdown()
 	{
-		Renderer2D::Shutdown();
 	}
 
 	Ref<ShaderLibrary> Renderer::GetShaderLibrary()
@@ -100,11 +81,6 @@ namespace Hazel {
 		return s_RendererAPI->GetCapabilities();
 	}
 
-
-	void Renderer::OnWindowResize(uint32_t width, uint32_t height)
-	{
-		
-	}
 	Ref<Texture2D> Renderer::GetWhiteTexture()
 	{
 		return s_Data->WhiteTexture;
@@ -130,24 +106,7 @@ namespace Hazel {
 		return s_Data->BlackCubeTexture;
 	}
 
-	void Renderer::BeginScene(OrthographicCamera& camera)
-	{
-		s_SceneData->ViewProjectionMatrix = camera.GetViewProjectionMatrix();
-	}
 
-	void Renderer::EndScene()
-	{
-	}
-
-	void Renderer::Submit_old(const Ref_old<Shader>& shader, const Ref_old<VertexArray>& vertexArray, const glm::mat4& transform)
-	{
-		shader->Bind();
-		shader->SetMat4("u_ViewProjection", s_SceneData->ViewProjectionMatrix);
-		shader->SetMat4("u_Transform", transform);
-
-		vertexArray->Bind();
-		RenderCommand::DrawIndexed(vertexArray);
-	}
 	void Renderer::SwapQueues()
 	{
 		s_RenderCommandQueueSubmissionIndex = (s_RenderCommandQueueSubmissionIndex + 1) % s_RenderCommandQueueCount;
@@ -155,7 +114,7 @@ namespace Hazel {
 	uint32_t Renderer::RT_GetCurrentFrameIndex()
 	{
 		// Swapchain owns the Render Thread frame index
-		return Application::Get().GetWindow().GetSwapChain().GetCurrentBufferIndex();
+		return Application::Get().GetWindow()->GetSwapChain().GetCurrentBufferIndex();
 	}
 
 	uint32_t Renderer::GetCurrentFrameIndex()

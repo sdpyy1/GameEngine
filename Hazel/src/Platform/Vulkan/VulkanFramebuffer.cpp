@@ -4,8 +4,6 @@
 #include "VulkanUtils.h"
 #include "Hazel/Renderer/Renderer.h"
 
-#include <format>
-
 namespace Hazel {
 
 	namespace Utils {
@@ -30,8 +28,8 @@ namespace Hazel {
 	{
 		if (specification.Width == 0)
 		{
-			m_Width = Application::Get().GetWindow().GetWidth();
-			m_Height = Application::Get().GetWindow().GetHeight();
+			m_Width = Application::Get().GetWindow()->GetWidth();
+			m_Height = Application::Get().GetWindow()->GetHeight();
 		}
 		else
 		{
@@ -148,7 +146,7 @@ namespace Hazel {
 				}
 				else
 				{
-					VulkanSwapChain& swapChain = Application::Get().GetWindow().GetSwapChain();
+					VulkanSwapChain& swapChain = Application::Get().GetWindow()->GetSwapChain();
 					instance->m_RenderPass = swapChain.GetRenderPass();
 
 					instance->m_ClearValues.clear();

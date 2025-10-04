@@ -1,8 +1,7 @@
 #pragma once
 
-#include "Hazel/Renderer/RenderCommand.h"
+#include "Hazel/Renderer/RendererAPI.h"
 
-#include "Hazel/Renderer/OrthographicCamera.h"
 #include "Hazel/Renderer/Shader.h"
 #include "Hazel/Renderer/RenderContext.h"
 #include "Hazel/Core/Application.h"
@@ -13,6 +12,7 @@
 namespace Hazel {
 	class ShaderLibrary;
 
+	// 管理命令缓冲区的调度和渲染相关的初始资源
 	class Renderer
 	{
 	public:
@@ -21,17 +21,11 @@ namespace Hazel {
 		static void Shutdown();
 		static Ref<ShaderLibrary> GetShaderLibrary();
 		static RendererCapabilities& GetCapabilities();
-
-		static void OnWindowResize(uint32_t width, uint32_t height);  // TODO:没用 转到窗口中了
-		 
-		static void BeginScene(OrthographicCamera& camera);
-		static void EndScene();
 		static Ref<Texture2D> GetWhiteTexture();
 		static Ref<Texture2D> GetBlackTexture();
 		static Ref<Texture2D> GetHilbertLut();
 		static Ref<Texture2D> GetBRDFLutTexture();
 		static Ref<TextureCube> GetBlackCubeTexture();
-		static void Submit_old(const Ref_old<Shader>& shader, const Ref_old<VertexArray>& vertexArray, const glm::mat4& transform = glm::mat4(1.0f));
 		static void SwapQueues();
 		static uint32_t GetCurrentFrameIndex();
 		static uint32_t RT_GetCurrentFrameIndex();
@@ -40,8 +34,8 @@ namespace Hazel {
 		static void WaitAndRender(RenderThread* renderThread);
 		static uint32_t GetRenderQueueIndex();
 
-		static void BeginFrame();
-		static void EndFrame();
+		static void RT_BeginFrame();
+		static void RT_EndFrame();
 
 		template<typename FuncT>
 		static void Submit(FuncT&& func)  // FuncT&&可以接收各种类型的函数对象，包括lambda表达式、函数指针等
@@ -91,12 +85,6 @@ namespace Hazel {
 		static RenderCommandQueue& GetRenderResourceReleaseQueue(uint32_t index);
 
 	private:
-		struct SceneData
-		{
-			glm::mat4 ViewProjectionMatrix;
-		};
-		static Scope<SceneData> s_SceneData ;
-
 
 	};
 }

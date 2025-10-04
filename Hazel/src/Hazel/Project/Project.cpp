@@ -5,15 +5,15 @@
 
 namespace Hazel {
 
-	Ref_old<Project> Project::New()
+	Ref<Project> Project::New()
 	{
-		s_ActiveProject = CreateRef<Project>();
+		s_ActiveProject = Ref<Project>::Create();
 		return s_ActiveProject;
 	}
 
-	Ref_old<Project> Project::Load_old(const std::filesystem::path& path)
+	Ref<Project> Project::Load_old(const std::filesystem::path& path)
 	{
-		Ref_old<Project> project = CreateRef<Project>();
+		Ref<Project> project = Ref<Project>::Create();
 
 		ProjectSerializer serializer(project);
 		if (serializer.Deserialize(path))

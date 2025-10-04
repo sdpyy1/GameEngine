@@ -7,10 +7,10 @@
 
 namespace Hazel
 {
-	Scope<Window> Window::Create_old(const WindowProps& props)
+	Ref<Window> Window::Create(const WindowProps& props)
 	{
 	#ifdef HZ_PLATFORM_WINDOWS
-		return CreateScope<WindowsWindow>(props);
+		return Ref<WindowsWindow>::Create(props);
 	#else
 		HZ_CORE_ASSERT(false, "Unknown platform!");
 		return nullptr;

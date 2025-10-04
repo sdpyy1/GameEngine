@@ -13,6 +13,7 @@ namespace Hazel {
 	public:
 		Entity() = default;
 		Entity(entt::entity handle, Scene* scene);
+		Entity(entt::entity handle, Ref<Scene> scene);
 		Entity(const Entity& other) = default;
 
 		template<typename T, typename... Args>

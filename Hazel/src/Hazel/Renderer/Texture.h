@@ -43,9 +43,9 @@ namespace Hazel {
 	class Texture2D : public Texture
 	{
 	public:
-		static Ref_old<Texture2D> Create_old(const TextureSpecification& specification);
-		static Ref_old<Texture2D> Create_old(const TextureSpecification& specification, const std::filesystem::path& filepath);
-		static Ref_old<Texture2D> Create_old(const TextureSpecification& specification, Buffer1 imageData);
+		static Ref<Texture2D> Create_old(const TextureSpecification& specification);
+		static Ref<Texture2D> Create_old(const TextureSpecification& specification, const std::filesystem::path& filepath);
+		static Ref<Texture2D> Create_old(const TextureSpecification& specification, Buffer1 imageData);
 		static Ref<Texture2D> Create(const TextureSpecification& specification);
 		static Ref<Texture2D> Create(const TextureSpecification& specification, const std::filesystem::path& filepath);
 		static Ref<Texture2D> Create(const TextureSpecification& specification, Buffer1 imageData);
@@ -77,7 +77,7 @@ namespace Hazel {
 	class TextureCube : public Texture
 	{
 	public:
-		static Ref_old<TextureCube> Create_old(const TextureSpecification& specification, Buffer1 imageData = Buffer1());
+		static Ref<TextureCube> Create_old(const TextureSpecification& specification, Buffer1 imageData = Buffer1());
 
 		virtual TextureType GetType() const override { return TextureType::TextureCube; }
 

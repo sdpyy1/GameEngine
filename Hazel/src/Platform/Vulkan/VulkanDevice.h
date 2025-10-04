@@ -24,7 +24,7 @@ namespace Hazel {
 		bool IsExtensionSupported(const std::string& extensionName) const;
 		VkFormat GetDepthFormat() const { return m_DepthFormat; }
 		std::string getDeviceName() { return std::string(m_Properties.deviceName); }
-		static Ref_old<VulkanPhysicalDevice> Select(VkInstance vkInstance); // Create Static PhysicalDevice
+		static Ref<VulkanPhysicalDevice> Select(VkInstance vkInstance); // Create Static PhysicalDevice
 		const VkPhysicalDeviceMemoryProperties& GetMemoryProperties() const { return m_MemoryProperties; }
 
 	private:
@@ -63,7 +63,7 @@ namespace Hazel {
 	class VulkanDevice : public RefCounted {
 
 	public:
-		VulkanDevice(const Ref_old<VulkanPhysicalDevice>& physicalDevice, VkPhysicalDeviceFeatures enabledFeatures);
+		VulkanDevice(const Ref<VulkanPhysicalDevice>& physicalDevice, VkPhysicalDeviceFeatures enabledFeatures);
 		~VulkanDevice();
 		void Destroy();
 
@@ -72,8 +72,8 @@ namespace Hazel {
 		VkQueue GetGraphicsQueue() { return m_GraphicsQueue; }
 		VkQueue GetComputeQueue() { return m_ComputeQueue; }
 		VkQueue GetTransferQueue() { return m_TransferQueue; }
-		const Ref_old<VulkanPhysicalDevice>& GetPhysicalDevice() const { return m_PhysicalDevice; }
-		static Ref_old<VulkanDevice> Create_old(const Ref_old<VulkanPhysicalDevice>& physicalDevice, VkPhysicalDeviceFeatures enabledFeatures); // Create Static Device
+		const Ref<VulkanPhysicalDevice>& GetPhysicalDevice() const { return m_PhysicalDevice; }
+		static Ref<VulkanDevice> Create_old(const Ref<VulkanPhysicalDevice>& physicalDevice, VkPhysicalDeviceFeatures enabledFeatures); // Create Static Device
 		VkDevice GetVulkanDevice() const { return m_LogicalDevice; }
 		VkCommandBuffer GetCommandBuffer(bool begin, bool compute = false);
 		void FlushCommandBuffer(VkCommandBuffer commandBuffer);
@@ -84,7 +84,7 @@ namespace Hazel {
 		Ref<VulkanCommandPool> GetOrCreateThreadLocalCommandPool();
 	private:
 		VkDevice m_LogicalDevice = nullptr;
-		Ref_old<VulkanPhysicalDevice> m_PhysicalDevice;
+		Ref<VulkanPhysicalDevice> m_PhysicalDevice;
 		VkPhysicalDeviceFeatures m_EnabledFeatures;
 
 		VkQueue m_GraphicsQueue;

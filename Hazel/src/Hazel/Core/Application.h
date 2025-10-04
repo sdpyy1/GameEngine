@@ -47,7 +47,7 @@ namespace Hazel {
 		void PushLayer(Layer* layer);
 		void PushOverlay(Layer* layer);
 
-		WindowsWindow& GetWindow() { return *(WindowsWindow*) (m_Window.get()); }
+		Ref<WindowsWindow>& GetWindow() { return m_Window.As<WindowsWindow>(); }
 		void RenderImGui();
 
 		void Close();
@@ -55,8 +55,7 @@ namespace Hazel {
 		ImGuiLayer* GetImGuiLayer() { return m_ImGuiLayer; }
 
 		static Application& Get() { return *s_Instance; }
-		Ref_old<RenderContext> GetRenderContext() { return GetWindow().GetRenderContext_old(); }
-		Ref<RenderContext> GetRenderContext_new() { return GetWindow().GetRenderContext(); }
+		Ref<RenderContext> GetRenderContext() { return GetWindow()->GetRenderContext(); }
 		const ApplicationSpecification& GetSpecification() const { return m_Specification; }
 		uint32_t GetCurrentFrameIndex() const { return m_CurrentFrameIndex; }
 		void SubmitToMainThread(const std::function<void()>& function);
@@ -68,7 +67,7 @@ namespace Hazel {
 		void ExecuteMainThreadQueue();
 	private:
 		ApplicationSpecification m_Specification;
-		Scope<Window> m_Window;
+		Ref<Window> m_Window;
 		ImGuiLayer* m_ImGuiLayer;
 		bool m_Running = true;
 		bool m_Minimized = false;

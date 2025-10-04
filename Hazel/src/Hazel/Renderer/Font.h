@@ -9,19 +9,19 @@ namespace Hazel {
 
 	struct MSDFData;
 
-	class Font
+	class Font: public RefCounted
 	{
 	public:
 		Font(const std::filesystem::path& font);
 		~Font();
 
 		const MSDFData* GetMSDFData() const { return m_Data; }
-		Ref_old<Texture2D> GetAtlasTexture() const { return m_AtlasTexture; }
+		Ref<Texture2D> GetAtlasTexture() const { return m_AtlasTexture; }
 
-		static Ref_old<Font> GetDefault();
+		static Ref<Font> GetDefault();
 	private:
 		MSDFData* m_Data;
-		Ref_old<Texture2D> m_AtlasTexture;
+		Ref<Texture2D> m_AtlasTexture;
 	};
 
 }

@@ -2,7 +2,7 @@
 #include <string>
 
 namespace Hazel {
-
+	// äÖÈ¾ÅäÖÃ£¬´æ´¢ÔÚRendererÀàÖĞ
 	struct RendererConfig
 	{
 		uint32_t FramesInFlight = 3;

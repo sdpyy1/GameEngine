@@ -263,7 +263,7 @@ namespace Hazel {
 #endif
 	}
 
-	void VulkanAllocator::Init(Ref_old<VulkanDevice> device)
+	void VulkanAllocator::Init(Ref<VulkanDevice> device)
 	{
 		s_Data = new VulkanAllocatorData();
 
@@ -276,7 +276,7 @@ namespace Hazel {
 
 		vmaCreateAllocator(&allocatorInfo, &s_Data->Allocator);
 	}
-	void VulkanAllocator::Init(Ref_old<VulkanDevice> device,VkInstance instance)
+	void VulkanAllocator::Init(Ref<VulkanDevice> device,VkInstance instance)
 	{
 		s_Data = new VulkanAllocatorData();
 

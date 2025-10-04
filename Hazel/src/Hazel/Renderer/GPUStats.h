@@ -3,6 +3,7 @@
 
 namespace Hazel {
 
+	// VulkanµÄVMA»áÓÃ
 	struct GPUMemoryStats
 	{
 		uint64_t Used = 0;

@@ -2,7 +2,7 @@
 #include <string>
 
 namespace Hazel {
-
+	// ´æ´¢ÔÚVulkanRendererÖĞ
 	struct RendererCapabilities
 	{
 		std::string Vendor;

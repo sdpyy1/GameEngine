@@ -7,5 +7,8 @@ namespace Hazel {
 		: m_EntityHandle(handle), m_Scene(scene)
 	{
 	}
-
+	Entity::Entity(entt::entity handle, Ref <Scene> scene)
+		: m_EntityHandle(handle), m_Scene(&*scene)
+	{
+	}
 }

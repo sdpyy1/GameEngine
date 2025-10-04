@@ -69,13 +69,13 @@ namespace Hazel {
 		HZ_CORE_INFO("Create GLFW Window Done!");
 
 		// RenderContext
-		m_RenderContext = RenderContext::Create_old(m_Window);
+		m_RenderContext = RenderContext::Create(m_Window);
 		m_RenderContext->Init(); 
 		HZ_CORE_INFO("RenderContext Init Done!");
 
 		// SwapChain For Vulkan
 		if (Renderer::Current() == RendererAPI::Type::Vulkan) {
-			Ref_old<VulkanContext> context = std::dynamic_pointer_cast<VulkanContext>(m_RenderContext);
+			Ref<VulkanContext> context = m_RenderContext.As<VulkanContext>();
 
 			m_SwapChain = new VulkanSwapChain(context->GetInstanceNative(), context->GetDeviceNative());
 			m_SwapChain->InitSurface(m_Window);

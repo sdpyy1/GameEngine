@@ -31,7 +31,7 @@ namespace Hazel {
 		if (!m_Specification.WorkingDirectory.empty())
 			std::filesystem::current_path(m_Specification.WorkingDirectory);
 
-		m_Window = Window::Create_old(WindowProps(m_Specification.Name));  // 这里创建了GLFW窗口、也初始化了RenderContext和SwapChain
+		m_Window = Window::Create(WindowProps(m_Specification.Name));  // 这里创建了GLFW窗口、也初始化了RenderContext和SwapChain
 		
 		m_Window->SetEventCallback(HZ_BIND_EVENT_FN(Application::OnEvent));
 		HZ_CORE_ASSERT(NFD::Init() == NFD_OKAY);
@@ -53,7 +53,7 @@ namespace Hazel {
 	{
 		HZ_PROFILE_FUNCTION();
 
-		ScriptEngine::Shutdown();
+		//ScriptEngine::Shutdown();
 		Renderer::Shutdown();
 	}
 
@@ -131,14 +131,8 @@ namespace Hazel {
 
 			if (!m_Minimized)
 			{
-				// On Render thread
-				Renderer::Submit([&]()
-					{
-						// 清空命令缓冲区、获取下一帧图片索引
-						m_Window->GetSwapChain().BeginFrame();
-					});
-				// 重置DrawCall=0，重置描述符池
-				Renderer::BeginFrame();  // 也是RT_ 只是没标明
+				// 重置DrawCall=0，重置描述符池,清空命令缓冲区、获取下一帧图片索引
+				Renderer::RT_BeginFrame();  // 也是RT_ 只是没标明
 
 				// 更新各层
 				{
@@ -146,26 +140,20 @@ namespace Hazel {
 						layer->OnUpdate(timestep);  // 这里就是填装渲染指令的地方
 				}
 
-				// Render ImGui on render thread
+				// GUI渲染
 				Application* app = this;
 				if (m_Specification.EnableImGui)
 				{
 					Renderer::Submit([app]() { app->RenderImGui(); });
 					Renderer::Submit([=]() { m_ImGuiLayer->End(); });
 				}
-				Renderer::EndFrame();  //目前啥也没干
 
-				// On Render thread
-				Renderer::Submit([&]()
-					{						
+				// 提交命令缓冲区、呈现图片
+				Renderer::RT_EndFrame();  
 
-						// m_Window->GetSwapChain().BeginFrame();
-						// Renderer::WaitAndRender();
-						// 提交命令缓冲区、呈现图片
-						m_Window->SwapBuffers();
-					});
 			}
 
+			// 记录信息
 			m_CurrentFrameIndex = (m_CurrentFrameIndex + 1) % Renderer::GetConfig().FramesInFlight;
 			static uint64_t frameCounter = 0;
 			frameCounter++;

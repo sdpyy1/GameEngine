@@ -158,24 +158,18 @@ namespace Hazel {
 	}
 
 
-
-
-
-
-
-
-
-
 	RendererCapabilities& VulkanRenderer::GetCapabilities()
 	{
 		return s_Data->RenderCaps;
 	}
-	void VulkanRenderer::BeginFrame()
+	void VulkanRenderer::RT_BeginFrame()
 	{
 		Renderer::Submit([]()
 			{
-				VulkanSwapChain& swapChain = Application::Get().GetWindow().GetSwapChain();
 
+				VulkanSwapChain& swapChain = Application::Get().GetWindow()->GetSwapChain();
+				// 清空命令缓冲区、获取下一帧图片索引
+				swapChain.BeginFrame();
 				// Reset descriptor pools here
 				VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 				uint32_t bufferIndex = swapChain.GetCurrentBufferIndex();
@@ -198,9 +192,15 @@ namespace Hazel {
 			});
 	}
 
-	void VulkanRenderer::EndFrame()
+	void VulkanRenderer::RT_EndFrame()
 	{
+		Renderer::Submit([]() {
+			Ref<WindowsWindow> m_Window = Application::Get().GetWindow();
+			// 提交命令缓冲区、呈现图片
+			m_Window->SwapBuffers();
+		});
 #if 0
+
 		Renderer::Submit([]()
 			{
 				VK_CHECK_RESULT(vkEndCommandBuffer(commandBuffer));

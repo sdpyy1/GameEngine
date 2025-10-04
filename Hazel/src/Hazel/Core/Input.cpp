@@ -162,7 +162,7 @@ namespace Hazel {
 
 	std::pair<float, float> Input::GetMousePosition()
 	{
-		auto& window = static_cast<Window&>(Application::Get().GetWindow());
+		auto& window = static_cast<Window&>(*Application::Get().GetWindow());
 
 		double x, y;
 		glfwGetCursorPos(static_cast<GLFWwindow*>(window.GetNativeWindow()), &x, &y);
@@ -173,7 +173,7 @@ namespace Hazel {
 	//		of the screen when it reaches the edge
 	void Input::SetCursorMode(CursorMode mode)
 	{
-		auto& window = static_cast<Window&>(Application::Get().GetWindow());
+		auto& window = static_cast<Window&>(*Application::Get().GetWindow());
 		glfwSetInputMode(static_cast<GLFWwindow*>(window.GetNativeWindow()), GLFW_CURSOR, GLFW_CURSOR_NORMAL + (int)mode);
 
 		if (Application::Get().GetSpecification().EnableImGui){}
@@ -182,7 +182,7 @@ namespace Hazel {
 
 	CursorMode Input::GetCursorMode()
 	{
-		auto& window = static_cast<Window&>(Application::Get().GetWindow());
+		auto& window = static_cast<Window&>(*Application::Get().GetWindow());
 		return (CursorMode)(glfwGetInputMode(static_cast<GLFWwindow*>(window.GetNativeWindow()), GLFW_CURSOR) - GLFW_CURSOR_NORMAL);
 	}
 

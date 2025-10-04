@@ -16,8 +16,8 @@ namespace Hazel {
 		std::filesystem::path m_BaseDirectory;
 		std::filesystem::path m_CurrentDirectory;
 		
-		Ref_old<Texture2D> m_DirectoryIcon;
-		Ref_old<Texture2D> m_FileIcon;
+		Ref<Texture2D> m_DirectoryIcon;
+		Ref<Texture2D> m_FileIcon;
 	};
 
 }

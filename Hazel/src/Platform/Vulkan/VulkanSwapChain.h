@@ -8,19 +8,18 @@ namespace Hazel {
 	public:
 		VulkanSwapChain() = default;
 
-		VulkanSwapChain(VkInstance m_Instance, const Ref_old<VulkanDevice>& device);
+		VulkanSwapChain(VkInstance m_Instance, const Ref<VulkanDevice>& device);
 		void InitSurface(GLFWwindow* windowHandle);
 		void Create_old(uint32_t* width, uint32_t* height, bool vsync);
 		void BeginFrame();
 		void Present();
 		std::vector<VkImageView> GetViews() {
 			std::vector<VkImageView> res;
-			for (int i = 0; i < m_ImageCount; i++) {
+			for (unsigned i = 0; i < m_ImageCount; i++) {
 				res.push_back(m_Images[i].ImageView);
 			}
 			return res;
 		}
-
 		void Destroy();
 		void OnResize(uint32_t width, uint32_t height);
 		uint32_t GetImageCount() const { return m_ImageCount; }
@@ -51,7 +50,7 @@ namespace Hazel {
 
 	private:
 		VkInstance m_Instance = nullptr;
-		Ref_old<VulkanDevice> m_Device;
+		Ref<VulkanDevice> m_Device;
 		VkSurfaceKHR m_Surface;
 		VkRenderPass m_RenderPass = nullptr;
 		std::vector<VkFramebuffer> m_Framebuffers;

@@ -9,7 +9,7 @@ namespace Hazel {
 
 		virtual void Init() = 0;  // ≥ı ºªØ‰÷»æAPI
 
-		static Scope<RenderContext> Create_old(void* window);
+		static Ref<RenderContext> Create(void* window);
 	};
 
 }

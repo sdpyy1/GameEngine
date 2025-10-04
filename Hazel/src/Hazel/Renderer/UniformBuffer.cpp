@@ -6,7 +6,7 @@
 
 namespace Hazel {
 
-	Ref_old<UniformBuffer> UniformBuffer::Create_old(uint32_t size, uint32_t binding)
+	Ref<UniformBuffer> UniformBuffer::Create_old(uint32_t size, uint32_t binding)
 	{
 		switch (Renderer::Current())
 		{

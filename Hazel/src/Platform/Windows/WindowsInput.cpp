@@ -8,14 +8,14 @@ namespace Hazel {
 
 	bool Input_old::IsKeyPressed(const KeyCode_old key)
 	{
-		auto* window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
+		auto* window = static_cast<GLFWwindow*>(Application::Get().GetWindow()->GetNativeWindow());
 		auto state = glfwGetKey(window, static_cast<int32_t>(key));
 		return state == GLFW_PRESS;
 	}
 
 	void Input_old::SetCursorMode(CursorMode mode)
 	{
-		auto* window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
+		auto* window = static_cast<GLFWwindow*>(Application::Get().GetWindow()->GetNativeWindow());
 		switch (mode)
 		{
 		case CursorMode::Normal:
@@ -32,14 +32,14 @@ namespace Hazel {
 
 	bool Input_old::IsMouseButtonPressed(const MouseCode button)
 	{
-		auto* window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
+		auto* window = static_cast<GLFWwindow*>(Application::Get().GetWindow()->GetNativeWindow());
 		auto state = glfwGetMouseButton(window, static_cast<int32_t>(button));
 		return state == GLFW_PRESS;
 	}
 
 	glm::vec2 Input_old::GetMousePosition()
 	{
-		auto* window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
+		auto* window = static_cast<GLFWwindow*>(Application::Get().GetWindow()->GetNativeWindow());
 		double xpos, ypos;
 		glfwGetCursorPos(window, &xpos, &ypos);
 

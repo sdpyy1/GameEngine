@@ -55,7 +55,7 @@ namespace Hazel {
 	struct SpriteRendererComponent
 	{
 		glm::vec4 Color{ 1.0f, 1.0f, 1.0f, 1.0f };
-		Ref_old<Texture2D> Texture;
+		Ref<Texture2D> Texture;
 		float TilingFactor = 1.0f;
 
 		SpriteRendererComponent() = default;
@@ -164,7 +164,7 @@ namespace Hazel {
 	struct TextComponent
 	{
 		std::string TextString;
-		Ref_old<Font> FontAsset = Font::GetDefault();
+		Ref<Font> FontAsset = Font::GetDefault();
 		glm::vec4 Color{ 1.0f };
 		float Kerning = 0.0f;
 		float LineSpacing = 0.0f;

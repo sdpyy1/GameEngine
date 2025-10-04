@@ -4,7 +4,6 @@
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include "glm/gtx/string_cast.hpp"
-
 // This ignores all warnings raised inside External headers
 #pragma warning(push, 0)
 #include <spdlog/spdlog.h>
@@ -18,11 +17,11 @@ namespace Hazel {
 	public:
 		static void Init();
 
-		static Ref_old<spdlog::logger>& GetCoreLogger() { return s_CoreLogger; }
-		static Ref_old<spdlog::logger>& GetClientLogger() { return s_ClientLogger; }
+		static std::shared_ptr<spdlog::logger>& GetCoreLogger() { return s_CoreLogger; }
+		static std::shared_ptr<spdlog::logger>& GetClientLogger() { return s_ClientLogger; }
 	private:
-		static Ref_old<spdlog::logger> s_CoreLogger;
-		static Ref_old<spdlog::logger> s_ClientLogger;
+		static std::shared_ptr<spdlog::logger> s_CoreLogger;
+		static std::shared_ptr<spdlog::logger> s_ClientLogger;
 	};
 
 }

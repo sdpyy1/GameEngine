@@ -170,7 +170,7 @@ namespace Hazel {
 				VkCommandBuffer commandBuffer = nullptr;
 				if (instance->m_OwnedBySwapChain)
 				{
-					VulkanSwapChain& swapChain = Application::Get().GetWindow().GetSwapChain();
+					VulkanSwapChain& swapChain = Application::Get().GetWindow()->GetSwapChain();
 					commandBuffer = swapChain.GetDrawCommandBuffer(commandBufferIndex);
 				}
 				else

@@ -389,7 +389,7 @@ namespace Hazel {
 
 		if (buffer)
 		{
-			Ref<VulkanDevice> device = VulkanContext::GetCurrentDevice().get();
+			Ref<VulkanDevice> device = VulkanContext::GetCurrentDevice();
 
 			VkDeviceSize size = buffer.Size;
 
