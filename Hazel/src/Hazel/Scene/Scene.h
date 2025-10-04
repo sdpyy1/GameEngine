@@ -32,7 +32,7 @@ namespace Hazel {
 		VkPipeline graphicsPipeline;
 		std::vector<VkFramebuffer> swapChainFramebuffers;
 		std::vector<VkImageView> swapChainImageViews;
-		VulkanSwapChain swapChian;
+		VulkanSwapChain *swapChian;
 		VkDevice device;
 
 

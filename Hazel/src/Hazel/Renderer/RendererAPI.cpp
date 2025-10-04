@@ -7,6 +7,16 @@ namespace Hazel {
 
 	RendererAPI::Type RendererAPI::s_API = RendererAPI::Type::Vulkan;
 
+	RendererAPI* RendererAPI::CreateAPI()
+	{
+		switch (RendererAPI::Current())
+		{
+		case RendererAPI::Type::Vulkan: return new VulkanRenderer();
+		}
+		HZ_CORE_ASSERT(false, "Unknown RendererAPI");
+		return nullptr;
+	}
+
 	Scope<RendererAPI> RendererAPI::Create_old()
 	{
 		switch (s_API)
@@ -18,5 +28,6 @@ namespace Hazel {
 		HZ_CORE_ASSERT(false, "Unknown RendererAPI!");
 		return nullptr;
 	}
+
 
 }

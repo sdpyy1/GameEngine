@@ -335,6 +335,26 @@ namespace Hazel
 	{
 		GetThreadLocalCommandPool()->FlushCommandBuffer(commandBuffer);
 	}
+	void VulkanDevice::Destroy()
+	{
+		m_CommandPools.clear();
+		vkDeviceWaitIdle(m_LogicalDevice);
+		vkDestroyDevice(m_LogicalDevice, nullptr);
+	}
+	void VulkanDevice::LockQueue(bool compute)
+	{
+		if (compute)
+			m_ComputeQueueMutex.lock();
+		else
+			m_GraphicsQueueMutex.lock();
+	}
+	void VulkanDevice::UnlockQueue(bool compute)
+	{
+		if (compute)
+			m_ComputeQueueMutex.unlock();
+		else
+			m_GraphicsQueueMutex.unlock();
+	}
 	void VulkanCommandPool::FlushCommandBuffer(VkCommandBuffer commandBuffer, VkQueue queue)
 	{
 		auto device = VulkanContext::GetCurrentDevice();
@@ -360,14 +380,14 @@ namespace Hazel
 		VK_CHECK_RESULT(vkCreateFence(vulkanDevice, &fenceCreateInfo, nullptr, &fence));
 
 		{
-			device->LockQueue();
+			device->LockQueue();  // ???:Device的CommandBuffer提交加锁的目的？
 
 			// Submit to the queue
 			VK_CHECK_RESULT(vkQueueSubmit(queue, 1, &submitInfo, fence));
 
 			device->UnlockQueue();
 		}
-		// Wait for the fence to signal that command buffer has finished executing
+		// Wait for the fence to signal that command buffer has finished executing  等待GPU命令执行完成
 		VK_CHECK_RESULT(vkWaitForFences(vulkanDevice, 1, &fence, VK_TRUE, DEFAULT_FENCE_TIMEOUT));
 
 		vkDestroyFence(vulkanDevice, fence, nullptr);
@@ -398,6 +418,7 @@ namespace Hazel
 	}
 	Ref<VulkanCommandPool> VulkanDevice::GetOrCreateThreadLocalCommandPool()
 	{
+		// CommandPool与线程ID绑定，相当于一个线程一个CommandPool
 		auto threadID = std::this_thread::get_id();
 		auto commandPoolIt = m_CommandPools.find(threadID);
 		if (commandPoolIt != m_CommandPools.end())

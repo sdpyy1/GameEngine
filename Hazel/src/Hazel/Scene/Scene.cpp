@@ -73,13 +73,13 @@ namespace Hazel {
 	Scene::Scene()
 	{
 		vulkanContext = Application::Get().GetRenderContext_new().As<VulkanContext>();
-		swapChian = Application::Get().GetWindow().GetSwapChain();
+		swapChian = Application::Get().GetWindow().GetSwapChainPtr();
 		device = vulkanContext->GetCurrentDevice()->GetVulkanDevice();
 		// 临时创建PASS
-		createRenderPass();
+		//createRenderPass();
 		createGraphicsPipeline();
-		swapChainImageViews = swapChian.GetViews();
-		createFramebuffers();
+		swapChainImageViews = swapChian->GetViews();
+		//createFramebuffers();
 	}
 
 	Scene::~Scene()
@@ -101,9 +101,11 @@ namespace Hazel {
 		// 7. 绑定描述符集（资源）
 		// 8. 绘图API
 		// 9. 结束Pass
-		Scene * instance = this;
-		Renderer::Submit([instance]() mutable {
-			VkCommandBuffer commandBuffer = instance->swapChian.GetCurrentDrawCommandBuffer();
+		VulkanSwapChain* instance = this->swapChian;
+		VkPipeline pp = this->graphicsPipeline;
+		Renderer::Submit([instance,pp]() mutable {
+			uint32_t a = instance->GetCurrentBufferIndex();
+			VkCommandBuffer commandBuffer = instance->GetCurrentDrawCommandBuffer();
 			//vkResetCommandBuffer(commandBuffer, /*VkCommandBufferResetFlagBits*/ 0);
 			VkCommandBufferBeginInfo beginInfo{};
 			beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -114,13 +116,11 @@ namespace Hazel {
 
 			VkRenderPassBeginInfo renderPassInfo{};
 			renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-			renderPassInfo.renderPass = instance->swapChian.GetRenderPass();
-			renderPassInfo.framebuffer = instance->swapChian.GetCurrentFramebuffer();
+			renderPassInfo.renderPass = instance->GetRenderPass();
+			renderPassInfo.framebuffer = instance->GetCurrentFramebuffer();
 			renderPassInfo.renderArea.offset = { 0, 0 };
-			VkExtent2D v;
-			v.height = instance->swapChian.GetHeight();
-			v.width = instance->swapChian.GetWidth();
-			renderPassInfo.renderArea.extent = v;
+
+			renderPassInfo.renderArea.extent = instance->GetExtent();
 
 			VkClearValue clearColor = { {{0.0f, 0.0f, 0.0f, 1.0f}} };
 			renderPassInfo.clearValueCount = 1;
@@ -128,20 +128,20 @@ namespace Hazel {
 
 			vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-			vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, instance->graphicsPipeline);
+			vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pp);
 
 			VkViewport viewport{};
 			viewport.x = 0.0f;
 			viewport.y = 0.0f;
-			viewport.width = static_cast<float>(v.width);
-			viewport.height = static_cast<float>(v.height);
+			viewport.width = static_cast<float>(instance->GetExtent().width);
+			viewport.height = static_cast<float>(instance->GetExtent().height);
 			viewport.minDepth = 0.0f;
 			viewport.maxDepth = 1.0f;
 			vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 
 			VkRect2D scissor{};
 			scissor.offset = { 0, 0 };
-			scissor.extent = v;
+			scissor.extent = instance->GetExtent();
 			vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
 			vkCmdDraw(commandBuffer, 3, 1, 0, 0);
@@ -151,12 +151,6 @@ namespace Hazel {
 			if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
 				throw std::runtime_error("failed to record command buffer!");
 			}
-
-
-
-
-
-
 
 		});
 	
@@ -170,7 +164,7 @@ namespace Hazel {
 
 	void Scene::createRenderPass() {
 		VkAttachmentDescription colorAttachment{};
-		colorAttachment.format = swapChian.GetColorFormat();
+		colorAttachment.format = swapChian->GetColorFormat();
 		colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
 		colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 		colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -306,7 +300,7 @@ namespace Hazel {
 		pipelineInfo.pColorBlendState = &colorBlending;
 		pipelineInfo.pDynamicState = &dynamicState;
 		pipelineInfo.layout = pipelineLayout;
-		pipelineInfo.renderPass = renderPass;
+		pipelineInfo.renderPass = swapChian->GetRenderPass();
 		pipelineInfo.subpass = 0;
 		pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
@@ -334,8 +328,8 @@ namespace Hazel {
 			framebufferInfo.renderPass = renderPass;  // 绑定“仅颜色缓冲”的RenderPass
 			framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());  // 附件数量改为1
 			framebufferInfo.pAttachments = attachments.data();  // 指向仅含颜色附件的列表
-			framebufferInfo.width = swapChian.GetWidth(); // 帧缓冲宽度=交换链图像宽度
-			framebufferInfo.height = swapChian.GetHeight();  // 帧缓冲高度=交换链图像高度
+			framebufferInfo.width = swapChian->GetWidth(); // 帧缓冲宽度=交换链图像宽度
+			framebufferInfo.height = swapChian->GetHeight();  // 帧缓冲高度=交换链图像高度
 			framebufferInfo.layers = 1;  // 图层数（2D渲染默认1，立体渲染需设为2）
 
 			// 创建帧缓冲

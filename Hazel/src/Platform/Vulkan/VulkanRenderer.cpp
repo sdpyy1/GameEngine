@@ -56,8 +56,10 @@ namespace Hazel {
 	}
 	void VulkanRenderer::Init()
 	{
+		// 初始化一些资源
 		s_Data = new VulkanRendererData();
 		const auto& config = Renderer::GetConfig();
+		// 为并发帧都创建DescriptorPool
 		s_Data->DescriptorPools.resize(config.FramesInFlight);
 		s_Data->DescriptorPoolAllocationCount.resize(config.FramesInFlight);
 		auto& caps = s_Data->RenderCaps;
@@ -65,11 +67,13 @@ namespace Hazel {
 		caps.Vendor = Utils::VulkanVendorIDToString(properties.vendorID);
 		caps.Device = properties.deviceName;
 		caps.Version = std::to_string(properties.driverVersion);
-		Utils::DumpGPUInfo();
-		// Create descriptor pools
+		HZ_CORE_INFO_TAG("Renderer", "GPU Info:");
+		HZ_CORE_INFO_TAG("Renderer", "  Vendor: {0}", caps.Vendor);
+		HZ_CORE_INFO_TAG("Renderer", "  Device: {0}", caps.Device);
+		HZ_CORE_INFO_TAG("Renderer", "  Version: {0}", caps.Version);
+		// 创建 descriptor pools
 		Renderer::Submit([]() mutable
 			{
-				// Create Descriptor Pool
 				VkDescriptorPoolSize pool_sizes[] =
 				{
 					{ VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
@@ -101,7 +105,7 @@ namespace Hazel {
 				VK_CHECK_RESULT(vkCreateDescriptorPool(device, &pool_info, nullptr, &s_Data->MaterialDescriptorPool));
 			});
 
-		// Create fullscreen quad
+		// 提前把全屏正方形顶点数据创建好
 		float x = -1;
 		float y = -1;
 		float width = 2, height = 2;

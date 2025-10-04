@@ -38,17 +38,17 @@ namespace Hazel
 		GET_INSTANCE_PROC_ADDR(m_Instance, GetQueueCheckpointDataNV);
 	}
 	void VulkanSwapChain::BeginFrame() {
-
 		 // Resource release queue
 		auto& queue = Renderer::GetRenderResourceReleaseQueue(m_CurrentFrameIndex);
 		queue.Execute();
-
+		// 获取下一帧图片
 		m_CurrentImageIndex = AcquireNextImage();
-
+		// 内部的CommandBuffer也会Reset
 		VK_CHECK_RESULT(vkResetCommandPool(m_Device->GetVulkanDevice(), m_CommandBuffers[m_CurrentFrameIndex].CommandPool, 0));
 
 	}
 
+	// 渲染命令结束后APP调用
 	void VulkanSwapChain::Present()
 	{
 		const uint64_t DEFAULT_FENCE_TIMEOUT = 100000000000;
@@ -188,7 +188,7 @@ namespace Hazel
 		std::vector<VkPresentModeKHR> presentModes(presentModeCount);
 		VK_CHECK_RESULT(fpGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, m_Surface, &presentModeCount, presentModes.data()));
 	
-		VkExtent2D swapchainExtent = {};
+		swapchainExtent = {};
 		// If width (and height) equals the special value 0xFFFFFFFF, the size of the surface will be set by the swapchain
 		if (surfCaps.currentExtent.width == (uint32_t)-1)
 		{
@@ -335,7 +335,6 @@ namespace Hazel
 			VK_CHECK_RESULT(vkCreateImageView(device, &colorAttachmentView, nullptr, &m_Images[i].ImageView));
 			VKUtils::SetDebugUtilsObjectName(device, VK_OBJECT_TYPE_IMAGE_VIEW, fmt::format("Swapchain ImageView: {}", i), m_Images[i].ImageView);
 		}
-
 		// Create command buffers
 		{
 			for (auto& commandBuffer : m_CommandBuffers)
@@ -406,7 +405,7 @@ namespace Hazel
 		colorAttachmentDesc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 		colorAttachmentDesc.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 		colorAttachmentDesc.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-
+		// 这个深度图并没有用
 		VkAttachmentReference colorReference = {};
 		colorReference.attachment = 0;
 		colorReference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
@@ -506,26 +505,7 @@ namespace Hazel
 
 		vkDeviceWaitIdle(device);
 	}
-	void VulkanDevice::Destroy()
-	{
-		m_CommandPools.clear();
-		vkDeviceWaitIdle(m_LogicalDevice);
-		vkDestroyDevice(m_LogicalDevice, nullptr);
-	}
-	void VulkanDevice::LockQueue(bool compute)
-	{
-		if (compute)
-			m_ComputeQueueMutex.lock();
-		else
-			m_GraphicsQueueMutex.lock();
-	}
-	void VulkanDevice::UnlockQueue(bool compute)
-	{
-		if (compute)
-			m_ComputeQueueMutex.unlock();
-		else
-			m_GraphicsQueueMutex.unlock();
-	}
+
 	void VulkanSwapChain::OnResize(uint32_t width, uint32_t height)
 	{
 		HZ_CORE_WARN_TAG("Renderer", "VulkanSwapChain::OnResize");
@@ -534,6 +514,7 @@ namespace Hazel
 		vkDeviceWaitIdle(device);
 		Create_old(&width, &height, m_VSync);
 		vkDeviceWaitIdle(device);
+		
 	}
 
 	void VulkanSwapChain::FindImageFormatAndColorSpace()
@@ -564,7 +545,7 @@ namespace Hazel
 			{
 				if (surfaceFormat.format == VK_FORMAT_B8G8R8A8_UNORM)
 				{
-					m_ColorFormat = surfaceFormat.format;
+					m_ColorFormat = VK_FORMAT_R8G8B8A8_UNORM;   // 这是线性的， 还有50是自动进行矫正的颜色格式
 					m_ColorSpace = surfaceFormat.colorSpace;
 					found_B8G8R8A8_UNORM = true;
 					break;

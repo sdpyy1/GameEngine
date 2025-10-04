@@ -70,7 +70,7 @@ namespace Hazel {
 
 		// RenderContext
 		m_RenderContext = RenderContext::Create_old(m_Window);
-		m_RenderContext->Init();
+		m_RenderContext->Init(); 
 		HZ_CORE_INFO("RenderContext Init Done!");
 
 		// SwapChain For Vulkan

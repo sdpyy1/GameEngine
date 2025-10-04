@@ -31,13 +31,13 @@ namespace Hazel {
 		if (!m_Specification.WorkingDirectory.empty())
 			std::filesystem::current_path(m_Specification.WorkingDirectory);
 
-		m_Window = Window::Create_old(WindowProps(m_Specification.Name));
+		m_Window = Window::Create_old(WindowProps(m_Specification.Name));  // 这里创建了GLFW窗口、也初始化了RenderContext和SwapChain
 		
 		m_Window->SetEventCallback(HZ_BIND_EVENT_FN(Application::OnEvent));
 		HZ_CORE_ASSERT(NFD::Init() == NFD_OKAY);
 
-		Renderer::Init();  
-		m_RenderThread.Pump();  
+		Renderer::Init();  // 把渲染API准备好，并提前创建了一些资源
+		m_RenderThread.Pump();  // 因为前边的一些渲染相关的函数都是Render::Submit的，需要让渲染线程执行完他们
 
 		// ImGui初始化
 		//m_ImGuiLayer = new ImGuiLayer();
@@ -122,8 +122,10 @@ namespace Hazel {
 			float time = Time::GetTime();
 			Timestep timestep = time - m_LastFrameTime; 
 			m_LastFrameTime = time;
+
 			ExecuteMainThreadQueue();
 			m_RenderThread.NextFrame();
+
 			// Start rendering previous frame
 			m_RenderThread.Kick(); // 通知渲染线程开始渲染（RenderCommandQueue缓存的命令全部执行）
 
@@ -132,9 +134,11 @@ namespace Hazel {
 				// On Render thread
 				Renderer::Submit([&]()
 					{
+						// 清空命令缓冲区、获取下一帧图片索引
 						m_Window->GetSwapChain().BeginFrame();
 					});
-				Renderer::BeginFrame();
+				// 重置DrawCall=0，重置描述符池
+				Renderer::BeginFrame();  // 也是RT_ 只是没标明
 
 				// 更新各层
 				{
@@ -153,10 +157,12 @@ namespace Hazel {
 
 				// On Render thread
 				Renderer::Submit([&]()
-					{
+					{						
+
 						// m_Window->GetSwapChain().BeginFrame();
 						// Renderer::WaitAndRender();
-						m_Window->SwapBuffers();  // 呈现画面的函数
+						// 提交命令缓冲区、呈现图片
+						m_Window->SwapBuffers();
 					});
 			}
 
@@ -176,16 +182,19 @@ namespace Hazel {
 
 	bool Application::OnWindowResize(WindowResizeEvent& e)
 	{
-		HZ_PROFILE_FUNCTION();
-
-		if (e.GetWidth() == 0 || e.GetHeight() == 0)
+		const uint32_t width = e.GetWidth(), height = e.GetHeight();
+		if (width == 0 || height == 0)
 		{
-			m_Minimized = true;
+			//m_Minimized = true;
 			return false;
 		}
+		//m_Minimized = false;
 
-		m_Minimized = false;
-		Renderer::OnWindowResize(e.GetWidth(), e.GetHeight());
+		auto& window = m_Window;
+		Renderer::Submit([&window, width, height]() mutable
+			{
+				window->GetSwapChain().OnResize(width, height);
+			});
 
 		return false;
 	}

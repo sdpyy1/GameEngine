@@ -33,6 +33,7 @@ namespace Hazel {
 		VkFormat GetColorFormat() { return m_ColorFormat; }
 		void SetVSync(const bool enabled) { m_VSync = enabled; }
 		VkSurfaceKHR GetSurface() const { return m_Surface; }
+		VkExtent2D GetExtent() { return swapchainExtent; }
 		VkCommandBuffer GetDrawCommandBuffer(uint32_t index)
 		{
 			HZ_CORE_ASSERT(index < m_CommandBuffers.size());
@@ -54,7 +55,7 @@ namespace Hazel {
 		VkSurfaceKHR m_Surface;
 		VkRenderPass m_RenderPass = nullptr;
 		std::vector<VkFramebuffer> m_Framebuffers;
-
+		VkExtent2D swapchainExtent;
 		uint32_t m_QueueNodeIndex = UINT32_MAX;
 		VkFormat m_ColorFormat;
 		VkColorSpaceKHR m_ColorSpace;

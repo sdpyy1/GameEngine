@@ -43,6 +43,8 @@ namespace Hazel {
 		friend class VulkanDevice;
 
 	};
+
+	//  每个CommandPool都有图像和计算两个Pool
 	class VulkanCommandPool : public RefCounted
 	{
 	public:

@@ -14,8 +14,8 @@ namespace Hazel {
 		uint32_t Height;
 
 		WindowProps(const std::string& title = "Hazel Engine",
-			        uint32_t width = 1600,
-			        uint32_t height = 900)
+			        uint32_t width = 800,
+			        uint32_t height = 600)
 			: Title(title), Width(width), Height(height)
 		{
 		}
@@ -43,6 +43,7 @@ namespace Hazel {
 		virtual Ref_old<RenderContext> GetRenderContext_old() { return m_RenderContext; }
 		virtual Ref<RenderContext> GetRenderContext() { return Ref<RenderContext>(m_RenderContext.get()); }
 		VulkanSwapChain& GetSwapChain() { return *m_SwapChain; };
+		VulkanSwapChain* GetSwapChainPtr() { return m_SwapChain; };
 
 		static Scope<Window> Create_old(const WindowProps& props = WindowProps());
 	protected:

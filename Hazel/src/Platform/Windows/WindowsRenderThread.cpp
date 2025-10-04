@@ -100,7 +100,7 @@ namespace Hazel {
 	void RenderThread::NextFrame()
 	{
 		m_AppThreadFrame++;
-		Renderer::SwapQueues();
+		Renderer::SwapQueues();  // ½»»»ÃüÁî»º³å³Ø
 	}
 
 	void RenderThread::BlockUntilRenderComplete()
@@ -125,7 +125,7 @@ namespace Hazel {
 
 	void RenderThread::Pump()
 	{
-		NextFrame();
+		NextFrame();  // ÇĞ»»ÃüÁî»º³å³ØÎªÏÂÒ»¸ö
 		Kick();
 		BlockUntilRenderComplete();
 	}

@@ -22,15 +22,7 @@ namespace Hazel {
 
 		return sceneData;
 		}();
-	static RendererAPI* InitRendererAPI()
-	{
-		switch (RendererAPI::Current())
-		{
-		case RendererAPI::Type::Vulkan: return new VulkanRenderer();
-		}
-		HZ_CORE_ASSERT(false, "Unknown RendererAPI");
-		return nullptr;
-	}
+
 	struct RendererData
 	{
 		Ref<ShaderLibrary> m_ShaderLibrary;
@@ -56,34 +48,30 @@ namespace Hazel {
 	// 在这里完成初始资源的加载
 	void Renderer::Init()
 	{
-		// 存储渲染资源
+		// 存储一些提前创建好的渲染资源
 		s_Data = new RendererData();
-		// 缓存队列
-		s_CommandQueue[0] = new RenderCommandQueue();
-		s_CommandQueue[1] = new RenderCommandQueue();
+		// 缓存队列 通过Renderer::submit提交的命令都会存储在RenderCommandQueue
+		for (int i = 0; i < s_RenderCommandQueueCount; i++) {
+			s_CommandQueue[i] = new RenderCommandQueue();
+		}
+		// 并发渲染数
 		s_Config.FramesInFlight = glm::min<uint32_t>(s_Config.FramesInFlight, Application::Get().GetWindow().GetSwapChain().GetImageCount());
 		
 		// 创建具体的渲染API对象
-		s_RendererAPI = InitRendererAPI();
+		s_RendererAPI = RendererAPI::CreateAPI();
 
 		// 加载Shader
-		// TODO：这里还设置了Shader 宏，还没有研究   加载初始Shader还没看
-		/*Renderer::SetGlobalMacroInShaders("__HZ_REFLECTION_OCCLUSION_METHOD", "0");
-		Renderer::SetGlobalMacroInShaders("__HZ_AO_METHOD", std::format("{}", (int)ShaderDef::GetAOMethod(true)));
-		Renderer::SetGlobalMacroInShaders("__HZ_GTAO_COMPUTE_BENT_NORMALS", "0");*/
-		//s_Data->m_ShaderLibrary = Ref<ShaderLibrary>::Create();
-
-		//if (!s_Config.ShaderPackPath.empty())
-		//// NOTE: some shaders (compute) need to have optimization disabled because of a shaderc internal error
-		Ref<Shader> shader = Shader::Create("assets/shaders/vert.spv");
+		//Ref<Shader> shader = Shader::Create("assets/shaders/vert.spv");
 
 		// 加载纹理
-		uint32_t whiteTextureData = 0xffffffff;
-		TextureSpecification spec;
-		spec.Format = ImageFormat::RGBA;
-		spec.Width = 1;
-		spec.Height = 1;
-		s_Data->WhiteTexture = Texture2D::Create(spec, Buffer1(&whiteTextureData, sizeof(uint32_t)));
+		//uint32_t whiteTextureData = 0xffffffff;
+		//TextureSpecification spec;
+		//spec.Format = ImageFormat::RGBA;
+		//spec.Width = 1;
+		//spec.Height = 1;
+		//s_Data->WhiteTexture = Texture2D::Create(spec, Buffer1(&whiteTextureData, sizeof(uint32_t)));
+
+		// 为并发帧创建了描述符池、提前准备了全屏顶点数据存入了GPU
 		s_RendererAPI->Init();
 
 	}
@@ -115,7 +103,7 @@ namespace Hazel {
 
 	void Renderer::OnWindowResize(uint32_t width, uint32_t height)
 	{
-		RenderCommand::SetViewport(0, 0, width, height);
+		
 	}
 	Ref<Texture2D> Renderer::GetWhiteTexture()
 	{
@@ -189,7 +177,7 @@ namespace Hazel {
 			HZ_PROFILE_SCOPE("Wait");
 			renderThread->WaitAndSet(RenderThread::State::Kick, RenderThread::State::Busy);
 		}
-		s_CommandQueue[GetRenderQueueIndex()]->Execute();
+		s_CommandQueue[GetRenderQueueIndex()]->Execute();  // ???：感觉有问题，这怎么总在执行下一帧的命令（解决：他在执行NextFrame（）时，切换到了下一帧，这里再切换一下又回去了，所以这套逻辑只在一共2个缓冲区的时候没问题）
 
 		// Rendering has completed, set state to idle
 		renderThread->Set(RenderThread::State::Idle);

@@ -60,7 +60,7 @@ namespace Hazel {
 				vertexBufferCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
 				instance->m_MemoryAllocation = allocator.AllocateBuffer(vertexBufferCreateInfo, VMA_MEMORY_USAGE_GPU_ONLY, instance->m_VulkanBuffer);
 
-				VkCommandBuffer copyCmd = device->GetCommandBuffer(true);
+				VkCommandBuffer copyCmd = device->GetCommandBuffer(true);  // 获取命令缓冲区并直接开始记录命令
 
 				VkBufferCopy copyRegion = {};
 				copyRegion.size = instance->m_LocalData.Size;

@@ -38,7 +38,7 @@ namespace Hazel {
 		virtual void DrawLines(const Ref_old<VertexArray>& vertexArray, uint32_t vertexCount) = 0;
 		
 		virtual void SetLineWidth(float width) = 0;
-
+		static RendererAPI* CreateAPI();
 		static Type Current() { return s_API; }
 		static Scope<RendererAPI> Create_old();
 	private:
