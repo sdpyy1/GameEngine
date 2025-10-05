@@ -64,11 +64,15 @@ namespace Hazel {
 	{
 		// TODO: local storage should be potentially replaced with render thread storage
 		memcpy(m_LocalStorage, data, size); // 数据存入m_LocalStorage，后续渲染tick才会提交到GPU
-		Ref<VulkanUniformBuffer> instance = this;
-		Renderer::Submit([instance, size, offset]() mutable
-			{
-				instance->RT_SetData(instance->m_LocalStorage, size, offset);
-			});
+		//Ref<VulkanUniformBuffer> instance = this;
+		//Renderer::Submit([instance, size, offset]() mutable
+		//	{
+		//		instance->RT_SetData(instance->m_LocalStorage, size, offset);
+		//	});
+		VulkanAllocator allocator("VulkanUniformBuffer");
+		uint8_t* pData = allocator.MapMemory<uint8_t>(m_MemoryAlloc);
+		memcpy(pData, (const uint8_t*)data + offset, size);
+		allocator.UnmapMemory(m_MemoryAlloc);
 	}
 
 	void VulkanUniformBuffer::RT_SetData(const void* data, uint32_t size, uint32_t offset)

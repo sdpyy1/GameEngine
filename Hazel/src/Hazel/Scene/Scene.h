@@ -17,11 +17,15 @@ namespace Hazel {
 	class Scene: public RefCounted
 	{
 	public:
+		void updateUniformBuffer(uint32_t currentImage);
 		Scene();
 		~Scene();
 		
 		// 临时调试接口
 		void RenderVukan();
+		void createDescriptorSetLayout();
+		void createDescriptorPool();
+		void createDescriptorSets();
 		void createGraphicsPipeline();
 
 	private:
@@ -30,9 +34,21 @@ namespace Hazel {
 		VkPipeline graphicsPipeline;
 		VulkanSwapChain *swapChian;
 		VkDevice device;
+		// UBO
+		struct UniformBufferObject {
+			glm::mat4 model;
+			glm::mat4 view;
+			glm::mat4 proj;
+		};
+		VkDescriptorPool descriptorPool;
+		std::vector<VkDescriptorSet> descriptorSets;
 
+		VkDescriptorSetLayout descriptorSetLayout;
+
+		UniformBufferObject* ubo;
 		Ref<VertexBuffer> testVertexBuffer;
 		Ref<IndexBuffer> indexBuffer;
+		Ref<UniformBufferSet> uniformBufferSet;
 	public:
 		static Ref<Scene> Copy(Ref<Scene> other);
 

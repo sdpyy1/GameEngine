@@ -9,6 +9,7 @@ namespace Hazel {
 	class VulkanUniformBufferSet : public UniformBufferSet
 	{
 	public:
+
 		VulkanUniformBufferSet(uint32_t size, uint32_t framesInFlight)
 			: m_FramesInFlight(framesInFlight)
 		{
@@ -43,6 +44,13 @@ namespace Hazel {
 		{
 			m_UniformBuffers[frame] = uniformBuffer;
 		}
+
+		virtual void Set_Data(uint32_t frame, const void* data, uint32_t size, uint32_t offset = 0) override {
+
+			m_UniformBuffers[frame]->SetData(data, size, offset);
+
+		};
+
 	private:
 		uint32_t m_FramesInFlight = 0;
 		std::map<uint32_t, Ref<UniformBuffer>> m_UniformBuffers;

@@ -7,6 +7,8 @@
 #include "Hazel/Scripting/ScriptEngine.h"
 #include "Hazel/Physics/Physics2D.h"
 #include "Hazel/Renderer/Renderer.h"
+#define GLM_FORCE_RADIANS
+#define GLM_FORCE_DEPTH_ZERO_TO_FE   // 把深度值范围设置为[0, 1]，而不是OpenGL的[-1, 1]
 #include <glm/glm.hpp>
 
 #include "Entity.h"
@@ -20,6 +22,7 @@
 #include <Platform/Vulkan/VulkanShader.h>
 #include <Platform/Vulkan/VulkanVertexBuffer.h>
 #include <Platform/Vulkan/VulkanIndexBuffer.h>
+#include <Platform/Vulkan/VulkanUniformBuffer.h>
 
 namespace Hazel {
 
@@ -68,19 +71,35 @@ namespace Hazel {
 	const std::vector<uint16_t> indices = {
 	0, 1, 2, 2, 3, 0
 	};
+
+
+	void Scene::updateUniformBuffer(uint32_t currentImage) {
+		static auto startTime = std::chrono::high_resolution_clock::now();
+		auto currentTime = std::chrono::high_resolution_clock::now();
+		float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+		ubo->model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+		ubo->view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+		ubo->proj = glm::perspective(glm::radians(45.0f), swapChian->GetExtent().width / (float)swapChian->GetExtent().height, 0.1f, 10.0f);
+		ubo->proj[1][1] *= -1;
+		uniformBufferSet->Set_Data(currentImage, (void*)ubo, sizeof(UniformBufferObject));
+	}
 	Scene::Scene()
 	{
 		vulkanContext = Application::Get().GetRenderContext().As<VulkanContext>();
 		swapChian = Application::Get().GetWindow()->GetSwapChainPtr();
-		device = vulkanContext->GetCurrentDevice()->GetVulkanDevice();
-		createGraphicsPipeline();
 
+		device = vulkanContext->GetCurrentDevice()->GetVulkanDevice();
+		createDescriptorSetLayout();
+
+		createGraphicsPipeline();
+		ubo = new UniformBufferObject();
 		// 顶点创建
 		testVertexBuffer = VertexBuffer::Create((void*)vertices.data(), sizeof(vertices[0]) * vertices.size(), VertexBufferUsage::Static);
 		indexBuffer = IndexBuffer::Create((void*)indices.data(), sizeof(indices[0]) * indices.size());
+		uniformBufferSet = UniformBufferSet::Create(sizeof(UniformBufferObject));
 
-
-
+		createDescriptorPool();
+		createDescriptorSets();
 	}
 
 	Scene::~Scene()
@@ -106,7 +125,7 @@ namespace Hazel {
 		Scene* instance = this;
 		Renderer::Submit([instance]() mutable {
 
-			uint32_t a = instance->swapChian->GetCurrentBufferIndex();
+			uint32_t flyIndex = instance->swapChian->GetCurrentBufferIndex();
 			VkCommandBuffer commandBuffer = instance->swapChian->GetCurrentDrawCommandBuffer();
 			//vkResetCommandBuffer(commandBuffer, /*VkCommandBufferResetFlagBits*/ 0);
 			VkCommandBufferBeginInfo beginInfo{};
@@ -129,7 +148,7 @@ namespace Hazel {
 			renderPassInfo.pClearValues = &clearColor;
 
 			vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-
+			instance->updateUniformBuffer(flyIndex);
 			vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, instance->graphicsPipeline);
 			// 绑定顶点缓冲区
 			VkBuffer vertexBuffers[] = { instance->testVertexBuffer.As<VulkanVertexBuffer>()->GetVulkanBuffer()};
@@ -149,6 +168,7 @@ namespace Hazel {
 			scissor.offset = { 0, 0 };
 			scissor.extent = instance->swapChian->GetExtent();
 			vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, instance->pipelineLayout, 0, 1, &instance->descriptorSets[flyIndex], 0, nullptr);
 
 			vkCmdDrawIndexed(
 				commandBuffer,        // 目标命令缓冲区
@@ -172,8 +192,97 @@ namespace Hazel {
 	
 	
 	};
+	// 描述符集的布局信息 layout(binding = x)  描述每个x是什么数据 
+	void Scene::createDescriptorSetLayout() {
+		VkDescriptorSetLayoutBinding uboLayoutBinding{};
+		uboLayoutBinding.binding = 0; // binding 0 对应着色器layout(binding = 0)
+		uboLayoutBinding.descriptorCount = 1; // 绑定点可以是数组，所以这里是1，表示单个
+		uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER; // 资源类型，这里是UBO
+		uboLayoutBinding.pImmutableSamplers = nullptr; // 采样器相关，只有采样器才用得上
+		uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT; // 着色器阶段，这里是顶点着色器
 
-	
+		//VkDescriptorSetLayoutBinding samplerLayoutBinding{};
+		//samplerLayoutBinding.binding = 1; // binding 1 对应着色器layout(binding = 1)
+		//samplerLayoutBinding.descriptorCount = 1;
+		//samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		//samplerLayoutBinding.pImmutableSamplers = nullptr;
+		//samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+		// 结合所有设置的binding，创建描述符集布局
+		std::array<VkDescriptorSetLayoutBinding,1> bindings = { uboLayoutBinding };
+		VkDescriptorSetLayoutCreateInfo layoutInfo{};
+		layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+		layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
+		layoutInfo.pBindings = bindings.data();
+
+		// 创建描述符集布局
+		if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS) {
+			throw std::runtime_error("failed to create descriptor set layout!");
+		}
+	}
+	void Scene::createDescriptorPool() {
+		VkDescriptorPoolSize poolSize{};
+		poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		poolSize.descriptorCount = static_cast<uint32_t>(Renderer::GetConfig().FramesInFlight);
+
+		VkDescriptorPoolCreateInfo poolInfo{};
+		poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+		poolInfo.poolSizeCount = 1;
+		poolInfo.pPoolSizes = &poolSize;
+		poolInfo.maxSets = static_cast<uint32_t>(Renderer::GetConfig().FramesInFlight);
+
+		if (vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS) {
+			throw std::runtime_error("failed to create descriptor pool!");
+		}
+	}
+	void Scene::createDescriptorSets() {
+		std::vector<VkDescriptorSetLayout> layouts(Renderer::GetConfig().FramesInFlight, descriptorSetLayout);
+		VkDescriptorSetAllocateInfo allocInfo{};
+		allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+		allocInfo.descriptorPool = descriptorPool;
+		allocInfo.descriptorSetCount = static_cast<uint32_t>(Renderer::GetConfig().FramesInFlight);
+		allocInfo.pSetLayouts = layouts.data();
+
+		// 并行运行的每帧都需要一个描述符集，防止互相影响
+		descriptorSets.resize(Renderer::GetConfig().FramesInFlight);
+		if (vkAllocateDescriptorSets(device, &allocInfo, descriptorSets.data()) != VK_SUCCESS) {
+			throw std::runtime_error("failed to allocate descriptor sets!");
+		}
+
+		for (size_t i = 0; i < Renderer::GetConfig().FramesInFlight; i++) {
+			// 实际的ubo对象
+			VkDescriptorBufferInfo bufferInfo{};
+			bufferInfo.buffer = uniformBufferSet->Get(i).As<VulkanUniformBuffer>()->GetVkBuffer();
+			bufferInfo.offset = 0;
+			bufferInfo.range = sizeof(UniformBufferObject);
+			// 实际的纹理对象
+			//VkDescriptorImageInfo imageInfo{};
+			//imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+			//imageInfo.imageView = textureImageView;
+			//imageInfo.sampler = textureSampler;
+
+			// 描述符集的写入操作
+			std::array<VkWriteDescriptorSet, 1> descriptorWrites{};
+
+			descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			descriptorWrites[0].dstSet = descriptorSets[i];  // 要更新的描述符集
+			descriptorWrites[0].dstBinding = 0; // 绑定点，对应着色器layout(binding = 0)
+			descriptorWrites[0].dstArrayElement = 0; // 数组的第几个元素，这里不是数组所以是0
+			descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+			descriptorWrites[0].descriptorCount = 1; // 绑定点是一个数组时，这里就不是1了
+			descriptorWrites[0].pBufferInfo = &bufferInfo; // 资源信息
+
+			//descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			//descriptorWrites[1].dstSet = descriptorSets[i];
+			//descriptorWrites[1].dstBinding = 1;
+			//descriptorWrites[1].dstArrayElement = 0;
+			//descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+			//descriptorWrites[1].descriptorCount = 1;
+			//descriptorWrites[1].pImageInfo = &imageInfo;
+
+			vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+		}
+	}
 	void Scene::createGraphicsPipeline()
 	{
 
@@ -224,7 +333,7 @@ namespace Hazel {
 		rasterizer.rasterizerDiscardEnable = VK_FALSE;
 		rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
 		rasterizer.lineWidth = 1.0f;
-		rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
+		rasterizer.cullMode = VK_CULL_MODE_NONE;
 		rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
 		rasterizer.depthBiasEnable = VK_FALSE;
 
@@ -259,8 +368,8 @@ namespace Hazel {
 
 		VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-		pipelineLayoutInfo.setLayoutCount = 0;
-		pipelineLayoutInfo.pushConstantRangeCount = 0;
+		pipelineLayoutInfo.setLayoutCount = 1;  // 可以指定多个描述符集布局，在shader中通过layout(set = x)指定使用哪个
+		pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
 
 		if (vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
 			throw std::runtime_error("failed to create pipeline layout!");
