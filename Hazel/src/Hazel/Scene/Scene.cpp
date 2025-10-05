@@ -87,10 +87,9 @@ namespace Hazel {
 	{
 		vulkanContext = Application::Get().GetRenderContext().As<VulkanContext>();
 		swapChian = Application::Get().GetWindow()->GetSwapChainPtr();
+		shader = Renderer::GetShaderLibrary()->Get("test").As<VulkanShader>();
 
 		device = vulkanContext->GetCurrentDevice()->GetVulkanDevice();
-		createDescriptorSetLayout();
-
 		createGraphicsPipeline();
 		ubo = new UniformBufferObject();
 		// 顶点创建
@@ -192,34 +191,7 @@ namespace Hazel {
 	
 	
 	};
-	// 描述符集的布局信息 layout(binding = x)  描述每个x是什么数据 
-	void Scene::createDescriptorSetLayout() {
-		VkDescriptorSetLayoutBinding uboLayoutBinding{};
-		uboLayoutBinding.binding = 0; // binding 0 对应着色器layout(binding = 0)
-		uboLayoutBinding.descriptorCount = 1; // 绑定点可以是数组，所以这里是1，表示单个
-		uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER; // 资源类型，这里是UBO
-		uboLayoutBinding.pImmutableSamplers = nullptr; // 采样器相关，只有采样器才用得上
-		uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT; // 着色器阶段，这里是顶点着色器
 
-		//VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-		//samplerLayoutBinding.binding = 1; // binding 1 对应着色器layout(binding = 1)
-		//samplerLayoutBinding.descriptorCount = 1;
-		//samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		//samplerLayoutBinding.pImmutableSamplers = nullptr;
-		//samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-		// 结合所有设置的binding，创建描述符集布局
-		std::array<VkDescriptorSetLayoutBinding,1> bindings = { uboLayoutBinding };
-		VkDescriptorSetLayoutCreateInfo layoutInfo{};
-		layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-		layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
-		layoutInfo.pBindings = bindings.data();
-
-		// 创建描述符集布局
-		if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS) {
-			throw std::runtime_error("failed to create descriptor set layout!");
-		}
-	}
 	void Scene::createDescriptorPool() {
 		VkDescriptorPoolSize poolSize{};
 		poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -236,7 +208,7 @@ namespace Hazel {
 		}
 	}
 	void Scene::createDescriptorSets() {
-		std::vector<VkDescriptorSetLayout> layouts(Renderer::GetConfig().FramesInFlight, descriptorSetLayout);
+		std::vector<VkDescriptorSetLayout> layouts(Renderer::GetConfig().FramesInFlight, *shader->GetDescriptorSetLayout());
 		VkDescriptorSetAllocateInfo allocInfo{};
 		allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 		allocInfo.descriptorPool = descriptorPool;
@@ -270,7 +242,7 @@ namespace Hazel {
 			descriptorWrites[0].dstArrayElement = 0; // 数组的第几个元素，这里不是数组所以是0
 			descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 			descriptorWrites[0].descriptorCount = 1; // 绑定点是一个数组时，这里就不是1了
-			descriptorWrites[0].pBufferInfo = &bufferInfo; // 资源信息
+			descriptorWrites[0].pBufferInfo = &uniformBufferSet->Get(i).As<VulkanUniformBuffer>()->GetDescriptorBufferInfo(); // 资源信息
 
 			//descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 			//descriptorWrites[1].dstSet = descriptorSets[i];
@@ -285,11 +257,9 @@ namespace Hazel {
 	}
 	void Scene::createGraphicsPipeline()
 	{
-
-		// 转为vkShaderModule对象
-		VkShaderModule vertShaderModule = Shader::Create("assets/shaders/Debug/vert.spv").As<VulkanShader>()->GetShaderModule();
-		VkShaderModule fragShaderModule = Shader::Create("assets/shaders/Debug/frag.spv").As<VulkanShader>()->GetShaderModule();
-
+		// Shader信息
+		VkShaderModule vertShaderModule = shader->GetVertShaderModule();
+		VkShaderModule fragShaderModule = shader->GetFragShaderModule();
 		VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
 		vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 		vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
@@ -311,11 +281,11 @@ namespace Hazel {
 		auto bindingDescription = Vertex::getBindingDescription();
 		// 顶点的各个属性的排列
 		auto attributeDescriptions = Vertex::getAttributeDescriptions();
-
 		vertexInputInfo.vertexBindingDescriptionCount = 1;
 		vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
 		vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
 		vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
+
 
 		VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
 		inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -369,7 +339,7 @@ namespace Hazel {
 		VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 		pipelineLayoutInfo.setLayoutCount = 1;  // 可以指定多个描述符集布局，在shader中通过layout(set = x)指定使用哪个
-		pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
+		pipelineLayoutInfo.pSetLayouts = shader->GetDescriptorSetLayout();
 
 		if (vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
 			throw std::runtime_error("failed to create pipeline layout!");

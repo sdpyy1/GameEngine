@@ -65,10 +65,10 @@ namespace Hazel {
 	VulkanPipeline::VulkanPipeline(const PipelineSpecification& spec)
 		: m_Specification(spec)
 	{
-		/*HZ_CORE_ASSERT(spec.Shader);
+		HZ_CORE_ASSERT(spec.Shader);
 		HZ_CORE_ASSERT(spec.TargetFramebuffer);
 		Invalidate();
-		Renderer::RegisterShaderDependency(spec.Shader, this);  */
+		//Renderer::RegisterShaderDependency(spec.Shader, this);  
 	}
 
 	VulkanPipeline::~VulkanPipeline()
@@ -91,11 +91,12 @@ namespace Hazel {
 
 		//		VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 		//		HZ_CORE_ASSERT(instance->m_Specification.Shader);
+		//		// 管线指定了Shader和Framebuffer
 		//		Ref<VulkanShader> vulkanShader = Ref<VulkanShader>(instance->m_Specification.Shader);
 		//		Ref<VulkanFramebuffer> framebuffer = instance->m_Specification.TargetFramebuffer.As<VulkanFramebuffer>();
-
+		//		// 获取Shader需要的描述符布局
 		//		auto descriptorSetLayouts = vulkanShader->GetAllDescriptorSetLayouts();
-
+		//		// 如果有常量推送，就需要这个
 		//		const auto& pushConstantRanges = vulkanShader->GetPushConstantRanges();
 
 		//		// TODO: should come from shader
@@ -112,6 +113,7 @@ namespace Hazel {
 
 		//		// Create the pipeline layout that is used to generate the rendering pipelines that are based on this descriptor set layout
 		//		// In a more complex scenario you would have different pipeline layouts for different descriptor set layouts that could be reused
+		//		// PipeLineLayout就是存储资源的描述符布局和常量推送，这些东西都是Shader中拿
 		//		VkPipelineLayoutCreateInfo pPipelineLayoutCreateInfo = {};
 		//		pPipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 		//		pPipelineLayoutCreateInfo.pNext = nullptr;

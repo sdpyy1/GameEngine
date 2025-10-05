@@ -19,6 +19,7 @@ namespace Hazel {
 		static RendererConfig& GetConfig();
 		static void Init();
 		static void Shutdown();
+		static Ref<ShaderLibrary> GetShaderLibrary();
 
 
 		static void SwapQueues(); // ΩªªªBuffer√¸¡Óª∫≥Â

@@ -3,7 +3,7 @@
 #include "Hazel/Core/Timestep.h"
 #include "Hazel/Core/UUID.h"
 #include "Hazel/Renderer/EditorCamera.h"
-
+#include "Platform/Vulkan/VulkanShader.h"
 #include "entt.hpp"
 #include <Hazel/Renderer/RenderContext.h>
 #include "Platform/Vulkan/VulkanContext.h"
@@ -23,7 +23,6 @@ namespace Hazel {
 		
 		// 临时调试接口
 		void RenderVukan();
-		void createDescriptorSetLayout();
 		void createDescriptorPool();
 		void createDescriptorSets();
 		void createGraphicsPipeline();
@@ -42,9 +41,7 @@ namespace Hazel {
 		};
 		VkDescriptorPool descriptorPool;
 		std::vector<VkDescriptorSet> descriptorSets;
-
-		VkDescriptorSetLayout descriptorSetLayout;
-
+		Ref<VulkanShader> shader;
 		UniformBufferObject* ubo;
 		Ref<VertexBuffer> testVertexBuffer;
 		Ref<IndexBuffer> indexBuffer;

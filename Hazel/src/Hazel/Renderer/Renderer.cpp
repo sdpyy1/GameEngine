@@ -8,7 +8,7 @@ namespace Hazel {
 	// 这里存储常用渲染资源
 	struct RendererData
 	{
-
+		Ref<ShaderLibrary> m_ShaderLibrary;
 	};
 
 	static RendererConfig s_Config;
@@ -24,6 +24,8 @@ namespace Hazel {
 	{
 		// 存储一些提前创建好的渲染资源
 		s_Data = new RendererData();
+		s_Data->m_ShaderLibrary = Ref<ShaderLibrary>::Create();
+
 		// 缓存队列 通过Renderer::submit提交的命令都会存储在RenderCommandQueue
 		for (int i = 0; i < s_RenderCommandQueueCount; i++) {
 			s_CommandQueue[i] = new RenderCommandQueue();
@@ -35,8 +37,14 @@ namespace Hazel {
 		s_RendererAPI = RendererAPI::CreateAPI();
 
 		// 加载Shader
-		//Ref<Shader> shader = Shader::Create("assets/shaders/vert.spv");
-
+		Shader::DescriptorBinding uboBinding;
+		uboBinding.binding = 0; 
+		uboBinding.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER; 
+		uboBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT; 
+		uboBinding.count = 1; 
+		Shader::ShaderSpecification uboSpec;
+		uboSpec.bindings.push_back(uboBinding);
+		s_Data->m_ShaderLibrary->LoadCommonShader("test", "assets/shaders/Debug/vert.spv", "assets/shaders/Debug/frag.spv", uboSpec);
 		// 加载纹理
 		//uint32_t whiteTextureData = 0xffffffff;
 		//TextureSpecification spec;
@@ -61,6 +69,11 @@ namespace Hazel {
 
 	void Renderer::Shutdown()
 	{
+	}
+
+	Ref<ShaderLibrary> Renderer::GetShaderLibrary()
+	{
+		return s_Data->m_ShaderLibrary;
 	}
 
 

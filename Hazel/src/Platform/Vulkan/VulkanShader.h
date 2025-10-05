@@ -5,13 +5,16 @@ namespace Hazel {
 
 	class VulkanShader : public Shader
 	{
-	public:		
+	public:
 		VulkanShader() = default;
-		VulkanShader(const std::string& path, bool forceCompile, bool disableOptimization);
+		VulkanShader(const std::string& name, const std::string& vertFilePath, const std::string& fragFilePath, ShaderSpecification spec);
 
-		void Reload(bool forceCompile = false) override;
-		void RT_Reload(bool forceCompile) override;
-		VkShaderModule GetShaderModule() { return shaderModule; }
+		void Reload() override;
+		void RT_Reload() override;
+		void createDescriptorSetLayout();
+		VkShaderModule GetVertShaderModule() { return m_VertShaderModule; }
+		VkShaderModule GetFragShaderModule() { return m_FragShaderModule; }
+		VkDescriptorSetLayout* GetDescriptorSetLayout() { return &m_DescriptorSetLayout; }
 		virtual ~VulkanShader();
 		void Release();
 		virtual const std::string& GetName() const override { return m_Name; }
@@ -19,22 +22,11 @@ namespace Hazel {
 
 	private:
 		std::string m_Name;
-		bool m_DisableOptimization = false;
-		std::filesystem::path m_AssetPath;
-		VkShaderModule shaderModule;
-
-
-	public:
-		// TODO:Tmp add
-		virtual void Bind() const{};
-		virtual void Unbind() const{};
-
-		virtual void SetInt(const std::string& name, int value){};
-		virtual void SetIntArray(const std::string& name, int* values, uint32_t count){};
-		virtual void SetFloat(const std::string& name, float value){};
-		virtual void SetFloat2(const std::string& name, const glm::vec2& value){};
-		virtual void SetFloat3(const std::string& name, const glm::vec3& value){};
-		virtual void SetFloat4(const std::string& name, const glm::vec4& value){};
-		virtual void SetMat4(const std::string& name, const glm::mat4& value){};
+		std::string m_VertFilePath;
+		std::string m_FragFilePath;
+		VkShaderModule m_VertShaderModule;
+		VkShaderModule m_FragShaderModule;
+		ShaderSpecification m_Spec;
+		VkDescriptorSetLayout m_DescriptorSetLayout;
 	};
 }
