@@ -78,7 +78,7 @@ namespace Hazel {
 		CreateFromFile(specification, filepath);
 	}
 
-	VulkanTexture2D::VulkanTexture2D(const TextureSpecification& specification, Buffer1 data)
+	VulkanTexture2D::VulkanTexture2D(const TextureSpecification& specification, Buffer data)
 		: m_Specification(specification)
 	{
 		CreateFromBuffer(specification, data);
@@ -148,11 +148,11 @@ namespace Hazel {
 			});
 	}
 
-	void VulkanTexture2D::CreateFromBuffer(const TextureSpecification& specification, Buffer1 data)
+	void VulkanTexture2D::CreateFromBuffer(const TextureSpecification& specification, Buffer data)
 	{
 		if (m_Specification.Height == 0)
 		{
-			m_ImageData = TextureImporter::ToBufferFromMemory(Buffer1(data.Data, m_Specification.Width), m_Specification.Format, m_Specification.Width, m_Specification.Height);
+			m_ImageData = TextureImporter::ToBufferFromMemory(Buffer(data.Data, m_Specification.Width), m_Specification.Format, m_Specification.Width, m_Specification.Height);
 			if (!m_ImageData)
 			{
 				// TODO(Yan): move this to asset manager
@@ -165,7 +165,7 @@ namespace Hazel {
 		{
 			Utils::ValidateSpecification(m_Specification);
 			auto size = (uint32_t)Utils::GetMemorySize(m_Specification.Format, m_Specification.Width, m_Specification.Height);
-			m_ImageData = Buffer1::Copy(data.Data, size);
+			m_ImageData = Buffer::Copy(data.Data, size);
 		}
 		else
 		{
@@ -320,10 +320,10 @@ namespace Hazel {
 
 		// TODO(Yan): option for local storage
 		m_ImageData.Release();
-		m_ImageData = Buffer1();
+		m_ImageData = Buffer();
 	}
 
-	void VulkanTexture2D::SetData(Buffer1 buffer)
+	void VulkanTexture2D::SetData(Buffer buffer)
 	{
 		auto device = VulkanContext::GetCurrentDevice();
 		Ref<VulkanImage2D> image = m_Image.As<VulkanImage2D>();
@@ -473,7 +473,7 @@ namespace Hazel {
 		SetData(m_ImageData);
 	}
 
-	Buffer1 VulkanTexture2D::GetWriteableBuffer()
+	Buffer VulkanTexture2D::GetWriteableBuffer()
 	{
 		return m_ImageData;
 	}
@@ -676,7 +676,7 @@ namespace Hazel {
 #endif
 	}
 
-	void VulkanTexture2D::CopyToHostBuffer(Buffer1& buffer)
+	void VulkanTexture2D::CopyToHostBuffer(Buffer& buffer)
 	{
 		if (m_Image)
 			m_Image.As<VulkanImage2D>()->CopyToHostBuffer(buffer);
@@ -688,13 +688,13 @@ namespace Hazel {
 
 	static std::map<VkImage, WeakRef<VulkanTextureCube>> s_TextureCubeReferences;
 
-	VulkanTextureCube::VulkanTextureCube(const TextureSpecification& specification, Buffer1 data)
+	VulkanTextureCube::VulkanTextureCube(const TextureSpecification& specification, Buffer data)
 		: m_Specification(specification)
 	{
 		if (data)
 		{
 			uint32_t size = m_Specification.Width * m_Specification.Height * 4 * 6; // six layers
-			m_LocalStorage = Buffer1::Copy(data.Data, size);
+			m_LocalStorage = Buffer::Copy(data.Data, size);
 		}
 
 		Invalidate();
@@ -1153,7 +1153,7 @@ namespace Hazel {
 	}
 #endif
 
-	void VulkanTextureCube::CopyToHostBuffer(Buffer1& buffer)
+	void VulkanTextureCube::CopyToHostBuffer(Buffer& buffer)
 	{
 		auto device = VulkanContext::GetCurrentDevice();
 		auto vulkanDevice = device->GetVulkanDevice();
@@ -1243,7 +1243,7 @@ namespace Hazel {
 		allocator.DestroyBuffer(stagingBuffer, stagingBufferAllocation);
 	}
 
-	void VulkanTextureCube::CopyFromBuffer(const Buffer1& buffer, uint32_t mips)
+	void VulkanTextureCube::CopyFromBuffer(const Buffer& buffer, uint32_t mips)
 	{
 		// HZ_CORE_VERIFY(buffer.Size == m_GPUAllocationSize);
 

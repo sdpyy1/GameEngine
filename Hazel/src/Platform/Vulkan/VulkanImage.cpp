@@ -383,7 +383,7 @@ namespace Hazel {
 		return s_ImageReferences;
 	}
 
-	void VulkanImage2D::SetData(Buffer1 buffer)
+	void VulkanImage2D::SetData(Buffer buffer)
 	{
 		HZ_CORE_ASSERT(m_Specification.Transfer, "Image must be created with ImageSpecification::Transfer enabled!");
 
@@ -507,7 +507,7 @@ namespace Hazel {
 	}
 
 
-	void VulkanImage2D::CopyToHostBuffer(Buffer1& buffer) const
+	void VulkanImage2D::CopyToHostBuffer(Buffer& buffer) const
 	{
 		auto device = VulkanContext::GetCurrentDevice();
 		auto vulkanDevice = device->GetVulkanDevice();

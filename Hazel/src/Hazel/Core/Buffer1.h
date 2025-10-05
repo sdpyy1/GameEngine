@@ -2,31 +2,31 @@
 
 namespace Hazel {
 
-	struct Buffer1
+	struct Buffer
 	{
 		void* Data = nullptr;
 		uint64_t Size = 0;
 
-		Buffer1() = default;
+		Buffer() = default;
 
-		Buffer1(const void* data, uint64_t size = 0)
+		Buffer(const void* data, uint64_t size = 0)
 			: Data((void*)data), Size(size) {
 		}
 
-		static Buffer1 Copy(const Buffer1& other)
+		static Buffer Copy(const Buffer& other)
 		{
-			Buffer1 Buffer1;
-			Buffer1.Allocate(other.Size);
-			memcpy(Buffer1.Data, other.Data, other.Size);
-			return Buffer1;
+			Buffer Buffer;
+			Buffer.Allocate(other.Size);
+			memcpy(Buffer.Data, other.Data, other.Size);
+			return Buffer;
 		}
 
-		static Buffer1 Copy(const void* data, uint64_t size)
+		static Buffer Copy(const void* data, uint64_t size)
 		{
-			Buffer1 Buffer1;
-			Buffer1.Allocate(size);
-			memcpy(Buffer1.Data, data, size);
-			return Buffer1;
+			Buffer Buffer;
+			Buffer.Allocate(size);
+			memcpy(Buffer.Data, data, size);
+			return Buffer;
 		}
 
 		void Allocate(uint64_t size)
@@ -68,15 +68,15 @@ namespace Hazel {
 
 		byte* ReadBytes(uint64_t size, uint64_t offset) const
 		{
-			HZ_CORE_ASSERT(offset + size <= Size, "Buffer1 overflow!");
-			byte* Buffer1 = new byte[size];
-			memcpy(Buffer1, (byte*)Data + offset, size);
-			return Buffer1;
+			HZ_CORE_ASSERT(offset + size <= Size, "Buffer overflow!");
+			byte* Buffer = new byte[size];
+			memcpy(Buffer, (byte*)Data + offset, size);
+			return Buffer;
 		}
 
 		void Write(const void* data, uint64_t size, uint64_t offset = 0)
 		{
-			HZ_CORE_ASSERT(offset + size <= Size, "Buffer1 overflow!");
+			HZ_CORE_ASSERT(offset + size <= Size, "Buffer overflow!");
 			memcpy((byte*)Data + offset, data, size);
 		}
 
@@ -104,7 +104,7 @@ namespace Hazel {
 		inline uint64_t GetSize() const { return Size; }
 	};
 
-	struct Buffer1Safe : public Buffer1
+	struct Buffer1Safe : public Buffer
 	{
 		~Buffer1Safe()
 		{
@@ -113,10 +113,10 @@ namespace Hazel {
 
 		static Buffer1Safe Copy(const void* data, uint64_t size)
 		{
-			Buffer1Safe Buffer1;
-			Buffer1.Allocate(size);
-			memcpy(Buffer1.Data, data, size);
-			return Buffer1;
+			Buffer1Safe Buffer;
+			Buffer.Allocate(size);
+			memcpy(Buffer.Data, data, size);
+			return Buffer;
 		}
 	};
 }

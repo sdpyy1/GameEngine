@@ -27,7 +27,7 @@ namespace Hazel {
 		return nullptr;
 	}
 
-	Ref<Texture2D> Texture2D::Create(const TextureSpecification& specification, Buffer1 imageData)
+	Ref<Texture2D> Texture2D::Create(const TextureSpecification& specification, Buffer imageData)
 	{
 		switch (RendererAPI::Current())
 		{
@@ -59,7 +59,7 @@ namespace Hazel {
 		return nullptr;
 	}
 
-	Ref<Texture2D> Texture2D::Create_old(const TextureSpecification& specification, Buffer1 imageData)
+	Ref<Texture2D> Texture2D::Create_old(const TextureSpecification& specification, Buffer imageData)
 	{
 		switch (RendererAPI::Current())
 		{
@@ -70,7 +70,7 @@ namespace Hazel {
 		return nullptr;
 	}
 
-	Ref<TextureCube> TextureCube::Create_old(const TextureSpecification& specification, Buffer1 imageData)
+	Ref<TextureCube> TextureCube::Create_old(const TextureSpecification& specification, Buffer imageData)
 	{
 		switch (RendererAPI::Current())
 		{

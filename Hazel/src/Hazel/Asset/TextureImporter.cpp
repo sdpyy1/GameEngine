@@ -4,10 +4,10 @@
 #include <stb_image.h>
 namespace Hazel {
 
-	Buffer1 TextureImporter::ToBufferFromFile(const std::filesystem::path& path, ImageFormat& outFormat, uint32_t& outWidth, uint32_t& outHeight)
+	Buffer TextureImporter::ToBufferFromFile(const std::filesystem::path& path, ImageFormat& outFormat, uint32_t& outWidth, uint32_t& outHeight)
 	{
 		FileStatus fileStatus = FileSystem::TryOpenFileAndWait(path, 100);
-		Buffer1 imageBuffer;
+		Buffer imageBuffer;
 		std::string pathString = path.string();
 		bool isSRGB = (outFormat == ImageFormat::SRGB) || (outFormat == ImageFormat::SRGBA);
 		int width, height, channels;
@@ -33,9 +33,9 @@ namespace Hazel {
 		return imageBuffer;
 	}
 
-	Buffer1 TextureImporter::ToBufferFromMemory(Buffer1 buffer, ImageFormat& outFormat, uint32_t& outWidth, uint32_t& outHeight)
+	Buffer TextureImporter::ToBufferFromMemory(Buffer buffer, ImageFormat& outFormat, uint32_t& outWidth, uint32_t& outHeight)
 	{
-		Buffer1 imageBuffer;
+		Buffer imageBuffer;
 
 		int width, height, channels;
 		bool isSRGB = (outFormat == ImageFormat::SRGB) || (outFormat == ImageFormat::SRGBA);

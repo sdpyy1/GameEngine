@@ -54,8 +54,8 @@ namespace Hazel {
 		static bool OpenDirectoryInExplorer(const std::filesystem::path& path);
 		static bool OpenExternally(const std::filesystem::path& path);
 
-		static bool WriteBytes(const std::filesystem::path& filepath, const Buffer1& buffer);
-		static Buffer1 ReadBytes(const std::filesystem::path& filepath);
+		static bool WriteBytes(const std::filesystem::path& filepath, const Buffer& buffer);
+		static Buffer ReadBytes(const std::filesystem::path& filepath);
 
 		static std::filesystem::path GetUniqueFileName(const std::filesystem::path& filepath);
 		static uint64_t GetLastWriteTime(const std::filesystem::path& filepath);

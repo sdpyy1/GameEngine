@@ -68,8 +68,8 @@ namespace Hazel {
 		virtual ResourceDescriptorInfo GetDescriptorInfo() const override { return (ResourceDescriptorInfo)&m_DescriptorImageInfo; }
 		const VkDescriptorImageInfo& GetDescriptorInfoVulkan() const { return *(VkDescriptorImageInfo*)GetDescriptorInfo(); }
 
-		virtual Buffer1 GetBuffer() const override { return m_ImageData; }
-		virtual Buffer1& GetBuffer() override { return m_ImageData; }
+		virtual Buffer GetBuffer() const override { return m_ImageData; }
+		virtual Buffer& GetBuffer() override { return m_ImageData; }
 
 		virtual uint64_t GetGPUMemoryUsage() const override { return m_GPUAllocationSize; }
 
@@ -80,13 +80,13 @@ namespace Hazel {
 		// Debug
 		static const std::map<VkImage, WeakRef<VulkanImage2D>>& GetImageRefs();
 
-		virtual void SetData(Buffer1 buffer) override;
-		virtual void CopyToHostBuffer(Buffer1& buffer) const override;
+		virtual void SetData(Buffer buffer) override;
+		virtual void CopyToHostBuffer(Buffer& buffer) const override;
 
 	private:
 		ImageSpecification m_Specification;
 
-		Buffer1 m_ImageData;
+		Buffer m_ImageData;
 
 		VulkanImageInfo m_Info;
 		VkDeviceSize m_GPUAllocationSize = 0;

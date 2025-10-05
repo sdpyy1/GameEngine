@@ -7,6 +7,7 @@
 #include "entt.hpp"
 #include <Hazel/Renderer/RenderContext.h>
 #include "Platform/Vulkan/VulkanContext.h"
+#include <Hazel/Renderer/IndexBuffer.h>
 class b2World;
 
 namespace Hazel {
@@ -21,21 +22,17 @@ namespace Hazel {
 		
 		// 临时调试接口
 		void RenderVukan();
-
-		void createRenderPass();
 		void createGraphicsPipeline();
-		void createFramebuffers();
+
 	private:
 		Ref<VulkanContext> vulkanContext;
-		VkRenderPass renderPass;
 		VkPipelineLayout pipelineLayout;
 		VkPipeline graphicsPipeline;
-		std::vector<VkFramebuffer> swapChainFramebuffers;
-		std::vector<VkImageView> swapChainImageViews;
 		VulkanSwapChain *swapChian;
 		VkDevice device;
 
-
+		Ref<VertexBuffer> testVertexBuffer;
+		Ref<IndexBuffer> indexBuffer;
 	public:
 		static Ref<Scene> Copy(Ref<Scene> other);
 

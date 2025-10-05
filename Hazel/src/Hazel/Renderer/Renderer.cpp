@@ -5,18 +5,10 @@
 #include <glm/gtc/random.hpp>
 
 namespace Hazel {
+	// 这里存储常用渲染资源
 	struct RendererData
 	{
-		Ref<ShaderLibrary> m_ShaderLibrary;
 
-		Ref<Texture2D> WhiteTexture;
-		Ref<Texture2D> BlackTexture;
-		Ref<Texture2D> BRDFLutTexture;
-		Ref<Texture2D> HilbertLut;
-		Ref<TextureCube> BlackCubeTexture;
-		//Ref<Environment> EmptyEnvironment;  还没有
-
-		std::unordered_map<std::string, std::string> GlobalShaderMacros;
 	};
 
 	static RendererConfig s_Config;
@@ -51,7 +43,7 @@ namespace Hazel {
 		//spec.Format = ImageFormat::RGBA;
 		//spec.Width = 1;
 		//spec.Height = 1;
-		//s_Data->WhiteTexture = Texture2D::Create(spec, Buffer1(&whiteTextureData, sizeof(uint32_t)));
+		//s_Data->WhiteTexture = Texture2D::Create(spec, Buffer(&whiteTextureData, sizeof(uint32_t)));
 
 		// 为并发帧创建了描述符池、提前准备了全屏顶点数据存入了GPU
 		s_RendererAPI->Init();
@@ -71,40 +63,12 @@ namespace Hazel {
 	{
 	}
 
-	Ref<ShaderLibrary> Renderer::GetShaderLibrary()
-	{
-		return s_Data->m_ShaderLibrary;
-	}
 
 	RendererCapabilities& Renderer::GetCapabilities()
 	{
 		return s_RendererAPI->GetCapabilities();
 	}
 
-	Ref<Texture2D> Renderer::GetWhiteTexture()
-	{
-		return s_Data->WhiteTexture;
-	}
-
-	Ref<Texture2D> Renderer::GetBlackTexture()
-	{
-		return s_Data->BlackTexture;
-	}
-
-	Ref<Texture2D> Renderer::GetHilbertLut()
-	{
-		return s_Data->HilbertLut;
-	}
-
-	Ref<Texture2D> Renderer::GetBRDFLutTexture()
-	{
-		return s_Data->BRDFLutTexture;
-	}
-
-	Ref<TextureCube> Renderer::GetBlackCubeTexture()
-	{
-		return s_Data->BlackCubeTexture;
-	}
 
 
 	void Renderer::SwapQueues()

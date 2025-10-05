@@ -7,12 +7,12 @@ namespace Hazel {
 	{
 	public:
 		VulkanTexture2D(const TextureSpecification& specification, const std::filesystem::path& filepath);
-		VulkanTexture2D(const TextureSpecification& specification, Buffer1 data = Buffer1());
+		VulkanTexture2D(const TextureSpecification& specification, Buffer data = Buffer());
 		~VulkanTexture2D() override;
 
 		virtual void CreateFromFile(const TextureSpecification& specification, const std::filesystem::path& filepath) override;
 		virtual void ReplaceFromFile(const TextureSpecification& specification, const std::filesystem::path& filepath) override;
-		virtual void CreateFromBuffer(const TextureSpecification& specification, Buffer1 data = Buffer1()) override;
+		virtual void CreateFromBuffer(const TextureSpecification& specification, Buffer data = Buffer()) override;
 
 		virtual void Resize(const glm::uvec2& size) override;
 		virtual void Resize(uint32_t width, uint32_t height) override;
@@ -33,7 +33,7 @@ namespace Hazel {
 		void Lock() override;
 		void Unlock() override;
 
-		Buffer1 GetWriteableBuffer() override;
+		Buffer GetWriteableBuffer() override;
 		bool Loaded() const override { return m_Image && m_Image->IsValid(); }
 		const std::filesystem::path& GetPath() const override;
 		uint32_t GetMipLevelCount() const override;
@@ -43,14 +43,14 @@ namespace Hazel {
 
 		virtual uint64_t GetHash() const { return (uint64_t)m_Image.As<VulkanImage2D>()->GetDescriptorInfoVulkan().imageView; }
 
-		void CopyToHostBuffer(Buffer1& buffer);
+		void CopyToHostBuffer(Buffer& buffer);
 	private:
-		void SetData(Buffer1 buffer);
+		void SetData(Buffer buffer);
 	private:
 		TextureSpecification m_Specification;
 		std::filesystem::path m_Path;
 
-		Buffer1 m_ImageData;
+		Buffer m_ImageData;
 
 		Ref<Image2D> m_Image;
 	};
@@ -58,7 +58,7 @@ namespace Hazel {
 	class VulkanTextureCube : public TextureCube
 	{
 	public:
-		VulkanTextureCube(const TextureSpecification& specification, Buffer1 data = nullptr);
+		VulkanTextureCube(const TextureSpecification& specification, Buffer data = nullptr);
 		virtual ~VulkanTextureCube();
 
 		void Release();
@@ -83,8 +83,8 @@ namespace Hazel {
 
 		void GenerateMips(bool readonly = false);
 
-		void CopyToHostBuffer(Buffer1& buffer);
-		void CopyFromBuffer(const Buffer1& buffer, uint32_t mips);
+		void CopyToHostBuffer(Buffer& buffer);
+		void CopyFromBuffer(const Buffer& buffer, uint32_t mips);
 	private:
 		void Invalidate();
 	private:
@@ -92,7 +92,7 @@ namespace Hazel {
 
 		bool m_MipsGenerated = false;
 
-		Buffer1 m_LocalStorage;
+		Buffer m_LocalStorage;
 		VmaAllocation m_MemoryAlloc;
 		uint64_t m_GPUAllocationSize = 0;
 		VkImage m_Image{ nullptr };

@@ -45,12 +45,12 @@ namespace Hazel {
 	public:
 		static Ref<Texture2D> Create_old(const TextureSpecification& specification);
 		static Ref<Texture2D> Create_old(const TextureSpecification& specification, const std::filesystem::path& filepath);
-		static Ref<Texture2D> Create_old(const TextureSpecification& specification, Buffer1 imageData);
+		static Ref<Texture2D> Create_old(const TextureSpecification& specification, Buffer imageData);
 		static Ref<Texture2D> Create(const TextureSpecification& specification);
 		static Ref<Texture2D> Create(const TextureSpecification& specification, const std::filesystem::path& filepath);
-		static Ref<Texture2D> Create(const TextureSpecification& specification, Buffer1 imageData);
+		static Ref<Texture2D> Create(const TextureSpecification& specification, Buffer imageData);
 		virtual void CreateFromFile(const TextureSpecification& specification, const std::filesystem::path& filepath) = 0;
-		virtual void CreateFromBuffer(const TextureSpecification& specification, Buffer1 data = Buffer1()) = 0;
+		virtual void CreateFromBuffer(const TextureSpecification& specification, Buffer data = Buffer()) = 0;
 		bool  IsLoaded() const { return true; } // 需要删除，瞎写的为了编译
 		virtual void ReplaceFromFile(const TextureSpecification& specification, const std::filesystem::path& filepath) = 0;
 
@@ -63,7 +63,7 @@ namespace Hazel {
 		virtual void Lock() = 0;
 		virtual void Unlock() = 0;
 
-		virtual Buffer1 GetWriteableBuffer() = 0;
+		virtual Buffer GetWriteableBuffer() = 0;
 
 		virtual bool Loaded() const = 0;
 
@@ -77,7 +77,7 @@ namespace Hazel {
 	class TextureCube : public Texture
 	{
 	public:
-		static Ref<TextureCube> Create_old(const TextureSpecification& specification, Buffer1 imageData = Buffer1());
+		static Ref<TextureCube> Create_old(const TextureSpecification& specification, Buffer imageData = Buffer());
 
 		virtual TextureType GetType() const override { return TextureType::TextureCube; }
 

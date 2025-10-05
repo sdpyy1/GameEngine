@@ -119,8 +119,8 @@ namespace Hazel {
 		virtual ImageSpecification& GetSpecification() = 0;
 		virtual const ImageSpecification& GetSpecification() const = 0;
 
-		virtual Buffer1 GetBuffer() const = 0;
-		virtual Buffer1& GetBuffer() = 0;
+		virtual Buffer GetBuffer() const = 0;
+		virtual Buffer& GetBuffer() = 0;
 
 		virtual uint64_t GetGPUMemoryUsage() const = 0; // 显存使用量
 
@@ -128,8 +128,8 @@ namespace Hazel {
 
 		virtual uint64_t GetHash() const = 0;
 
-		virtual void SetData(Buffer1 buffer) = 0;
-		virtual void CopyToHostBuffer(Buffer1& buffer) const = 0; // 复制到CPU可读的buffer
+		virtual void SetData(Buffer buffer) = 0;
+		virtual void CopyToHostBuffer(Buffer& buffer) const = 0; // 复制到CPU可读的buffer
 
 		// TODO: usage (eg. shader read)
 	};
@@ -137,7 +137,7 @@ namespace Hazel {
 	class Image2D : public Image
 	{
 	public:
-		static Ref<Image2D> Create(const ImageSpecification& specification, Buffer1 buffer = Buffer1());
+		static Ref<Image2D> Create(const ImageSpecification& specification, Buffer buffer = Buffer());
 		virtual void Resize(const glm::uvec2& size) = 0;
 		virtual bool IsValid() const = 0;
 	};

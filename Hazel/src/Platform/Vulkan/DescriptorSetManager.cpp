@@ -593,8 +593,8 @@ namespace Hazel {
 					for (size_t i = 0; i < input.Input.size(); i++)
 					{
 						Ref<VulkanTexture2D> vulkanTexture = input.Input[i].As<VulkanTexture2D>();
-						if (vulkanTexture == nullptr)
-							vulkanTexture = Renderer::GetWhiteTexture().As<VulkanTexture2D>(); // TODO(Yan): error texture
+						//if (vulkanTexture == nullptr)
+							//vulkanTexture = Renderer::GetWhiteTexture().As<VulkanTexture2D>(); // TODO(Yan): error texture
 
 						const VkDescriptorImageInfo& imageInfo = vulkanTexture->GetDescriptorInfoVulkan();
 						if (imageInfo.imageView != WriteDescriptorMap[currentFrameIndex].at(set).at(binding).ResourceHandles[i])

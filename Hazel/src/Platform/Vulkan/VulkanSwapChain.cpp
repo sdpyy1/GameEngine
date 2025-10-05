@@ -508,8 +508,6 @@ namespace Hazel
 
 	void VulkanSwapChain::OnResize(uint32_t width, uint32_t height)
 	{
-		HZ_CORE_WARN_TAG("Renderer", "VulkanSwapChain::OnResize");
-
 		auto device = m_Device->GetVulkanDevice();
 		vkDeviceWaitIdle(device);
 		Create_old(&width, &height, m_VSync);

@@ -15,7 +15,7 @@ namespace Hazel {
 	VulkanIndexBuffer::VulkanIndexBuffer(void* data, uint64_t size)
 		: m_Size(size)
 	{
-		m_LocalData = Buffer1::Copy(data, size);
+		m_LocalData = Buffer::Copy(data, size);
 
 		Ref<VulkanIndexBuffer> instance = this;
 		Renderer::Submit([instance]() mutable

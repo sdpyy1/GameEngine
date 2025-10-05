@@ -19,16 +19,10 @@ namespace Hazel {
 		static RendererConfig& GetConfig();
 		static void Init();
 		static void Shutdown();
-		static Ref<ShaderLibrary> GetShaderLibrary();
-		static RendererCapabilities& GetCapabilities();
-		static Ref<Texture2D> GetWhiteTexture();
-		static Ref<Texture2D> GetBlackTexture();
-		static Ref<Texture2D> GetHilbertLut();
-		static Ref<Texture2D> GetBRDFLutTexture();
-		static Ref<TextureCube> GetBlackCubeTexture();
-		static void SwapQueues();
-		static uint32_t GetCurrentFrameIndex();
-		static uint32_t RT_GetCurrentFrameIndex();
+
+
+		static void SwapQueues(); // ΩªªªBuffer√¸¡Óª∫≥Â
+
 		static RendererAPI::Type Current() { return RendererAPI::Current(); }
 		static void RenderThreadFunc(RenderThread* renderThread);
 		static void WaitAndRender(RenderThread* renderThread);
@@ -83,7 +77,9 @@ namespace Hazel {
 		}
 		static RenderCommandQueue& GetRenderCommandQueue();
 		static RenderCommandQueue& GetRenderResourceReleaseQueue(uint32_t index);
-
+		static RendererCapabilities& GetCapabilities();
+		static uint32_t GetCurrentFrameIndex();
+		static uint32_t RT_GetCurrentFrameIndex();
 	private:
 
 	};

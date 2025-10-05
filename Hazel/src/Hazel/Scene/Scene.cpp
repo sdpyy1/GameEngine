@@ -19,6 +19,7 @@
 #include "box2d/b2_circle_shape.h"
 #include <Platform/Vulkan/VulkanShader.h>
 #include <Platform/Vulkan/VulkanVertexBuffer.h>
+#include <Platform/Vulkan/VulkanIndexBuffer.h>
 
 namespace Hazel {
 
@@ -58,27 +59,28 @@ namespace Hazel {
 			return attributeDescriptions;
 		}
 	};
-	static const std::vector<Vertex> vertices = {
-{{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
-{{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
-{{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
-{{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}},
-
-{{-0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
-{{0.5f, -0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
-{{0.5f, 0.5f, -0.5f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
-{{-0.5f, 0.5f, -0.5f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}}
+	const std::vector<Vertex> vertices = {
+		{{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
+		{{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
+		{{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
+		{{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}},
+	};
+	const std::vector<uint16_t> indices = {
+	0, 1, 2, 2, 3, 0
 	};
 	Scene::Scene()
 	{
 		vulkanContext = Application::Get().GetRenderContext().As<VulkanContext>();
 		swapChian = Application::Get().GetWindow()->GetSwapChainPtr();
 		device = vulkanContext->GetCurrentDevice()->GetVulkanDevice();
-		// 临时创建PASS
-		//createRenderPass();
 		createGraphicsPipeline();
-		swapChainImageViews = swapChian->GetViews();
-		//createFramebuffers();
+
+		// 顶点创建
+		testVertexBuffer = VertexBuffer::Create((void*)vertices.data(), sizeof(vertices[0]) * vertices.size(), VertexBufferUsage::Static);
+		indexBuffer = IndexBuffer::Create((void*)indices.data(), sizeof(indices[0]) * indices.size());
+
+
+
 	}
 
 	Scene::~Scene()
@@ -101,11 +103,11 @@ namespace Hazel {
 		// 8. 绘图API
 		// 9. 结束Pass
 		// 10. 结束命令记录
-		VulkanSwapChain* instance = this->swapChian;
-		VkPipeline pp = this->graphicsPipeline;
-		Renderer::Submit([instance,pp]() mutable {
-			uint32_t a = instance->GetCurrentBufferIndex();
-			VkCommandBuffer commandBuffer = instance->GetCurrentDrawCommandBuffer();
+		Scene* instance = this;
+		Renderer::Submit([instance]() mutable {
+
+			uint32_t a = instance->swapChian->GetCurrentBufferIndex();
+			VkCommandBuffer commandBuffer = instance->swapChian->GetCurrentDrawCommandBuffer();
 			//vkResetCommandBuffer(commandBuffer, /*VkCommandBufferResetFlagBits*/ 0);
 			VkCommandBufferBeginInfo beginInfo{};
 			beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -116,11 +118,11 @@ namespace Hazel {
 
 			VkRenderPassBeginInfo renderPassInfo{};
 			renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-			renderPassInfo.renderPass = instance->GetRenderPass();
-			renderPassInfo.framebuffer = instance->GetCurrentFramebuffer();
+			renderPassInfo.renderPass = instance->swapChian->GetRenderPass();
+			renderPassInfo.framebuffer = instance->swapChian->GetCurrentFramebuffer();
 			renderPassInfo.renderArea.offset = { 0, 0 };
 
-			renderPassInfo.renderArea.extent = instance->GetExtent();
+			renderPassInfo.renderArea.extent = instance->swapChian->GetExtent();
 
 			VkClearValue clearColor = { {{0.0f, 0.0f, 0.0f, 1.0f}} };
 			renderPassInfo.clearValueCount = 1;
@@ -128,24 +130,34 @@ namespace Hazel {
 
 			vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-			vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pp);
-
+			vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, instance->graphicsPipeline);
+			// 绑定顶点缓冲区
+			VkBuffer vertexBuffers[] = { instance->testVertexBuffer.As<VulkanVertexBuffer>()->GetVulkanBuffer()};
+			VkDeviceSize offsets[] = { 0 };
+			vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+			vkCmdBindIndexBuffer(commandBuffer, instance->indexBuffer.As<VulkanIndexBuffer>()->GetVulkanBuffer(), 0, VK_INDEX_TYPE_UINT16);
 			VkViewport viewport{};
 			viewport.x = 0.0f;
 			viewport.y = 0.0f;
-			viewport.width = static_cast<float>(instance->GetExtent().width);
-			viewport.height = static_cast<float>(instance->GetExtent().height);
+			viewport.width = static_cast<float>(instance->swapChian->GetExtent().width);
+			viewport.height = static_cast<float>(instance->swapChian->GetExtent().height);
 			viewport.minDepth = 0.0f;
 			viewport.maxDepth = 1.0f;
 			vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 
 			VkRect2D scissor{};
 			scissor.offset = { 0, 0 };
-			scissor.extent = instance->GetExtent();
+			scissor.extent = instance->swapChian->GetExtent();
 			vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-			vkCmdDraw(commandBuffer, 3, 1, 0, 0);
-
+			vkCmdDrawIndexed(
+				commandBuffer,        // 目标命令缓冲区
+				static_cast<uint32_t>(indices.size()), // 索引总数（36个）
+				1,                    // 绘制的实例数量（1个立方体，不实例化）
+				0,                    // 索引偏移（从第0个索引开始）
+				0,                    // 顶点偏移（每个索引对应的顶点索引 + 此值，0表示不偏移）
+				0                     // 实例偏移（实例化时用，0表示不偏移）
+			);
 			vkCmdEndRenderPass(commandBuffer);
 
 			if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
@@ -161,54 +173,13 @@ namespace Hazel {
 	
 	};
 
-	void Scene::createRenderPass() {
-		VkAttachmentDescription colorAttachment{};
-		colorAttachment.format = swapChian->GetColorFormat();
-		colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
-		colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-		colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-		colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-		colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-
-		VkAttachmentReference colorAttachmentRef{};
-		colorAttachmentRef.attachment = 0;
-		colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-		VkSubpassDescription subpass{};
-		subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-		subpass.colorAttachmentCount = 1;
-		subpass.pColorAttachments = &colorAttachmentRef;
-
-		VkSubpassDependency dependency{};
-		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-		dependency.dstSubpass = 0;
-		dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-		dependency.srcAccessMask = 0;
-		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-
-		VkRenderPassCreateInfo renderPassInfo{};
-		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-		renderPassInfo.attachmentCount = 1;
-		renderPassInfo.pAttachments = &colorAttachment;
-		renderPassInfo.subpassCount = 1;
-		renderPassInfo.pSubpasses = &subpass;
-		renderPassInfo.dependencyCount = 1;
-		renderPassInfo.pDependencies = &dependency;
-
-		if (vkCreateRenderPass(device, &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS) {
-			throw std::runtime_error("failed to create render pass!");
-		}
-	}
 	
 	void Scene::createGraphicsPipeline()
 	{
 
 		// 转为vkShaderModule对象
-		VkShaderModule vertShaderModule = Shader::Create("assets/shaders/vert.spv").As<VulkanShader>()->GetShaderModule();
-		VkShaderModule fragShaderModule = Shader::Create("assets/shaders/frag.spv").As<VulkanShader>()->GetShaderModule();
+		VkShaderModule vertShaderModule = Shader::Create("assets/shaders/Debug/vert.spv").As<VulkanShader>()->GetShaderModule();
+		VkShaderModule fragShaderModule = Shader::Create("assets/shaders/Debug/frag.spv").As<VulkanShader>()->GetShaderModule();
 
 		VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
 		vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -224,10 +195,18 @@ namespace Hazel {
 
 		VkPipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
 
+		// 顶点信息
 		VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
 		vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-		vertexInputInfo.vertexBindingDescriptionCount = 0;
-		vertexInputInfo.vertexAttributeDescriptionCount = 0;
+		// 顶点绑定描述符
+		auto bindingDescription = Vertex::getBindingDescription();
+		// 顶点的各个属性的排列
+		auto attributeDescriptions = Vertex::getAttributeDescriptions();
+
+		vertexInputInfo.vertexBindingDescriptionCount = 1;
+		vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
+		vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
+		vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
 
 		VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
 		inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -311,32 +290,6 @@ namespace Hazel {
 		vkDestroyShaderModule(device, vertShaderModule, nullptr);
 	}
 
-	void Scene::createFramebuffers() {
-		// 帧缓冲数量与交换链图像视图数量一致（每个交换链图像对应一个帧缓冲）
-		swapChainFramebuffers.resize(3);
-
-		// 为每个交换链图像视图创建帧缓冲
-		for (size_t i = 0; i < swapChainImageViews.size(); i++) {
-			// 关键修改：仅保留颜色附件（交换链图像视图），移除深度ImageView
-			std::array<VkImageView, 1> attachments = {
-				swapChainImageViews[i]  // 唯一附件：交换链的颜色图像视图（用于最终呈现）
-			};
-
-			VkFramebufferCreateInfo framebufferInfo{};
-			framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-			framebufferInfo.renderPass = renderPass;  // 绑定“仅颜色缓冲”的RenderPass
-			framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());  // 附件数量改为1
-			framebufferInfo.pAttachments = attachments.data();  // 指向仅含颜色附件的列表
-			framebufferInfo.width = swapChian->GetWidth(); // 帧缓冲宽度=交换链图像宽度
-			framebufferInfo.height = swapChian->GetHeight();  // 帧缓冲高度=交换链图像高度
-			framebufferInfo.layers = 1;  // 图层数（2D渲染默认1，立体渲染需设为2）
-
-			// 创建帧缓冲
-			if (vkCreateFramebuffer(vulkanContext->GetCurrentDevice()->GetVulkanDevice(), &framebufferInfo, nullptr, &swapChainFramebuffers[i]) != VK_SUCCESS) {
-				throw std::runtime_error("failed to create framebuffer!");
-			}
-		}
-	}
 
 
 

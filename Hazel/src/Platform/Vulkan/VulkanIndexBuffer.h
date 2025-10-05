@@ -26,7 +26,7 @@ namespace Hazel {
 		VkBuffer GetVulkanBuffer() { return m_VulkanBuffer; }
 	private:
 		uint64_t m_Size = 0;
-		Buffer1 m_LocalData;
+		Buffer m_LocalData;
 
 		VkBuffer m_VulkanBuffer = nullptr;
 		VmaAllocation m_MemoryAllocation;
