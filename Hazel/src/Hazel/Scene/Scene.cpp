@@ -23,6 +23,7 @@
 #include <Platform/Vulkan/VulkanVertexBuffer.h>
 #include <Platform/Vulkan/VulkanIndexBuffer.h>
 #include <Platform/Vulkan/VulkanUniformBuffer.h>
+#include <Platform/Vulkan/VulkanTexture.h>
 
 namespace Hazel {
 
@@ -88,7 +89,18 @@ namespace Hazel {
 		vulkanContext = Application::Get().GetRenderContext().As<VulkanContext>();
 		swapChian = Application::Get().GetWindow()->GetSwapChainPtr();
 		shader = Renderer::GetShaderLibrary()->Get("test").As<VulkanShader>();
-
+		TextureSpecification default2DTexture;
+		default2DTexture.Format = ImageFormat::RGBA;
+		default2DTexture.Width = 512;
+		default2DTexture.Height = 512;
+		default2DTexture.SamplerWrap = TextureWrap::Repeat;
+		default2DTexture.SamplerFilter = TextureFilter::Linear;
+		default2DTexture.GenerateMips = true;
+		default2DTexture.Storage = false;
+		default2DTexture.StoreLocally = false;
+		// 调试名称（可选，便于调试时识别）
+		default2DTexture.DebugName = "Default2DTexture";
+		texture = Texture2D::Create(default2DTexture, std::filesystem::path("assets/textures/texture.jpg"));
 		device = vulkanContext->GetCurrentDevice()->GetVulkanDevice();
 		createGraphicsPipeline();
 		ubo = new UniformBufferObject();
@@ -228,13 +240,12 @@ namespace Hazel {
 			bufferInfo.offset = 0;
 			bufferInfo.range = sizeof(UniformBufferObject);
 			// 实际的纹理对象
-			//VkDescriptorImageInfo imageInfo{};
-			//imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-			//imageInfo.imageView = textureImageView;
-			//imageInfo.sampler = textureSampler;
+
+			VkDescriptorImageInfo imageInfo{};
+			imageInfo = texture.As<VulkanTexture2D>()->GetDescriptorInfoVulkan();
 
 			// 描述符集的写入操作
-			std::array<VkWriteDescriptorSet, 1> descriptorWrites{};
+			std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
 
 			descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 			descriptorWrites[0].dstSet = descriptorSets[i];  // 要更新的描述符集
@@ -244,13 +255,13 @@ namespace Hazel {
 			descriptorWrites[0].descriptorCount = 1; // 绑定点是一个数组时，这里就不是1了
 			descriptorWrites[0].pBufferInfo = &uniformBufferSet->Get(i).As<VulkanUniformBuffer>()->GetDescriptorBufferInfo(); // 资源信息
 
-			//descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			//descriptorWrites[1].dstSet = descriptorSets[i];
-			//descriptorWrites[1].dstBinding = 1;
-			//descriptorWrites[1].dstArrayElement = 0;
-			//descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-			//descriptorWrites[1].descriptorCount = 1;
-			//descriptorWrites[1].pImageInfo = &imageInfo;
+			descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			descriptorWrites[1].dstSet = descriptorSets[i];
+			descriptorWrites[1].dstBinding = 1;
+			descriptorWrites[1].dstArrayElement = 0;
+			descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+			descriptorWrites[1].descriptorCount = 1;
+			descriptorWrites[1].pImageInfo = &imageInfo;
 
 			vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
 		}

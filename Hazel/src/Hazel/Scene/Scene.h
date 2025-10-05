@@ -46,6 +46,7 @@ namespace Hazel {
 		Ref<VertexBuffer> testVertexBuffer;
 		Ref<IndexBuffer> indexBuffer;
 		Ref<UniformBufferSet> uniformBufferSet;
+		Ref<Texture2D> texture;
 	public:
 		static Ref<Scene> Copy(Ref<Scene> other);
 

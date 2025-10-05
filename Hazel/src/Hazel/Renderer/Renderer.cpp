@@ -42,8 +42,14 @@ namespace Hazel {
 		uboBinding.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER; 
 		uboBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT; 
 		uboBinding.count = 1; 
+		Shader::DescriptorBinding uboBinding2;
+		uboBinding2.binding = 1;
+		uboBinding2.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		uboBinding2.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+		uboBinding2.count = 1;
 		Shader::ShaderSpecification uboSpec;
 		uboSpec.bindings.push_back(uboBinding);
+		uboSpec.bindings.push_back(uboBinding2);
 		s_Data->m_ShaderLibrary->LoadCommonShader("test", "assets/shaders/Debug/vert.spv", "assets/shaders/Debug/frag.spv", uboSpec);
 		// ¼ÓÔØÎÆÀí
 		//uint32_t whiteTextureData = 0xffffffff;
