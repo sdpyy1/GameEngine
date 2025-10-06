@@ -521,6 +521,10 @@ namespace Hazel {
 		return false;
 	}
 
+	void DescriptorSetManager::Bake()
+	{
+	}
+
 
 
 	void DescriptorSetManager::InvalidateAndUpdate()

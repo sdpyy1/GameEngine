@@ -9,6 +9,7 @@
 #include <Hazel/Core/RenderThread.h>
 #include "RenderCommandQueue.h"
 #include "RendererCapabilities.h"
+#include "IndexBuffer.h"
 namespace Hazel {
 	class ShaderLibrary;
 
@@ -21,9 +22,11 @@ namespace Hazel {
 		static void Shutdown();
 		static Ref<ShaderLibrary> GetShaderLibrary();
 
-
+		static void BeginPass(Ref<RenderPass> renderPass);
+		static void EndPass();
 		static void SwapQueues(); // ΩªªªBuffer√¸¡Óª∫≥Â
-
+		static void BindVertData(Ref<VertexBuffer> testVertexBuffer);
+		static void BindIndexData(Ref<IndexBuffer> indexBuffer);
 		static RendererAPI::Type Current() { return RendererAPI::Current(); }
 		static void RenderThreadFunc(RenderThread* renderThread);
 		static void WaitAndRender(RenderThread* renderThread);

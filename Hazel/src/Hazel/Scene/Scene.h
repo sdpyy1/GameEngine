@@ -23,14 +23,12 @@ namespace Hazel {
 		
 		// 临时调试接口
 		void RenderVukan();
-		void createFinalColorSets();
-		void createDescriptorSets();
-		void createFinalColorPipeline();
+		void updateFinalColorSets();
+		void updateGBufferSets();
 
 	private:
 		Ref<VulkanContext> vulkanContext;
 		VkPipelineLayout pipelineLayout;
-		VkPipeline graphicsPipeline;
 		VulkanSwapChain *swapChian;
 		VkDevice device;
 		// UBO
@@ -48,6 +46,7 @@ namespace Hazel {
 		Ref<UniformBufferSet> uniformBufferSet;
 		Ref<Texture2D> texture;
 		Ref<Image2D> positionAttachment;
+		Ref<RenderPass> gBufferPass;
 	public:
 		static Ref<Scene> Copy(Ref<Scene> other);
 

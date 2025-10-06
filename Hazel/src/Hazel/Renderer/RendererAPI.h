@@ -4,6 +4,7 @@
 #include <glm/glm.hpp>
 #include "RenderCommandBuffer.h"
 #include "RenderPass.h"
+#include "Hazel/Renderer/IndexBuffer.h"
 
 namespace Hazel {
 	// 抽象各种图像API的接口
@@ -26,9 +27,11 @@ namespace Hazel {
 		virtual void Shutdown() = 0;
 		virtual void RT_BeginFrame() = 0;
 		virtual void RT_EndFrame() = 0;
-		virtual void BeginRenderPass(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<RenderPass> renderPass, bool explicitClear = false) = 0;
-		virtual void EndRenderPass(Ref<RenderCommandBuffer> renderCommandBuffer) = 0;
-				static RendererAPI* CreateAPI();
+		virtual void BeginRenderPass(Ref<RenderPass> renderPass) = 0;
+		virtual void EndRenderPass() = 0;
+		static RendererAPI* CreateAPI();
+		virtual void BindVertData(Ref<VertexBuffer> testVertexBuffer) = 0;
+		virtual void BindIndexData(Ref<IndexBuffer> indexBuffer) = 0;
 		static Type Current() { return s_API; }
 	private:
 		static Type s_API;

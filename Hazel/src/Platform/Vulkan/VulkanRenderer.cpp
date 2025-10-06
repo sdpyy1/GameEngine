@@ -8,6 +8,10 @@
 #include <imgui.h>
 #include <Hazel/Renderer/IndexBuffer.h>
 #include "VulkanNativeCall.h"
+#include "VulkanFramebuffer.h"
+#include "VulkanPipeline.h"
+#include "VulkanVertexBuffer.h"
+#include "VulkanIndexBuffer.h"
 
 namespace Hazel {
 	struct VulkanRendererData
@@ -177,7 +181,15 @@ namespace Hazel {
 				memset(s_Data->DescriptorPoolAllocationCount.data(), 0, s_Data->DescriptorPoolAllocationCount.size() * sizeof(uint32_t));
 
 				s_Data->DrawCallCount = 0;
+				uint32_t flyIndex = Application::Get().GetWindow()->GetSwapChainPtr()->GetCurrentBufferIndex();
+				VkCommandBuffer commandBuffer = Application::Get().GetWindow()->GetSwapChainPtr()->GetCurrentDrawCommandBuffer();
+				//vkResetCommandBuffer(commandBuffer, /*VkCommandBufferResetFlagBits*/ 0);
+				VkCommandBufferBeginInfo beginInfo{};
+				beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
+				if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
+					throw std::runtime_error("failed to begin recording command buffer!");
+				}
 #if 0
 				VkCommandBufferBeginInfo cmdBufInfo = {};
 				cmdBufInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -191,7 +203,19 @@ namespace Hazel {
 #endif
 			});
 	}
+	void VulkanRenderer::BindVertData(Ref<VertexBuffer> testVertexBuffer) {
+		VkCommandBuffer commandBuffer = Application::Get().GetWindow()->GetSwapChainPtr()->GetCurrentDrawCommandBuffer();
+		VkDeviceSize offsets[] = { 0 };
+		VkBuffer vertexBuffers[] = { testVertexBuffer.As<VulkanVertexBuffer>()->GetVulkanBuffer() };
+		vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+	}
+	void VulkanRenderer::BindIndexData(Ref<IndexBuffer> indexBuffer)
+	{
+		VkCommandBuffer commandBuffer = Application::Get().GetWindow()->GetSwapChainPtr()->GetCurrentDrawCommandBuffer();
 
+		vkCmdBindIndexBuffer(commandBuffer, indexBuffer.As<VulkanIndexBuffer>()->GetVulkanBuffer(), 0, VK_INDEX_TYPE_UINT16);
+
+	}
 	void VulkanRenderer::RT_EndFrame()
 	{
 		Renderer::Submit([]() {
@@ -218,6 +242,43 @@ namespace Hazel {
 		VK_CHECK_RESULT(vkAllocateDescriptorSets(device, &allocInfo, &result));
 		s_Data->DescriptorPoolAllocationCount[bufferIndex] += allocInfo.descriptorSetCount;
 		return result;
+	}
+	void VulkanRenderer::BeginRenderPass(Ref<RenderPass> renderPass)
+	{
+		uint32_t flyIndex = Renderer::GetCurrentFrameIndex();
+		VkCommandBuffer commandBuffer = Application::Get().GetWindow()->GetSwapChainPtr()->GetCurrentDrawCommandBuffer();
+		VkRenderPass gbufferPass = renderPass->GetPipeline()->GetSpecification().TargetFramebuffer.As<VulkanFramebuffer>()->GetRenderPass();
+		Ref<VulkanFramebuffer> gbufferfbo = renderPass->GetPipeline()->GetSpecification().TargetFramebuffer.As<VulkanFramebuffer>();
+		VkRenderPassBeginInfo gbufferPassInfo{};
+		gbufferPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+		gbufferPassInfo.renderPass = gbufferPass;
+		gbufferPassInfo.framebuffer = gbufferfbo->GetVulkanFramebuffer();
+		gbufferPassInfo.renderArea.offset = { 0, 0 };
+		gbufferPassInfo.renderArea.extent = VkExtent2D{ gbufferfbo->GetWidth(),gbufferfbo->GetHeight() };
+		gbufferPassInfo.clearValueCount = gbufferfbo->GetColorAttachmentCount() + 1; // +1表示深度纹理也清除？
+		gbufferPassInfo.pClearValues = gbufferfbo->GetVulkanClearValues().data();
+
+		vkCmdBeginRenderPass(commandBuffer, &gbufferPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderPass->GetPipeline().As<VulkanPipeline>()->GetVulkanPipeline());
+
+
+		VkViewport viewport{};
+		viewport.x = 0.0f;
+		viewport.y = 0.0f;
+		viewport.width = static_cast<float>(gbufferfbo->GetWidth());
+		viewport.height = static_cast<float>(gbufferfbo->GetHeight());
+		viewport.minDepth = 0.0f;
+		viewport.maxDepth = 1.0f;
+		vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+		VkRect2D scissor{};
+		scissor.offset = { 0, 0 };
+		scissor.extent = VkExtent2D{ gbufferfbo->GetWidth(),gbufferfbo->GetHeight() };
+		vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderPass->GetPipeline().As<VulkanPipeline>()->GetVulkanPipelineLayout(), 0, 1, &renderPass->GetPipeline()->GetShader().As<VulkanShader>()->GetDescriptorSet()[flyIndex], 0, nullptr);
+	}
+	void VulkanRenderer::EndRenderPass()
+	{
+		vkCmdEndRenderPass(Application::Get().GetWindow()->GetSwapChainPtr()->GetCurrentDrawCommandBuffer());
 	}
 	namespace Utils {
 

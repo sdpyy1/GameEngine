@@ -36,16 +36,6 @@ namespace Hazel {
 		// 创建具体的渲染API对象
 		s_RendererAPI = RendererAPI::CreateAPI();
 
-		// 加载Shader
-		Shader::DescriptorBinding finalColorSamplerBinding;
-		finalColorSamplerBinding.binding = 0;
-		finalColorSamplerBinding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		finalColorSamplerBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-		finalColorSamplerBinding.count = 1;
-		Shader::ShaderSpecification finalColorSpec;
-		finalColorSpec.bindings.push_back(finalColorSamplerBinding);
-		s_Data->m_ShaderLibrary->LoadCommonShader("finalColor", "assets/shaders/Debug/vert.spv", "assets/shaders/Debug/frag.spv", finalColorSpec);
-
 
 		// gBufferShader
 		Shader::ShaderSpecification gbufferShaderSpec;
@@ -100,9 +90,30 @@ namespace Hazel {
 
 
 
+	void Renderer::BeginPass(Ref<RenderPass> renderPass)
+	{
+		return s_RendererAPI->BeginRenderPass(renderPass);
+	}
+
+	void Renderer::EndPass()
+	{
+		return s_RendererAPI->EndRenderPass();
+
+	}
+
 	void Renderer::SwapQueues()
 	{
 		s_RenderCommandQueueSubmissionIndex = (s_RenderCommandQueueSubmissionIndex + 1) % s_RenderCommandQueueCount;
+	}
+	void Renderer::BindVertData(Ref<VertexBuffer> testVertexBuffer)
+	{
+		return s_RendererAPI->BindVertData(testVertexBuffer);
+
+	}
+	void Renderer::BindIndexData(Ref<IndexBuffer> indexBuffer)
+	{
+		return s_RendererAPI->BindIndexData(indexBuffer);
+
 	}
 	uint32_t Renderer::RT_GetCurrentFrameIndex()
 	{

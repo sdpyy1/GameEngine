@@ -11,7 +11,7 @@ namespace Hazel {
 	{
 		switch (RendererAPI::Current())
 		{
-		case RendererAPI::Type::Vulkan: return new VulkanRenderer();
+			case RendererAPI::Type::Vulkan: return new VulkanRenderer();
 		}
 		HZ_CORE_ASSERT(false, "Unknown RendererAPI");
 		return nullptr;

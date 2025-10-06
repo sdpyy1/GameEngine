@@ -12,11 +12,12 @@ namespace Hazel {
 
 		virtual void RT_BeginFrame() override;
 		virtual void RT_EndFrame() override;
-
+		virtual void BindVertData(Ref<VertexBuffer> testVertexBuffer) override;
+		virtual void BindIndexData(Ref<IndexBuffer> indexBuffer) override;
 		static VkDescriptorSet RT_AllocateDescriptorSet(VkDescriptorSetAllocateInfo& allocInfo);
 
-		virtual void BeginRenderPass(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<RenderPass> renderPass, bool explicitClear = false) {};
-		virtual void EndRenderPass(Ref<RenderCommandBuffer> renderCommandBuffer) {};
+		virtual void BeginRenderPass(Ref<RenderPass> renderPass) override;
+		virtual void EndRenderPass() override;
 	};
 
 	namespace Utils {

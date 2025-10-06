@@ -131,7 +131,7 @@ namespace Hazel {
 
 			if (!m_Minimized)
 			{
-				// 重置DrawCall=0，重置描述符池,清空命令缓冲区、获取下一帧图片索引
+				// 重置DrawCall=0，重置描述符池,清空命令缓冲区、获取下一帧图片索引,并开始记录命令
 				Renderer::RT_BeginFrame();  // 也是RT_ 只是没标明
 
 				// 更新各层

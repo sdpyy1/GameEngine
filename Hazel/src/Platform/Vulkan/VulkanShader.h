@@ -8,6 +8,7 @@ namespace Hazel {
 	public:
 		VulkanShader() = default;
 		VulkanShader(const std::string& name, const std::string& vertFilePath, const std::string& fragFilePath, ShaderSpecification spec);
+		VulkanShader(const std::string& name, const std::string& vertFilePath, const std::string& fragFilePath, ShaderSpecification spec,VkDevice device);
 
 		void Reload() override;
 		void RT_Reload() override;
