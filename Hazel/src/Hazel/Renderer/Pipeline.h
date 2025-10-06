@@ -41,7 +41,7 @@ namespace Hazel {
 		VertexBufferLayout InstanceLayout;
 		VertexBufferLayout BoneInfluenceLayout;
 		PrimitiveTopology Topology = PrimitiveTopology::Triangles;
-		DepthCompareOperator DepthOperator = DepthCompareOperator::GreaterOrEqual;
+		DepthCompareOperator DepthOperator = DepthCompareOperator::Less;
 		bool BackfaceCulling = true;
 		bool DepthTest = true;
 		bool DepthWrite = true;

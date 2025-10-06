@@ -24,8 +24,9 @@ namespace Hazel {
 		// 临时调试接口
 		void RenderVukan();
 		void createDescriptorPool();
+		void createFinalColorSets();
 		void createDescriptorSets();
-		void createGraphicsPipeline();
+		void createFinalColorPipeline();
 
 	private:
 		Ref<VulkanContext> vulkanContext;
@@ -41,12 +42,16 @@ namespace Hazel {
 		};
 		VkDescriptorPool descriptorPool;
 		std::vector<VkDescriptorSet> descriptorSets;
-		Ref<VulkanShader> shader;
+		std::vector<VkDescriptorSet> finaldescriptorSets;
+		Ref<VulkanShader> finalColorShader;
+		Ref<VulkanShader> gBuffershader;
+		Ref<Pipeline> GbufferPipeline;
 		UniformBufferObject* ubo;
 		Ref<VertexBuffer> testVertexBuffer;
 		Ref<IndexBuffer> indexBuffer;
 		Ref<UniformBufferSet> uniformBufferSet;
 		Ref<Texture2D> texture;
+		Ref<Image2D> positionAttachment;
 	public:
 		static Ref<Scene> Copy(Ref<Scene> other);
 

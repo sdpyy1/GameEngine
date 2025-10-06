@@ -52,7 +52,7 @@ namespace Hazel {
 		uint32_t Width = 0;
 		uint32_t Height = 0;
 		glm::vec4 ClearColor = { 0.0f, 0.0f, 0.0f, 1.0f };
-		float DepthClearValue = 0.0f;
+		float DepthClearValue = 1.0f;  // TODO:  原本深度清除值是0，不理解为什么，我还把深度比较改成了less
 		bool ClearColorOnLoad = true;
 		bool ClearDepthOnLoad = true;
 

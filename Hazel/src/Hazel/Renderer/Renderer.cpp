@@ -37,20 +37,30 @@ namespace Hazel {
 		s_RendererAPI = RendererAPI::CreateAPI();
 
 		// º”‘ÿShader
+		Shader::DescriptorBinding finalColorSamplerBinding;
+		finalColorSamplerBinding.binding = 0;
+		finalColorSamplerBinding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		finalColorSamplerBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+		finalColorSamplerBinding.count = 1;
+		Shader::ShaderSpecification finalColorSpec;
+		finalColorSpec.bindings.push_back(finalColorSamplerBinding);
+		s_Data->m_ShaderLibrary->LoadCommonShader("finalColor", "assets/shaders/Debug/vert.spv", "assets/shaders/Debug/frag.spv", finalColorSpec);
+
+
+		// gBufferShader
+		Shader::ShaderSpecification gbufferShaderSpec;
 		Shader::DescriptorBinding uboBinding;
-		uboBinding.binding = 0; 
-		uboBinding.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER; 
-		uboBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT; 
-		uboBinding.count = 1; 
-		Shader::DescriptorBinding uboBinding2;
-		uboBinding2.binding = 1;
-		uboBinding2.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		uboBinding2.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-		uboBinding2.count = 1;
-		Shader::ShaderSpecification uboSpec;
-		uboSpec.bindings.push_back(uboBinding);
-		uboSpec.bindings.push_back(uboBinding2);
-		s_Data->m_ShaderLibrary->LoadCommonShader("test", "assets/shaders/Debug/vert.spv", "assets/shaders/Debug/frag.spv", uboSpec);
+		uboBinding.binding = 0;
+		uboBinding.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		uboBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+		uboBinding.count = 1;
+		gbufferShaderSpec.bindings.push_back(uboBinding);
+		s_Data->m_ShaderLibrary->LoadCommonShader("gBuffer", "assets/shaders/Debug/gBuffervert.spv", "assets/shaders/Debug/gBufferfrag.spv", gbufferShaderSpec);
+
+
+
+
+
 		// º”‘ÿŒ∆¿Ì
 		//uint32_t whiteTextureData = 0xffffffff;
 		//TextureSpecification spec;

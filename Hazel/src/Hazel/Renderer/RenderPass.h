@@ -14,11 +14,11 @@ namespace Hazel {
 
 	struct RenderPassSpecification
 	{
-		Ref<Pipeline> Pipeline;  // ???: 为什么要把RenderPass和Pipeline绑定起来
+		Ref<Pipeline> Pipeline;  // ???: 为什么要把RenderPass和Pipeline绑定起来（解答：这个render Pass不是Vulkan概念，这里的Pass封装了Pass需要的所有东西）
 		std::string DebugName;
 		glm::vec4 MarkerColor;
 	};
-
+	// 很宽泛的指一个渲染的Pass，而不是说Vulkan的RenderPass概念
 	class RenderPass : public RefCounted
 	{
 	public:
