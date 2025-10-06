@@ -10,7 +10,7 @@ namespace Hazel {
 	class Shader : public RefCounted
 	{
 	public:
-		// TODO: 临时，只满足Vulkan
+		// TODO: 临时，只满足Vulkan，如果要抽象，改类型，在Vulkan内部再switch即可
 		struct DescriptorBinding {
 			uint32_t binding;               // 绑定点索引
 			VkDescriptorType type;          // 资源类型（UBO、采样器等）
@@ -19,8 +19,6 @@ namespace Hazel {
 		};
 		struct ShaderSpecification {
 			std::vector<DescriptorBinding> bindings;
-			uint32_t pushConstantSize = 0;
-			VkShaderStageFlags pushConstantStages = 0;
 		};
 		virtual ~Shader() = default;
 		static Ref<Shader> Create(const std::string& name,const std::string& vertFilePath, const std::string& fragFilePath, ShaderSpecification spec);

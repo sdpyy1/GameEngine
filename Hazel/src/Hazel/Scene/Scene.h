@@ -23,7 +23,6 @@ namespace Hazel {
 		
 		// 临时调试接口
 		void RenderVukan();
-		void createDescriptorPool();
 		void createFinalColorSets();
 		void createDescriptorSets();
 		void createFinalColorPipeline();
@@ -40,9 +39,6 @@ namespace Hazel {
 			glm::mat4 view;
 			glm::mat4 proj;
 		};
-		VkDescriptorPool descriptorPool;
-		std::vector<VkDescriptorSet> descriptorSets;
-		std::vector<VkDescriptorSet> finaldescriptorSets;
 		Ref<VulkanShader> finalColorShader;
 		Ref<VulkanShader> gBuffershader;
 		Ref<Pipeline> GbufferPipeline;

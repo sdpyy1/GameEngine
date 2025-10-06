@@ -52,6 +52,7 @@ namespace Hazel {
 		}
 
 		createDescriptorSetLayout();
+		createDescriptorSet();
 
 	}
 
@@ -77,6 +78,58 @@ namespace Hazel {
 		if (vkCreateDescriptorSetLayout(Application::Get().GetRenderContext().As<VulkanContext>()->GetCurrentDevice()->GetVulkanDevice(), &layoutInfo, nullptr, &m_DescriptorSetLayout) != VK_SUCCESS) {
 			throw std::runtime_error("Failed to create descriptor set layout!");
 		}
+	}
+
+	void VulkanShader::createDescriptorSet()
+	{
+		VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+		// 获取并发帧数量（如双缓冲为2，三缓冲为3）
+		uint32_t framesInFlight = Renderer::GetConfig().FramesInFlight;
+		// 目前只使用Set=0，但为每个并发帧创建独立的描述符集
+		uint32_t maxSets = framesInFlight;
+
+		// 统计每种描述符类型的总需求（按并发帧数量计算）
+		std::unordered_map<VkDescriptorType, uint32_t> typeCountMap;
+		for (const auto& binding : m_Spec.bindings) {
+			// 每个绑定的总数量 = 单个集的数量 × 并发帧数量
+			typeCountMap[binding.type] += binding.count * maxSets;
+		}
+
+		// 转换为VkDescriptorPoolSize数组
+		std::vector<VkDescriptorPoolSize> poolSizes;
+		poolSizes.reserve(typeCountMap.size());
+		for (std::unordered_map<VkDescriptorType, uint32_t>::const_iterator it = typeCountMap.begin();
+			it != typeCountMap.end();
+			++it) {
+			VkDescriptorPoolSize poolSize;
+			poolSize.type = it->first;
+			poolSize.descriptorCount = it->second;
+			poolSizes.push_back(poolSize);
+		}
+
+		// 创建描述符池（容量需满足所有并发帧的描述符集）
+		VkDescriptorPoolCreateInfo poolInfo{};
+		poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+		poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
+		poolInfo.pPoolSizes = poolSizes.data();
+		poolInfo.maxSets = maxSets;  // 池中可分配的描述符集数量 = 并发帧数量
+
+		VkResult createPoolResult = vkCreateDescriptorPool(
+			device, &poolInfo, nullptr, &m_DescriptorPool);
+		assert(createPoolResult == VK_SUCCESS && "创建描述符池失败！");
+
+		// 为每个并发帧分配独立的描述符集（Set=0）
+		m_DescriptorSets.resize(maxSets);  // 初始化向量容量
+		std::vector<VkDescriptorSetLayout> layouts(maxSets, m_DescriptorSetLayout);
+		VkDescriptorSetAllocateInfo allocInfo{};
+		allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+		allocInfo.descriptorPool = m_DescriptorPool;
+		allocInfo.descriptorSetCount = maxSets;  // 一次分配所有并发帧的描述符集
+		allocInfo.pSetLayouts = layouts.data();  // 所有集都使用Set=0的布局
+
+		VkResult allocateResult = vkAllocateDescriptorSets(
+			device, &allocInfo, m_DescriptorSets.data());
+		assert(allocateResult == VK_SUCCESS && "分配描述符集失败！");
 	}
 	
 	VulkanShader::~VulkanShader()

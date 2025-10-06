@@ -12,9 +12,11 @@ namespace Hazel {
 		void Reload() override;
 		void RT_Reload() override;
 		void createDescriptorSetLayout();
+		void createDescriptorSet();
 		VkShaderModule GetVertShaderModule() { return m_VertShaderModule; }
 		VkShaderModule GetFragShaderModule() { return m_FragShaderModule; }
 		VkDescriptorSetLayout* GetDescriptorSetLayout() { return &m_DescriptorSetLayout; }
+		std::vector<VkDescriptorSet> GetDescriptorSet() { return m_DescriptorSets; }
 		virtual ~VulkanShader();
 		void Release();
 		virtual const std::string& GetName() const override { return m_Name; }
@@ -28,5 +30,7 @@ namespace Hazel {
 		VkShaderModule m_FragShaderModule;
 		ShaderSpecification m_Spec;
 		VkDescriptorSetLayout m_DescriptorSetLayout;
+		VkDescriptorPool m_DescriptorPool;
+		std::vector<VkDescriptorSet> m_DescriptorSets;
 	};
 }

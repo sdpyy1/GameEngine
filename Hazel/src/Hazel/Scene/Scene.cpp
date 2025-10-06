@@ -99,20 +99,6 @@ namespace Hazel {
 		swapChian = Application::Get().GetWindow()->GetSwapChainPtr();
 		finalColorShader = Renderer::GetShaderLibrary()->Get("finalColor").As<VulkanShader>();
 		gBuffershader = Renderer::GetShaderLibrary()->Get("gBuffer").As<VulkanShader>();
-		//TextureSpecification default2DTexture;
-		//default2DTexture.Format = ImageFormat::RGBA;
-		//default2DTexture.Width = 800;
-		//default2DTexture.Height = 600;
-		//default2DTexture.SamplerWrap = TextureWrap::Repeat;
-		//default2DTexture.SamplerFilter = TextureFilter::Linear;
-		//default2DTexture.GenerateMips = true;
-		//default2DTexture.Storage = false;
-		//default2DTexture.StoreLocally = false;
-		//// 调试名称（可选，便于调试时识别）
-		//default2DTexture.DebugName = "Texture";
-		//texture = Texture2D::Create(default2DTexture, std::filesystem::path("assets/textures/texture.jpg"));
-
-
 
 		// FBO创建好后，Vulkan会自动创建附件图片、深度图片、VkRenderPass
 		FramebufferTextureSpecification positionSpec(ImageFormat::RGBA16F);	
@@ -149,9 +135,8 @@ namespace Hazel {
 		indexBuffer = IndexBuffer::Create((void*)indices.data(), sizeof(indices[0]) * indices.size());
 		uniformBufferSet = UniformBufferSet::Create(sizeof(UniformBufferObject));
 
-		createDescriptorPool();
-		createDescriptorSets();
 		createFinalColorSets();
+		createDescriptorSets();
 	}
 
 	Scene::~Scene()
@@ -217,7 +202,7 @@ namespace Hazel {
 			scissor.offset = { 0, 0 };
 			scissor.extent = instance->swapChian->GetExtent();
 			vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
-			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, instance->GbufferPipeline.As<VulkanPipeline>()->GetVulkanPipelineLayout(), 0, 1, &instance->descriptorSets[flyIndex], 0, nullptr);
+			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, instance->GbufferPipeline.As<VulkanPipeline>()->GetVulkanPipelineLayout(), 0, 1, &instance->GbufferPipeline->GetShader().As<VulkanShader>()->GetDescriptorSet()[flyIndex], 0, nullptr);
 			vkCmdDrawIndexed(
 				commandBuffer,        // 目标命令缓冲区
 				static_cast<uint32_t>(indices.size()), // 索引总数（36个）
@@ -257,7 +242,7 @@ namespace Hazel {
 			scissor.offset = { 0, 0 };
 			scissor.extent = instance->swapChian->GetExtent();
 			vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
-			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, instance->pipelineLayout, 0, 1, &instance->finaldescriptorSets[flyIndex], 0, nullptr);
+			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, instance->pipelineLayout, 0, 1, &instance->finalColorShader->GetDescriptorSet()[flyIndex], 0, nullptr);
 
 			vkCmdDraw(commandBuffer, 3, 1, 0, 0);
 
@@ -276,58 +261,14 @@ namespace Hazel {
 	
 	};
 
-	void Scene::createDescriptorPool() {
-		// 定义两个 Pass 所需的所有描述符类型和数量
-		std::vector<VkDescriptorPoolSize> poolSizes;
-
-		// 1. Pass 1 所需：UNIFORM_BUFFER（每个帧 1 个）
-		VkDescriptorPoolSize uniformBufferPoolSize{};
-		uniformBufferPoolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		uniformBufferPoolSize.descriptorCount = static_cast<uint32_t>(Renderer::GetConfig().FramesInFlight);
-		poolSizes.push_back(uniformBufferPoolSize);
-
-		// 2. Pass 2 所需：COMBINED_IMAGE_SAMPLER（每个帧 1 个）
-		VkDescriptorPoolSize imageSamplerPoolSize{};
-		imageSamplerPoolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		imageSamplerPoolSize.descriptorCount = static_cast<uint32_t>(Renderer::GetConfig().FramesInFlight);
-		poolSizes.push_back(imageSamplerPoolSize);
-
-		// 描述符池创建信息
-		VkDescriptorPoolCreateInfo poolInfo{};
-		poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-		poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());  // 现在有 2 种类型
-		poolInfo.pPoolSizes = poolSizes.data();
-		// 最大描述符集数量：两个 Pass 各 FramesInFlight 个，总和是 2*FramesInFlight
-		poolInfo.maxSets = 2 * static_cast<uint32_t>(Renderer::GetConfig().FramesInFlight);
-
-		// 可选：允许池在描述符集被释放后复用内存（建议开启，更灵活）
-		poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-
-		if (vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS) {
-			throw std::runtime_error("failed to create descriptor pool!");
-		}
-	}
 
 	void Scene::createFinalColorSets() {
-		std::vector<VkDescriptorSetLayout> layouts(Renderer::GetConfig().FramesInFlight, *finalColorShader->GetDescriptorSetLayout());
-		VkDescriptorSetAllocateInfo allocInfo{};
-		allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-		allocInfo.descriptorPool = descriptorPool;
-		allocInfo.descriptorSetCount = static_cast<uint32_t>(Renderer::GetConfig().FramesInFlight);
-		allocInfo.pSetLayouts = layouts.data();
-
-		// 并行运行的每帧都需要一个描述符集，防止互相影响
-		finaldescriptorSets.resize(Renderer::GetConfig().FramesInFlight);
-		if (vkAllocateDescriptorSets(device, &allocInfo, finaldescriptorSets.data()) != VK_SUCCESS) {
-			throw std::runtime_error("failed to allocate descriptor sets!");
-		}
-
+		// 描述符集的写入操作
 		for (size_t i = 0; i < Renderer::GetConfig().FramesInFlight; i++) {
-			// 描述符集的写入操作
 			std::array<VkWriteDescriptorSet, 1> descriptorWrites{};
 
 			descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			descriptorWrites[0].dstSet = finaldescriptorSets[i];  // 要更新的描述符集
+			descriptorWrites[0].dstSet = finalColorShader->GetDescriptorSet()[i];  // 要更新的描述符集
 			descriptorWrites[0].dstBinding = 0; // 绑定点，对应着色器layout(binding = 0)
 			descriptorWrites[0].dstArrayElement = 0; // 数组的第几个元素，这里不是数组所以是0
 			descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -339,19 +280,6 @@ namespace Hazel {
 	}
 
 	void Scene::createDescriptorSets() {
-		std::vector<VkDescriptorSetLayout> layouts(Renderer::GetConfig().FramesInFlight, *gBuffershader->GetDescriptorSetLayout());
-		VkDescriptorSetAllocateInfo allocInfo{};
-		allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-		allocInfo.descriptorPool = descriptorPool;
-		allocInfo.descriptorSetCount = static_cast<uint32_t>(Renderer::GetConfig().FramesInFlight);
-		allocInfo.pSetLayouts = layouts.data();
-
-		// 并行运行的每帧都需要一个描述符集，防止互相影响
-		descriptorSets.resize(Renderer::GetConfig().FramesInFlight);
-		if (vkAllocateDescriptorSets(device, &allocInfo, descriptorSets.data()) != VK_SUCCESS) {
-			throw std::runtime_error("failed to allocate descriptor sets!");
-		}
-
 		for (size_t i = 0; i < Renderer::GetConfig().FramesInFlight; i++) {
 			// 实际的ubo对象
 			VkDescriptorBufferInfo bufferInfo{};
@@ -366,7 +294,7 @@ namespace Hazel {
 			std::array<VkWriteDescriptorSet, 1> descriptorWrites{};
 
 			descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			descriptorWrites[0].dstSet = descriptorSets[i];  // 要更新的描述符集
+			descriptorWrites[0].dstSet = gBuffershader->GetDescriptorSet()[i];  // 要更新的描述符集
 			descriptorWrites[0].dstBinding = 0; // 绑定点，对应着色器layout(binding = 0)
 			descriptorWrites[0].dstArrayElement = 0; // 数组的第几个元素，这里不是数组所以是0
 			descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
