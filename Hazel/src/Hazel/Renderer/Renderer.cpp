@@ -3,12 +3,16 @@
 #include "Platform/Vulkan/VulkanRenderer.h"
 #include "Hazel/Renderer/RendererAPI.h"
 #include <glm/gtc/random.hpp>
+#include <imgui.h>
+#include <Platform/Vulkan/VulkanImage.h>
 
 namespace Hazel {
+	Ref<Texture2D> Renderer::WhiteTexture = nullptr;
 	// 这里存储常用渲染资源
 	struct RendererData
 	{
 		Ref<ShaderLibrary> m_ShaderLibrary;
+		Ref<Texture2D> WhiteTexture;
 	};
 
 	static RendererConfig s_Config;
@@ -52,12 +56,12 @@ namespace Hazel {
 
 
 		// 加载纹理
-		//uint32_t whiteTextureData = 0xffffffff;
-		//TextureSpecification spec;
-		//spec.Format = ImageFormat::RGBA;
-		//spec.Width = 1;
-		//spec.Height = 1;
-		//s_Data->WhiteTexture = Texture2D::Create(spec, Buffer(&whiteTextureData, sizeof(uint32_t)));
+		uint32_t whiteTextureData = 0xffffffff;
+		TextureSpecification spec;
+		spec.Format = ImageFormat::RGBA;
+		spec.Width = 1;
+		spec.Height = 1;
+		WhiteTexture = Texture2D::Create(spec, Buffer(&whiteTextureData, sizeof(uint32_t)));
 
 		// 为并发帧创建了描述符池、提前准备了全屏顶点数据存入了GPU
 		s_RendererAPI->Init();
@@ -149,6 +153,7 @@ namespace Hazel {
 	{
 		return (s_RenderCommandQueueSubmissionIndex + 1) % s_RenderCommandQueueCount;
 	}
+
 	RenderCommandQueue& Renderer::GetRenderCommandQueue()
 	{
 		return *s_CommandQueue[s_RenderCommandQueueSubmissionIndex];

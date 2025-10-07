@@ -23,9 +23,31 @@ project "Hazelnut"
 		"%{IncludeDir.glm}",
 		"%{IncludeDir.ImGuizmo}",
 		"%{IncludeDir.VulkanSDK}/Include",
-
+		"%{IncludeDir.VMA}",
+				"%{IncludeDir.ImGui}",
 	}
-
+	-- includedirs
+	-- {
+	-- 	"src",
+	-- 	"vendor/spdlog/include",
+	-- 	"%{IncludeDir.Box2D}",
+	-- 	"%{IncludeDir.filewatch}",
+	-- 	"%{IncludeDir.GLFW}",
+	-- 	"%{IncludeDir.Glad}",
+	-- 	"%{IncludeDir.ImGui}",
+	-- 	"%{IncludeDir.glm}",
+	-- 	"%{IncludeDir.msdfgen}",
+	-- 	"%{IncludeDir.msdf_atlas_gen}",
+	-- 	"%{IncludeDir.stb_image}",
+	-- 	"%{IncludeDir.entt}",
+	-- 	"%{IncludeDir.mono}",
+	-- 	"%{IncludeDir.yaml_cpp}",
+	-- 	"%{IncludeDir.ImGuizmo}",
+	-- 	"%{IncludeDir.VMA}",
+	-- 	"%{IncludeDir.VulkanSDK}/Include",
+	-- 	"%{IncludeDir.choc}",
+	-- 	"%{IncludeDir.nfd}"
+	-- }
 	links
 	{
 		"Hazel"

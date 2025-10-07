@@ -58,6 +58,16 @@ namespace Hazel {
 		}
 
 	}
+	VkDescriptorSet VulkanRenderer::RT_AllocateDescriptorSet(VkDescriptorSetAllocateInfo& allocInfo)
+	{
+		uint32_t bufferIndex = Renderer::RT_GetCurrentFrameIndex();
+		allocInfo.descriptorPool = s_Data->DescriptorPools[bufferIndex];
+		VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+		VkDescriptorSet result;
+		VK_CHECK_RESULT(vkAllocateDescriptorSets(device, &allocInfo, &result));
+		s_Data->DescriptorPoolAllocationCount[bufferIndex] += allocInfo.descriptorSetCount;
+		return result;
+	}
 	void VulkanRenderer::Init()
 	{
 		// 初始化一些资源
@@ -186,7 +196,6 @@ namespace Hazel {
 				//vkResetCommandBuffer(commandBuffer, /*VkCommandBufferResetFlagBits*/ 0);
 				VkCommandBufferBeginInfo beginInfo{};
 				beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-
 				if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
 					throw std::runtime_error("failed to begin recording command buffer!");
 				}
@@ -232,17 +241,7 @@ namespace Hazel {
 			});
 #endif
 	}
-	VkDescriptorSet VulkanRenderer::RT_AllocateDescriptorSet(VkDescriptorSetAllocateInfo& allocInfo)
-	{
 
-		uint32_t bufferIndex = Renderer::RT_GetCurrentFrameIndex();
-		allocInfo.descriptorPool = s_Data->DescriptorPools[bufferIndex];
-		VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-		VkDescriptorSet result;
-		VK_CHECK_RESULT(vkAllocateDescriptorSets(device, &allocInfo, &result));
-		s_Data->DescriptorPoolAllocationCount[bufferIndex] += allocInfo.descriptorSetCount;
-		return result;
-	}
 	void VulkanRenderer::BeginRenderPass(Ref<RenderPass> renderPass)
 	{
 		uint32_t flyIndex = Renderer::GetCurrentFrameIndex();

@@ -33,7 +33,7 @@ namespace Hazel {
 		std::string Name = "Hazel Application";
 		std::string WorkingDirectory;
 		ApplicationCommandLineArgs CommandLineArgs;
-		bool EnableImGui = false;
+		bool EnableImGui = true;
 	};
 	class VulkanContext;
 	class Application

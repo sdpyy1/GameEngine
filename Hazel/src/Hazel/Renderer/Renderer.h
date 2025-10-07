@@ -31,7 +31,9 @@ namespace Hazel {
 		static void RenderThreadFunc(RenderThread* renderThread);
 		static void WaitAndRender(RenderThread* renderThread);
 		static uint32_t GetRenderQueueIndex();
-
+		static Ref<Texture2D> GetWit() {
+			return WhiteTexture;
+		}
 		static void RT_BeginFrame();
 		static void RT_EndFrame();
 
@@ -84,7 +86,9 @@ namespace Hazel {
 		static RendererCapabilities& GetCapabilities();
 		static uint32_t GetCurrentFrameIndex();
 		static uint32_t RT_GetCurrentFrameIndex();
+
 	private:
+		static Ref<Texture2D> WhiteTexture;
 
 	};
 }

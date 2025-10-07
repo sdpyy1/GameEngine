@@ -23,8 +23,15 @@ namespace Hazel {
 		
 		// 临时调试接口
 		void RenderVukan();
-		void updateFinalColorSets();
+		//void updateFinalColorSets();
 		void updateGBufferSets();
+		Ref<Image2D> GetFinalPassImage()
+		{
+			return gBufferPass->GetPipeline()->GetSpecification().TargetFramebuffer->GetImage(0);
+		}
+
+		void SetViewPortImage();
+
 
 	private:
 		Ref<VulkanContext> vulkanContext;

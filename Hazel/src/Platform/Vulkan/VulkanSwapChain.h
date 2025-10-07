@@ -11,12 +11,10 @@ namespace Hazel {
 
 		VulkanSwapChain(VkInstance m_Instance, const Ref<VulkanDevice>& device);
 		void InitSurface(GLFWwindow* windowHandle);
-		void Create_old(uint32_t* width, uint32_t* height, bool vsync);
+		void Create(uint32_t* width, uint32_t* height, bool vsync);
 		void BeginFrame();
 		void Present();
-		VulkanShader* GetShader() {
-			return shader;
-		}
+
 		std::vector<VkImageView> GetViews() {
 			std::vector<VkImageView> res;
 			for (unsigned i = 0; i < m_ImageCount; i++) {
@@ -24,8 +22,8 @@ namespace Hazel {
 			}
 			return res;
 		}
-		void createFinalColorPipeline();
-		VkPipeline GetPipeline() { return pipeline; }
+		//void createFinalColorPipeline();
+		//VkPipeline GetPipeline() { return pipeline; }
 		void Destroy();
 		void OnResize(uint32_t width, uint32_t height);
 		uint32_t GetImageCount() const { return m_ImageCount; }
@@ -55,7 +53,6 @@ namespace Hazel {
 		uint32_t AcquireNextImage();
 
 	private:
-		VulkanShader* shader;
 		VkInstance m_Instance = nullptr;
 		Ref<VulkanDevice> m_Device;
 		VkSurfaceKHR m_Surface;
@@ -88,8 +85,6 @@ namespace Hazel {
 
 		// Fences to signal that command buffers are ready to be reused (one for each frame in flight)
 		std::vector<VkFence> m_WaitFences;
-		VkPipelineLayout pipelineLayout;
-		VkPipeline pipeline;
 		uint32_t m_CurrentFrameIndex = 0;    // Index of the frame we are currently working on, up to max frames in flight
 		uint32_t m_CurrentImageIndex = 0;    // Index of the current swapchain image.  Can be different from frame index
 	};

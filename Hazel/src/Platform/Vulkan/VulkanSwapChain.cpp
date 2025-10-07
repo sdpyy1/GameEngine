@@ -39,7 +39,7 @@ namespace Hazel
 		GET_INSTANCE_PROC_ADDR(m_Instance, GetQueueCheckpointDataNV);
 	}
 	void VulkanSwapChain::BeginFrame() {
-		 // Resource release queue
+		// Resource release queue
 		auto& queue = Renderer::GetRenderResourceReleaseQueue(m_CurrentFrameIndex);
 		queue.Execute();
 		// 获取下一帧图片
@@ -52,41 +52,7 @@ namespace Hazel
 	// 渲染命令结束后APP调用
 	void VulkanSwapChain::Present()
 	{
-		VkViewport viewport{}; VkRect2D scissor{};
-		uint32_t flyIndex = GetCurrentBufferIndex();
 		VkCommandBuffer commandBuffer = GetCurrentDrawCommandBuffer();
-		VkRenderPassBeginInfo renderPassInfo{};
-		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-		renderPassInfo.renderPass = GetRenderPass();
-		renderPassInfo.framebuffer = GetCurrentFramebuffer();
-		renderPassInfo.renderArea.offset = { 0, 0 };
-
-		renderPassInfo.renderArea.extent = GetExtent();
-
-		VkClearValue clearColor = { {{0.0f, 0.0f, 0.0f, 1.0f}} };
-		renderPassInfo.clearValueCount = 1;
-		renderPassInfo.pClearValues = &clearColor;
-
-		vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
-
-		viewport.x = 0.0f;
-		viewport.y = 0.0f;
-		viewport.width = static_cast<float>(GetExtent().width);
-		viewport.height = static_cast<float>(GetExtent().height);
-		viewport.minDepth = 0.0f;
-		viewport.maxDepth = 1.0f;
-		vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
-
-
-		scissor.offset = { 0, 0 };
-		scissor.extent = GetExtent();
-		vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
-		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &shader->GetDescriptorSet()[flyIndex], 0, nullptr);
-
-		vkCmdDraw(commandBuffer, 3, 1, 0, 0);
-
-		vkCmdEndRenderPass(commandBuffer);
 
 		if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
 			throw std::runtime_error("failed to record command buffer!");
@@ -209,7 +175,7 @@ namespace Hazel
 		FindImageFormatAndColorSpace();
 	}
 
-	void VulkanSwapChain::Create_old(uint32_t* width, uint32_t* height, bool vsync)
+	void VulkanSwapChain::Create(uint32_t* width, uint32_t* height, bool vsync)
 	{
 		m_VSync = vsync;
 
@@ -227,7 +193,7 @@ namespace Hazel
 		HZ_CORE_ASSERT(presentModeCount > 0);
 		std::vector<VkPresentModeKHR> presentModes(presentModeCount);
 		VK_CHECK_RESULT(fpGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, m_Surface, &presentModeCount, presentModes.data()));
-	
+
 		swapchainExtent = {};
 		// If width (and height) equals the special value 0xFFFFFFFF, the size of the surface will be set by the swapchain
 		if (surfCaps.currentExtent.width == (uint32_t)-1)
@@ -504,8 +470,6 @@ namespace Hazel
 				VKUtils::SetDebugUtilsObjectName(m_Device->GetVulkanDevice(), VK_OBJECT_TYPE_FRAMEBUFFER, fmt::format("Swapchain framebuffer (Frame in flight: {})", i), m_Framebuffers[i]);
 			}
 		}
-
-		createFinalColorPipeline();
 	}
 
 	void VulkanSwapChain::Destroy()
@@ -552,9 +516,9 @@ namespace Hazel
 	{
 		auto device = m_Device->GetVulkanDevice();
 		vkDeviceWaitIdle(device);
-		Create_old(&width, &height, m_VSync);
+		Create(&width, &height, m_VSync);
 		vkDeviceWaitIdle(device);
-		
+
 	}
 
 	void VulkanSwapChain::FindImageFormatAndColorSpace()
@@ -585,7 +549,7 @@ namespace Hazel
 			{
 				if (surfaceFormat.format == VK_FORMAT_B8G8R8A8_UNORM)
 				{
-					m_ColorFormat = VK_FORMAT_R8G8B8A8_UNORM;   // 这是线性的， 还有50是自动进行矫正的颜色格式
+					m_ColorFormat = VK_FORMAT_B8G8R8A8_UNORM;   // 这是线性的， 还有50是自动进行矫正的颜色格式
 					m_ColorSpace = surfaceFormat.colorSpace;
 					found_B8G8R8A8_UNORM = true;
 					break;
@@ -627,8 +591,8 @@ namespace Hazel
 
 		return imageIndex;
 	}
-	void VulkanSwapChain::createFinalColorPipeline()
-	{		
+	/*void VulkanSwapChain::createFinalColorPipeline()
+	{
 		// 加载Shader
 		Shader::DescriptorBinding finalColorSamplerBinding;
 		finalColorSamplerBinding.binding = 0;
@@ -748,5 +712,6 @@ namespace Hazel
 
 		//vkDestroyShaderModule(device, fragShaderModule, nullptr);
 		//vkDestroyShaderModule(device, vertShaderModule, nullptr);
-	}
+	//}
+}*/
 }

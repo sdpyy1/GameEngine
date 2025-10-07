@@ -39,10 +39,12 @@ namespace Hazel {
 		Renderer::Init();  // 把渲染API准备好，并提前创建了一些资源
 		m_RenderThread.Pump();  // 因为前边的一些渲染相关的函数都是Render::Submit的，需要让渲染线程执行完他们
 
-		// ImGui初始化
-		//m_ImGuiLayer = new ImGuiLayer();
-		//PushOverlay(m_ImGuiLayer);
-
+		 //ImGui初始化
+		if (m_Specification.EnableImGui)
+		{
+			m_ImGuiLayer = ImGuiLayer::Create();
+			PushOverlay(m_ImGuiLayer);
+		}
 		// TODO:其他系统初始化也在这里
 
 
@@ -80,6 +82,7 @@ namespace Hazel {
 		// 渲染各层的ImGUI窗口
 		for (Layer* layer : m_LayerStack)
 			layer->OnImGuiRender();
+		m_ImGuiLayer->End();
 	}
 
 	void Application::Close()
@@ -145,7 +148,6 @@ namespace Hazel {
 				if (m_Specification.EnableImGui)
 				{
 					Renderer::Submit([app]() { app->RenderImGui(); });
-					Renderer::Submit([=]() { m_ImGuiLayer->End(); });
 				}
 
 				// 提交命令缓冲区、呈现图片

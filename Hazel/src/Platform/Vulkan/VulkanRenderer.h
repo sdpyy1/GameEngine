@@ -18,6 +18,7 @@ namespace Hazel {
 
 		virtual void BeginRenderPass(Ref<RenderPass> renderPass) override;
 		virtual void EndRenderPass() override;
+
 	};
 
 	namespace Utils {

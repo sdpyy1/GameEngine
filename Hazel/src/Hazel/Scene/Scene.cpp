@@ -12,6 +12,7 @@
 #include <glm/glm.hpp>
 
 #include "Entity.h"
+#include "examples/imgui_impl_vulkan.h"
 
 // Box2D
 #include "box2d/b2_world.h"
@@ -26,6 +27,7 @@
 #include <Platform/Vulkan/VulkanTexture.h>
 #include <Platform/Vulkan/VulkanFramebuffer.h>
 #include <Platform/Vulkan/VulkanPipeline.h>
+#include <imgui.h>
 
 namespace Hazel {
 
@@ -99,7 +101,7 @@ namespace Hazel {
 		testVertexBuffer = VertexBuffer::Create((void*)vertices.data(), sizeof(vertices[0]) * vertices.size(), VertexBufferUsage::Static);
 		indexBuffer = IndexBuffer::Create((void*)indices.data(), sizeof(indices[0]) * indices.size());
 		uniformBufferSet = UniformBufferSet::Create(sizeof(UniformBufferObject));
-		updateFinalColorSets();  // TODO:最后呈现Pass需要一张纹理，但是这个目前不知道怎么塞进Vulkan中，只能先放着
+		//updateFinalColorSets();  // TODO:最后呈现Pass需要一张纹理，但是这个目前不知道怎么塞进Vulkan中，只能先放着
 		updateGBufferSets();
 		RenderPassSpecification gBufferPassSpec;
 		gBufferPassSpec.Pipeline = GbufferPipeline;
@@ -145,8 +147,6 @@ namespace Hazel {
 				0                     // 实例偏移（实例化时用，0表示不偏移）
 			);
 			Renderer::EndPass();
-
-
 		});
 	
 		// APP后续
@@ -157,23 +157,23 @@ namespace Hazel {
 	};
 
 
-	void Scene::updateFinalColorSets() {
-		finalColorShader = swapChian->GetShader();
-		// 描述符集的写入操作
-		for (size_t i = 0; i < Renderer::GetConfig().FramesInFlight; i++) {
-			std::array<VkWriteDescriptorSet, 1> descriptorWrites{};
+	//void Scene::updateFinalColorSets() {
+	//	finalColorShader = swapChian->GetShader();
+	//	// 描述符集的写入操作
+	//	for (size_t i = 0; i < Renderer::GetConfig().FramesInFlight; i++) {
+	//		std::array<VkWriteDescriptorSet, 1> descriptorWrites{};
 
-			descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			descriptorWrites[0].dstSet = finalColorShader->GetDescriptorSet()[i];  // 要更新的描述符集
-			descriptorWrites[0].dstBinding = 0; // 绑定点，对应着色器layout(binding = 0)
-			descriptorWrites[0].dstArrayElement = 0; // 数组的第几个元素，这里不是数组所以是0
-			descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-			descriptorWrites[0].descriptorCount = 1; // 绑定点是一个数组时，这里就不是1了
-			descriptorWrites[0].pImageInfo = &GbufferPipeline->GetSpecification().TargetFramebuffer.As<VulkanFramebuffer>()->GetImage(0).As<VulkanImage2D>()->GetDescriptorInfoVulkan(); // 资源信息
+	//		descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+	//		descriptorWrites[0].dstSet = finalColorShader->GetDescriptorSet()[i];  // 要更新的描述符集
+	//		descriptorWrites[0].dstBinding = 0; // 绑定点，对应着色器layout(binding = 0)
+	//		descriptorWrites[0].dstArrayElement = 0; // 数组的第几个元素，这里不是数组所以是0
+	//		descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+	//		descriptorWrites[0].descriptorCount = 1; // 绑定点是一个数组时，这里就不是1了
+	//		descriptorWrites[0].pImageInfo = &GbufferPipeline->GetSpecification().TargetFramebuffer.As<VulkanFramebuffer>()->GetImage(0).As<VulkanImage2D>()->GetDescriptorInfoVulkan(); // 资源信息
 
-			vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
-		}
-	}
+	//		vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+	//	}
+	//}
 
 	void Scene::updateGBufferSets() {
 		for (size_t i = 0; i < Renderer::GetConfig().FramesInFlight; i++) {
@@ -200,11 +200,30 @@ namespace Hazel {
 			vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
 		}
 	}
+	void Image(const Ref<Image2D>& image, const ImVec2& size, const ImVec2& uv0, const ImVec2& uv1, const ImVec4& tint_col = { 1,1,1,1 },
+		const ImVec4& border_col = { 0,0,0,0 })
+	{
+		HZ_CORE_VERIFY(image, "Image is null");
+
+		if (RendererAPI::Current() == RendererAPI::Type::Vulkan)
+		{
+			Ref<VulkanImage2D> vulkanImage = image.As<VulkanImage2D>();
+			const auto& imageInfo = vulkanImage->GetImageInfo();
+			if (!imageInfo.ImageView)
+				return;
+			const auto textureID = ImGui_ImplVulkan_AddTexture(imageInfo.Sampler, imageInfo.ImageView, vulkanImage->GetDescriptorInfoVulkan().imageLayout);
+			ImGui::Image(textureID, size, uv0, uv1, tint_col, border_col);
+		}
+	}
+
+	void Scene::SetViewPortImage()
+	{
+		Ref<Image2D> finalRenderOutput = GetFinalPassImage();
+
+		auto viewportSize = ImGui::GetContentRegionAvail();
+		Image(finalRenderOutput, viewportSize, {0, 0}, {1, 1});
+	}
 	
-
-
-
-
 
 	template<typename... Component>
 	static void CopyComponent(entt::registry& dst, entt::registry& src, const std::unordered_map<UUID, entt::entity>& enttMap)

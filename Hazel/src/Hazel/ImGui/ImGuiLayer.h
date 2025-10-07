@@ -11,23 +11,15 @@ namespace Hazel {
 	class ImGuiLayer : public Layer
 	{
 	public:
-		ImGuiLayer();
-		~ImGuiLayer() = default;
+		virtual void Begin() = 0;
+		virtual void End() = 0;
 
-		virtual void OnAttach() override;
-		virtual void OnDetach() override;
-		virtual void OnEvent(Event& e) override;
-
-		void Begin();
-		void End();
-
-		void BlockEvents(bool block) { m_BlockEvents = block; }
-		
 		void SetDarkThemeColors();
+		void SetDarkThemeV2Colors();
 
-		uint32_t GetActiveWidgetID() const;
-	private:
-		bool m_BlockEvents = true;
+		void AllowInputEvents(bool allowEvents);
+
+		static ImGuiLayer* Create();
 	};
 	
 }
