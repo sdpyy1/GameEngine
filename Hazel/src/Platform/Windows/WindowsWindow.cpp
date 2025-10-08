@@ -43,6 +43,7 @@ namespace Hazel {
 		m_Data.Title = props.Title;
 		m_Data.Width = props.Width;
 		m_Data.Height = props.Height;
+		m_Data.VSync = props.VSync;
 
 		HZ_CORE_INFO("Creating window {0} ({1}, {2})", props.Title, props.Width, props.Height);
 
@@ -82,12 +83,12 @@ namespace Hazel {
 			m_SwapChain = new VulkanSwapChain(context->GetInstanceNative(), context->GetDeviceNative());
 			m_SwapChain->InitSurface(m_Window);
 
-			m_SwapChain->Create(&m_Data.Width, &m_Data.Height, true); // TODO: VSync写死
+			m_SwapChain->Create(&m_Data.Width, &m_Data.Height, m_Data.VSync);
 			HZ_CORE_INFO("Create Vulkan SwapChain Done!");
 		}
 
 		glfwSetWindowUserPointer(m_Window, &m_Data);
-		SetVSync(true);
+		SetVSync(&m_Data.VSync);
 
 		// Set GLFW callbacks
 		glfwSetWindowSizeCallback(m_Window, [](GLFWwindow* window, int width, int height)
@@ -201,7 +202,6 @@ namespace Hazel {
 			m_Data.Width = width;
 			m_Data.Height = height;
 		}
-
 	}
 
 	void WindowsWindow::Shutdown()
@@ -220,9 +220,7 @@ namespace Hazel {
 	void WindowsWindow::OnUpdate()
 	{
 		HZ_PROFILE_FUNCTION();
-
 		glfwPollEvents();
-		//m_RenderContext->SwapBuffers();
 	}
 
 	void WindowsWindow::SetVSync(bool enabled)
@@ -237,8 +235,7 @@ namespace Hazel {
 			m_Data.VSync = enabled;
 		}
 		if (Renderer::Current() == RendererAPI::Type::Vulkan) {
-			HZ_CORE_WARN("TODO: Vulkan SetVSync");
-			m_Data.VSync = false;
+			// Vulkan的实现以及集成在VulkanSwapChain创建中
 		}	
 	}
 

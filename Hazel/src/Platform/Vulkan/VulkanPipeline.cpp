@@ -73,11 +73,10 @@ namespace Hazel {
 
 	VulkanPipeline::~VulkanPipeline()
 	{
-		Renderer::SubmitResourceFree([pipeline = m_VulkanPipeline, pipelineCache = m_PipelineCache, pipelineLayout = m_PipelineLayout]()
+		Renderer::SubmitResourceFree([pipeline = m_VulkanPipeline, pipelineLayout = m_PipelineLayout]()
 			{
 				const auto vulkanDevice = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 				vkDestroyPipeline(vulkanDevice, pipeline, nullptr);
-				vkDestroyPipelineCache(vulkanDevice, pipelineCache, nullptr);
 				vkDestroyPipelineLayout(vulkanDevice, pipelineLayout, nullptr);
 			});
 	}
@@ -348,13 +347,8 @@ namespace Hazel {
 				pipelineCreateInfo.renderPass = framebuffer->GetRenderPass();
 				pipelineCreateInfo.pDynamicState = &dynamicState;
 
-				// What is this pipeline cache?
-				VkPipelineCacheCreateInfo pipelineCacheCreateInfo = {};
-				pipelineCacheCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
-				VK_CHECK_RESULT(vkCreatePipelineCache(device, &pipelineCacheCreateInfo, nullptr, &instance->m_PipelineCache));
-
 				// Create rendering pipeline using the specified states
-				VK_CHECK_RESULT(vkCreateGraphicsPipelines(device, instance->m_PipelineCache, 1, &pipelineCreateInfo, nullptr, &instance->m_VulkanPipeline));
+				VK_CHECK_RESULT(vkCreateGraphicsPipelines(device, VulkanContext::Get()->GetPipelineCache(), 1, &pipelineCreateInfo, nullptr, &instance->m_VulkanPipeline));
 				VKUtils::SetDebugUtilsObjectName(device, VK_OBJECT_TYPE_PIPELINE, instance->m_Specification.DebugName, instance->m_VulkanPipeline);
 			});
 	}

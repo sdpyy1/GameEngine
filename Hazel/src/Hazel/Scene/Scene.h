@@ -23,11 +23,10 @@ namespace Hazel {
 		
 		// 临时调试接口
 		void RenderVukan();
-		//void updateFinalColorSets();
 		void updateGBufferSets();
 		Ref<Image2D> GetFinalPassImage()
 		{
-			return gBufferPass->GetPipeline()->GetSpecification().TargetFramebuffer->GetImage(0);
+			return gBufferPass->GetPipeline()->GetSpecification().TargetFramebuffer->GetImage(1);
 		}
 
 		void SetViewPortImage();
@@ -54,6 +53,7 @@ namespace Hazel {
 		Ref<Texture2D> texture;
 		Ref<Image2D> positionAttachment;
 		Ref<RenderPass> gBufferPass;
+		Ref<RenderCommandBuffer> passCommandBuffer;
 	public:
 		static Ref<Scene> Copy(Ref<Scene> other);
 

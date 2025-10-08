@@ -1,6 +1,7 @@
 #include "hzpch.h"
 #include "RenderCommandQueue.h"
 #include "Hazel/Core/RenderThread.h"
+#include "Hazel/Core/Application.h"
 
 #define HZ_RENDER_TRACE(...) HZ_CORE_TRACE(__VA_ARGS__)
 
@@ -43,17 +44,19 @@ namespace Hazel {
 		//HZ_RENDER_TRACE("RenderCommandQueue::Execute -- {0} commands, {1} bytes", m_CommandCount, (m_CommandBufferPtr - m_CommandBuffer));
 
 		byte* buffer = m_CommandBuffer;
+		if (Application::Get().isRunning() && !Application::Get().isMinimized()) {  // 因为即使最小化事件触发，命令缓存中还有上一帧数据要处理，而窗口大小已经变0了，会出Bug
+			for (uint32_t i = 0; i < m_CommandCount; i++)
+			{
+				RenderCommandFn function = *(RenderCommandFn*)buffer;
+				buffer += sizeof(RenderCommandFn);
 
-		for (uint32_t i = 0; i < m_CommandCount; i++)
-		{
-			RenderCommandFn function = *(RenderCommandFn*)buffer;
-			buffer += sizeof(RenderCommandFn);
-
-			uint32_t size = *(uint32_t*)buffer;
-			buffer += sizeof(uint32_t);
-			function(buffer);
-			buffer += size;
+				uint32_t size = *(uint32_t*)buffer;
+				buffer += sizeof(uint32_t);
+				function(buffer);
+				buffer += size;
+			}
 		}
+
 
 		m_CommandBufferPtr = m_CommandBuffer;
 		m_CommandCount = 0;

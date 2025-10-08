@@ -20,7 +20,7 @@ namespace Hazel {
 		virtual uint32_t BeginTimestampQuery() = 0;
 		virtual void EndTimestampQuery(uint32_t queryID) = 0;
 
-		static Ref<RenderCommandBuffer> Create(uint32_t count = 0, const std::string& debugName = "");
+		static Ref<RenderCommandBuffer> Create(const std::string& debugName = "",uint32_t count = 0);
 		static Ref<RenderCommandBuffer> CreateFromSwapChain(const std::string& debugName = "");
 	};
 

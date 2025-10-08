@@ -12,12 +12,10 @@ namespace Hazel {
 		VulkanContext(void* windowHandle);
 		virtual void Init() override;
 
-		// static func
 		static Ref<VulkanContext> Get() { return Application::Get().GetRenderContext().As<VulkanContext>(); }
 		static VkInstance GetInstance() { return Get()->GetInstanceNative(); }
 		static Ref<VulkanDevice> GetCurrentDevice() { return Get()->GetDeviceNative(); }
-
-		// Get func
+		VkPipelineCache GetPipelineCache() { return m_PipelineCache; }
 		VkInstance GetInstanceNative() { return m_Instance; }
 		Ref<VulkanDevice> GetDeviceNative() { return m_Device; }
 	private:

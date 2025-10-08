@@ -27,10 +27,8 @@ namespace Hazel {
 		VkPipelineLayout GetVulkanPipelineLayout() { return m_PipelineLayout; }
 	private:
 		PipelineSpecification m_Specification;
-
 		VkPipelineLayout m_PipelineLayout = nullptr;
 		VkPipeline m_VulkanPipeline = nullptr;
-		VkPipelineCache m_PipelineCache = nullptr;
 	};
 
 }

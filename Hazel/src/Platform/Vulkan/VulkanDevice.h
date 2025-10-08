@@ -73,7 +73,7 @@ namespace Hazel {
 		VkQueue GetComputeQueue() { return m_ComputeQueue; }
 		VkQueue GetTransferQueue() { return m_TransferQueue; }
 		const Ref<VulkanPhysicalDevice>& GetPhysicalDevice() const { return m_PhysicalDevice; }
-		static Ref<VulkanDevice> Create_old(const Ref<VulkanPhysicalDevice>& physicalDevice, VkPhysicalDeviceFeatures enabledFeatures); // Create Static Device
+		static Ref<VulkanDevice> Create(const Ref<VulkanPhysicalDevice>& physicalDevice, VkPhysicalDeviceFeatures enabledFeatures); // Create Static Device
 		VkDevice GetVulkanDevice() const { return m_LogicalDevice; }
 		VkCommandBuffer GetCommandBuffer(bool begin, bool compute = false);
 		void FlushCommandBuffer(VkCommandBuffer commandBuffer);

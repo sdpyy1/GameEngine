@@ -44,6 +44,8 @@ namespace Hazel {
 
 		void OnEvent(Event& e);
 
+		bool OnWindowMinimize(WindowMinimizeEvent& e);
+		bool isRunning() { return m_Running; }
 		void PushLayer(Layer* layer);
 		void PushOverlay(Layer* layer);
 
@@ -55,6 +57,7 @@ namespace Hazel {
 		ImGuiLayer* GetImGuiLayer() { return m_ImGuiLayer; }
 
 		static Application& Get() { return *s_Instance; }
+		bool isMinimized() { return m_Minimized; }
 		Ref<RenderContext> GetRenderContext() { return GetWindow()->GetRenderContext(); }
 		const ApplicationSpecification& GetSpecification() const { return m_Specification; }
 		uint32_t GetCurrentFrameIndex() const { return m_CurrentFrameIndex; }

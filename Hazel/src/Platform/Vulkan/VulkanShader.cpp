@@ -121,11 +121,10 @@ namespace Hazel {
 
 	void VulkanShader::Reload()
 	{
-		/*Renderer::Submit([instance = Ref(this)]() mutable{
+		Renderer::Submit([instance = Ref(this)]() mutable{
 			HZ_CORE_INFO("Create Shader :{0}", instance->m_Name);
 			instance->RT_Reload();
-		});*/
-		RT_Reload();
+		});
 	}
 
 	
@@ -148,10 +147,9 @@ namespace Hazel {
 		if (vkCreateShaderModule(VulkanContext::GetCurrentDevice()->GetVulkanDevice(), &fragCreateInfo, nullptr, &m_FragShaderModule) != VK_SUCCESS) {
 			throw std::runtime_error("failed to create shader module!");
 		}
-
 		createDescriptorSetLayout();
+		// 当前会给每个Shader（也就是给每个Pass创建一个Pool）
 		createDescriptorSet();
-
 	}
 
 	void VulkanShader::createDescriptorSetLayout() {
@@ -181,18 +179,16 @@ namespace Hazel {
 	void VulkanShader::createDescriptorSet()
 	{
 		VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-		// 获取并发帧数量（如双缓冲为2，三缓冲为3）
+		// 获取并发帧数量
 		uint32_t framesInFlight = Renderer::GetConfig().FramesInFlight;
 		// 目前只使用Set=0，但为每个并发帧创建独立的描述符集
 		uint32_t maxSets = framesInFlight;
-
 		// 统计每种描述符类型的总需求（按并发帧数量计算）
 		std::unordered_map<VkDescriptorType, uint32_t> typeCountMap;
 		for (const auto& binding : m_Spec.bindings) {
 			// 每个绑定的总数量 = 单个集的数量 × 并发帧数量
 			typeCountMap[binding.type] += binding.count * maxSets;
 		}
-
 		// 转换为VkDescriptorPoolSize数组
 		std::vector<VkDescriptorPoolSize> poolSizes;
 		poolSizes.reserve(typeCountMap.size());
@@ -204,18 +200,15 @@ namespace Hazel {
 			poolSize.descriptorCount = it->second;
 			poolSizes.push_back(poolSize);
 		}
-
 		// 创建描述符池（容量需满足所有并发帧的描述符集）
 		VkDescriptorPoolCreateInfo poolInfo{};
 		poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 		poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
 		poolInfo.pPoolSizes = poolSizes.data();
 		poolInfo.maxSets = maxSets;  // 池中可分配的描述符集数量 = 并发帧数量
-
 		VkResult createPoolResult = vkCreateDescriptorPool(
 			device, &poolInfo, nullptr, &m_DescriptorPool);
 		assert(createPoolResult == VK_SUCCESS && "创建描述符池失败！");
-
 		// 为每个并发帧分配独立的描述符集（Set=0）
 		m_DescriptorSets.resize(maxSets);  // 初始化向量容量
 		std::vector<VkDescriptorSetLayout> layouts(maxSets, m_DescriptorSetLayout);
@@ -229,8 +222,29 @@ namespace Hazel {
 			device, &allocInfo, m_DescriptorSets.data());
 		assert(allocateResult == VK_SUCCESS && "分配描述符集失败！");
 	}
-	
+	void VulkanShader::Release() {
+		VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+		if (m_DescriptorPool != VK_NULL_HANDLE) {
+			vkDestroyDescriptorPool(device, m_DescriptorPool, nullptr);
+			m_DescriptorPool = VK_NULL_HANDLE; 
+		}
+		if (m_DescriptorSetLayout != VK_NULL_HANDLE) {
+			vkDestroyDescriptorSetLayout(device, m_DescriptorSetLayout, nullptr);
+			m_DescriptorSetLayout = VK_NULL_HANDLE;
+		}
+
+		if (m_FragShaderModule != VK_NULL_HANDLE) {
+			vkDestroyShaderModule(device, m_FragShaderModule, nullptr);
+			m_FragShaderModule = VK_NULL_HANDLE;
+		}
+		if (m_VertShaderModule != VK_NULL_HANDLE) {
+			vkDestroyShaderModule(device, m_VertShaderModule, nullptr);
+			m_VertShaderModule = VK_NULL_HANDLE;
+		}
+		m_Spec = {}; // 重置为默认状态（根据实际定义调整）
+	}
 	VulkanShader::~VulkanShader()
 	{
+		Release();
 	}
 }

@@ -23,6 +23,7 @@ namespace Hazel {
 		createInstance(); 
 		CreateDevice();
 		createPipelineCache();
+		// VAM初始化
 		VulkanAllocator::Init(m_Device,m_Instance);
 		// 加载Debug Utils扩展函数
 		VKUtils::VulkanLoadDebugUtilsExtensions(m_Instance, m_Device->GetVulkanDevice());
@@ -39,7 +40,7 @@ namespace Hazel {
 		enabledFeatures.independentBlend = true;
 		enabledFeatures.pipelineStatisticsQuery = true;
 		enabledFeatures.shaderStorageImageReadWithoutFormat = true;
-		m_Device = VulkanDevice::Create_old(m_PhysicalDevice, enabledFeatures);
+		m_Device = VulkanDevice::Create(m_PhysicalDevice, enabledFeatures);
 		HZ_CORE_INFO("Create LogicDevice");
 	}
 
@@ -129,7 +130,6 @@ namespace Hazel {
 		pipelineCacheCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
 		VK_CHECK_RESULT(vkCreatePipelineCache(m_Device->GetVulkanDevice(), &pipelineCacheCreateInfo, nullptr, &m_PipelineCache));
 		HZ_CORE_INFO("Pipeline Cache");
-
 	}
 
 	void VulkanContext::CheckVersion() {

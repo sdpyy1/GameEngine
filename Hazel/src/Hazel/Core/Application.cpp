@@ -18,7 +18,7 @@ namespace Hazel {
 	static std::thread::id s_MainThreadID;
 
 	Application::Application(const ApplicationSpecification& specification)
-		: m_Specification(specification),m_RenderThread(ThreadingPolicy::SingleThreaded)
+		: m_Specification(specification),m_RenderThread(ThreadingPolicy::MultiThreaded)
 	{
 		HZ_PROFILE_FUNCTION();
 
@@ -32,12 +32,12 @@ namespace Hazel {
 			std::filesystem::current_path(m_Specification.WorkingDirectory);
 
 		m_Window = Window::Create(WindowProps(m_Specification.Name));  // 这里创建了GLFW窗口、也初始化了RenderContext和SwapChain
-		
 		m_Window->SetEventCallback(HZ_BIND_EVENT_FN(Application::OnEvent));
 		HZ_CORE_ASSERT(NFD::Init() == NFD_OKAY);
 
-		Renderer::Init();  // 把渲染API准备好，并提前创建了一些资源
-		m_RenderThread.Pump();  // 因为前边的一些渲染相关的函数都是Render::Submit的，需要让渲染线程执行完他们
+		Renderer::Init();
+		// 执行当前的Renderer命令
+		m_RenderThread.Pump(); 
 
 		 //ImGui初始化
 		if (m_Specification.EnableImGui)
@@ -46,14 +46,63 @@ namespace Hazel {
 			PushOverlay(m_ImGuiLayer);
 		}
 		// TODO:其他系统初始化也在这里
+	}
 
+	void Application::Run()
+	{
+		HZ_PROFILE_FUNCTION();
 
+		while (m_Running)
+		{
+			// 阻塞等待渲染线程
+			m_RenderThread.BlockUntilRenderComplete();  
 
+			// -----------------同步点：到这里渲染线程和主线程同步----------------------
+			float time = Time::GetTime();
+			Timestep timestep = time - m_LastFrameTime;
+			m_LastFrameTime = time;
+
+			// 这里就做一件事：交换Submit用的命令缓冲区的Index，用下一个命令记录新命令
+			m_RenderThread.NextFrame();
+			// 提醒渲染线程工作，渲染上一帧信息
+			m_RenderThread.Kick(); 
+			// 上一行和下一行表示GPU和渲染线程都开始工作了，在渲染线程渲染上一帧的时候,CPU开始收集下一帧渲染命令
+			if (!m_Minimized)
+			{
+				// 重置DrawCall=0，（交换链的Begin也写在这里了：获取下一帧图片索引、清空交换链的命令缓冲区)
+				Renderer::BeginFrame();  // 也是RT_ 只是没标明
+
+				// 更新各层
+				{
+					for (Layer* layer : m_LayerStack)
+						layer->OnUpdate(timestep);
+				}
+
+				// GUI渲染
+				Application* app = this;
+				if (m_Specification.EnableImGui)
+				{
+					Renderer::Submit([app]() { app->RenderImGui(); });
+				}
+
+				// 提交命令缓冲区、呈现图片
+				Renderer::EndFrame();  
+			}
+			// 记录信息
+			m_CurrentFrameIndex = (m_CurrentFrameIndex + 1) % Renderer::GetConfig().FramesInFlight;
+			static uint64_t frameCounter = 0;
+			frameCounter++;
+
+			m_Window->OnUpdate();
+			ExecuteMainThreadQueue();
+
+		}
 	}
 
 	Application::~Application()
 	{
 		HZ_PROFILE_FUNCTION();
+		m_RenderThread.Terminate();
 
 		//ScriptEngine::Shutdown();
 		Renderer::Shutdown();
@@ -105,65 +154,22 @@ namespace Hazel {
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<WindowCloseEvent>(HZ_BIND_EVENT_FN(Application::OnWindowClose));
 		dispatcher.Dispatch<WindowResizeEvent>(HZ_BIND_EVENT_FN(Application::OnWindowResize));
+		dispatcher.Dispatch<WindowMinimizeEvent>(HZ_BIND_EVENT_FN(Application::OnWindowMinimize));
 
 		for (auto it = m_LayerStack.rbegin(); it != m_LayerStack.rend(); ++it)
 		{
-			if (e.Handled) 
+			if (e.Handled)
 				break;
 			(*it)->OnEvent(e);
 		}
 	}
-
-	void Application::Run()
+	bool Application::OnWindowMinimize(WindowMinimizeEvent& e)
 	{
-		HZ_PROFILE_FUNCTION();
+		m_Minimized = e.IsMinimized();
 
-		while (m_Running)
-		{
-			m_RenderThread.BlockUntilRenderComplete();  // 阻塞等待渲染线程完成渲染
+		return false;
 
-			float time = Time::GetTime();
-			Timestep timestep = time - m_LastFrameTime; 
-			m_LastFrameTime = time;
-
-			ExecuteMainThreadQueue();
-			m_RenderThread.NextFrame();
-
-			// Start rendering previous frame
-			m_RenderThread.Kick(); // 通知渲染线程开始渲染（RenderCommandQueue缓存的命令全部执行）
-
-			if (!m_Minimized)
-			{
-				// 重置DrawCall=0，重置描述符池,清空命令缓冲区、获取下一帧图片索引,并开始记录命令
-				Renderer::RT_BeginFrame();  // 也是RT_ 只是没标明
-
-				// 更新各层
-				{
-					for (Layer* layer : m_LayerStack)
-						layer->OnUpdate(timestep);  // 这里就是填装渲染指令的地方
-				}
-
-				// GUI渲染
-				Application* app = this;
-				if (m_Specification.EnableImGui)
-				{
-					Renderer::Submit([app]() { app->RenderImGui(); });
-				}
-
-				// 提交命令缓冲区、呈现图片
-				Renderer::RT_EndFrame();  
-
-			}
-
-			// 记录信息
-			m_CurrentFrameIndex = (m_CurrentFrameIndex + 1) % Renderer::GetConfig().FramesInFlight;
-			static uint64_t frameCounter = 0;
-			frameCounter++;
-
-			m_Window->OnUpdate();
-		}
 	}
-
 	bool Application::OnWindowClose(WindowCloseEvent& e)
 	{
 		m_Running = false;

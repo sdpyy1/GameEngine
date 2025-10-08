@@ -22,11 +22,11 @@ namespace Hazel {
 		static void Shutdown();
 		static Ref<ShaderLibrary> GetShaderLibrary();
 
-		static void BeginPass(Ref<RenderPass> renderPass);
-		static void EndPass();
+		static void BeginRenderPass(Ref<RenderCommandBuffer> commandBuffer,Ref<RenderPass> renderPass,bool explicitClear);
+		static void EndRenderPass(Ref<RenderCommandBuffer> commandBuffer);
 		static void SwapQueues(); // 交换Buffer命令缓冲
-		static void BindVertData(Ref<VertexBuffer> testVertexBuffer);
-		static void BindIndexData(Ref<IndexBuffer> indexBuffer);
+		static void BindVertData(Ref<RenderCommandBuffer> commandBuffer, Ref<VertexBuffer> testVertexBuffer);
+		static void BindIndexDataAndDraw(Ref<RenderCommandBuffer> commandBuffer, Ref<IndexBuffer> indexBuffer);
 		static RendererAPI::Type Current() { return RendererAPI::Current(); }
 		static void RenderThreadFunc(RenderThread* renderThread);
 		static void WaitAndRender(RenderThread* renderThread);
@@ -34,8 +34,8 @@ namespace Hazel {
 		static Ref<Texture2D> GetWit() {
 			return WhiteTexture;
 		}
-		static void RT_BeginFrame();
-		static void RT_EndFrame();
+		static void BeginFrame();
+		static void EndFrame();
 
 		template<typename FuncT>
 		static void Submit(FuncT&& func)  // FuncT&&可以接收各种类型的函数对象，包括lambda表达式、函数指针等

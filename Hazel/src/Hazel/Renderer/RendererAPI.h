@@ -25,13 +25,13 @@ namespace Hazel {
 
 		virtual void Init() = 0;
 		virtual void Shutdown() = 0;
-		virtual void RT_BeginFrame() = 0;
-		virtual void RT_EndFrame() = 0;
-		virtual void BeginRenderPass(Ref<RenderPass> renderPass) = 0;
-		virtual void EndRenderPass() = 0;
+		virtual void BeginFrame() = 0;
+		virtual void EndFrame() = 0;
+		virtual void BeginRenderPass(Ref<RenderCommandBuffer> commandBuffer, Ref<RenderPass> renderPass, bool explicitClear) = 0;
+		virtual void EndRenderPass(Ref<RenderCommandBuffer> renderCommandBuffer) = 0;
 		static RendererAPI* CreateAPI();
-		virtual void BindVertData(Ref<VertexBuffer> testVertexBuffer) = 0;
-		virtual void BindIndexData(Ref<IndexBuffer> indexBuffer) = 0;
+		virtual void BindVertData(Ref<RenderCommandBuffer> commandBuffer, Ref<VertexBuffer> testVertexBuffer) = 0;
+		virtual void BindIndexDataAndDraw(Ref<RenderCommandBuffer> commandBuffer, Ref<IndexBuffer> indexBuffer) = 0;
 		static Type Current() { return s_API; }
 	private:
 		static Type s_API;

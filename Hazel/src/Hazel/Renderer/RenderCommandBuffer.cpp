@@ -7,7 +7,7 @@
 
 namespace Hazel {
 
-	Ref<RenderCommandBuffer> RenderCommandBuffer::Create(uint32_t count, const std::string& debugName)
+	Ref<RenderCommandBuffer> RenderCommandBuffer::Create(const std::string& debugName,uint32_t count)
 	{
 		switch (RendererAPI::Current())
 		{

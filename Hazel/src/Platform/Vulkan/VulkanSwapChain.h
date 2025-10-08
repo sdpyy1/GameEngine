@@ -78,7 +78,7 @@ namespace Hazel {
 			VkCommandPool CommandPool = nullptr;
 			VkCommandBuffer CommandBuffer = nullptr;
 		};
-		std::vector<SwapchainCommandBuffer> m_CommandBuffers;
+		std::vector<SwapchainCommandBuffer> m_CommandBuffers;  // ÷ª”√”⁄ImGUI
 		// Semaphores to signal that images are available for rendering and that rendering has finished (one pair for each frame in flight)
 		std::vector<VkSemaphore> m_ImageAvailableSemaphores;
 		std::vector<VkSemaphore> m_RenderFinishedSemaphores;

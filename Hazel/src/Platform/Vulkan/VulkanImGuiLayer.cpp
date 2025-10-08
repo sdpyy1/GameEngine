@@ -4,8 +4,8 @@
 #ifndef IMGUI_IMPL_API
 #define IMGUI_IMPL_API
 #endif
-#include "examples/imgui_impl_glfw.h"
-#include "examples/imgui_impl_vulkan.h"
+#include "backends/imgui_impl_glfw.h"
+#include "examples/imgui_impl_vulkan_with_textures.h"
 #include "Hazel/Core/Application.h"
 #include <GLFW/glfw3.h>
 #include "Hazel/Renderer/Renderer.h"
@@ -29,7 +29,6 @@ namespace Hazel {
 
 	void VulkanImGuiLayer::Begin()
 	{
-
 		ImGui_ImplVulkan_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
@@ -37,24 +36,26 @@ namespace Hazel {
 
 	void VulkanImGuiLayer::End()
 	{
-
 		ImGui::Render();
-		VulkanSwapChain& swapChain = Application::Get().GetWindow()->GetSwapChain();
 
+		VulkanSwapChain& swapChain = Application::Get().GetWindow()->GetSwapChain();
 		VkClearValue clearValues[2];
 		clearValues[0].color = { {0.1f, 0.1f,0.1f, 1.0f} };
 		clearValues[1].depthStencil = { 1.0f, 0 };
 
 		uint32_t width = swapChain.GetWidth();
 		uint32_t height = swapChain.GetHeight();
+
 		uint32_t commandBufferIndex = swapChain.GetCurrentBufferIndex();
+
 		VkCommandBufferBeginInfo drawCmdBufInfo = {};
 		drawCmdBufInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 		drawCmdBufInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 		drawCmdBufInfo.pNext = nullptr;
 
 		VkCommandBuffer drawCommandBuffer = swapChain.GetCurrentDrawCommandBuffer();
-		//VK_CHECK_RESULT(vkBeginCommandBuffer(drawCommandBuffer, &drawCmdBufInfo));
+		VK_CHECK_RESULT(vkBeginCommandBuffer(drawCommandBuffer, &drawCmdBufInfo));
+
 		VkRenderPassBeginInfo renderPassBeginInfo = {};
 		renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 		renderPassBeginInfo.pNext = nullptr;
@@ -68,6 +69,7 @@ namespace Hazel {
 		renderPassBeginInfo.framebuffer = swapChain.GetCurrentFramebuffer();
 
 		vkCmdBeginRenderPass(drawCommandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
+
 		VkCommandBufferInheritanceInfo inheritanceInfo = {};
 		inheritanceInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
 		inheritanceInfo.renderPass = swapChain.GetRenderPass();
@@ -108,7 +110,7 @@ namespace Hazel {
 
 		vkCmdEndRenderPass(drawCommandBuffer);
 
-		//VK_CHECK_RESULT(vkEndCommandBuffer(drawCommandBuffer));
+		VK_CHECK_RESULT(vkEndCommandBuffer(drawCommandBuffer));
 
 		ImGuiIO& io = ImGui::GetIO(); (void)io;
 		// Update and Render additional Platform Windows
@@ -128,8 +130,7 @@ namespace Hazel {
 		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
 		//io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
-		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
-
+		//io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows  开启这个会让多线程渲染出问题，无法控制主窗口之外的窗口
 		//// Configure Fonts
 		//{
 		//	UI::FontConfiguration robotoBold;

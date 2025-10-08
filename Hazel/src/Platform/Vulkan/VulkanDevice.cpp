@@ -172,7 +172,7 @@ namespace Hazel
 	{
 		return Ref<VulkanPhysicalDevice>::Create(vkInstance);
 	}
-	Ref<VulkanDevice> VulkanDevice::Create_old(const Ref<VulkanPhysicalDevice>& physicalDevice, VkPhysicalDeviceFeatures enabledFeatures)
+	Ref<VulkanDevice> VulkanDevice::Create(const Ref<VulkanPhysicalDevice>& physicalDevice, VkPhysicalDeviceFeatures enabledFeatures)
 	{
 		return Ref<VulkanDevice>::Create(physicalDevice, enabledFeatures);
 	}

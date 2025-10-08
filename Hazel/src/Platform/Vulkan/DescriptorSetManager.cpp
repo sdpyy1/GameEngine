@@ -11,6 +11,7 @@
 #include "VulkanTexture.h"
 
 #include "Hazel/Debug/Profiler.h"
+#include "VulkanRenderPass.h"
 
 namespace Hazel {
 
@@ -223,6 +224,7 @@ namespace Hazel {
 		else
 			HZ_CORE_WARN_TAG("Renderer", "[RenderPass ({})] Input {} not found", m_Specification.DebugName, name);
 	}
+
 
 	bool DescriptorSetManager::IsInvalidated(uint32_t set, uint32_t binding) const
 	{

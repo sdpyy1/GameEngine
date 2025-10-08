@@ -10,14 +10,14 @@ namespace Hazel {
 
 		virtual RendererCapabilities& GetCapabilities() override;
 
-		virtual void RT_BeginFrame() override;
-		virtual void RT_EndFrame() override;
-		virtual void BindVertData(Ref<VertexBuffer> testVertexBuffer) override;
-		virtual void BindIndexData(Ref<IndexBuffer> indexBuffer) override;
+		virtual void BeginFrame() override;
+		virtual void EndFrame() override;
+		virtual void BindVertData(Ref<RenderCommandBuffer> commandBuffer, Ref<VertexBuffer> testVertexBuffer) override;
+		virtual void BindIndexDataAndDraw(Ref<RenderCommandBuffer> commandBuffer, Ref<IndexBuffer> indexBuffer) override;
 		static VkDescriptorSet RT_AllocateDescriptorSet(VkDescriptorSetAllocateInfo& allocInfo);
 
-		virtual void BeginRenderPass(Ref<RenderPass> renderPass) override;
-		virtual void EndRenderPass() override;
+		virtual void BeginRenderPass(Ref<RenderCommandBuffer> commandBuffer, Ref<RenderPass> renderPass, bool explicitClear) override;
+		virtual void EndRenderPass(Ref<RenderCommandBuffer> commandBuffer) override;
 
 	};
 

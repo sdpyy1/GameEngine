@@ -21,6 +21,10 @@ namespace Hazel {
 		virtual void OnImGuiRender() override;
 		void OnEvent(Event& e) override;
 
+
+		// 各种窗口创建
+		void ViewportGUI();
+		void TestGUI();
 	private:
 		Scene scene;  // 场景
 		EditorCamera camera; // 摄像机

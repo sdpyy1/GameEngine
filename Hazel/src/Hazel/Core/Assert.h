@@ -19,10 +19,12 @@
 	#define HZ_ASSERT(...) HZ_EXPAND_MACRO( HZ_INTERNAL_ASSERT_GET_MACRO(__VA_ARGS__)(_, __VA_ARGS__) )
 	#define HZ_CORE_ASSERT(...) HZ_EXPAND_MACRO( HZ_INTERNAL_ASSERT_GET_MACRO(__VA_ARGS__)(_CORE_, __VA_ARGS__) )
 	#define HZ_CORE_VERIFY_MESSAGE_INTERNAL(...)  ::Hazel::Log::GetCoreLogger()->critical(  "Verify Failed: {}",  fmt::format(__VA_ARGS__))
-	#define HZ_CORE_VERIFY(condition, ...) { if(!(condition)) { HZ_CORE_VERIFY_MESSAGE_INTERNAL(__VA_ARGS__); } }
-	#define HZ_CORE_VERIFY(condition) { if(!(condition)) { HZ_CORE_VERIFY_MESSAGE_INTERNAL("ERROR"); } }
-	#define HZ_CORE_VERFIY(condition, fmt, ...) 
+	#define HZ_CORE_VERIFY(...) HZ_ASSERT(__VA_ARGS__)
+// TODO：带format还不支持
+	#define HZ_CORE_VERFIY(condition, format, ...)
 #else
 	#define HZ_ASSERT(...)
 	#define HZ_CORE_ASSERT(...)
+	#define HZ_CORE_VERIFY(...)
+	#define HZ_CORE_VERFIY(condition, format, ...)
 #endif

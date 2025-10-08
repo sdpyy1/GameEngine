@@ -138,7 +138,7 @@ namespace Hazel {
 		Ref<VulkanFramebuffer> instance = this;
 		Renderer::Submit([instance, width, height]() mutable
 			{
-				/*instance->m_Width = (uint32_t)(width * instance->m_Specification.Scale);
+				instance->m_Width = (uint32_t)(width * instance->m_Specification.Scale);
 				instance->m_Height = (uint32_t)(height * instance->m_Specification.Scale);
 				if (!instance->m_Specification.SwapChainTarget)
 				{
@@ -151,23 +151,10 @@ namespace Hazel {
 
 					instance->m_ClearValues.clear();
 					instance->m_ClearValues.emplace_back().color = { 0.0f, 0.0f, 0.0f, 1.0f };
-				}*/
+				}
 
 			});
-		instance->m_Width = (uint32_t)(width * instance->m_Specification.Scale);
-		instance->m_Height = (uint32_t)(height * instance->m_Specification.Scale);
-		if (!instance->m_Specification.SwapChainTarget)
-		{
-			instance->RT_Invalidate();
-		}
-		else
-		{
-			VulkanSwapChain& swapChain = Application::Get().GetWindow()->GetSwapChain();
-			instance->m_RenderPass = swapChain.GetRenderPass();
 
-			instance->m_ClearValues.clear();
-			instance->m_ClearValues.emplace_back().color = { 0.0f, 0.0f, 0.0f, 1.0f };
-		}
 		for (auto& callback : m_ResizeCallbacks)
 			callback(this);
 	}

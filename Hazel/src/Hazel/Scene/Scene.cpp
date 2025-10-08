@@ -12,7 +12,7 @@
 #include <glm/glm.hpp>
 
 #include "Entity.h"
-#include "examples/imgui_impl_vulkan.h"
+#include "examples/imgui_impl_vulkan_with_textures.h"
 
 // Box2D
 #include "box2d/b2_world.h"
@@ -37,7 +37,7 @@ namespace Hazel {
 		glm::vec2 texCoord;
 	};
 	const std::vector<Vertex> vertices = {
-				{{-0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
+		{{-0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
 		{{0.5f, -0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
 		{{0.5f, 0.5f, -0.5f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
 		{{-0.5f, 0.5f, -0.5f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}},
@@ -55,6 +55,9 @@ namespace Hazel {
 
 
 	void Scene::updateUniformBuffer(uint32_t currentImage) {
+		if (swapChian->GetExtent().width == 0 && (float)swapChian->GetExtent().height == 0) {
+			return;
+		}
 		static auto startTime = std::chrono::high_resolution_clock::now();
 		auto currentTime = std::chrono::high_resolution_clock::now();
 		float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
@@ -66,6 +69,7 @@ namespace Hazel {
 	}
 	Scene::Scene()
 	{
+		passCommandBuffer = RenderCommandBuffer::Create("PassCommandBuffer");
 		vulkanContext = Application::Get().GetRenderContext().As<VulkanContext>();
 		swapChian = Application::Get().GetWindow()->GetSwapChainPtr();
 		gBuffershader = Renderer::GetShaderLibrary()->Get("gBuffer").As<VulkanShader>();
@@ -95,17 +99,23 @@ namespace Hazel {
 		pSpec.DebugName = "GbufferPipeline";
 		GbufferPipeline = Pipeline::Create(pSpec);
 
-		device = vulkanContext->GetCurrentDevice()->GetVulkanDevice();
 		ubo = new UniformBufferObject();
 		// 顶点创建
 		testVertexBuffer = VertexBuffer::Create((void*)vertices.data(), sizeof(vertices[0]) * vertices.size(), VertexBufferUsage::Static);
 		indexBuffer = IndexBuffer::Create((void*)indices.data(), sizeof(indices[0]) * indices.size());
 		uniformBufferSet = UniformBufferSet::Create(sizeof(UniformBufferObject));
-		//updateFinalColorSets();  // TODO:最后呈现Pass需要一张纹理，但是这个目前不知道怎么塞进Vulkan中，只能先放着
-		updateGBufferSets();
+
 		RenderPassSpecification gBufferPassSpec;
 		gBufferPassSpec.Pipeline = GbufferPipeline;
 		gBufferPass = RenderPass::Create(gBufferPassSpec);
+		TextureSpecification textureSpec;
+		textureSpec.Width = 100;
+		textureSpec.Height = 100;
+		std::filesystem::path path = "assets/textures/texture.jpg";
+		texture = Texture2D::Create(textureSpec, path);
+		gBufferPass->SetInput(uniformBufferSet, 0);  // 传递实际数据给Shader
+		gBufferPass->SetInput(texture, 1);  // 传递实际数据给Shader
+
 	}
 
 	Scene::~Scene()
@@ -114,92 +124,21 @@ namespace Hazel {
 	}
 
 	void Scene::RenderVukan() {
-	
-		// 交给APP完成的事情
-		// 1. 获取下一帧图片ID
-		// 2. 重置命令缓冲区
-		// 3. 开始记录命令
+		passCommandBuffer->Begin();
+		uint32_t flyIndex = Renderer::GetCurrentFrameIndex();
+		updateUniformBuffer(flyIndex);
 
-		// 这里完成的
-		// 4. 绑定Pass
-		// 5. 绑定PipleLine
-		// 6. 更新UBO
-		// 7. 绑定描述符集（资源）
-		// 8. 绘图API
-		// 9. 结束Pass
-		// 10. 结束命令记录
-		Scene* instance = this;
-		Renderer::Submit([instance]() mutable {
-			uint32_t flyIndex = Renderer::GetCurrentFrameIndex();
-			instance->updateUniformBuffer(flyIndex);
-			VkCommandBuffer commandBuffer = Application::Get().GetWindow()->GetSwapChainPtr()->GetCurrentDrawCommandBuffer();
+		Renderer::BeginRenderPass(passCommandBuffer,gBufferPass,true);
 
-			Renderer::BeginPass(instance->gBufferPass);
-			VkBuffer vertexBuffers[] = { instance->testVertexBuffer.As<VulkanVertexBuffer>()->GetVulkanBuffer() };
-			Renderer::BindVertData(instance->testVertexBuffer);
-			Renderer::BindIndexData(instance->indexBuffer);
-			vkCmdDrawIndexed(
-				commandBuffer,        // 目标命令缓冲区
-				static_cast<uint32_t>(indices.size()), // 索引总数（36个）
-				1,                    // 绘制的实例数量（1个立方体，不实例化）
-				0,                    // 索引偏移（从第0个索引开始）
-				0,                    // 顶点偏移（每个索引对应的顶点索引 + 此值，0表示不偏移）
-				0                     // 实例偏移（实例化时用，0表示不偏移）
-			);
-			Renderer::EndPass();
-		});
-	
-		// APP后续
-		// 11. 提交命令
-		// 12. 呈现图片
-	
-	
+		Renderer::BindVertData(passCommandBuffer,testVertexBuffer);
+		Renderer::BindIndexDataAndDraw(passCommandBuffer,indexBuffer);
+		
+		Renderer::EndRenderPass(passCommandBuffer);
+		passCommandBuffer->End();
+		passCommandBuffer->Submit();
+
 	};
 
-
-	//void Scene::updateFinalColorSets() {
-	//	finalColorShader = swapChian->GetShader();
-	//	// 描述符集的写入操作
-	//	for (size_t i = 0; i < Renderer::GetConfig().FramesInFlight; i++) {
-	//		std::array<VkWriteDescriptorSet, 1> descriptorWrites{};
-
-	//		descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-	//		descriptorWrites[0].dstSet = finalColorShader->GetDescriptorSet()[i];  // 要更新的描述符集
-	//		descriptorWrites[0].dstBinding = 0; // 绑定点，对应着色器layout(binding = 0)
-	//		descriptorWrites[0].dstArrayElement = 0; // 数组的第几个元素，这里不是数组所以是0
-	//		descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	//		descriptorWrites[0].descriptorCount = 1; // 绑定点是一个数组时，这里就不是1了
-	//		descriptorWrites[0].pImageInfo = &GbufferPipeline->GetSpecification().TargetFramebuffer.As<VulkanFramebuffer>()->GetImage(0).As<VulkanImage2D>()->GetDescriptorInfoVulkan(); // 资源信息
-
-	//		vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
-	//	}
-	//}
-
-	void Scene::updateGBufferSets() {
-		for (size_t i = 0; i < Renderer::GetConfig().FramesInFlight; i++) {
-			// 实际的ubo对象
-			VkDescriptorBufferInfo bufferInfo{};
-			bufferInfo.buffer = uniformBufferSet->Get(i).As<VulkanUniformBuffer>()->GetVkBuffer();
-			bufferInfo.offset = 0;
-			bufferInfo.range = sizeof(UniformBufferObject);
-			// 实际的纹理对象
-			//VkDescriptorImageInfo imageInfo{};
-			//imageInfo = texture.As<VulkanTexture2D>()->GetDescriptorInfoVulkan();
-
-			// 描述符集的写入操作
-			std::array<VkWriteDescriptorSet, 1> descriptorWrites{};
-
-			descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			descriptorWrites[0].dstSet = gBuffershader->GetDescriptorSet()[i];  // 要更新的描述符集
-			descriptorWrites[0].dstBinding = 0; // 绑定点，对应着色器layout(binding = 0)
-			descriptorWrites[0].dstArrayElement = 0; // 数组的第几个元素，这里不是数组所以是0
-			descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-			descriptorWrites[0].descriptorCount = 1; // 绑定点是一个数组时，这里就不是1了
-			descriptorWrites[0].pBufferInfo = &uniformBufferSet->Get(i).As<VulkanUniformBuffer>()->GetDescriptorBufferInfo(); // 资源信息
-
-			vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
-		}
-	}
 	void Image(const Ref<Image2D>& image, const ImVec2& size, const ImVec2& uv0, const ImVec2& uv1, const ImVec4& tint_col = { 1,1,1,1 },
 		const ImVec4& border_col = { 0,0,0,0 })
 	{

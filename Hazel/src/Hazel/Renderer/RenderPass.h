@@ -26,6 +26,8 @@ namespace Hazel {
 
 		virtual RenderPassSpecification& GetSpecification() = 0;
 		virtual const RenderPassSpecification& GetSpecification() const = 0;
+		virtual void SetInput(Ref<UniformBufferSet> UboSet, uint32_t Binding) = 0;
+		virtual void SetInput(Ref<Texture2D> texture, uint32_t Binding) = 0;
 
 		virtual Ref<Pipeline> GetPipeline() const = 0;
 

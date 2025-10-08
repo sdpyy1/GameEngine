@@ -1,8 +1,6 @@
 #pragma once
 #include <vulkan/vulkan.h>
 namespace Hazel {
-// TODO: Vulkan错误检查
-// 宏定义：执行函数 f 并检查返回结果
 #define VK_CHECK_RESULT(f)\
 {\
 	VkResult res = (f);\

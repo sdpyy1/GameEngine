@@ -11,7 +11,7 @@ namespace Hazel {
 	public:
 
 		VulkanUniformBufferSet(uint32_t size, uint32_t framesInFlight)
-			: m_FramesInFlight(framesInFlight)
+			: m_FramesInFlight(framesInFlight),m_PreSize(size)
 		{
 			if (framesInFlight == 0)
 				m_FramesInFlight = Renderer::GetConfig().FramesInFlight;
@@ -50,9 +50,10 @@ namespace Hazel {
 			m_UniformBuffers[frame]->SetData(data, size, offset);
 
 		};
-
+		uint32_t Get_PreSize() { return m_PreSize; };
 	private:
 		uint32_t m_FramesInFlight = 0;
+		uint32_t m_PreSize = 0;
 		std::map<uint32_t, Ref<UniformBuffer>> m_UniformBuffers;
 	};
 }

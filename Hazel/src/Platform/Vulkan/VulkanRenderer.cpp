@@ -12,6 +12,9 @@
 #include "VulkanPipeline.h"
 #include "VulkanVertexBuffer.h"
 #include "VulkanIndexBuffer.h"
+#include "VulkanRenderCommandBuffer.h"
+#include <glm/gtc/type_ptr.hpp>
+#include "VulkanRenderPass.h"
 
 namespace Hazel {
 	struct VulkanRendererData
@@ -176,56 +179,46 @@ namespace Hazel {
 	{
 		return s_Data->RenderCaps;
 	}
-	void VulkanRenderer::RT_BeginFrame()
+	void VulkanRenderer::BeginFrame()
 	{
 		Renderer::Submit([]()
 			{
-
 				VulkanSwapChain& swapChain = Application::Get().GetWindow()->GetSwapChain();
 				// 清空命令缓冲区、获取下一帧图片索引
 				swapChain.BeginFrame();
 				// Reset descriptor pools here
 				VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 				uint32_t bufferIndex = swapChain.GetCurrentBufferIndex();
-				vkResetDescriptorPool(device, s_Data->DescriptorPools[bufferIndex], 0);
-				memset(s_Data->DescriptorPoolAllocationCount.data(), 0, s_Data->DescriptorPoolAllocationCount.size() * sizeof(uint32_t));
+
+				// TODO:这个Pool 目前我还没用到，目前每个Shader一个Pool
+				//vkResetDescriptorPool(device, s_Data->DescriptorPools[bufferIndex], 0);
+				//memset(s_Data->DescriptorPoolAllocationCount.data(), 0, s_Data->DescriptorPoolAllocationCount.size() * sizeof(uint32_t));
 
 				s_Data->DrawCallCount = 0;
-				uint32_t flyIndex = Application::Get().GetWindow()->GetSwapChainPtr()->GetCurrentBufferIndex();
-				VkCommandBuffer commandBuffer = Application::Get().GetWindow()->GetSwapChainPtr()->GetCurrentDrawCommandBuffer();
-				//vkResetCommandBuffer(commandBuffer, /*VkCommandBufferResetFlagBits*/ 0);
-				VkCommandBufferBeginInfo beginInfo{};
-				beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-				if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
-					throw std::runtime_error("failed to begin recording command buffer!");
-				}
-#if 0
-				VkCommandBufferBeginInfo cmdBufInfo = {};
-				cmdBufInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-				cmdBufInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-				cmdBufInfo.pNext = nullptr;
-
-				VkCommandBuffer drawCommandBuffer = swapChain.GetCurrentDrawCommandBuffer();
-				commandBuffer = drawCommandBuffer;
-				HZ_CORE_ASSERT(commandBuffer);
-				VK_CHECK_RESULT(vkBeginCommandBuffer(drawCommandBuffer, &cmdBufInfo));
-#endif
 			});
 	}
-	void VulkanRenderer::BindVertData(Ref<VertexBuffer> testVertexBuffer) {
-		VkCommandBuffer commandBuffer = Application::Get().GetWindow()->GetSwapChainPtr()->GetCurrentDrawCommandBuffer();
-		VkDeviceSize offsets[] = { 0 };
-		VkBuffer vertexBuffers[] = { testVertexBuffer.As<VulkanVertexBuffer>()->GetVulkanBuffer() };
-		vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+	void VulkanRenderer::BindVertData(Ref<RenderCommandBuffer> commandBuffer, Ref<VertexBuffer> testVertexBuffer) {
+		
+		Renderer::Submit([commandBuffer,testVertexBuffer] {
+			uint32_t frameIndex = Renderer::RT_GetCurrentFrameIndex();
+			VkCommandBuffer vkCommandBuffer = commandBuffer.As<VulkanRenderCommandBuffer>()->GetActiveCommandBuffer();
+			VkDeviceSize offsets[] = { 0 };
+			VkBuffer vertexBuffers[] = { testVertexBuffer.As<VulkanVertexBuffer>()->GetVulkanBuffer() };
+			vkCmdBindVertexBuffers(vkCommandBuffer, 0, 1, vertexBuffers, offsets);
+			});
+
 	}
-	void VulkanRenderer::BindIndexData(Ref<IndexBuffer> indexBuffer)
+	void VulkanRenderer::BindIndexDataAndDraw(Ref<RenderCommandBuffer> commandBuffer, Ref<IndexBuffer> indexBuffer)
 	{
-		VkCommandBuffer commandBuffer = Application::Get().GetWindow()->GetSwapChainPtr()->GetCurrentDrawCommandBuffer();
-
-		vkCmdBindIndexBuffer(commandBuffer, indexBuffer.As<VulkanIndexBuffer>()->GetVulkanBuffer(), 0, VK_INDEX_TYPE_UINT16);
+		Renderer::Submit([commandBuffer,indexBuffer] {
+			uint32_t frameIndex = Renderer::RT_GetCurrentFrameIndex();
+			VkCommandBuffer vkCommandBuffer = commandBuffer.As<VulkanRenderCommandBuffer>()->GetActiveCommandBuffer();
+			vkCmdBindIndexBuffer(vkCommandBuffer, indexBuffer.As<VulkanIndexBuffer>()->GetVulkanBuffer(), 0, VK_INDEX_TYPE_UINT16);
+			vkCmdDrawIndexed(vkCommandBuffer,static_cast<uint32_t>(indexBuffer->GetSize()/2), 1,0,0,0 );  // TODO：IndexSize现在返回是字节数，是不对的
+			});
 
 	}
-	void VulkanRenderer::RT_EndFrame()
+	void VulkanRenderer::EndFrame()
 	{
 		Renderer::Submit([]() {
 			Ref<WindowsWindow> m_Window = Application::Get().GetWindow();
@@ -242,42 +235,160 @@ namespace Hazel {
 #endif
 	}
 
-	void VulkanRenderer::BeginRenderPass(Ref<RenderPass> renderPass)
+	void VulkanRenderer::BeginRenderPass(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<RenderPass> renderPass, bool explicitClear)
 	{
-		uint32_t flyIndex = Renderer::GetCurrentFrameIndex();
-		VkCommandBuffer commandBuffer = Application::Get().GetWindow()->GetSwapChainPtr()->GetCurrentDrawCommandBuffer();
-		VkRenderPass gbufferPass = renderPass->GetPipeline()->GetSpecification().TargetFramebuffer.As<VulkanFramebuffer>()->GetRenderPass();
-		Ref<VulkanFramebuffer> gbufferfbo = renderPass->GetPipeline()->GetSpecification().TargetFramebuffer.As<VulkanFramebuffer>();
-		VkRenderPassBeginInfo gbufferPassInfo{};
-		gbufferPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-		gbufferPassInfo.renderPass = gbufferPass;
-		gbufferPassInfo.framebuffer = gbufferfbo->GetVulkanFramebuffer();
-		gbufferPassInfo.renderArea.offset = { 0, 0 };
-		gbufferPassInfo.renderArea.extent = VkExtent2D{ gbufferfbo->GetWidth(),gbufferfbo->GetHeight() };
-		gbufferPassInfo.clearValueCount = gbufferfbo->GetColorAttachmentCount() + 1; // +1表示深度纹理也清除？
-		gbufferPassInfo.pClearValues = gbufferfbo->GetVulkanClearValues().data();
+		Renderer::Submit([renderCommandBuffer, renderPass, explicitClear]()
+			{
+				uint32_t frameIndex = Renderer::RT_GetCurrentFrameIndex();
+				VkCommandBuffer commandBuffer = renderCommandBuffer.As<VulkanRenderCommandBuffer>()->GetActiveCommandBuffer();
 
-		vkCmdBeginRenderPass(commandBuffer, &gbufferPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderPass->GetPipeline().As<VulkanPipeline>()->GetVulkanPipeline());
+				VkDebugUtilsLabelEXT debugLabel{};
+				debugLabel.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT;
+				memcpy(&debugLabel.color, glm::value_ptr(renderPass->GetSpecification().MarkerColor), sizeof(float) * 4);
+				debugLabel.pLabelName = renderPass->GetSpecification().DebugName.c_str();
+				fpCmdBeginDebugUtilsLabelEXT(commandBuffer, &debugLabel);
 
+				auto fb = renderPass->GetSpecification().Pipeline->GetSpecification().TargetFramebuffer;
+				Ref<VulkanFramebuffer> framebuffer = fb.As<VulkanFramebuffer>();
+				const auto& fbSpec = framebuffer->GetSpecification();
 
-		VkViewport viewport{};
-		viewport.x = 0.0f;
-		viewport.y = 0.0f;
-		viewport.width = static_cast<float>(gbufferfbo->GetWidth());
-		viewport.height = static_cast<float>(gbufferfbo->GetHeight());
-		viewport.minDepth = 0.0f;
-		viewport.maxDepth = 1.0f;
-		vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
-		VkRect2D scissor{};
-		scissor.offset = { 0, 0 };
-		scissor.extent = VkExtent2D{ gbufferfbo->GetWidth(),gbufferfbo->GetHeight() };
-		vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
-		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderPass->GetPipeline().As<VulkanPipeline>()->GetVulkanPipelineLayout(), 0, 1, &renderPass->GetPipeline()->GetShader().As<VulkanShader>()->GetDescriptorSet()[flyIndex], 0, nullptr);
-	}
-	void VulkanRenderer::EndRenderPass()
+				uint32_t width = framebuffer->GetWidth();
+				uint32_t height = framebuffer->GetHeight();
+
+				VkViewport viewport = {};
+				viewport.minDepth = 0.0f;
+				viewport.maxDepth = 1.0f;
+
+				VkRenderPassBeginInfo renderPassBeginInfo = {};
+				renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+				renderPassBeginInfo.pNext = nullptr;
+				renderPassBeginInfo.renderPass = framebuffer->GetRenderPass();
+				renderPassBeginInfo.renderArea.offset.x = 0;
+				renderPassBeginInfo.renderArea.offset.y = 0;
+				renderPassBeginInfo.renderArea.extent.width = width;
+				renderPassBeginInfo.renderArea.extent.height = height;
+				if (framebuffer->GetSpecification().SwapChainTarget)
+				{
+					VulkanSwapChain& swapChain = Application::Get().GetWindow()->GetSwapChain();
+					width = swapChain.GetWidth();
+					height = swapChain.GetHeight();
+					renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+					renderPassBeginInfo.pNext = nullptr;
+					renderPassBeginInfo.renderPass = framebuffer->GetRenderPass();
+					renderPassBeginInfo.renderArea.offset.x = 0;
+					renderPassBeginInfo.renderArea.offset.y = 0;
+					renderPassBeginInfo.renderArea.extent.width = width;
+					renderPassBeginInfo.renderArea.extent.height = height;
+					renderPassBeginInfo.framebuffer = swapChain.GetCurrentFramebuffer();
+
+					viewport.x = 0.0f;
+					viewport.y = (float)height;
+					viewport.width = (float)width;
+					viewport.height = -(float)height;
+				}
+				else
+				{
+					width = framebuffer->GetWidth();
+					height = framebuffer->GetHeight();
+					renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+					renderPassBeginInfo.pNext = nullptr;
+					renderPassBeginInfo.renderPass = framebuffer->GetRenderPass();
+					renderPassBeginInfo.renderArea.offset.x = 0;
+					renderPassBeginInfo.renderArea.offset.y = 0;
+					renderPassBeginInfo.renderArea.extent.width = width;
+					renderPassBeginInfo.renderArea.extent.height = height;
+					renderPassBeginInfo.framebuffer = framebuffer->GetVulkanFramebuffer();
+
+					viewport.x = 0.0f;
+					viewport.y = 0.0f;
+					viewport.width = (float)width;
+					viewport.height = (float)height;
+				}
+
+				// TODO: Does our framebuffer have a depth attachment?
+				const auto& clearValues = framebuffer->GetVulkanClearValues();
+				renderPassBeginInfo.clearValueCount = (uint32_t)clearValues.size();
+				renderPassBeginInfo.pClearValues = clearValues.data();
+
+				vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+				if (explicitClear)
+				{
+					const uint32_t colorAttachmentCount = (uint32_t)framebuffer->GetColorAttachmentCount();
+					const uint32_t totalAttachmentCount = colorAttachmentCount + (framebuffer->HasDepthAttachment() ? 1 : 0);
+					HZ_CORE_ASSERT(clearValues.size() == totalAttachmentCount);
+
+					std::vector<VkClearAttachment> attachments(totalAttachmentCount);
+					std::vector<VkClearRect> clearRects(totalAttachmentCount);
+					for (uint32_t i = 0; i < colorAttachmentCount; i++)
+					{
+						attachments[i].aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+						attachments[i].colorAttachment = i;
+						attachments[i].clearValue = clearValues[i];
+
+						clearRects[i].rect.offset = { (int32_t)0, (int32_t)0 };
+						clearRects[i].rect.extent = { width, height };
+						clearRects[i].baseArrayLayer = 0;
+						clearRects[i].layerCount = 1;
+					}
+
+					if (framebuffer->HasDepthAttachment())
+					{
+						attachments[colorAttachmentCount].aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT /*| VK_IMAGE_ASPECT_STENCIL_BIT*/;
+						attachments[colorAttachmentCount].clearValue = clearValues[colorAttachmentCount];
+						clearRects[colorAttachmentCount].rect.offset = { (int32_t)0, (int32_t)0 };
+						clearRects[colorAttachmentCount].rect.extent = { width, height };
+						clearRects[colorAttachmentCount].baseArrayLayer = 0;
+						clearRects[colorAttachmentCount].layerCount = 1;
+					}
+
+					vkCmdClearAttachments(commandBuffer, totalAttachmentCount, attachments.data(), totalAttachmentCount, clearRects.data());
+
+				}
+
+				// Update dynamic viewport state
+				vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+
+				// Update dynamic scissor state
+				VkRect2D scissor = {};
+				scissor.extent.width = width;
+				scissor.extent.height = height;
+				scissor.offset.x = 0;
+				scissor.offset.y = 0;
+				vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+
+				// TODO: automatic layout transitions for input resources
+
+				// Bind Vulkan Pipeline
+				Ref<VulkanPipeline> vulkanPipeline = renderPass->GetSpecification().Pipeline.As<VulkanPipeline>();
+				VkPipeline vPipeline = vulkanPipeline->GetVulkanPipeline();
+				vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vPipeline);
+
+				if (vulkanPipeline->IsDynamicLineWidth())
+					vkCmdSetLineWidth(commandBuffer, vulkanPipeline->GetSpecification().LineWidth);
+
+				// Bind input descriptors (starting from set 1, set 0 is for per-draw)
+				Ref<VulkanRenderPass> vulkanRenderPass = renderPass.As<VulkanRenderPass>();
+				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderPass->GetPipeline().As<VulkanPipeline>()->GetVulkanPipelineLayout(), 0, 1, &renderPass->GetPipeline()->GetShader().As<VulkanShader>()->GetDescriptorSet()[frameIndex], 0, nullptr);
+				/*vulkanRenderPass->Prepare();
+				if (vulkanRenderPass->HasDescriptorSets())
+				{
+					const auto& descriptorSets = vulkanRenderPass->GetDescriptorSets(frameIndex);
+					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vulkanPipeline->GetVulkanPipelineLayout(), vulkanRenderPass->GetFirstSetIndex(), (uint32_t)descriptorSets.size(), descriptorSets.data(), 0, nullptr);
+				}*/
+			});
+	
+	}	
+	void VulkanRenderer::EndRenderPass(Ref<RenderCommandBuffer> renderCommandBuffer)
 	{
-		vkCmdEndRenderPass(Application::Get().GetWindow()->GetSwapChainPtr()->GetCurrentDrawCommandBuffer());
+		Renderer::Submit([renderCommandBuffer]()
+			{
+				uint32_t frameIndex = Renderer::RT_GetCurrentFrameIndex();
+				VkCommandBuffer commandBuffer = renderCommandBuffer.As<VulkanRenderCommandBuffer>()->GetActiveCommandBuffer();
+
+				vkCmdEndRenderPass(commandBuffer);
+				fpCmdEndDebugUtilsLabelEXT(commandBuffer);
+			});
 	}
 	namespace Utils {
 
