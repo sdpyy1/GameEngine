@@ -7,8 +7,7 @@
 #include "Hazel/Scripting/ScriptEngine.h"
 #include "Hazel/Physics/Physics2D.h"
 #include "Hazel/Renderer/Renderer.h"
-#define GLM_FORCE_RADIANS
-#define GLM_FORCE_DEPTH_ZERO_TO_FE   // 把深度值范围设置为[0, 1]，而不是OpenGL的[-1, 1]
+#define GLM_FORCE_DEPTH_ZERO_TO_FE 
 #include <glm/glm.hpp>
 
 #include "Entity.h"
@@ -58,13 +57,13 @@ namespace Hazel {
 		if (swapChian->GetExtent().width == 0 && (float)swapChian->GetExtent().height == 0) {
 			return;
 		}
-		
 		static auto startTime = std::chrono::high_resolution_clock::now();
 		auto currentTime = std::chrono::high_resolution_clock::now();
 		float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 		ubo->model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 		ubo->view = editorCamera.GetViewMatrix();
 		ubo->proj = editorCamera.GetProjectionMatrix();
+		ubo->proj[1][1] *= -1; // Y轴反转
 
 		uniformBufferSet->RT_Get()->SetData((void*)ubo, sizeof(UniformBufferObject));
 	}
