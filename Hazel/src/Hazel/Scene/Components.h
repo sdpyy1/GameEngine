@@ -1,6 +1,5 @@
 #pragma once
 
-#include "SceneCamera.h"
 #include "Hazel/Core/UUID.h"
 #include "Hazel/Renderer/Texture.h"
 #include "Hazel/Renderer/Font.h"
@@ -74,15 +73,15 @@ namespace Hazel {
 		CircleRendererComponent(const CircleRendererComponent&) = default;
 	};
 
-	struct CameraComponent
-	{
-		SceneCamera Camera;
-		bool Primary = true; // TODO: think about moving to Scene
-		bool FixedAspectRatio = false;
+	//struct CameraComponent
+	//{
+	//	EditorCamera Camera;
+	//	bool Primary = true; // TODO: think about moving to Scene
+	//	bool FixedAspectRatio = false;
 
-		CameraComponent() = default;
-		CameraComponent(const CameraComponent&) = default;
-	};
+	//	CameraComponent() = default;
+	//	CameraComponent(const CameraComponent&) = default;
+	//};
 
 	struct ScriptComponent
 	{
@@ -177,7 +176,7 @@ namespace Hazel {
 
 	using AllComponents = 
 		ComponentGroup<TransformComponent, SpriteRendererComponent,
-			CircleRendererComponent, CameraComponent, ScriptComponent,
+			CircleRendererComponent, /*CameraComponent,*/ ScriptComponent,
 			NativeScriptComponent, Rigidbody2DComponent, BoxCollider2DComponent,
 			CircleCollider2DComponent, TextComponent>;
 

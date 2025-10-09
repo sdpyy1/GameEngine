@@ -17,18 +17,13 @@ namespace Hazel {
 	class Scene: public RefCounted
 	{
 	public:
-		void updateUniformBuffer(uint32_t currentImage);
+		void updateUniformBuffer(EditorCamera& editorCamera);
 		Scene();
 		~Scene();
 		
 		// 临时调试接口
-		void RenderVukan();
-		void updateGBufferSets();
-		Ref<Image2D> GetFinalPassImage()
-		{
-			return gBufferPass->GetPipeline()->GetSpecification().TargetFramebuffer->GetImage(1);
-		}
-
+		void RenderVukan(EditorCamera& editorCamera);
+		// 把最终渲染结果传递给ImGUI
 		void SetViewPortImage();
 
 

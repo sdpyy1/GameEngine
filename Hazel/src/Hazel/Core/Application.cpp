@@ -18,7 +18,7 @@ namespace Hazel {
 	static std::thread::id s_MainThreadID;
 
 	Application::Application(const ApplicationSpecification& specification)
-		: m_Specification(specification),m_RenderThread(ThreadingPolicy::MultiThreaded)
+		: m_Specification(specification),m_RenderThread(ThreadingPolicy::SingleThreaded)
 	{
 		HZ_PROFILE_FUNCTION();
 

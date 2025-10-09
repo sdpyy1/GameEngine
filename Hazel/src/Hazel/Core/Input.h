@@ -69,12 +69,12 @@ namespace Hazel {
 
 		static bool IsKeyPressed(KeyCode keycode);
 		static bool IsKeyHeld(KeyCode keycode);
-		//static bool IsKeyDown(KeyCode keycode);
+		static bool IsKeyDown(KeyCode keycode);
 		static bool IsKeyReleased(KeyCode keycode);
 
 		static bool IsMouseButtonPressed(MouseButton button);
 		static bool IsMouseButtonHeld(MouseButton button);
-		//static bool IsMouseButtonDown(MouseButton button);
+		static bool IsMouseButtonDown(MouseButton button);
 		static bool IsMouseButtonReleased(MouseButton button);
 		static float GetMouseX();
 		static float GetMouseY();

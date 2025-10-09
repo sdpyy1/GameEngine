@@ -203,30 +203,30 @@ namespace Hazel {
 			out << YAML::EndMap; // TransformComponent
 		}
 
-		if (entity.HasComponent<CameraComponent>())
-		{
-			out << YAML::Key_old << "CameraComponent";
-			out << YAML::BeginMap; // CameraComponent
+		//if (entity.HasComponent<CameraComponent>())
+		//{
+		//	out << YAML::Key_old << "CameraComponent";
+		//	out << YAML::BeginMap; // CameraComponent
 
-			auto& cameraComponent = entity.GetComponent<CameraComponent>();
-			auto& camera = cameraComponent.Camera;
+		//	auto& cameraComponent = entity.GetComponent<CameraComponent>();
+		//	auto& camera = cameraComponent.Camera;
 
-			out << YAML::Key_old << "Camera" << YAML::Value;
-			out << YAML::BeginMap; // Camera
-			out << YAML::Key_old << "ProjectionType" << YAML::Value << (int)camera.GetProjectionType();
-			out << YAML::Key_old << "PerspectiveFOV" << YAML::Value << camera.GetPerspectiveVerticalFOV();
-			out << YAML::Key_old << "PerspectiveNear" << YAML::Value << camera.GetPerspectiveNearClip();
-			out << YAML::Key_old << "PerspectiveFar" << YAML::Value << camera.GetPerspectiveFarClip();
-			out << YAML::Key_old << "OrthographicSize" << YAML::Value << camera.GetOrthographicSize();
-			out << YAML::Key_old << "OrthographicNear" << YAML::Value << camera.GetOrthographicNearClip();
-			out << YAML::Key_old << "OrthographicFar" << YAML::Value << camera.GetOrthographicFarClip();
-			out << YAML::EndMap; // Camera
+		//	out << YAML::Key_old << "Camera" << YAML::Value;
+		//	out << YAML::BeginMap; // Camera
+		//	//out << YAML::Key_old << "ProjectionType" << YAML::Value << (int)camera.GetProjectionType();
+		//	//out << YAML::Key_old << "PerspectiveFOV" << YAML::Value << camera.GetPerspectiveVerticalFOV();
+		//	//out << YAML::Key_old << "PerspectiveNear" << YAML::Value << camera.GetPerspectiveNearClip();
+		//	//out << YAML::Key_old << "PerspectiveFar" << YAML::Value << camera.GetPerspectiveFarClip();
+		//	//out << YAML::Key_old << "OrthographicSize" << YAML::Value << camera.GetOrthographicSize();
+		//	//out << YAML::Key_old << "OrthographicNear" << YAML::Value << camera.GetOrthographicNearClip();
+		//	//out << YAML::Key_old << "OrthographicFar" << YAML::Value << camera.GetOrthographicFarClip();
+		//	out << YAML::EndMap; // Camera
 
-			out << YAML::Key_old << "Primary" << YAML::Value << cameraComponent.Primary;
-			out << YAML::Key_old << "FixedAspectRatio" << YAML::Value << cameraComponent.FixedAspectRatio;
+		//	out << YAML::Key_old << "Primary" << YAML::Value << cameraComponent.Primary;
+		//	out << YAML::Key_old << "FixedAspectRatio" << YAML::Value << cameraComponent.FixedAspectRatio;
 
-			out << YAML::EndMap; // CameraComponent
-		}
+		//	out << YAML::EndMap; // CameraComponent
+		////}
 
 		if (entity.HasComponent<ScriptComponent>())
 		{
@@ -446,24 +446,24 @@ namespace Hazel {
 				}
 
 				auto cameraComponent = entity["CameraComponent"];
-				if (cameraComponent)
-				{
-					auto& cc = deserializedEntity.AddComponent<CameraComponent>();
+				//if (cameraComponent)
+				//{
+				//	auto& cc = deserializedEntity.AddComponent<CameraComponent>();
 
-					auto& cameraProps = cameraComponent["Camera"];
-					cc.Camera.SetProjectionType((SceneCamera::ProjectionType)cameraProps["ProjectionType"].as<int>());
+				//	auto& cameraProps = cameraComponent["Camera"];
+				//	//cc.Camera.SetProjectionType((SceneCamera::ProjectionType)cameraProps["ProjectionType"].as<int>());
 
-					cc.Camera.SetPerspectiveVerticalFOV(cameraProps["PerspectiveFOV"].as<float>());
-					cc.Camera.SetPerspectiveNearClip(cameraProps["PerspectiveNear"].as<float>());
-					cc.Camera.SetPerspectiveFarClip(cameraProps["PerspectiveFar"].as<float>());
+				//	//cc.Camera.SetPerspectiveVerticalFOV(cameraProps["PerspectiveFOV"].as<float>());
+				//	//cc.Camera.SetPerspectiveNearClip(cameraProps["PerspectiveNear"].as<float>());
+				//	//cc.Camera.SetPerspectiveFarClip(cameraProps["PerspectiveFar"].as<float>());
 
-					cc.Camera.SetOrthographicSize(cameraProps["OrthographicSize"].as<float>());
-					cc.Camera.SetOrthographicNearClip(cameraProps["OrthographicNear"].as<float>());
-					cc.Camera.SetOrthographicFarClip(cameraProps["OrthographicFar"].as<float>());
+				//	//cc.Camera.SetOrthographicSize(cameraProps["OrthographicSize"].as<float>());
+				//	//cc.Camera.SetOrthographicNearClip(cameraProps["OrthographicNear"].as<float>());
+				//	//cc.Camera.SetOrthographicFarClip(cameraProps["OrthographicFar"].as<float>());
 
-					cc.Primary = cameraComponent["Primary"].as<bool>();
-					cc.FixedAspectRatio = cameraComponent["FixedAspectRatio"].as<bool>();
-				}
+				//	cc.Primary = cameraComponent["Primary"].as<bool>();
+				//	cc.FixedAspectRatio = cameraComponent["FixedAspectRatio"].as<bool>();
+				//}
 
 				auto scriptComponent = entity["ScriptComponent"];
 				if (scriptComponent)

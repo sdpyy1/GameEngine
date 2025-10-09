@@ -5,6 +5,7 @@
 #include "Hazel/Core/Application.h"
 
 #include <GLFW/glfw3.h>
+#include <imgui_internal.h>
 
 namespace Hazel {
 
@@ -64,38 +65,38 @@ namespace Hazel {
 		return s_KeyData.find(key) != s_KeyData.end() && s_KeyData[key].State == KeyState::Held;
 	}
 
-	//bool Input::IsKeyDown(KeyCode keycode)
-	//{
-	//	bool enableImGui = Application::Get().GetSpecification().EnableImGui;
-	//	if (!enableImGui)
-	//	{
-	//		auto& window = static_cast<Window&>(Application::Get().GetWindow());
-	//		auto state = glfwGetKey(static_cast<GLFWwindow*>(window.GetNativeWindow()), static_cast<int32_t>(keycode));
-	//		return state == GLFW_PRESS || state == GLFW_REPEAT;
-	//	}
+	bool Input::IsKeyDown(KeyCode keycode)
+	{
+		bool enableImGui = Application::Get().GetSpecification().EnableImGui;
+		if (!enableImGui)
+		{
+			auto& window = static_cast<Window&>(*Application::Get().GetWindow());
+			auto state = glfwGetKey(static_cast<GLFWwindow*>(window.GetNativeWindow()), static_cast<int32_t>(keycode));
+			return state == GLFW_PRESS || state == GLFW_REPEAT;
+		}
 
-	//	auto& window = static_cast<Window&>(Application::Get().GetWindow());
-	//	GLFWwindow* win = static_cast<GLFWwindow*>(window.GetNativeWindow());
-	//	ImGuiContext* context = ImGui::GetCurrentContext();
-	//	bool pressed = false;
-	//	for (ImGuiViewport* viewport : context->Viewports)
-	//	{
-	//		if (!viewport->PlatformUserData)
-	//			continue;
+		auto& window = static_cast<Window&>(*Application::Get().GetWindow());
+		GLFWwindow* win = static_cast<GLFWwindow*>(window.GetNativeWindow());
+		ImGuiContext* context = ImGui::GetCurrentContext();
+		bool pressed = false;
+		for (ImGuiViewport* viewport : context->Viewports)
+		{
+			if (!viewport->PlatformUserData)
+				continue;
 
-	//		GLFWwindow* windowHandle = *(GLFWwindow**)viewport->PlatformUserData; // First member is GLFWwindow
-	//		if (!windowHandle)
-	//			continue;
-	//		auto state = glfwGetKey(windowHandle, static_cast<int32_t>(keycode));
-	//		if (state == GLFW_PRESS || state == GLFW_REPEAT)
-	//		{
-	//			pressed = true;
-	//			break;
-	//		}
-	//	}
+			GLFWwindow* windowHandle = *(GLFWwindow**)viewport->PlatformUserData; // First member is GLFWwindow
+			if (!windowHandle)
+				continue;
+			auto state = glfwGetKey(windowHandle, static_cast<int32_t>(keycode));
+			if (state == GLFW_PRESS || state == GLFW_REPEAT)
+			{
+				pressed = true;
+				break;
+			}
+		}
 
-	//	return pressed;
-	//}
+		return pressed;
+	}
 
 	bool Input::IsKeyReleased(KeyCode key)
 	{
@@ -112,36 +113,36 @@ namespace Hazel {
 		return s_MouseData.find(button) != s_MouseData.end() && s_MouseData[button].State == KeyState::Held;
 	}
 
-	//bool Input::IsMouseButtonDown(MouseButton button)
-	//{
-	//	bool enableImGui = Application::Get().GetSpecification().EnableImGui;
-	//	if (!enableImGui)
-	//	{
-	//		auto& window = static_cast<Window&>(Application::Get().GetWindow());
-	//		auto state = glfwGetMouseButton(static_cast<GLFWwindow*>(window.GetNativeWindow()), static_cast<int32_t>(button));
-	//		return state == GLFW_PRESS;
-	//	}
+	bool Input::IsMouseButtonDown(MouseButton button)
+	{
+		bool enableImGui = Application::Get().GetSpecification().EnableImGui;
+		if (!enableImGui)
+		{
+			auto& window = static_cast<Window&>(*Application::Get().GetWindow());
+			auto state = glfwGetMouseButton(static_cast<GLFWwindow*>(window.GetNativeWindow()), static_cast<int32_t>(button));
+			return state == GLFW_PRESS;
+		}
 
-	//	ImGuiContext* context = ImGui::GetCurrentContext();
-	//	bool pressed = false;
-	//	for (ImGuiViewport* viewport : context->Viewports)
-	//	{
-	//		if (!viewport->PlatformUserData)
-	//			continue;
+		ImGuiContext* context = ImGui::GetCurrentContext();
+		bool pressed = false;
+		for (ImGuiViewport* viewport : context->Viewports)
+		{
+			if (!viewport->PlatformUserData)
+				continue;
 
-	//		GLFWwindow* windowHandle = *(GLFWwindow**)viewport->PlatformUserData; // First member is GLFWwindow
-	//		if (!windowHandle)
-	//			continue;
+			GLFWwindow* windowHandle = *(GLFWwindow**)viewport->PlatformUserData; // First member is GLFWwindow
+			if (!windowHandle)
+				continue;
 
-	//		auto state = glfwGetMouseButton(static_cast<GLFWwindow*>(windowHandle), static_cast<int32_t>(button));
-	//		if (state == GLFW_PRESS || state == GLFW_REPEAT)
-	//		{
-	//			pressed = true;
-	//			break;
-	//		}
-	//	}
-	//	return pressed;
-	////}
+			auto state = glfwGetMouseButton(static_cast<GLFWwindow*>(windowHandle), static_cast<int32_t>(button));
+			if (state == GLFW_PRESS || state == GLFW_REPEAT)
+			{
+				pressed = true;
+				break;
+			}
+		}
+		return pressed;
+	}
 
 	bool Input::IsMouseButtonReleased(MouseButton button)
 	{

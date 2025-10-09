@@ -18,7 +18,7 @@ namespace Hazel {
 
 
 	EditorLayer::EditorLayer()
-		: Layer("EditorLayer"),camera(60.0f, 16.0f / 9.0f, 0.1f, 10000.0f)
+		: Layer("EditorLayer"), m_EditorCamera(45.0f, 1600.0f, 1200.0f, 0.1f, 10.0f)
 	{
 	}
 
@@ -33,7 +33,10 @@ namespace Hazel {
 
 	void EditorLayer::OnUpdate(Timestep ts)
 	{
-		scene.RenderVukan();
+		m_EditorCamera.SetActive(true);
+		m_EditorCamera.OnUpdate(ts);
+
+		scene.RenderVukan(m_EditorCamera);
 	}
 
 	void EditorLayer::OnImGuiRender()

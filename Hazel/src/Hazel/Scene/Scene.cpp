@@ -54,18 +54,19 @@ namespace Hazel {
 	};
 
 
-	void Scene::updateUniformBuffer(uint32_t currentImage) {
+	void Scene::updateUniformBuffer(EditorCamera& editorCamera) {
 		if (swapChian->GetExtent().width == 0 && (float)swapChian->GetExtent().height == 0) {
 			return;
 		}
+		
 		static auto startTime = std::chrono::high_resolution_clock::now();
 		auto currentTime = std::chrono::high_resolution_clock::now();
 		float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 		ubo->model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-		ubo->view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-		ubo->proj = glm::perspective(glm::radians(45.0f), swapChian->GetExtent().width / (float)swapChian->GetExtent().height, 0.1f, 10.0f);
-		ubo->proj[1][1] *= -1;
-		uniformBufferSet->Set_Data(currentImage, (void*)ubo, sizeof(UniformBufferObject));
+		ubo->view = editorCamera.GetViewMatrix();
+		ubo->proj = editorCamera.GetProjectionMatrix();
+
+		uniformBufferSet->RT_Get()->SetData((void*)ubo, sizeof(UniformBufferObject));
 	}
 	Scene::Scene()
 	{
@@ -123,10 +124,10 @@ namespace Hazel {
 		delete m_PhysicsWorld;
 	}
 
-	void Scene::RenderVukan() {
+	void Scene::RenderVukan(EditorCamera & editorCamera) {
 		passCommandBuffer->Begin();
 		uint32_t flyIndex = Renderer::GetCurrentFrameIndex();
-		updateUniformBuffer(flyIndex);
+		updateUniformBuffer(editorCamera);
 
 		Renderer::BeginRenderPass(passCommandBuffer,gBufferPass,true);
 
@@ -157,7 +158,7 @@ namespace Hazel {
 
 	void Scene::SetViewPortImage()
 	{
-		Ref<Image2D> finalRenderOutput = GetFinalPassImage();
+		Ref<Image2D> finalRenderOutput = gBufferPass->GetPipeline()->GetSpecification().TargetFramebuffer->GetImage(1);
 
 		auto viewportSize = ImGui::GetContentRegionAvail();
 		Image(finalRenderOutput, viewportSize, {0, 0}, {1, 1});
@@ -255,31 +256,31 @@ namespace Hazel {
 
 	void Scene::OnViewportResize(uint32_t width, uint32_t height)
 	{
-		if (m_ViewportWidth == width && m_ViewportHeight == height)
-			return;
+		//if (m_ViewportWidth == width && m_ViewportHeight == height)
+		//	return;
 
-		m_ViewportWidth = width;
-		m_ViewportHeight = height;
+		//m_ViewportWidth = width;
+		//m_ViewportHeight = height;
 
-		// Resize our non-FixedAspectRatio cameras
-		auto view = m_Registry.view<CameraComponent>();
-		for (auto entity : view)
-		{
-			auto& cameraComponent = view.get<CameraComponent>(entity);
-			if (!cameraComponent.FixedAspectRatio)
-				cameraComponent.Camera.SetViewportSize(width, height);
-		}
+		//// Resize our non-FixedAspectRatio cameras
+		//auto view = m_Registry.view<CameraComponent>();
+		//for (auto entity : view)
+		//{
+		//	auto& cameraComponent = view.get<CameraComponent>(entity);
+		//	if (!cameraComponent.FixedAspectRatio)
+		//		cameraComponent.Camera.SetViewportSize(width, height);
+		//}
 	}
 
 	Entity Scene::GetPrimaryCameraEntity()
 	{
-		auto view = m_Registry.view<CameraComponent>();
-		for (auto entity : view)
-		{
-			const auto& camera = view.get<CameraComponent>(entity);
-			if (camera.Primary)
-				return Entity{entity, this};
-		}
+		//auto view = m_Registry.view<CameraComponent>();
+		//for (auto entity : view)
+		//{
+		//	const auto& camera = view.get<CameraComponent>(entity);
+		//	if (camera.Primary)
+		//		return Entity{entity, this};
+		//}
 		return {};
 	}
 
@@ -342,12 +343,12 @@ namespace Hazel {
 	{
 	}
 
-	template<>
-	void Scene::OnComponentAdded<CameraComponent>(Entity entity, CameraComponent& component)
-	{
-		if (m_ViewportWidth > 0 && m_ViewportHeight > 0)
-			component.Camera.SetViewportSize(m_ViewportWidth, m_ViewportHeight);
-	}
+	//template<>
+	//void Scene::OnComponentAdded<CameraComponent>(Entity entity, CameraComponent& component)
+	//{
+	//	if (m_ViewportWidth > 0 && m_ViewportHeight > 0)
+	//		component.Camera.SetViewportSize(m_ViewportWidth, m_ViewportHeight);
+	//}
 
 	template<>
 	void Scene::OnComponentAdded<ScriptComponent>(Entity entity, ScriptComponent& component)
