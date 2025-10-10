@@ -130,6 +130,11 @@ namespace Hazel {
 		return Application::Get().GetWindow()->GetSwapChain().GetCurrentBufferIndex();
 	}
 
+	Ref<Texture2D> Renderer::GetWhiteTexture()
+	{
+		return s_Data->WhiteTexture;
+	}
+
 	uint32_t Renderer::GetCurrentFrameIndex()
 	{
 		return Application::Get().GetCurrentFrameIndex();

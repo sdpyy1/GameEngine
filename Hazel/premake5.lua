@@ -50,12 +50,14 @@ project "Hazel"
 		"%{IncludeDir.VMA}",
 		"%{IncludeDir.VulkanSDK}/Include",
 		"%{IncludeDir.choc}",
-		"%{IncludeDir.nfd}"
+		"%{IncludeDir.nfd}",
+		"%{IncludeDir.assimp}"
 	}
 
 	libdirs
 	{
-		"%{IncludeDir.VulkanSDK}/Lib"
+		"%{IncludeDir.VulkanSDK}/Lib",
+		"%{LibraryDir.assimp}"
 	}
 	links
 	{
@@ -68,7 +70,8 @@ project "Hazel"
 		"opengl32.lib",
 		"vulkan-1.lib",
 		"%{Library.mono}",
-		"NFD-Extended"
+		"NFD-Extended",
+		"assimp-vc143-mtd.lib"
 	}
 
 	filter "files:vendor/ImGuizmo/**.cpp"

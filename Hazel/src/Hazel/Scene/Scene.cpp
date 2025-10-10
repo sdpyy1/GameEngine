@@ -136,7 +136,6 @@ namespace Hazel {
 		Renderer::EndRenderPass(passCommandBuffer);
 		passCommandBuffer->End();
 		passCommandBuffer->Submit();
-
 	};
 
 	void Image(const Ref<Image2D>& image, const ImVec2& size, const ImVec2& uv0, const ImVec2& uv1, const ImVec4& tint_col = { 1,1,1,1 },

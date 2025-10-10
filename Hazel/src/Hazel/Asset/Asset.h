@@ -37,7 +37,7 @@ namespace Hazel {
 		// No IsValid(), IsFlagSet(AssetFlag::Missing) etc. etc. all throughout the code.
 		//friend class EditorAssetManager;
 		//friend class RuntimeAssetManager;
-		//friend class AssimpMeshImporter;
+		friend class AssimpMeshImporter;
 		//friend class TextureSerializer;
 
 		bool IsValid() const { return ((Flags & (uint16_t)AssetFlag::Missing) | (Flags & (uint16_t)AssetFlag::Invalid)) == 0; }

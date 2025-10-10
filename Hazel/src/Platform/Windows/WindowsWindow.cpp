@@ -67,8 +67,7 @@ namespace Hazel {
 			m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
 			++s_GLFWWindowCount;
 		}
-		
-
+	
 		HZ_CORE_INFO("Create GLFW Window Done!");
 
 		// RenderContext

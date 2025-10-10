@@ -87,6 +87,10 @@ namespace Hazel {
 		static uint32_t GetCurrentFrameIndex();
 		static uint32_t RT_GetCurrentFrameIndex();
 
+
+		static Ref<Texture2D> GetWhiteTexture();
+
+
 	private:
 		static Ref<Texture2D> WhiteTexture;
 
