@@ -17,6 +17,10 @@ namespace Hazel {
 	public:
 		static Ref<Material> Create(const Ref<Shader>& shader, const std::string& name = "");
 		static Ref<Material> Copy(const Ref<Material>& other, const std::string& name = "");
+
+		virtual void Set(const std::string& name, const glm::vec3& value) = 0;
+		virtual void Set(const std::string& name, float value) = 0;
+
 		virtual ~Material() {}
 	};
 

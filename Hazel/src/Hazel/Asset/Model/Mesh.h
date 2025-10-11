@@ -3,14 +3,23 @@
 #include <Hazel/Math/AABB.h>
 #include <Hazel/Renderer/VertexBuffer.h>
 #include <Hazel/Renderer/IndexBuffer.h>
+
 namespace Hazel {
-	struct Vertex
-	{
-		glm::vec3 Position;
+	struct Vertex {
+		glm::vec3 Position;  // 所有分量为 0
 		glm::vec3 Normal;
 		glm::vec3 Tangent;
 		glm::vec3 Binormal;
 		glm::vec2 Texcoord;
+
+		static VertexBufferLayout GetVertexLayout() {
+			VertexBufferElement Position(ShaderDataType::Float3, "Position");
+			VertexBufferElement Normal(ShaderDataType::Float3, "Normal");
+			VertexBufferElement Tangent(ShaderDataType::Float3, "Tangent");
+			VertexBufferElement Binormal(ShaderDataType::Float3, "Binormal");
+			VertexBufferElement Texcoord(ShaderDataType::Float2, "Texcoord");
+			return { Position ,Normal ,Tangent ,Binormal,Texcoord };
+		}
 	};
 	struct Index
 	{
@@ -53,8 +62,10 @@ namespace Hazel {
 	};
 	class MeshSource : public Asset {
 	public:
-
-
+		MeshSource() = default;
+		Ref<VertexBuffer> GetVertexBuffer() {return m_VertexBuffer;}
+		Ref<IndexBuffer> GetIndexBuffer() {return m_IndexBuffer;}
+		virtual ~MeshSource();
 	private:
 		std::vector<Submesh> m_Submeshes;
 		std::vector<Vertex> m_Vertices;
@@ -66,11 +77,7 @@ namespace Hazel {
 		Ref<VertexBuffer> m_BoneInfluenceBuffer;
 		Ref<IndexBuffer> m_IndexBuffer;
 		AABB m_BoundingBox;
-
-
-
 		friend class AssimpMeshImporter;
-
 	};
 
 }

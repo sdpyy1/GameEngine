@@ -27,31 +27,10 @@
 #include <Platform/Vulkan/VulkanFramebuffer.h>
 #include <Platform/Vulkan/VulkanPipeline.h>
 #include <imgui.h>
+#include <Hazel/Asset/AssetImporter.h>
+#include <Hazel/Asset/Model/Mesh.h>
 
 namespace Hazel {
-
-	struct Vertex {
-		glm::vec3 pos;
-		glm::vec3 color;
-		glm::vec2 texCoord;
-	};
-	const std::vector<Vertex> vertices = {
-		{{-0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
-		{{0.5f, -0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
-		{{0.5f, 0.5f, -0.5f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
-		{{-0.5f, 0.5f, -0.5f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}},
-		{{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
-		{{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
-		{{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
-		{{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}},
-
-
-	};
-	const std::vector<uint16_t> indices = {
-		0, 1, 2, 2, 3, 0,
-		4, 5, 6, 6, 7, 4
-	};
-
 
 	void Scene::updateUniformBuffer(EditorCamera& editorCamera) {
 		if (swapChian->GetExtent().width == 0 && (float)swapChian->GetExtent().height == 0) {
@@ -60,7 +39,7 @@ namespace Hazel {
 		static auto startTime = std::chrono::high_resolution_clock::now();
 		auto currentTime = std::chrono::high_resolution_clock::now();
 		float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
-		ubo->model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+		ubo->model = glm::mat4(1.0);
 		ubo->view = editorCamera.GetViewMatrix();
 		ubo->proj = editorCamera.GetProjectionMatrix();
 		ubo->proj[1][1] *= -1; // Y轴反转
@@ -83,26 +62,31 @@ namespace Hazel {
 		framebufferSpec.Attachments = attachmentSpec;
 		framebufferSpec.DebugName = "GBuffer";
 		Ref<Framebuffer> GbufferFBO = Framebuffer::Create(framebufferSpec);
-
+		ubo = new UniformBufferObject();
 		positionAttachment = GbufferFBO->GetImage(0);
 		HZ_CORE_WARN("Gbuffer 有{}个附件", GbufferFBO->GetColorAttachmentCount());
-
 		// Pipeline 测试
-		VertexBufferElement position(ShaderDataType::Float3, "position");
-		VertexBufferElement color(ShaderDataType::Float3, "color");
-		VertexBufferElement texCoord(ShaderDataType::Float2, "texCoord");
+		VertexBufferElement Position(ShaderDataType::Float3, "Position");
+		VertexBufferElement Normal(ShaderDataType::Float3, "Normal");
+		VertexBufferElement Tangent(ShaderDataType::Float3, "Tangent");
+		VertexBufferElement Binormal(ShaderDataType::Float3, "Binormal");
+		VertexBufferElement Texcoord(ShaderDataType::Float2, "Texcoord");
 		PipelineSpecification pSpec;
 		pSpec.BackfaceCulling = false;
-		pSpec.Layout = { position ,color,texCoord };
+		pSpec.Layout = Vertex::GetVertexLayout();
 		pSpec.Shader = gBuffershader;   // TODO：这里要修改为GbuFFer自己的shader
 		pSpec.TargetFramebuffer = GbufferFBO;
 		pSpec.DebugName = "GbufferPipeline";
 		GbufferPipeline = Pipeline::Create(pSpec);
-
-		ubo = new UniformBufferObject();
-		// 顶点创建
-		testVertexBuffer = VertexBuffer::Create((void*)vertices.data(), sizeof(vertices[0]) * vertices.size(), VertexBufferUsage::Static);
-		indexBuffer = IndexBuffer::Create((void*)indices.data(), sizeof(indices[0]) * indices.size());
+		// 模型加载
+		AssetMetadata metadata;
+		//metadata.FilePath = "D:/Hazel-3D-2023/Hazelnut/Resources/Meshes/Default/Capsule.gltf";
+		metadata.FilePath = "assets/model/helmet_pbr/DamagedHelmet.gltf";
+		metadata.Type = AssetType::MeshSource;
+		Ref<Asset> ham;
+		AssetImporter::TryLoadData(metadata, ham);
+		testVertexBuffer = ham.As<MeshSource>()->GetVertexBuffer();
+		indexBuffer = ham.As<MeshSource>()->GetIndexBuffer();
 		uniformBufferSet = UniformBufferSet::Create(sizeof(UniformBufferObject));
 
 		RenderPassSpecification gBufferPassSpec;
@@ -157,6 +141,7 @@ namespace Hazel {
 	void Scene::SetViewPortImage()
 	{
 		Ref<Image2D> finalRenderOutput = gBufferPass->GetPipeline()->GetSpecification().TargetFramebuffer->GetImage(1);
+		//Ref<Image2D> finalRenderOutput = Renderer::GetWhiteTexture();
 
 		auto viewportSize = ImGui::GetContentRegionAvail();
 		Image(finalRenderOutput, viewportSize, {0, 0}, {1, 1});

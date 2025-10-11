@@ -13,12 +13,14 @@
 #include "ImGuizmo.h"
 #include <Platform/Vulkan/VulkanImage.h>
 #include <GLFW/include/GLFW/glfw3.h>
+#include <Hazel/Asset/AssetMetadata.h>
+#include <Hazel/Asset/AssetImporter.h>
 
 namespace Hazel {
 
 
 	EditorLayer::EditorLayer()
-		: Layer("EditorLayer"), m_EditorCamera(45.0f, 1600.0f, 1200.0f, 0.1f, 10.0f)
+		: Layer("EditorLayer"), m_EditorCamera(45.0f, 1600.0f, 1200.0f, 0.1f, 1000.0f)
 	{
 	}
 

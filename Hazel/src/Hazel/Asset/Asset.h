@@ -39,7 +39,7 @@ namespace Hazel {
 		//friend class RuntimeAssetManager;
 		friend class AssimpMeshImporter;
 		//friend class TextureSerializer;
-
+		friend class AssetManager;
 		bool IsValid() const { return ((Flags & (uint16_t)AssetFlag::Missing) | (Flags & (uint16_t)AssetFlag::Invalid)) == 0; }
 
 		bool IsFlagSet(AssetFlag flag) const { return (uint16_t)flag & Flags; }

@@ -7,6 +7,12 @@ namespace Hazel {
 	public:
 		VulkanMaterial(const Ref<Shader>& shader, const std::string& name = "");
 		VulkanMaterial(Ref<Material> material, const std::string& name = "");
+
+		virtual void Set(const std::string& name, const glm::vec3& value) {};
+		virtual void Set(const std::string& name, float value) {};
+
+
+
 		virtual ~VulkanMaterial() override;
 	private:
 		Ref<VulkanShader> m_Shader;

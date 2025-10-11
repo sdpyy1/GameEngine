@@ -12,7 +12,6 @@ namespace Hazel {
 	struct RendererData
 	{
 		Ref<ShaderLibrary> m_ShaderLibrary;
-		Ref<Texture2D> WhiteTexture;
 	};
 
 	static RendererConfig s_Config;
@@ -67,7 +66,6 @@ namespace Hazel {
 		spec.Width = 1;
 		spec.Height = 1;
 		WhiteTexture = Texture2D::Create(spec, Buffer(&whiteTextureData, sizeof(uint32_t)));
-
 		// 为并发帧创建了描述符池、提前准备了全屏顶点数据存入了GPU
 		s_RendererAPI->Init();
 
@@ -132,7 +130,7 @@ namespace Hazel {
 
 	Ref<Texture2D> Renderer::GetWhiteTexture()
 	{
-		return s_Data->WhiteTexture;
+		return WhiteTexture;
 	}
 
 	uint32_t Renderer::GetCurrentFrameIndex()

@@ -8,6 +8,8 @@
 #include <Hazel/Renderer/Renderer.h>
 #include "Model/Material.h"
 #include "Model/MaterialAsset.h"
+#include "Hazel/Asset/AssetManager.h"
+#include "Hazel/Asset/TextureImporter.h"
 namespace Hazel {
 #define MESH_DEBUG_LOG 0
 
@@ -94,17 +96,17 @@ namespace Hazel {
 			return nullptr;
 		}
 
-		meshSource->m_Skeleton = AssimpAnimationImporter::ImportSkeleton(scene);
-		HZ_CORE_INFO_TAG("Animation", "Skeleton {0} found in mesh file '{1}'", meshSource->HasSkeleton() ? "" : "not", m_Path.string());
+		//meshSource->m_Skeleton = AssimpAnimationImporter::ImportSkeleton(scene);
+		//HZ_CORE_INFO_TAG("Animation", "Skeleton {0} found in mesh file '{1}'", meshSource->HasSkeleton() ? "" : "not", m_Path.string());
 
-		// Actual load of the animations is deferred until later.
-		// Because:
-		// 1. If there is no skin (mesh), then assimp will not have loaded the skeleton, and we cannot
-		//    load the animations until we know what the skeleton is
-		// 2. Loading the animation requires some extra parameters to control how to import the root motion
-		//    This constructor has no way of knowing what those parameters are.
-		meshSource->m_AnimationNames = AssimpAnimationImporter::GetAnimationNames(scene);
-		meshSource->m_Animations = std::vector<Scope<Animation>>(meshSource->m_AnimationNames.size());
+		//// Actual load of the animations is deferred until later.
+		//// Because:
+		//// 1. If there is no skin (mesh), then assimp will not have loaded the skeleton, and we cannot
+		////    load the animations until we know what the skeleton is
+		//// 2. Loading the animation requires some extra parameters to control how to import the root motion
+		////    This constructor has no way of knowing what those parameters are.
+		//meshSource->m_AnimationNames = AssimpAnimationImporter::GetAnimationNames(scene);
+		//meshSource->m_Animations = std::vector<Scope<Animation>>(meshSource->m_AnimationNames.size());
 
 		// If no meshes in the scene, there's nothing more for us to do
 		if (scene->HasMeshes())
@@ -149,6 +151,7 @@ namespace Hazel {
 				auto& aabb = submesh.BoundingBox;
 				aabb.Min = { FLT_MAX, FLT_MAX, FLT_MAX };
 				aabb.Max = { -FLT_MAX, -FLT_MAX, -FLT_MAX };
+				HZ_CORE_INFO("vert Count = {}", mesh->mNumVertices);
 				for (size_t i = 0; i < mesh->mNumVertices; i++)
 				{
 					Vertex vertex;
@@ -172,6 +175,7 @@ namespace Hazel {
 
 					meshSource->m_Vertices.push_back(vertex);
 				}
+				HZ_CORE_INFO("Index Count = {}", mesh->mNumFaces*3);
 
 				// Indices
 				for (size_t i = 0; i < mesh->mNumFaces; i++)
@@ -209,84 +213,84 @@ namespace Hazel {
 		}
 
 		// skinning weights
-		if (meshSource->HasSkeleton())
-		{
-			meshSource->m_BoneInfluences.resize(meshSource->m_Vertices.size());
-			for (uint32_t m = 0; m < scene->mNumMeshes; m++)
-			{
-				aiMesh* mesh = scene->mMeshes[m];
-				Submesh& submesh = meshSource->m_Submeshes[m];
-
-				if (mesh->mNumBones > 0)
-				{
-					submesh.IsRigged = true;
-					for (uint32_t i = 0; i < mesh->mNumBones; i++)
-					{
-						aiBone* bone = mesh->mBones[i];
-						bool hasNonZeroWeight = false;
-						for (size_t j = 0; j < bone->mNumWeights; j++)
-						{
-							if (bone->mWeights[j].mWeight > 0.000001f)
-							{
-								hasNonZeroWeight = true;
-							}
-						}
-						if (!hasNonZeroWeight)
-							continue;
-
-						// Find bone in skeleton
-						uint32_t boneIndex = meshSource->m_Skeleton->GetBoneIndex(bone->mName.C_Str());
-						if (boneIndex == Skeleton::NullIndex)
-						{
-							HZ_CORE_ERROR_TAG("Animation", "Could not find mesh bone '{}' in skeleton!", bone->mName.C_Str());
-						}
-
-						uint32_t boneInfoIndex = ~0;
-						for (size_t j = 0; j < meshSource->m_BoneInfo.size(); ++j)
-						{
-							if (meshSource->m_BoneInfo[j].BoneIndex == boneIndex)
-							{
-								boneInfoIndex = static_cast<uint32_t>(j);
-								break;
-							}
-						}
-						if (boneInfoIndex == ~0)
-						{
-							boneInfoIndex = static_cast<uint32_t>(meshSource->m_BoneInfo.size());
-							const auto& boneInfo = meshSource->m_BoneInfo.emplace_back(Utils::Mat4FromAIMatrix4x4(bone->mOffsetMatrix), boneIndex);
-#if MESH_DEBUG_LOG
-							HZ_CORE_INFO_TAG("Mesh", "BoneInfo for bone '{0}'", bone->mName.C_Str());
-							HZ_CORE_INFO_TAG("Mesh", "  SubMeshIndex = {0}", m);
-							HZ_CORE_INFO_TAG("Mesh", "  BoneIndex = {0}", boneIndex);
-
-							glm::vec3 translation;
-							glm::quat rotationQuat;
-							glm::vec3 scale;
-							Math::DecomposeTransform(boneInfo.InverseBindPose, translation, rotationQuat, scale);
-							glm::vec3 rotation = glm::degrees(glm::eulerAngles(rotationQuat));
-							HZ_CORE_INFO_TAG("Mesh", "  Inverse Bind Pose = {");
-							HZ_MESH_LOG("    translation: ({0:8.4f}, {1:8.4f}, {2:8.4f})", translation.x, translation.y, translation.z);
-							HZ_MESH_LOG("    rotation:    ({0:8.4f}, {1:8.4f}, {2:8.4f})", rotation.x, rotation.y, rotation.z);
-							HZ_MESH_LOG("    scale:       ({0:8.4f}, {1:8.4f}, {2:8.4f})", scale.x, scale.y, scale.z);
-							HZ_MESH_LOG("  }");
-#endif
-						}
-
-						for (size_t j = 0; j < bone->mNumWeights; j++)
-						{
-							int VertexID = submesh.BaseVertex + bone->mWeights[j].mVertexId;
-							float Weight = bone->mWeights[j].mWeight;
-							meshSource->m_BoneInfluences[VertexID].AddBoneData(boneInfoIndex, Weight);
-						}
-					}
-				}
-			}
-
-			for (auto& boneInfluence : meshSource->m_BoneInfluences)
-			{
-				boneInfluence.NormalizeWeights();
-			}
-		}
+//		if (meshSource->HasSkeleton())
+//		{
+//			meshSource->m_BoneInfluences.resize(meshSource->m_Vertices.size());
+//			for (uint32_t m = 0; m < scene->mNumMeshes; m++)
+//			{
+//				aiMesh* mesh = scene->mMeshes[m];
+//				Submesh& submesh = meshSource->m_Submeshes[m];
+//
+//				if (mesh->mNumBones > 0)
+//				{
+//					submesh.IsRigged = true;
+//					for (uint32_t i = 0; i < mesh->mNumBones; i++)
+//					{
+//						aiBone* bone = mesh->mBones[i];
+//						bool hasNonZeroWeight = false;
+//						for (size_t j = 0; j < bone->mNumWeights; j++)
+//						{
+//							if (bone->mWeights[j].mWeight > 0.000001f)
+//							{
+//								hasNonZeroWeight = true;
+//							}
+//						}
+//						if (!hasNonZeroWeight)
+//							continue;
+//
+//						// Find bone in skeleton
+//						uint32_t boneIndex = meshSource->m_Skeleton->GetBoneIndex(bone->mName.C_Str());
+//						if (boneIndex == Skeleton::NullIndex)
+//						{
+//							HZ_CORE_ERROR_TAG("Animation", "Could not find mesh bone '{}' in skeleton!", bone->mName.C_Str());
+//						}
+//
+//						uint32_t boneInfoIndex = ~0;
+//						for (size_t j = 0; j < meshSource->m_BoneInfo.size(); ++j)
+//						{
+//							if (meshSource->m_BoneInfo[j].BoneIndex == boneIndex)
+//							{
+//								boneInfoIndex = static_cast<uint32_t>(j);
+//								break;
+//							}
+//						}
+//						if (boneInfoIndex == ~0)
+//						{
+//							boneInfoIndex = static_cast<uint32_t>(meshSource->m_BoneInfo.size());
+//							const auto& boneInfo = meshSource->m_BoneInfo.emplace_back(Utils::Mat4FromAIMatrix4x4(bone->mOffsetMatrix), boneIndex);
+//#if MESH_DEBUG_LOG
+//							HZ_CORE_INFO_TAG("Mesh", "BoneInfo for bone '{0}'", bone->mName.C_Str());
+//							HZ_CORE_INFO_TAG("Mesh", "  SubMeshIndex = {0}", m);
+//							HZ_CORE_INFO_TAG("Mesh", "  BoneIndex = {0}", boneIndex);
+//
+//							glm::vec3 translation;
+//							glm::quat rotationQuat;
+//							glm::vec3 scale;
+//							Math::DecomposeTransform(boneInfo.InverseBindPose, translation, rotationQuat, scale);
+//							glm::vec3 rotation = glm::degrees(glm::eulerAngles(rotationQuat));
+//							HZ_CORE_INFO_TAG("Mesh", "  Inverse Bind Pose = {");
+//							HZ_MESH_LOG("    translation: ({0:8.4f}, {1:8.4f}, {2:8.4f})", translation.x, translation.y, translation.z);
+//							HZ_MESH_LOG("    rotation:    ({0:8.4f}, {1:8.4f}, {2:8.4f})", rotation.x, rotation.y, rotation.z);
+//							HZ_MESH_LOG("    scale:       ({0:8.4f}, {1:8.4f}, {2:8.4f})", scale.x, scale.y, scale.z);
+//							HZ_MESH_LOG("  }");
+//#endif
+//						}
+//
+//						for (size_t j = 0; j < bone->mNumWeights; j++)
+//						{
+//							int VertexID = submesh.BaseVertex + bone->mWeights[j].mVertexId;
+//							float Weight = bone->mWeights[j].mWeight;
+//							meshSource->m_BoneInfluences[VertexID].AddBoneData(boneInfoIndex, Weight);
+//						}
+//					}
+//				}
+//			}
+//
+//			for (auto& boneInfluence : meshSource->m_BoneInfluences)
+//			{
+//				boneInfluence.NormalizeWeights();
+//			}
+//		}
 
 		// Materials
 		Ref<Texture2D> whiteTexture = Renderer::GetWhiteTexture();
@@ -295,12 +299,13 @@ namespace Hazel {
 			HZ_MESH_LOG("---- Materials - {0} ----", m_Path);
 
 			meshSource->m_Materials.resize(scene->mNumMaterials);
-
+			// 处理每种材质（每种材质都包含各种贴图或数据）
 			for (uint32_t i = 0; i < scene->mNumMaterials; i++)
 			{
 				auto aiMaterial = scene->mMaterials[i];
 				auto aiMaterialName = aiMaterial->GetName();
-				Ref<Material> material = Material::Create(Renderer::GetShaderLibrary()->Get("HazelPBR_Static"), aiMaterialName.data);
+				// 创建材质对象，需要一个Shader和名称
+				Ref<Material> material = Material::Create(Renderer::GetShaderLibrary()->Get("gBuffer"), aiMaterialName.data);
 				auto ma = Ref<MaterialAsset>::Create(material);
 
 				HZ_MESH_LOG("  {0} (Index = {1})", aiMaterialName.data, i);
@@ -363,7 +368,7 @@ namespace Hazel {
 #endif
 
 				aiString aiTexPath;
-
+				// 材质某个属性是固定值
 				glm::vec3 albedoColor(0.8f);
 				float emission = 0.0f;
 				aiColor3D aiColor, aiEmission;
@@ -397,6 +402,7 @@ namespace Hazel {
 				HZ_MESH_LOG("    COLOR = {0}, {1}, {2}", aiColor.r, aiColor.g, aiColor.b);
 				HZ_MESH_LOG("    ROUGHNESS = {0}", roughness);
 				HZ_MESH_LOG("    METALNESS = {0}", metalness);
+				// 材质某个属性是贴图
 				bool hasAlbedoMap = aiMaterial->GetTexture(AI_MATKEY_BASE_COLOR_TEXTURE, &aiTexPath) == AI_SUCCESS;
 				if (!hasAlbedoMap)
 				{
@@ -747,10 +753,10 @@ namespace Hazel {
 		if (meshSource->m_Vertices.size())
 			meshSource->m_VertexBuffer = VertexBuffer::Create(meshSource->m_Vertices.data(), (uint32_t)(meshSource->m_Vertices.size() * sizeof(Vertex)));
 
-		if (meshSource->m_BoneInfluences.size() > 0)
+	/*	if (meshSource->m_BoneInfluences.size() > 0)
 		{
 			meshSource->m_BoneInfluenceBuffer = VertexBuffer::Create(meshSource->m_BoneInfluences.data(), (uint32_t)(meshSource->m_BoneInfluences.size() * sizeof(BoneInfluence)));
-		}
+		}*/
 
 		if (meshSource->m_Indices.size())
 			meshSource->m_IndexBuffer = IndexBuffer::Create(meshSource->m_Indices.data(), (uint32_t)(meshSource->m_Indices.size() * sizeof(Index)));

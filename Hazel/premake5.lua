@@ -71,7 +71,7 @@ project "Hazel"
 		"vulkan-1.lib",
 		"%{Library.mono}",
 		"NFD-Extended",
-		"assimp-vc143-mtd.lib"
+		"assimp-vc143-mtd.lib"   -- assimp的dll需要复制到执行目录
 	}
 
 	filter "files:vendor/ImGuizmo/**.cpp"

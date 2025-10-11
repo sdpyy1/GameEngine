@@ -213,9 +213,9 @@ namespace Hazel {
 		Renderer::Submit([commandBuffer,indexBuffer] {
 			uint32_t frameIndex = Renderer::RT_GetCurrentFrameIndex();
 			VkCommandBuffer vkCommandBuffer = commandBuffer.As<VulkanRenderCommandBuffer>()->GetActiveCommandBuffer();
-			vkCmdBindIndexBuffer(vkCommandBuffer, indexBuffer.As<VulkanIndexBuffer>()->GetVulkanBuffer(), 0, VK_INDEX_TYPE_UINT16);
-			vkCmdDrawIndexed(vkCommandBuffer,static_cast<uint32_t>(indexBuffer->GetSize()/2), 1,0,0,0 );  // TODO：IndexSize现在返回是字节数，是不对的
-			});
+			vkCmdBindIndexBuffer(vkCommandBuffer, indexBuffer.As<VulkanIndexBuffer>()->GetVulkanBuffer(), 0, VK_INDEX_TYPE_UINT32);
+			vkCmdDrawIndexed(vkCommandBuffer, indexBuffer->GetCount(), 1, 0, 0, 0);
+		});
 
 	}
 	void VulkanRenderer::EndFrame()

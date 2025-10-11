@@ -24,7 +24,7 @@ project "Hazelnut"
 		"%{IncludeDir.ImGuizmo}",
 		"%{IncludeDir.VulkanSDK}/Include",
 		"%{IncludeDir.VMA}",
-				"%{IncludeDir.ImGui}",
+		"%{IncludeDir.ImGui}",
 	}
 	-- includedirs
 	-- {
@@ -48,11 +48,18 @@ project "Hazelnut"
 	-- 	"%{IncludeDir.choc}",
 	-- 	"%{IncludeDir.nfd}"
 	-- }
+	-- libdirs
+	-- {
+	-- 	"%{LibraryDir.assimp}/assimp-vc143-mtd.lib"
+	-- }
 	links
 	{
 		"Hazel"
 	}
-
+    filter "configurations:Debug"
+		postbuildcommands {
+			'{COPY} "../Hazel/vendor/assimp/bin/windows/Debug/assimp-vc143-mtd.dll" "%{cfg.targetdir}"',
+		}
 	filter "system:windows"
 		systemversion "latest"
 

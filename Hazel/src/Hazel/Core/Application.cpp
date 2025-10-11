@@ -10,6 +10,7 @@
 #include "Hazel/Core/Input.h"
 #include "Hazel/Utils/PlatformUtils.h"
 #include <Platform/Windows/WindowsWindow.h>
+#include "Hazel/Asset/AssetImporter.h"
 #include <nfd.hpp>
 
 namespace Hazel {
@@ -18,14 +19,14 @@ namespace Hazel {
 	static std::thread::id s_MainThreadID;
 
 	Application::Application(const ApplicationSpecification& specification)
-		: m_Specification(specification),m_RenderThread(ThreadingPolicy::SingleThreaded)
+		: m_Specification(specification), m_RenderThread(ThreadingPolicy::SingleThreaded)
 	{
 		HZ_PROFILE_FUNCTION();
 
 		HZ_CORE_ASSERT(!s_Instance, "Application already exists!");
 		s_Instance = this;
 		s_MainThreadID = std::this_thread::get_id();
-		m_RenderThread.Run();  
+		m_RenderThread.Run();
 
 		// Set working directory here
 		if (!m_Specification.WorkingDirectory.empty())
@@ -37,16 +38,16 @@ namespace Hazel {
 
 		Renderer::Init();
 		// 执行当前的Renderer命令
-		m_RenderThread.Pump(); 
-
-		 //ImGui初始化
+		m_RenderThread.Pump();
+		AssetImporter::Init();
+		//ImGui初始化
 		if (m_Specification.EnableImGui)
 		{
 			m_ImGuiLayer = ImGuiLayer::Create();
 			PushOverlay(m_ImGuiLayer);
 		}
-		// TODO:其他系统初始化也在这里
 	}
+
 
 	void Application::Run()
 	{
