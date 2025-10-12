@@ -1,5 +1,6 @@
 #pragma once
 #include "Asset.h"
+#include "Hazel/Asset/Model/MaterialAsset.h"
 namespace Hazel {
 	class AssetManager {
 	public:

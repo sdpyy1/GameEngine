@@ -3,8 +3,8 @@
 #include "Hazel/Asset/Asset.h"
 
 #include <map>
-#include "Material.h"
-
+#include "Hazel/Asset/Model/Material.h"
+class Material;
 namespace Hazel {
 
 	// 存储着各个贴图的UUID
@@ -28,9 +28,9 @@ namespace Hazel {
 		void ClearNormalMap();
 		void ClearMetalnessMap();
 		void ClearRoughnessMap();
-
-	private:
 		Ref<Material> m_Material;
+	private:
+
 
 		struct MapAssets
 		{
@@ -41,8 +41,6 @@ namespace Hazel {
 		} m_Maps;
 
 		bool m_Transparent = false;
-
-	
 	};
 
 	class MaterialTable : public RefCounted

@@ -205,7 +205,7 @@ namespace Hazel {
 		poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 		poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
 		poolInfo.pPoolSizes = poolSizes.data();
-		poolInfo.maxSets = maxSets;  // 池中可分配的描述符集数量 = 并发帧数量
+		poolInfo.maxSets = maxSets * 101;  // 池中可分配的描述符集数量 = 并发帧数量  + 额外支持100种Set
 		VkResult createPoolResult = vkCreateDescriptorPool(
 			device, &poolInfo, nullptr, &m_DescriptorPool);
 		assert(createPoolResult == VK_SUCCESS && "创建描述符池失败！");

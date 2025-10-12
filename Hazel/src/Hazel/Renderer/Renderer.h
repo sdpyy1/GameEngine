@@ -10,6 +10,8 @@
 #include "RenderCommandQueue.h"
 #include "RendererCapabilities.h"
 #include "IndexBuffer.h"
+#include "Hazel/Asset/Model/Mesh.h"
+
 namespace Hazel {
 	class ShaderLibrary;
 
@@ -25,6 +27,7 @@ namespace Hazel {
 		static void BeginRenderPass(Ref<RenderCommandBuffer> commandBuffer,Ref<RenderPass> renderPass,bool explicitClear);
 		static void EndRenderPass(Ref<RenderCommandBuffer> commandBuffer);
 		static void SwapQueues(); // ΩªªªBuffer√¸¡Óª∫≥Â
+		//void DrawStaticMesh(Ref<RenderCommandBuffer> commandBuffer, Ref<VertexBuffer> vertexBuffer, Ref<MeshSource> meshSource, uint32_t subMeshIndex);
 		static void BindVertData(Ref<RenderCommandBuffer> commandBuffer, Ref<VertexBuffer> testVertexBuffer);
 		static void BindIndexDataAndDraw(Ref<RenderCommandBuffer> commandBuffer, Ref<IndexBuffer> indexBuffer);
 		static RendererAPI::Type Current() { return RendererAPI::Current(); }

@@ -18,6 +18,7 @@ namespace Hazel {
 		VkShaderModule GetFragShaderModule() { return m_FragShaderModule; }
 		VkDescriptorSetLayout* GetDescriptorSetLayout() { return &m_DescriptorSetLayout; }
 		std::vector<VkDescriptorSet> GetDescriptorSet() { return m_DescriptorSets; }
+		VkDescriptorPool GetDescriptorPool() {return m_DescriptorPool;}
 		virtual ~VulkanShader();
 		void Release();
 		virtual const std::string& GetName() const override { return m_Name; }

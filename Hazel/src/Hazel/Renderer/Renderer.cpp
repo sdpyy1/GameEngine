@@ -43,21 +43,54 @@ namespace Hazel {
 		// Shader缓存，需要传给Shader资源描述符信息，Shader会创建好资源描述符Set
 		// gBufferShader
 		Shader::ShaderSpecification gbufferShaderSpec;
-		Shader::DescriptorBinding uboBinding;
-		uboBinding.binding = 0;
-		uboBinding.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		uboBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-		uboBinding.count = 1;
-		Shader::DescriptorBinding textureBinding;
-		textureBinding.binding = 1;
-		textureBinding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		textureBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-		textureBinding.count = 1;
-		gbufferShaderSpec.bindings.push_back(uboBinding);
-		gbufferShaderSpec.bindings.push_back(textureBinding);
-		//s_Data->m_ShaderLibrary->LoadCommonShader("gBuffer", "assets/shaders/Debug/gBuffervert.spv", "assets/shaders/Debug/gBufferfrag.spv", gbufferShaderSpec);
-		s_Data->m_ShaderLibrary->LoadCommonShader("gBuffer", "assets/shaders/Debug/vert.spv", "assets/shaders/Debug/frag.spv", gbufferShaderSpec);
 
+		// 1. 顶点着色器的 UBO（模型/视图/投影矩阵等）
+		Shader::DescriptorBinding uboBinding;
+		uboBinding.binding = 0;                  // 对应着色器中 binding = 0
+		uboBinding.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		uboBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;  // 顶点着色器使用
+		uboBinding.count = 1;
+		gbufferShaderSpec.bindings.push_back(uboBinding);
+
+		// 2. Albedo 贴图（combined image sampler）
+		Shader::DescriptorBinding albedoBinding;
+		albedoBinding.binding = 1;               // 对应着色器中 set=0, binding=0（注意索引对应）
+		albedoBinding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		albedoBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;  // 片段着色器使用
+		albedoBinding.count = 1;
+		gbufferShaderSpec.bindings.push_back(albedoBinding);
+
+		// 3. Normal 贴图
+		Shader::DescriptorBinding normalBinding;
+		normalBinding.binding = 2;               // 对应着色器中 set=0, binding=1
+		normalBinding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		normalBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+		normalBinding.count = 1;
+		gbufferShaderSpec.bindings.push_back(normalBinding);
+
+		// 4. Metalness 贴图
+		Shader::DescriptorBinding metalnessBinding;
+		metalnessBinding.binding = 3;            // 对应着色器中 set=0, binding=2
+		metalnessBinding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		metalnessBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+		metalnessBinding.count = 1;
+		gbufferShaderSpec.bindings.push_back(metalnessBinding);
+
+		// 5. Roughness 贴图
+		Shader::DescriptorBinding roughnessBinding;
+		roughnessBinding.binding = 4;            // 对应着色器中 set=0, binding=3
+		roughnessBinding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		roughnessBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+		roughnessBinding.count = 1;
+		gbufferShaderSpec.bindings.push_back(roughnessBinding);
+
+		// 加载着色器（确保 vert.spv 和 frag.spv 与上述绑定匹配）
+		s_Data->m_ShaderLibrary->LoadCommonShader(
+			"gBuffer",
+			"assets/shaders/Debug/vert.spv",
+			"assets/shaders/Debug/frag.spv",
+			gbufferShaderSpec
+		);
 
 		// 加载纹理
 		uint32_t whiteTextureData = 0xffffffff;
@@ -112,6 +145,10 @@ namespace Hazel {
 	{
 		s_RenderCommandQueueSubmissionIndex = (s_RenderCommandQueueSubmissionIndex + 1) % s_RenderCommandQueueCount;
 	}
+	//void Renderer::DrawStaticMesh(Ref<RenderCommandBuffer> commandBuffer, Ref<VertexBuffer> vertexBuffer, Ref<MeshSource> meshSource, uint32_t subMeshIndex) {
+
+	//}
+
 	void Renderer::BindVertData(Ref<RenderCommandBuffer> commandBuffer,Ref<VertexBuffer> testVertexBuffer)
 	{
 		return s_RendererAPI->BindVertData(commandBuffer,testVertexBuffer);

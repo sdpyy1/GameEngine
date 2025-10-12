@@ -29,6 +29,7 @@
 #include <imgui.h>
 #include <Hazel/Asset/AssetImporter.h>
 #include <Hazel/Asset/Model/Mesh.h>
+#include <Platform/Vulkan/VulkanMaterial.h>
 
 namespace Hazel {
 
@@ -53,11 +54,13 @@ namespace Hazel {
 		swapChian = Application::Get().GetWindow()->GetSwapChainPtr();
 		gBuffershader = Renderer::GetShaderLibrary()->Get("gBuffer").As<VulkanShader>();
 		// FBO创建好后，Vulkan会自动创建附件图片、深度图片、VkRenderPass
-		FramebufferTextureSpecification positionSpec(ImageFormat::RGBA16F);	
-		FramebufferTextureSpecification colorSpec(ImageFormat::RGBA16F);	
+		FramebufferTextureSpecification gPositionSpec(ImageFormat::RGBA16F);
+		FramebufferTextureSpecification gNormalSpec(ImageFormat::RGBA16F);
+		FramebufferTextureSpecification gAlbedoSpec(ImageFormat::RGBA16F);
+		FramebufferTextureSpecification gMRSpec(ImageFormat::RGBA16F);
 		FramebufferTextureSpecification depthSpec(ImageFormat::DEPTH32F);
 		FramebufferAttachmentSpecification attachmentSpec;
-		attachmentSpec.Attachments = { positionSpec,colorSpec,depthSpec };
+		attachmentSpec.Attachments = { gPositionSpec,gNormalSpec,gAlbedoSpec,gMRSpec,depthSpec };
 		FramebufferSpecification framebufferSpec;
 		framebufferSpec.Attachments = attachmentSpec;
 		framebufferSpec.DebugName = "GBuffer";
@@ -82,11 +85,12 @@ namespace Hazel {
 		AssetMetadata metadata;
 		//metadata.FilePath = "D:/Hazel-3D-2023/Hazelnut/Resources/Meshes/Default/Capsule.gltf";
 		metadata.FilePath = "assets/model/helmet_pbr/DamagedHelmet.gltf";
+		//metadata.FilePath = "assets/model/desert-eagle/scene.gltf";
 		metadata.Type = AssetType::MeshSource;
-		Ref<Asset> ham;
-		AssetImporter::TryLoadData(metadata, ham);
-		testVertexBuffer = ham.As<MeshSource>()->GetVertexBuffer();
-		indexBuffer = ham.As<MeshSource>()->GetIndexBuffer();
+		Ref<Asset> Helmet;
+		AssetImporter::TryLoadData(metadata, Helmet);
+		testVertexBuffer = Helmet.As<MeshSource>()->GetVertexBuffer();
+		indexBuffer = Helmet.As<MeshSource>()->GetIndexBuffer();
 		uniformBufferSet = UniformBufferSet::Create(sizeof(UniformBufferObject));
 
 		RenderPassSpecification gBufferPassSpec;
@@ -98,8 +102,10 @@ namespace Hazel {
 		std::filesystem::path path = "assets/textures/texture.jpg";
 		texture = Texture2D::Create(textureSpec, path);
 		gBufferPass->SetInput(uniformBufferSet, 0);  // 传递实际数据给Shader
-		gBufferPass->SetInput(texture, 1);  // 传递实际数据给Shader
-
+		//gBufferPass->SetInput(texture, 1);  // 传递实际数据给Shader
+		AssetHandle a = Helmet.As<MeshSource>()->m_Materials[0];
+		Ref<Material> m = AssetManager::GetAsset<MaterialAsset>(a)->m_Material;
+		m.As<VulkanMaterial>()->UpdateDescriptorSet();
 	}
 
 	Scene::~Scene()
@@ -140,7 +146,7 @@ namespace Hazel {
 
 	void Scene::SetViewPortImage()
 	{
-		Ref<Image2D> finalRenderOutput = gBufferPass->GetPipeline()->GetSpecification().TargetFramebuffer->GetImage(1);
+		Ref<Image2D> finalRenderOutput = gBufferPass->GetPipeline()->GetSpecification().TargetFramebuffer->GetImage(2);
 		//Ref<Image2D> finalRenderOutput = Renderer::GetWhiteTexture();
 
 		auto viewportSize = ImGui::GetContentRegionAvail();
@@ -315,7 +321,10 @@ namespace Hazel {
 	{
 		static_assert(sizeof(T) == 0);
 	}
-
+	template<>
+	void Scene::OnComponentAdded<StaticMeshComponent>(Entity entity, StaticMeshComponent& component)
+	{
+	}
 	template<>
 	void Scene::OnComponentAdded<IDComponent>(Entity entity, IDComponent& component)
 	{

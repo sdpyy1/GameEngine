@@ -19,7 +19,7 @@ namespace Hazel {
 		}
 		else
 		{
-			//stbi_set_flip_vertically_on_load(1);
+			stbi_set_flip_vertically_on_load(1);
 			imageBuffer.Data = stbi_load(pathString.c_str(), &width, &height, &channels, 4);
 			imageBuffer.Size = width * height * 4;
 			outFormat = isSRGB ? ImageFormat::SRGBA : ImageFormat::RGBA;

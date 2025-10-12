@@ -2,8 +2,6 @@
 
 #include "Hazel/Renderer/RenderPass.h"
 
-#include "DescriptorSetManager.h"
-
 #include "vulkan/vulkan.h"
 
 namespace Hazel {
@@ -25,7 +23,6 @@ namespace Hazel {
 		bool IsInvalidated(uint32_t set, uint32_t binding) const;
 	private:
 		RenderPassSpecification m_Specification;
-		DescriptorSetManager m_DescriptorSetManager;
 	};
 
 }

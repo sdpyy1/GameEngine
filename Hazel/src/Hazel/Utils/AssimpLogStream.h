@@ -14,7 +14,7 @@ namespace Hazel {
 			if (Assimp::DefaultLogger::isNullLogger())
 			{
 				Assimp::DefaultLogger::create("", Assimp::Logger::VERBOSE);
-				Assimp::DefaultLogger::get()->attachStream(new AssimpLogStream, Assimp::Logger::Debugging | Assimp::Logger::Info | Assimp::Logger::Warn | Assimp::Logger::Err);
+				Assimp::DefaultLogger::get()->attachStream(new AssimpLogStream, /*Assimp::Logger::Debugging | Assimp::Logger::Info |*/ Assimp::Logger::Warn | Assimp::Logger::Err);
 			}
 		}
 

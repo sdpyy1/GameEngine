@@ -29,7 +29,20 @@ namespace Hazel {
 		TagComponent(const std::string& tag)
 			: Tag(tag) {}
 	};
+	struct StaticMeshComponent
+	{
+		AssetHandle StaticMesh;
+		bool Visible = true;
 
+		StaticMeshComponent() = default;
+		StaticMeshComponent(const StaticMeshComponent& other)
+			: StaticMesh(other.StaticMesh), Visible(other.Visible)
+		{
+		}
+		StaticMeshComponent(AssetHandle staticMesh)
+			: StaticMesh(staticMesh) {
+		}
+	};
 	struct TransformComponent
 	{
 		glm::vec3 Translation = { 0.0f, 0.0f, 0.0f };
@@ -175,7 +188,7 @@ namespace Hazel {
 	};
 
 	using AllComponents = 
-		ComponentGroup<TransformComponent, SpriteRendererComponent,
+		ComponentGroup<StaticMeshComponent,TransformComponent, SpriteRendererComponent,
 			CircleRendererComponent, /*CameraComponent,*/ ScriptComponent,
 			NativeScriptComponent, Rigidbody2DComponent, BoxCollider2DComponent,
 			CircleCollider2DComponent, TextComponent>;
