@@ -15,7 +15,7 @@ namespace Hazel {
 		static Ref<T> GetAsset(AssetHandle assetHandle)
 		{
 			Ref<Asset> asset = m_MemoryAssets[assetHandle];
-			if (!asset->IsValid()) return nullptr;
+			if (asset==nullptr || !asset->IsValid()) return nullptr;
 			return asset.As<T>();
 		}
 

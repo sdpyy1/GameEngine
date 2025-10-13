@@ -15,18 +15,28 @@
 #include <GLFW/include/GLFW/glfw3.h>
 #include <Hazel/Asset/AssetMetadata.h>
 #include <Hazel/Asset/AssetImporter.h>
-
+#include "Hazel/Scene/SceneRender.h"
 namespace Hazel {
 
 
 	EditorLayer::EditorLayer()
 		: Layer("EditorLayer"), m_EditorCamera(45.0f, 1600.0f, 1200.0f, 0.1f, 1000.0f)
 	{
+		m_SceneRender = Ref<SceneRender>::Create();
 	}
 
 	void EditorLayer::OnAttach()
 	{
-		scene.CreateEntity("aaa");
+		// Ä£ÐÍ¼ÓÔØ
+		AssetMetadata metadata;
+		//metadata.FilePath = "D:/Hazel-3D-2023/Hazelnut/Resources/Meshes/Default/Capsule.gltf";
+		metadata.FilePath = "assets/model/helmet_pbr/DamagedHelmet.gltf";
+		//metadata.FilePath = "assets/model/desert-eagle/scene.gltf";
+		metadata.Type = AssetType::MeshSource;
+		Ref<Asset> Helmet;
+		AssetImporter::TryLoadData(metadata, Helmet);
+		Entity a = scene.CreateEntity("aaa");
+		a.AddComponent<StaticMeshComponent>(Helmet->Handle);
 	}
 
 	void EditorLayer::OnDetach()
@@ -38,7 +48,7 @@ namespace Hazel {
 		m_EditorCamera.SetActive(true);
 		m_EditorCamera.OnUpdate(ts);
 
-		scene.RenderVukan(m_EditorCamera);
+		scene.OnEditorRender(m_SceneRender,m_EditorCamera);
 	}
 
 	void EditorLayer::OnImGuiRender()
@@ -82,7 +92,7 @@ namespace Hazel {
 	void EditorLayer::ViewportGUI()
 	{
 		ImGui::Begin("ViewPort");
-		scene.SetViewPortImage();
+		scene.OutputRenderRes(m_SceneRender);
 		ImGui::End();
 	}
 	void EditorLayer::TestGUI()

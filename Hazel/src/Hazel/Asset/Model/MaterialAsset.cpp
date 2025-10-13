@@ -129,6 +129,10 @@ namespace Hazel{
 	{
 		//m_Material->Set(s_EmissionUniform, value);
 	}
+	void MaterialAsset::Bind()
+	{
+		m_Material->Bind();
+	}
 	void MaterialAsset::ClearAlbedoMap()
 	{
 		//m_Material->Set(s_AlbedoMapUniform, Renderer::GetWhiteTexture());

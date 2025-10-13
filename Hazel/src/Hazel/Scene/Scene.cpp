@@ -11,7 +11,7 @@
 #include <glm/glm.hpp>
 
 #include "Entity.h"
-#include "examples/imgui_impl_vulkan_with_textures.h"
+#include "Hazel/Utils/UIUtils.h"
 
 // Box2D
 #include "box2d/b2_world.h"
@@ -30,130 +30,52 @@
 #include <Hazel/Asset/AssetImporter.h>
 #include <Hazel/Asset/Model/Mesh.h>
 #include <Platform/Vulkan/VulkanMaterial.h>
+#include "SceneRender.h"
 
 namespace Hazel {
-
-	void Scene::updateUniformBuffer(EditorCamera& editorCamera) {
-		if (swapChian->GetExtent().width == 0 && (float)swapChian->GetExtent().height == 0) {
-			return;
-		}
-		static auto startTime = std::chrono::high_resolution_clock::now();
-		auto currentTime = std::chrono::high_resolution_clock::now();
-		float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
-		ubo->model = glm::mat4(1.0);
-		ubo->view = editorCamera.GetViewMatrix();
-		ubo->proj = editorCamera.GetProjectionMatrix();
-		ubo->proj[1][1] *= -1; // Y轴反转
-
-		uniformBufferSet->RT_Get()->SetData((void*)ubo, sizeof(UniformBufferObject));
-	}
 	Scene::Scene()
 	{
-		passCommandBuffer = RenderCommandBuffer::Create("PassCommandBuffer");
-		vulkanContext = Application::Get().GetRenderContext().As<VulkanContext>();
-		swapChian = Application::Get().GetWindow()->GetSwapChainPtr();
-		gBuffershader = Renderer::GetShaderLibrary()->Get("gBuffer").As<VulkanShader>();
-		// FBO创建好后，Vulkan会自动创建附件图片、深度图片、VkRenderPass
-		FramebufferTextureSpecification gPositionSpec(ImageFormat::RGBA16F);
-		FramebufferTextureSpecification gNormalSpec(ImageFormat::RGBA16F);
-		FramebufferTextureSpecification gAlbedoSpec(ImageFormat::RGBA16F);
-		FramebufferTextureSpecification gMRSpec(ImageFormat::RGBA16F);
-		FramebufferTextureSpecification depthSpec(ImageFormat::DEPTH32F);
-		FramebufferAttachmentSpecification attachmentSpec;
-		attachmentSpec.Attachments = { gPositionSpec,gNormalSpec,gAlbedoSpec,gMRSpec,depthSpec };
-		FramebufferSpecification framebufferSpec;
-		framebufferSpec.Attachments = attachmentSpec;
-		framebufferSpec.DebugName = "GBuffer";
-		Ref<Framebuffer> GbufferFBO = Framebuffer::Create(framebufferSpec);
-		ubo = new UniformBufferObject();
-		positionAttachment = GbufferFBO->GetImage(0);
-		HZ_CORE_WARN("Gbuffer 有{}个附件", GbufferFBO->GetColorAttachmentCount());
-		// Pipeline 测试
-		VertexBufferElement Position(ShaderDataType::Float3, "Position");
-		VertexBufferElement Normal(ShaderDataType::Float3, "Normal");
-		VertexBufferElement Tangent(ShaderDataType::Float3, "Tangent");
-		VertexBufferElement Binormal(ShaderDataType::Float3, "Binormal");
-		VertexBufferElement Texcoord(ShaderDataType::Float2, "Texcoord");
-		PipelineSpecification pSpec;
-		pSpec.BackfaceCulling = false;
-		pSpec.Layout = Vertex::GetVertexLayout();
-		pSpec.Shader = gBuffershader;   // TODO：这里要修改为GbuFFer自己的shader
-		pSpec.TargetFramebuffer = GbufferFBO;
-		pSpec.DebugName = "GbufferPipeline";
-		GbufferPipeline = Pipeline::Create(pSpec);
-		// 模型加载
-		AssetMetadata metadata;
-		//metadata.FilePath = "D:/Hazel-3D-2023/Hazelnut/Resources/Meshes/Default/Capsule.gltf";
-		metadata.FilePath = "assets/model/helmet_pbr/DamagedHelmet.gltf";
-		//metadata.FilePath = "assets/model/desert-eagle/scene.gltf";
-		metadata.Type = AssetType::MeshSource;
-		Ref<Asset> Helmet;
-		AssetImporter::TryLoadData(metadata, Helmet);
-		testVertexBuffer = Helmet.As<MeshSource>()->GetVertexBuffer();
-		indexBuffer = Helmet.As<MeshSource>()->GetIndexBuffer();
-		uniformBufferSet = UniformBufferSet::Create(sizeof(UniformBufferObject));
-
-		RenderPassSpecification gBufferPassSpec;
-		gBufferPassSpec.Pipeline = GbufferPipeline;
-		gBufferPass = RenderPass::Create(gBufferPassSpec);
-		TextureSpecification textureSpec;
-		textureSpec.Width = 100;
-		textureSpec.Height = 100;
-		std::filesystem::path path = "assets/textures/texture.jpg";
-		texture = Texture2D::Create(textureSpec, path);
-		gBufferPass->SetInput(uniformBufferSet, 0);  // 传递实际数据给Shader
-		//gBufferPass->SetInput(texture, 1);  // 传递实际数据给Shader
-		AssetHandle a = Helmet.As<MeshSource>()->m_Materials[0];
-		Ref<Material> m = AssetManager::GetAsset<MaterialAsset>(a)->m_Material;
-		m.As<VulkanMaterial>()->UpdateDescriptorSet();
 	}
 
-	Scene::~Scene()
-	{
-		delete m_PhysicsWorld;
-	}
 
-	void Scene::RenderVukan(EditorCamera & editorCamera) {
-		passCommandBuffer->Begin();
-		uint32_t flyIndex = Renderer::GetCurrentFrameIndex();
-		updateUniformBuffer(editorCamera);
 
-		Renderer::BeginRenderPass(passCommandBuffer,gBufferPass,true);
+	void Scene::OnEditorRender(Ref<SceneRender> sceneRender,EditorCamera & editorCamera) {
+		sceneRender->SetScene(this);
+		sceneRender->PreRender(editorCamera);
 
-		Renderer::BindVertData(passCommandBuffer,testVertexBuffer);
-		Renderer::BindIndexDataAndDraw(passCommandBuffer,indexBuffer);
-		
-		Renderer::EndRenderPass(passCommandBuffer);
-		passCommandBuffer->End();
-		passCommandBuffer->Submit();
+		CollectRenderableEntities();
+
+
+		sceneRender->EndRender();
 	};
 
-	void Image(const Ref<Image2D>& image, const ImVec2& size, const ImVec2& uv0, const ImVec2& uv1, const ImVec4& tint_col = { 1,1,1,1 },
-		const ImVec4& border_col = { 0,0,0,0 })
+
+
+	void Scene::OutputRenderRes(Ref<SceneRender> sceneRender)
 	{
-		HZ_CORE_VERIFY(image, "Image is null");
-
-		if (RendererAPI::Current() == RendererAPI::Type::Vulkan)
-		{
-			Ref<VulkanImage2D> vulkanImage = image.As<VulkanImage2D>();
-			const auto& imageInfo = vulkanImage->GetImageInfo();
-			if (!imageInfo.ImageView)
-				return;
-			const auto textureID = ImGui_ImplVulkan_AddTexture(imageInfo.Sampler, imageInfo.ImageView, vulkanImage->GetDescriptorInfoVulkan().imageLayout);
-			ImGui::Image(textureID, size, uv0, uv1, tint_col, border_col);
-		}
-	}
-
-	void Scene::SetViewPortImage()
-	{
-		Ref<Image2D> finalRenderOutput = gBufferPass->GetPipeline()->GetSpecification().TargetFramebuffer->GetImage(2);
-		//Ref<Image2D> finalRenderOutput = Renderer::GetWhiteTexture();
-
-		auto viewportSize = ImGui::GetContentRegionAvail();
-		Image(finalRenderOutput, viewportSize, {0, 0}, {1, 1});
+		UI::Image(sceneRender->GetFinalImage(), ImGui::GetContentRegionAvail(), {0, 0}, {1, 1});
 	}
 	
+	void Scene::SubmitStaticMesh(Ref<MeshSource> mesh) {
 
+
+
+	};
+	void Scene::CollectRenderableEntities()
+	{
+		auto allEntityOwnMesh = GetAllEntitiesWith<StaticMeshComponent>();
+		for (auto entity : allEntityOwnMesh) {
+			auto& staticMeshComponent = allEntityOwnMesh.get<StaticMeshComponent>(entity);
+			if (!staticMeshComponent.Visible) continue;
+			Ref<MeshSource> mesh = AssetManager::GetAsset<MeshSource>(staticMeshComponent.StaticMesh);
+			if (mesh == nullptr) continue;
+			Entity e = Entity(entity, this);
+			// 这里获取Model变换信息
+
+			// 注册Mesh
+			SubmitStaticMesh(mesh);
+		}
+	}
 	template<typename... Component>
 	static void CopyComponent(entt::registry& dst, entt::registry& src, const std::unordered_map<UUID, entt::entity>& enttMap)
 	{
@@ -192,32 +114,6 @@ namespace Hazel {
 		CopyComponentIfExists<Component...>(dst, src);
 	}
 
-	Ref<Scene> Scene::Copy(Ref<Scene> other)
-	{
-		Ref<Scene> newScene = Ref<Scene>::Create();
-
-		newScene->m_ViewportWidth = other->m_ViewportWidth;
-		newScene->m_ViewportHeight = other->m_ViewportHeight;
-
-		auto& srcSceneRegistry = other->m_Registry;
-		auto& dstSceneRegistry = newScene->m_Registry;
-		std::unordered_map<UUID, entt::entity> enttMap;
-
-		// Create entities in new scene
-		auto idView = srcSceneRegistry.view<IDComponent>();
-		for (auto e : idView)
-		{
-			UUID uuid = srcSceneRegistry.get<IDComponent>(e).ID;
-			const auto& name = srcSceneRegistry.get<TagComponent>(e).Tag;
-			Entity newEntity = newScene->CreateEntityWithUUID(uuid, name);
-			enttMap[uuid] = (entt::entity)newEntity;
-		}
-
-		// Copy components (except IDComponent and TagComponent)
-		CopyComponent(AllComponents{}, dstSceneRegistry, srcSceneRegistry, enttMap);
-
-		return newScene;
-	}
 
 	Entity Scene::CreateEntity(const std::string& name)
 	{
@@ -241,41 +137,6 @@ namespace Hazel {
 	{
 		m_EntityMap.erase(entity.GetUUID());
 		m_Registry.destroy(entity);
-	}
-
-	void Scene::OnViewportResize(uint32_t width, uint32_t height)
-	{
-		//if (m_ViewportWidth == width && m_ViewportHeight == height)
-		//	return;
-
-		//m_ViewportWidth = width;
-		//m_ViewportHeight = height;
-
-		//// Resize our non-FixedAspectRatio cameras
-		//auto view = m_Registry.view<CameraComponent>();
-		//for (auto entity : view)
-		//{
-		//	auto& cameraComponent = view.get<CameraComponent>(entity);
-		//	if (!cameraComponent.FixedAspectRatio)
-		//		cameraComponent.Camera.SetViewportSize(width, height);
-		//}
-	}
-
-	Entity Scene::GetPrimaryCameraEntity()
-	{
-		//auto view = m_Registry.view<CameraComponent>();
-		//for (auto entity : view)
-		//{
-		//	const auto& camera = view.get<CameraComponent>(entity);
-		//	if (camera.Primary)
-		//		return Entity{entity, this};
-		//}
-		return {};
-	}
-
-	void Scene::Step(int frames)
-	{
-		m_StepFrames = frames;
 	}
 
 	Entity Scene::DuplicateEntity(Entity entity)
@@ -309,13 +170,11 @@ namespace Hazel {
 	}
 
 
-
-
-	void Scene::RenderScene(EditorCamera& camera)
+	Scene::~Scene()
 	{
-		
+		delete m_PhysicsWorld;
 	}
-  
+
   template<typename T>
 	void Scene::OnComponentAdded(Entity entity, T& component)
 	{

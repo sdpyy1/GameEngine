@@ -11,6 +11,8 @@ namespace Hazel {
 		virtual void SetNormalTexture(Ref<Texture2D> texture) override;
 		virtual void SetMetalnessTexture(Ref<Texture2D> texture) override;
 		virtual void SetRoughnessTexture(Ref<Texture2D> texture) override;
+		virtual void Bind() override;
+		virtual void RT_Bind() override;
 
 		virtual ~VulkanMaterial() override;
 	private:

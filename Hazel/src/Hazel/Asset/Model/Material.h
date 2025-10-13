@@ -12,7 +12,8 @@ namespace Hazel {
 		virtual void SetNormalTexture(Ref<Texture2D> texture) = 0;
 		virtual void SetMetalnessTexture(Ref<Texture2D> texture) = 0;
 		virtual void SetRoughnessTexture(Ref<Texture2D> texture) = 0;
-
+		virtual void Bind() = 0;
+		virtual void RT_Bind() = 0;
 		virtual ~Material() {}
 	protected:
 		Ref<Texture2D> AlbedoTexture = nullptr;

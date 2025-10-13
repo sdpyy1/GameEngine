@@ -11,6 +11,6 @@ bool Hazel::MeshSourceSerializer::TryLoadData(const AssetMetadata& metadata, Ref
 		return false;
 
 	asset = meshSource;
-	asset->Handle = metadata.Handle;
+	AssetManager::AddMemoryOnlyAsset(meshSource);
 	return true;
 }

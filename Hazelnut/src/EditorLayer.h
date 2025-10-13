@@ -27,6 +27,7 @@ namespace Hazel {
 		void TestGUI();
 	private:
 		Scene scene;  // ³¡¾°
+		Ref<SceneRender> m_SceneRender; // ³¡¾°äÖÈ¾Æ÷
 		EditorCamera m_EditorCamera; // ÉãÏñ»ú
 	};
 

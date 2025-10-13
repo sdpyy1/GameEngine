@@ -23,15 +23,14 @@ namespace Hazel {
 		void SetMetalness(float value);
 		void SetRoughness(float value);
 		void SetEmission(float value);
-
+		void Bind();
 		void ClearAlbedoMap();
 		void ClearNormalMap();
 		void ClearMetalnessMap();
 		void ClearRoughnessMap();
-		Ref<Material> m_Material;
+
 	private:
-
-
+		Ref<Material> m_Material;
 		struct MapAssets
 		{
 			AssetHandle AlbedoMap = 0;

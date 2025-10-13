@@ -12,10 +12,10 @@ namespace Hazel {
 
 	void VulkanMaterial::UpdateDescriptorSet() {
 		// 1. 选择当前要绑定的贴图（优先用户设置，否则用默认）
-		auto albedo = AlbedoTexture;
-		auto normal = NormalTexture;
-		auto metalness =MetalnessTexture;
-		auto roughness = RoughnessTexture;
+		auto albedo = AlbedoTexture == nullptr? Renderer::GetWhiteTexture() : AlbedoTexture;
+		auto normal = NormalTexture == nullptr ? Renderer::GetWhiteTexture() : NormalTexture;
+		auto metalness =MetalnessTexture == nullptr ? Renderer::GetWhiteTexture() : MetalnessTexture;
+		auto roughness = RoughnessTexture == nullptr ? Renderer::GetWhiteTexture() : RoughnessTexture;
 
 		// 2. 准备贴图的 ImageInfo（结合采样器，假设贴图自带采样器）
 		auto getImageInfo = [](Ref<Texture2D> tex) -> VkDescriptorImageInfo {
@@ -74,6 +74,16 @@ namespace Hazel {
 	void VulkanMaterial::SetRoughnessTexture(Ref<Texture2D> texture)
 	{
 		RoughnessTexture = texture;
+	}
+	void VulkanMaterial::Bind()
+	{
+		Renderer::Submit([this]() {
+			UpdateDescriptorSet();
+			});
+	}
+	void VulkanMaterial::RT_Bind()
+	{
+		UpdateDescriptorSet();
 	}
 	void VulkanMaterial::SetAlbedoTexture(Ref<Texture2D> texture)
 	{

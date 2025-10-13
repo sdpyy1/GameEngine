@@ -14,7 +14,7 @@ namespace Hazel {
 		glm::vec3 Tangent;
 		glm::vec3 Binormal;
 		glm::vec2 Texcoord;
-
+		// 用于创建pipeline
 		static VertexBufferLayout GetVertexLayout() {
 			VertexBufferElement Position(ShaderDataType::Float3, "Position");
 			VertexBufferElement Normal(ShaderDataType::Float3, "Normal");

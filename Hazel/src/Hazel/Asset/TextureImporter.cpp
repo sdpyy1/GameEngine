@@ -19,12 +19,12 @@ namespace Hazel {
 		}
 		else
 		{
-			stbi_set_flip_vertically_on_load(1);
+			stbi_set_flip_vertically_on_load(1); // ·´×ªÏñËØ
 			imageBuffer.Data = stbi_load(pathString.c_str(), &width, &height, &channels, 4);
 			imageBuffer.Size = width * height * 4;
 			outFormat = isSRGB ? ImageFormat::SRGBA : ImageFormat::RGBA;
 		}
-
+		stbi_set_flip_vertically_on_load(0);
 		if (!imageBuffer.Data)
 			return {};
 
@@ -47,7 +47,7 @@ namespace Hazel {
 		}
 		else
 		{
-			// stbi_set_flip_vertically_on_load(1);
+			 stbi_set_flip_vertically_on_load(1);
 			imageBuffer.Data = stbi_load_from_memory((const stbi_uc*)buffer.Data, (int)buffer.Size, &width, &height, &channels, STBI_rgb_alpha);
 			imageBuffer.Size = width * height * 4;
 			outFormat = isSRGB ? ImageFormat::SRGBA : ImageFormat::RGBA;
@@ -55,6 +55,7 @@ namespace Hazel {
 
 		if (!imageBuffer.Data)
 			return {};
+		stbi_set_flip_vertically_on_load(0);
 
 		outWidth = width;
 		outHeight = height;
