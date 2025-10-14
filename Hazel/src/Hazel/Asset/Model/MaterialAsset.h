@@ -1,12 +1,8 @@
 #pragma once
-
 #include "Hazel/Asset/Asset.h"
+#include <Hazel/Asset/Model/Material.h>
 
-#include <map>
-#include "Hazel/Asset/Model/Material.h"
-class Material;
 namespace Hazel {
-
 	// 存储着各个贴图的UUID
 	class MaterialAsset : public Asset
 	{
@@ -23,14 +19,14 @@ namespace Hazel {
 		void SetMetalness(float value);
 		void SetRoughness(float value);
 		void SetEmission(float value);
-		void Bind();
 		void ClearAlbedoMap();
 		void ClearNormalMap();
 		void ClearMetalnessMap();
 		void ClearRoughnessMap();
-
+		Ref<Material> GetMaterial() { return m_Material; }
 	private:
 		Ref<Material> m_Material;
+
 		struct MapAssets
 		{
 			AssetHandle AlbedoMap = 0;

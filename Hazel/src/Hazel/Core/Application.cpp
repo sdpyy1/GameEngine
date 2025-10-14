@@ -19,7 +19,7 @@ namespace Hazel {
 	static std::thread::id s_MainThreadID;
 
 	Application::Application(const ApplicationSpecification& specification)
-		: m_Specification(specification), m_RenderThread(ThreadingPolicy::MultiThreaded)
+		: m_Specification(specification), m_RenderThread(ThreadingPolicy::SingleThreaded)
 	{
 		HZ_PROFILE_FUNCTION();
 
@@ -70,8 +70,8 @@ namespace Hazel {
 			// 上一行和下一行表示GPU和渲染线程都开始工作了，在渲染线程渲染上一帧的时候,CPU开始收集下一帧渲染命令
 			if (!m_Minimized)
 			{
-				// 重置DrawCall=0，（交换链的Begin也写在这里了：获取下一帧图片索引、清空交换链的命令缓冲区)
-				Renderer::BeginFrame();  // 也是RT_ 只是没标明
+				// 重置DrawCall=0，（交换链的Begin也写在这里了：获取下一帧图片索引、更新交换链FrameIndex、清空交换链的命令缓冲区)
+				Renderer::BeginFrame();
 
 				// 更新各层
 				{
@@ -89,10 +89,8 @@ namespace Hazel {
 				// 提交命令缓冲区、呈现图片
 				Renderer::EndFrame();  
 			}
-			// 记录信息
+			// 主线程 FrameIndex 更新
 			m_CurrentFrameIndex = (m_CurrentFrameIndex + 1) % Renderer::GetConfig().FramesInFlight;
-			static uint64_t frameCounter = 0;
-			frameCounter++;
 
 			m_Window->OnUpdate();
 			ExecuteMainThreadQueue();

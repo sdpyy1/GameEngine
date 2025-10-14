@@ -68,6 +68,8 @@ namespace Hazel {
 		MeshSource() = default;
 		Ref<VertexBuffer> GetVertexBuffer() {return m_VertexBuffer;}
 		Ref<IndexBuffer> GetIndexBuffer() {return m_IndexBuffer;}
+		std::vector<Submesh>& GetSubmeshes() { return m_Submeshes; }
+		AssetHandle GetMaterialHandle(uint32_t index) {return m_Materials[index];}
 		virtual ~MeshSource();
 		std::vector<AssetHandle> m_Materials;
 	private:

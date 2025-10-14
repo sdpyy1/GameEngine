@@ -15,6 +15,7 @@
 #include "VulkanRenderCommandBuffer.h"
 #include <glm/gtc/type_ptr.hpp>
 #include "VulkanRenderPass.h"
+#include "VulkanMaterial.h"
 
 namespace Hazel {
 	struct VulkanRendererData
@@ -70,6 +71,40 @@ namespace Hazel {
 		VK_CHECK_RESULT(vkAllocateDescriptorSets(device, &allocInfo, &result));
 		s_Data->DescriptorPoolAllocationCount[bufferIndex] += allocInfo.descriptorSetCount;
 		return result;
+	}
+	void VulkanRenderer::RenderStaticMeshWithMaterial(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<Pipeline> pipeline, Ref<MeshSource> meshSource, uint32_t submeshIndex, Ref<Material> material, Ref<VertexBuffer> transformBuffer, uint32_t transformOffset, uint32_t instanceCount)
+	{
+		HZ_CORE_ASSERT(meshSource);
+		HZ_CORE_ASSERT(material);
+		Ref<VulkanMaterial> vulkanMaterial = material.As<VulkanMaterial>();
+		Renderer::Submit([renderCommandBuffer, pipeline,meshSource, submeshIndex, vulkanMaterial, transformBuffer, transformOffset, instanceCount]() mutable {
+			uint32_t frameIndex = Renderer::RT_GetCurrentFrameIndex();
+			VkCommandBuffer commandBuffer = renderCommandBuffer.As<VulkanRenderCommandBuffer>()->GetActiveCommandBuffer();
+			Ref<VulkanVertexBuffer> meshVertBuffer = meshSource->GetVertexBuffer().As<VulkanVertexBuffer>();
+			VkBuffer vkMeshVertBuffer = meshVertBuffer->GetVulkanBuffer();
+			VkDeviceSize vertexOffsets[1] = { 0 };
+			vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vkMeshVertBuffer, vertexOffsets);  // 把整个Mesh的顶点都绑定
+			Ref<VulkanVertexBuffer> vulkanTransformBuffer = transformBuffer.As<VulkanVertexBuffer>();
+			VkBuffer vkTransformBuffer = vulkanTransformBuffer->GetVulkanBuffer();
+			VkDeviceSize instanceOffsets[1] = { transformOffset };
+			vkCmdBindVertexBuffers(commandBuffer, 1, 1, &vkTransformBuffer, instanceOffsets); // 第二个顶点缓冲区绑定当前SubMesh的变换矩阵数据
+
+			auto vulkanMeshIB = Ref<VulkanIndexBuffer>(meshSource->GetIndexBuffer());
+			VkBuffer ibBuffer = vulkanMeshIB->GetVulkanBuffer();
+			vkCmdBindIndexBuffer(commandBuffer, ibBuffer, 0, VK_INDEX_TYPE_UINT32); // 索引缓冲区全绑定
+
+			// 每个材质绑定自己的 Set=1
+			VkDescriptorSet matSet = vulkanMaterial->GetDescriptorSets()[frameIndex];
+			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+				pipeline.As<VulkanPipeline>()->GetVulkanPipelineLayout(),
+				1, // Set=1
+				1, &matSet,
+				0, nullptr);
+			const auto& submeshes = meshSource->GetSubmeshes();
+			const auto& submesh = submeshes[submeshIndex];
+			vkCmdDrawIndexed(commandBuffer, submesh.IndexCount/*索引数量*/, instanceCount/*实例数量*/, submesh.BaseIndex/*索引缓冲区的偏移*/, submesh.BaseVertex/*顶点偏移*/, 0/*实例化ID开始的编号*/);
+			
+		});
 	}
 	void VulkanRenderer::Init()
 	{
@@ -186,13 +221,11 @@ namespace Hazel {
 				VulkanSwapChain& swapChain = Application::Get().GetWindow()->GetSwapChain();
 				// 清空命令缓冲区、获取下一帧图片索引
 				swapChain.BeginFrame();
-				// Reset descriptor pools here
 				VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 				uint32_t bufferIndex = swapChain.GetCurrentBufferIndex();
-
-				// TODO:这个Pool 目前我还没用到，目前每个Shader一个Pool
-				//vkResetDescriptorPool(device, s_Data->DescriptorPools[bufferIndex], 0);
-				//memset(s_Data->DescriptorPoolAllocationCount.data(), 0, s_Data->DescriptorPoolAllocationCount.size() * sizeof(uint32_t));
+				// 
+				vkResetDescriptorPool(device, s_Data->DescriptorPools[bufferIndex], 0);
+				memset(s_Data->DescriptorPoolAllocationCount.data(), 0, s_Data->DescriptorPoolAllocationCount.size() * sizeof(uint32_t));
 
 				s_Data->DrawCallCount = 0;
 			});
@@ -367,15 +400,10 @@ namespace Hazel {
 				if (vulkanPipeline->IsDynamicLineWidth())
 					vkCmdSetLineWidth(commandBuffer, vulkanPipeline->GetSpecification().LineWidth);
 
-				// Bind input descriptors (starting from set 1, set 0 is for per-draw)
+				// Bind input descriptors
 				Ref<VulkanRenderPass> vulkanRenderPass = renderPass.As<VulkanRenderPass>();
 				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderPass->GetPipeline().As<VulkanPipeline>()->GetVulkanPipelineLayout(), 0, 1, &renderPass->GetPipeline()->GetShader().As<VulkanShader>()->GetDescriptorSet()[frameIndex], 0, nullptr);
-				/*vulkanRenderPass->Prepare();
-				if (vulkanRenderPass->HasDescriptorSets())
-				{
-					const auto& descriptorSets = vulkanRenderPass->GetDescriptorSets(frameIndex);
-					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vulkanPipeline->GetVulkanPipelineLayout(), vulkanRenderPass->GetFirstSetIndex(), (uint32_t)descriptorSets.size(), descriptorSets.data(), 0, nullptr);
-				}*/
+
 			});
 	
 	}	

@@ -62,8 +62,7 @@ namespace Hazel {
 				using namespace std::chrono_literals;
 				std::this_thread::sleep_for(3s);
 
-			}
-			HZ_CORE_ASSERT(result == VK_SUCCESS);
+			}			HZ_CORE_ASSERT(result == VK_SUCCESS);
 		}
 	}
 

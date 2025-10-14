@@ -15,7 +15,50 @@ namespace Hazel {
 		Entity(entt::entity handle, Scene* scene);
 		Entity(entt::entity handle, Ref<Scene> scene);
 		Entity(const Entity& other) = default;
+		UUID GetParentUUID() { return GetComponent<RelationshipComponent>().ParentHandle; }
+		void SetParentUUID(UUID parent) { GetComponent<RelationshipComponent>().ParentHandle = parent; }
+		std::vector<UUID>& Children() { return GetComponent<RelationshipComponent>().Children; }
+		TransformComponent& Transform() { return GetComponent<TransformComponent>(); }
 
+		Entity Entity::GetParent()
+		{
+			return m_Scene->GetEntityByUUID(GetParentUUID());
+		}
+		bool RemoveChild(Entity child)
+		{
+			UUID childId = child.GetUUID();
+			std::vector<UUID>& children = Children();
+			auto it = std::find(children.begin(), children.end(), childId);
+			if (it != children.end())
+			{
+				children.erase(it);
+				return true;
+			}
+
+			return false;
+		}
+
+		void SetParent(Entity parent)
+		{
+			Entity currentParent = GetParent();
+			if (currentParent == parent)
+				return;
+
+			// If changing parent, remove child from existing parent
+			if (currentParent)
+				currentParent.RemoveChild(*this);
+
+			// Setting to null is okay
+			SetParentUUID(parent.GetUUID());
+
+			if (parent)
+			{
+				auto& parentChildren = parent.Children();
+				UUID uuid = GetUUID();
+				if (std::find(parentChildren.begin(), parentChildren.end(), uuid) == parentChildren.end())
+					parentChildren.emplace_back(GetUUID());
+			}
+		}
 		template<typename T, typename... Args>
 		T& AddComponent(Args&&... args)
 		{

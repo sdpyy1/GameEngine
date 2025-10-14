@@ -16,6 +16,7 @@ namespace Hazel {
 			VkDescriptorType type;          // 资源类型（UBO、采样器等）
 			VkShaderStageFlags stageFlags;  // 可见的着色器阶段
 			uint32_t count = 1;             // 数组长度（默认1，非数组资源）
+			uint32_t set;
 		};
 		struct ShaderSpecification {
 			std::vector<DescriptorBinding> bindings;

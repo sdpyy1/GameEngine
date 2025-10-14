@@ -11,11 +11,12 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "ImGuizmo.h"
-#include <Platform/Vulkan/VulkanImage.h>
 #include <GLFW/include/GLFW/glfw3.h>
 #include <Hazel/Asset/AssetMetadata.h>
 #include <Hazel/Asset/AssetImporter.h>
+#include <Hazel/Asset/Model/Mesh.h>
 #include "Hazel/Scene/SceneRender.h"
+
 namespace Hazel {
 
 
@@ -30,8 +31,8 @@ namespace Hazel {
 		// Ä£ÐÍ¼ÓÔØ
 		AssetMetadata metadata;
 		//metadata.FilePath = "D:/Hazel-3D-2023/Hazelnut/Resources/Meshes/Default/Capsule.gltf";
-		metadata.FilePath = "assets/model/helmet_pbr/DamagedHelmet.gltf";
-		//metadata.FilePath = "assets/model/desert-eagle/scene.gltf";
+		//metadata.FilePath = "assets/model/helmet_pbr/DamagedHelmet.gltf";
+		metadata.FilePath = "assets/model/desert-eagle/scene.gltf";
 		metadata.Type = AssetType::MeshSource;
 		Ref<Asset> Helmet;
 		AssetImporter::TryLoadData(metadata, Helmet);

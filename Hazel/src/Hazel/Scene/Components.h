@@ -43,6 +43,17 @@ namespace Hazel {
 			: StaticMesh(staticMesh) {
 		}
 	};
+	struct RelationshipComponent
+	{
+		UUID ParentHandle = 0;
+		std::vector<UUID> Children;
+
+		RelationshipComponent() = default;
+		RelationshipComponent(const RelationshipComponent& other) = default;
+		RelationshipComponent(UUID parent)
+			: ParentHandle(parent) {
+		}
+	};
 	struct TransformComponent
 	{
 		glm::vec3 Translation = { 0.0f, 0.0f, 0.0f };
@@ -191,6 +202,6 @@ namespace Hazel {
 		ComponentGroup<StaticMeshComponent,TransformComponent, SpriteRendererComponent,
 			CircleRendererComponent, /*CameraComponent,*/ ScriptComponent,
 			NativeScriptComponent, Rigidbody2DComponent, BoxCollider2DComponent,
-			CircleCollider2DComponent, TextComponent>;
+			CircleCollider2DComponent, TextComponent, RelationshipComponent>;
 
 }

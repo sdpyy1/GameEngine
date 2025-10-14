@@ -8,15 +8,15 @@ namespace Hazel {
 	public:
 		VulkanShader() = default;
 		VulkanShader(const std::string& name, const std::string& vertFilePath, const std::string& fragFilePath, ShaderSpecification spec);
-		VulkanShader(const std::string& name, const std::string& vertFilePath, const std::string& fragFilePath, ShaderSpecification spec,VkDevice device);
 
 		void Reload() override;
 		void RT_Reload() override;
 		void createDescriptorSetLayout();
+		void createDescriptorPool(uint32_t maxMaterials);
 		void createDescriptorSet();
 		VkShaderModule GetVertShaderModule() { return m_VertShaderModule; }
 		VkShaderModule GetFragShaderModule() { return m_FragShaderModule; }
-		VkDescriptorSetLayout* GetDescriptorSetLayout() { return &m_DescriptorSetLayout; }
+		const std::vector<VkDescriptorSetLayout>& GetDescriptorSetLayout() const {return m_DescriptorSetLayouts;}
 		std::vector<VkDescriptorSet> GetDescriptorSet() { return m_DescriptorSets; }
 		VkDescriptorPool GetDescriptorPool() {return m_DescriptorPool;}
 		virtual ~VulkanShader();
@@ -31,7 +31,7 @@ namespace Hazel {
 		VkShaderModule m_VertShaderModule;
 		VkShaderModule m_FragShaderModule;
 		ShaderSpecification m_Spec;
-		VkDescriptorSetLayout m_DescriptorSetLayout;
+		std::vector<VkDescriptorSetLayout> m_DescriptorSetLayouts;
 		VkDescriptorPool m_DescriptorPool;
 		std::vector<VkDescriptorSet> m_DescriptorSets;
 	};

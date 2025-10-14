@@ -2,6 +2,7 @@
 #include "MaterialAsset.h"
 #include "Hazel/Renderer/Renderer.h"
 #include "Hazel/Asset/AssetManager.h"
+
 namespace Hazel{
 	MaterialAsset::MaterialAsset(bool transparent)
 		: m_Transparent(transparent)
@@ -128,10 +129,6 @@ namespace Hazel{
 	void MaterialAsset::SetEmission(float value)
 	{
 		//m_Material->Set(s_EmissionUniform, value);
-	}
-	void MaterialAsset::Bind()
-	{
-		m_Material->Bind();
 	}
 	void MaterialAsset::ClearAlbedoMap()
 	{

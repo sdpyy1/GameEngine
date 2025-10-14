@@ -6,20 +6,19 @@ namespace Hazel {
 	{
 	public:
 		VulkanMaterial(const Ref<Shader>& shader, const std::string& name = "");
-		void UpdateDescriptorSet();
+		void CreateDescriptorSet();
+		void UpdateDescriptorSet(bool bInit);
 		virtual void SetAlbedoTexture(Ref<Texture2D> texture) override;
 		virtual void SetNormalTexture(Ref<Texture2D> texture) override;
 		virtual void SetMetalnessTexture(Ref<Texture2D> texture) override;
 		virtual void SetRoughnessTexture(Ref<Texture2D> texture) override;
-		virtual void Bind() override;
-		virtual void RT_Bind() override;
-
+		const std::vector<VkDescriptorSet>& GetDescriptorSets() const { return m_DescriptorSets; }
 		virtual ~VulkanMaterial() override;
 	private:
 		Ref<VulkanShader> m_Shader;
 		std::string m_Name;
 		VkDevice  m_Device;
-		std::vector<VkDescriptorSet> m_DescriptorSets; // 材质专属描述符集（按帧分配）
+		std::vector<VkDescriptorSet> m_DescriptorSets;
 	};
 }
 

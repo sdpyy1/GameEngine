@@ -10,11 +10,10 @@
 #include "RenderCommandQueue.h"
 #include "RendererCapabilities.h"
 #include "IndexBuffer.h"
-#include "Hazel/Asset/Model/Mesh.h"
 
 namespace Hazel {
 	class ShaderLibrary;
-
+	class MeshSource;
 	// 管理命令缓冲区的调度和渲染相关的初始资源
 	class Renderer
 	{
@@ -29,6 +28,7 @@ namespace Hazel {
 		static void SwapQueues(); // 交换Buffer命令缓冲
 		//void DrawStaticMesh(Ref<RenderCommandBuffer> commandBuffer, Ref<VertexBuffer> vertexBuffer, Ref<MeshSource> meshSource, uint32_t subMeshIndex);
 		static void BindVertData(Ref<RenderCommandBuffer> commandBuffer, Ref<VertexBuffer> testVertexBuffer);
+		static void RenderStaticMeshWithMaterial(Ref<RenderCommandBuffer> commandBuffer, Ref<Pipeline> pipeline, Ref<MeshSource> meshSource,uint32_t submeshIndex,Ref<Material> material, Ref<VertexBuffer> transformBuffer, uint32_t transformOffset, uint32_t instanceCount);
 		static void BindIndexDataAndDraw(Ref<RenderCommandBuffer> commandBuffer, Ref<IndexBuffer> indexBuffer);
 		static RendererAPI::Type Current() { return RendererAPI::Current(); }
 		static void RenderThreadFunc(RenderThread* renderThread);

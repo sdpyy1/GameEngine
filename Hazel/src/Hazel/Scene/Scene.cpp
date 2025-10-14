@@ -41,9 +41,9 @@ namespace Hazel {
 
 	void Scene::OnEditorRender(Ref<SceneRender> sceneRender,EditorCamera & editorCamera) {
 		sceneRender->SetScene(this);
-		sceneRender->PreRender(editorCamera);
 
-		CollectRenderableEntities();
+		CollectRenderableEntities(sceneRender);
+		sceneRender->PreRender(editorCamera);
 
 
 		sceneRender->EndRender();
@@ -56,12 +56,8 @@ namespace Hazel {
 		UI::Image(sceneRender->GetFinalImage(), ImGui::GetContentRegionAvail(), {0, 0}, {1, 1});
 	}
 	
-	void Scene::SubmitStaticMesh(Ref<MeshSource> mesh) {
 
-
-
-	};
-	void Scene::CollectRenderableEntities()
+	void Scene::CollectRenderableEntities(Ref<SceneRender> sceneRender)
 	{
 		auto allEntityOwnMesh = GetAllEntitiesWith<StaticMeshComponent>();
 		for (auto entity : allEntityOwnMesh) {
@@ -71,10 +67,21 @@ namespace Hazel {
 			if (mesh == nullptr) continue;
 			Entity e = Entity(entity, this);
 			// 这里获取Model变换信息
+			glm::mat4 transform = GetWorldSpaceTransformMatrix(e);
 
 			// 注册Mesh
-			SubmitStaticMesh(mesh);
+			sceneRender->SubmitStaticMesh(mesh, transform);
 		}
+	}
+	glm::mat4 Scene::GetWorldSpaceTransformMatrix(Entity entity)
+	{
+		glm::mat4 transform(1.0f);
+
+		Entity parent = GetEntityByUUID(entity.GetParentUUID());
+		if (parent)
+			transform = GetWorldSpaceTransformMatrix(parent);
+
+		return transform * entity.Transform().GetTransform();
 	}
 	template<typename... Component>
 	static void CopyComponent(entt::registry& dst, entt::registry& src, const std::unordered_map<UUID, entt::entity>& enttMap)
@@ -117,25 +124,43 @@ namespace Hazel {
 
 	Entity Scene::CreateEntity(const std::string& name)
 	{
-		return CreateEntityWithUUID(UUID(), name);
+		return CreateChildEntity({}, name);
+
 	}
-
-	Entity Scene::CreateEntityWithUUID(UUID uuid, const std::string& name)
+	
+	Entity Scene::CreateChildEntity(Entity parent, const std::string& name)
 	{
-		Entity entity = { m_Registry.create(), this };
-		entity.AddComponent<IDComponent>(uuid);
-		entity.AddComponent<TransformComponent>();
-		auto& tag = entity.AddComponent<TagComponent>();
-		tag.Tag = name.empty() ? "Entity" : name;
+		auto entity = Entity{ m_Registry.create(), this };
+		auto& idComponent = entity.AddComponent<IDComponent>();
+		idComponent.ID = {};
 
-		m_EntityMap[uuid] = entity;
+		entity.AddComponent<TransformComponent>();
+		if (!name.empty())
+			entity.AddComponent<TagComponent>(name);
+
+		entity.AddComponent<RelationshipComponent>();
+
+		if (parent)
+			entity.SetParent(parent);
+
+		m_EntityIDMap[idComponent.ID] = entity;
+
+		SortEntities();
 
 		return entity;
 	}
-
+	void Scene::SortEntities()
+	{
+		m_Registry.sort<IDComponent>([&](const auto lhs, const auto rhs)
+			{
+				auto lhsEntity = m_EntityIDMap.find(lhs.ID);
+				auto rhsEntity = m_EntityIDMap.find(rhs.ID);
+				return static_cast<uint32_t>(lhsEntity->second) < static_cast<uint32_t>(rhsEntity->second);
+			});
+	}
 	void Scene::DestroyEntity(Entity entity)
 	{
-		m_EntityMap.erase(entity.GetUUID());
+		m_EntityIDMap.erase(entity.GetUUID());
 		m_Registry.destroy(entity);
 	}
 
@@ -163,10 +188,9 @@ namespace Hazel {
 	Entity Scene::GetEntityByUUID(UUID uuid)
 	{
 		// TODO(Yan): Maybe should be assert
-		if (m_EntityMap.find(uuid) != m_EntityMap.end())
-			return { m_EntityMap.at(uuid), this };
-
-		return {};
+		if (const auto iter = m_EntityIDMap.find(uuid); iter != m_EntityIDMap.end())
+			return iter->second;
+		return Entity{};
 	}
 
 
@@ -220,7 +244,10 @@ namespace Hazel {
 	void Scene::OnComponentAdded<TagComponent>(Entity entity, TagComponent& component)
 	{
 	}
-
+	template<>
+	void Scene::OnComponentAdded<RelationshipComponent>(Entity entity, RelationshipComponent& component)
+	{
+	}
 	template<>
 	void Scene::OnComponentAdded<NativeScriptComponent>(Entity entity, NativeScriptComponent& component)
 	{

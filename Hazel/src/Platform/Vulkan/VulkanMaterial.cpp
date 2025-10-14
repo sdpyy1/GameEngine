@@ -8,86 +8,133 @@ namespace Hazel {
 		: m_Shader(shader.As<VulkanShader>()), m_Name(name)
 	{
 		m_Device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+		CreateDescriptorSet();
 	}
+	void VulkanMaterial::CreateDescriptorSet()
+	{
+		Renderer::Submit([this] {
+			VkDevice device = m_Device;
+			VkDescriptorPool pool = m_Shader->GetDescriptorPool();       // Shader 专属 Pool
+			VkDescriptorSetLayout layout = m_Shader->GetDescriptorSetLayout()[1]; // Set=1 材质布局
 
-	void VulkanMaterial::UpdateDescriptorSet() {
-		// 1. 选择当前要绑定的贴图（优先用户设置，否则用默认）
-		auto albedo = AlbedoTexture == nullptr? Renderer::GetWhiteTexture() : AlbedoTexture;
-		auto normal = NormalTexture == nullptr ? Renderer::GetWhiteTexture() : NormalTexture;
-		auto metalness =MetalnessTexture == nullptr ? Renderer::GetWhiteTexture() : MetalnessTexture;
-		auto roughness = RoughnessTexture == nullptr ? Renderer::GetWhiteTexture() : RoughnessTexture;
+			uint32_t framesInFlight = Renderer::GetConfig().FramesInFlight;
 
-		// 2. 准备贴图的 ImageInfo（结合采样器，假设贴图自带采样器）
-		auto getImageInfo = [](Ref<Texture2D> tex) -> VkDescriptorImageInfo {
-			VkDescriptorImageInfo info{};
-			info.sampler = tex.As<VulkanTexture2D>()->GetDescriptorInfoVulkan().sampler; // 假设 Texture2D 类有 GetSampler 方法
-			info.imageView = tex.As<VulkanTexture2D>()->GetDescriptorInfoVulkan().imageView; // 假设 Texture2D 类有 GetImageView 方法
-			info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL; // 贴图需提前转换到该布局
-			return info;
+			// 每帧分配独立 DescriptorSet
+			m_DescriptorSets.resize(framesInFlight);
+
+			std::vector<VkDescriptorSetLayout> layouts(framesInFlight, layout);
+
+			VkDescriptorSetAllocateInfo allocInfo{};
+			allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+			allocInfo.descriptorPool = pool;
+			allocInfo.descriptorSetCount = framesInFlight;
+			allocInfo.pSetLayouts = layouts.data();
+
+			VkResult result = vkAllocateDescriptorSets(device, &allocInfo, m_DescriptorSets.data());
+			assert(result == VK_SUCCESS && "Failed to allocate material DescriptorSets!");
+		});
+	}
+	void VulkanMaterial::UpdateDescriptorSet(bool bInit)
+	{
+		Renderer::Submit([this,bInit] {
+			// 选择贴图（用户设置或默认）
+			auto albedo = AlbedoTexture ? AlbedoTexture : Renderer::GetWhiteTexture();
+			auto normal = NormalTexture ? NormalTexture : Renderer::GetWhiteTexture();
+			auto metalness = MetalnessTexture ? MetalnessTexture : Renderer::GetWhiteTexture();
+			auto roughness = RoughnessTexture ? RoughnessTexture : Renderer::GetWhiteTexture();
+
+			// 准备 VkDescriptorImageInfo
+			auto getImageInfo = [](Ref<Texture2D> tex) -> VkDescriptorImageInfo {
+				VkDescriptorImageInfo info{};
+				auto descriptor = tex.As<VulkanTexture2D>()->GetDescriptorInfoVulkan();
+				info.sampler = descriptor.sampler;
+				info.imageView = descriptor.imageView;
+				info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+				return info;
+				};
+
+			std::array<VkDescriptorImageInfo, 4> imageInfos = {
+				getImageInfo(albedo),
+				getImageInfo(normal),
+				getImageInfo(metalness),
+				getImageInfo(roughness)
 			};
 
-		std::array<VkDescriptorImageInfo, 4> imageInfos = {
-			getImageInfo(albedo),    // binding 1: u_AlbedoTexture
-			getImageInfo(normal),    // binding 2: u_NormalTexture
-			getImageInfo(metalness), // binding 3: u_MetalnessTexture
-			getImageInfo(roughness)  // binding 4: u_RoughnessTexture
-		};
-
-		// 3. 准备描述符写入操作（写入 Shader 的 Set = 0 的 binding 1~4）
-		std::array<VkWriteDescriptorSet, 4> writeSets{};
-		for (size_t i = 0; i < 4; i++) {
-			writeSets[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			writeSets[i].dstBinding = static_cast<uint32_t>(i) + 1; // binding = 1~4（与 Shader 对应）
-			writeSets[i].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-			writeSets[i].descriptorCount = 1;
-			writeSets[i].pImageInfo = &imageInfos[i];
-		}
-
-		// 4. 为 Shader 中所有帧的 Set = 0 更新贴图（多帧缓冲时每个帧都要更新）
-		uint32_t framesInFlight = Renderer::GetConfig().FramesInFlight;
-		for (uint32_t frame = 0; frame < framesInFlight; frame++) {
-			// 获取 Shader 的 Set = 0 描述符集（当前帧）
-			VkDescriptorSet shaderSet = m_Shader->GetDescriptorSet()[frame];
-
-			// 为当前帧的 Set 设置 dstSet
-			for (auto& write : writeSets) {
-				write.dstSet = shaderSet;
+			// 写入操作模板
+			std::array<VkWriteDescriptorSet, 4> writeSets{};
+			for (size_t i = 0; i < writeSets.size(); i++)
+			{
+				writeSets[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+				writeSets[i].dstBinding = static_cast<uint32_t>(i); // binding 0~3
+				writeSets[i].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+				writeSets[i].descriptorCount = 1;
+				writeSets[i].pImageInfo = &imageInfos[i];
 			}
 
-			// 批量更新当前帧的 4 个 binding
-			vkUpdateDescriptorSets(
-				m_Device,
-				static_cast<uint32_t>(writeSets.size()),
-				writeSets.data(),
-				0, nullptr
-			);
-		}
+			if (bInit)
+			{
+				// 初始化：更新所有帧的 DescriptorSet
+				uint32_t framesInFlight = Renderer::GetConfig().FramesInFlight;
+				for (uint32_t frameIndex = 0; frameIndex < framesInFlight; ++frameIndex)
+				{
+					for (auto& write : writeSets)
+						write.dstSet = m_DescriptorSets[frameIndex];
+
+					vkUpdateDescriptorSets(
+						m_Device,
+						static_cast<uint32_t>(writeSets.size()),
+						writeSets.data(),
+						0, nullptr
+					);
+				}
+			}
+			else
+			{
+				// 平时渲染：只更新当前帧
+				uint32_t frameIndex = Renderer::RT_GetCurrentFrameIndex();
+				VkDescriptorSet currentSet = m_DescriptorSets[frameIndex];
+				for (auto& write : writeSets)
+					write.dstSet = currentSet;
+
+				vkUpdateDescriptorSets(
+					m_Device,
+					static_cast<uint32_t>(writeSets.size()),
+					writeSets.data(),
+					0, nullptr
+				);
+			}
+		});
 	}
+
 	void VulkanMaterial::SetNormalTexture(Ref<Texture2D> texture)
 	{
-		NormalTexture = texture;
+		Renderer::Submit([this, texture]() {
+			NormalTexture = texture;
+			UpdateDescriptorSet(false);
+			});
 	}
 	void VulkanMaterial::SetMetalnessTexture(Ref<Texture2D> texture)
 	{
-		MetalnessTexture = texture;
+		Renderer::Submit([this, texture]() {
+			MetalnessTexture = texture;
+			UpdateDescriptorSet(false);
+			});
 	}
 	void VulkanMaterial::SetRoughnessTexture(Ref<Texture2D> texture)
 	{
-		RoughnessTexture = texture;
-	}
-	void VulkanMaterial::Bind()
-	{
-		Renderer::Submit([this]() {
-			UpdateDescriptorSet();
+		Renderer::Submit([this, texture]() {
+			RoughnessTexture = texture;
+			UpdateDescriptorSet(false);
 			});
-	}
-	void VulkanMaterial::RT_Bind()
-	{
-		UpdateDescriptorSet();
+
 	}
 	void VulkanMaterial::SetAlbedoTexture(Ref<Texture2D> texture)
 	{
-		AlbedoTexture = texture;
+		Renderer::Submit([this, texture]() {
+			AlbedoTexture = texture;
+			UpdateDescriptorSet(false);
+			});
+
 	}
 	VulkanMaterial::~VulkanMaterial()
 	{

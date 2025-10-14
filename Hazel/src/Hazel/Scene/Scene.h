@@ -12,7 +12,6 @@ class b2World;
 
 namespace Hazel {
 	class SceneRender;
-
 	class Entity;
 
 	class Scene: public RefCounted
@@ -25,15 +24,18 @@ namespace Hazel {
 		void OutputRenderRes(Ref<SceneRender> sceneRender);
 
 	public:
-		void CollectRenderableEntities();
+		void CollectRenderableEntities(Ref<SceneRender> sceneRender);
+
+		glm::mat4 GetWorldSpaceTransformMatrix(Entity entity);
+
 
 		Entity CreateEntity(const std::string& name = std::string());
-		Entity CreateEntityWithUUID(UUID uuid, const std::string& name = std::string());
+		Entity CreateChildEntity(Entity parent, const std::string& name);
+		void SortEntities();
 		void DestroyEntity(Entity entity);
 		Entity DuplicateEntity(Entity entity);
 		Entity FindEntityByName(std::string_view name);
 		Entity GetEntityByUUID(UUID uuid);
-		void SubmitStaticMesh(Ref<MeshSource> mesh);
 		template<typename... Components>
 		auto GetAllEntitiesWith()
 		{
@@ -47,7 +49,9 @@ namespace Hazel {
 
 		b2World* m_PhysicsWorld = nullptr;
 
-		std::unordered_map<UUID, entt::entity> m_EntityMap;
+		using EntityMap = std::unordered_map<UUID, Entity>;
+
+		EntityMap m_EntityIDMap;
 
 		friend class Entity;
 		friend class SceneSerializer;

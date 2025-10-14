@@ -36,52 +36,50 @@ namespace Hazel {
 		}
 		// 并发渲染数
 		s_Config.FramesInFlight = glm::min<uint32_t>(s_Config.FramesInFlight, Application::Get().GetWindow()->GetSwapChain().GetImageCount());
-		
 		// 创建具体的渲染API对象
 		s_RendererAPI = RendererAPI::CreateAPI();
-
 		// Shader缓存，需要传给Shader资源描述符信息，Shader会创建好资源描述符Set
 		// gBufferShader
 		Shader::ShaderSpecification gbufferShaderSpec;
-
 		// 1. 顶点着色器的 UBO（模型/视图/投影矩阵等）
 		Shader::DescriptorBinding uboBinding;
 		uboBinding.binding = 0;                  // 对应着色器中 binding = 0
 		uboBinding.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 		uboBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;  // 顶点着色器使用
 		uboBinding.count = 1;
+		uboBinding.set = 0;
 		gbufferShaderSpec.bindings.push_back(uboBinding);
-
 		// 2. Albedo 贴图（combined image sampler）
 		Shader::DescriptorBinding albedoBinding;
-		albedoBinding.binding = 1;               // 对应着色器中 set=0, binding=0（注意索引对应）
+		albedoBinding.binding = 0;               // 对应着色器中 set=0, binding=0（注意索引对应）
 		albedoBinding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 		albedoBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;  // 片段着色器使用
 		albedoBinding.count = 1;
+		albedoBinding.set = 1;
 		gbufferShaderSpec.bindings.push_back(albedoBinding);
-
 		// 3. Normal 贴图
 		Shader::DescriptorBinding normalBinding;
-		normalBinding.binding = 2;               // 对应着色器中 set=0, binding=1
+		normalBinding.binding = 1;               // 对应着色器中 set=0, binding=1
 		normalBinding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 		normalBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 		normalBinding.count = 1;
+		normalBinding.set = 1;
 		gbufferShaderSpec.bindings.push_back(normalBinding);
-
 		// 4. Metalness 贴图
 		Shader::DescriptorBinding metalnessBinding;
-		metalnessBinding.binding = 3;            // 对应着色器中 set=0, binding=2
+		metalnessBinding.binding = 2;            // 对应着色器中 set=0, binding=2
 		metalnessBinding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 		metalnessBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 		metalnessBinding.count = 1;
+		metalnessBinding.set = 1;
 		gbufferShaderSpec.bindings.push_back(metalnessBinding);
-
 		// 5. Roughness 贴图
 		Shader::DescriptorBinding roughnessBinding;
-		roughnessBinding.binding = 4;            // 对应着色器中 set=0, binding=3
+		roughnessBinding.binding = 3;            // 对应着色器中 set=0, binding=3
 		roughnessBinding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 		roughnessBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 		roughnessBinding.count = 1;
+		roughnessBinding.set = 1;
 		gbufferShaderSpec.bindings.push_back(roughnessBinding);
 
 		// 加载着色器（确保 vert.spv 和 frag.spv 与上述绑定匹配）
@@ -153,6 +151,10 @@ namespace Hazel {
 	{
 		return s_RendererAPI->BindVertData(commandBuffer,testVertexBuffer);
 
+	}
+	void Renderer::RenderStaticMeshWithMaterial(Ref<RenderCommandBuffer> commandBuffer,Ref<Pipeline> pipeline, Ref<MeshSource> meshSource, uint32_t submeshIndex, Ref<Material> material, Ref<VertexBuffer> transformBuffer, uint32_t transformOffset, uint32_t instanceCount)
+	{
+		return s_RendererAPI->RenderStaticMeshWithMaterial(commandBuffer, pipeline,meshSource, submeshIndex, material, transformBuffer, transformOffset, instanceCount);
 	}
 	void Renderer::BindIndexDataAndDraw(Ref<RenderCommandBuffer> commandBuffer, Ref<IndexBuffer> indexBuffer)
 	{

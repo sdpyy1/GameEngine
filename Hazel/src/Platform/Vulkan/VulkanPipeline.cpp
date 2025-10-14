@@ -92,7 +92,7 @@ namespace Hazel {
 				Ref<VulkanShader> vulkanShader = Ref<VulkanShader>(instance->m_Specification.Shader);
 				Ref<VulkanFramebuffer> framebuffer = instance->m_Specification.TargetFramebuffer.As<VulkanFramebuffer>();
 
-				VkDescriptorSetLayout* descriptorSetLayout = vulkanShader->GetDescriptorSetLayout();
+				const std::vector<VkDescriptorSetLayout>& descriptorSetLayouts = vulkanShader->GetDescriptorSetLayout();
 
 				//const auto& pushConstantRanges = vulkanShader->GetPushConstantRanges();
 
@@ -114,8 +114,8 @@ namespace Hazel {
 				pPipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 				pPipelineLayoutCreateInfo.pNext = nullptr;
 				//pPipelineLayoutCreateInfo.setLayoutCount = (uint32_t)descriptorSetLayouts.size();
-				pPipelineLayoutCreateInfo.setLayoutCount = 1; // 目前只支持1
-				pPipelineLayoutCreateInfo.pSetLayouts = descriptorSetLayout;
+				pPipelineLayoutCreateInfo.setLayoutCount = static_cast<uint32_t>(descriptorSetLayouts.size());
+				pPipelineLayoutCreateInfo.pSetLayouts = descriptorSetLayouts.data();
 				//pPipelineLayoutCreateInfo.pushConstantRangeCount = (uint32_t)vulkanPushConstantRanges.size();
 				//pPipelineLayoutCreateInfo.pPushConstantRanges = vulkanPushConstantRanges.data();
 

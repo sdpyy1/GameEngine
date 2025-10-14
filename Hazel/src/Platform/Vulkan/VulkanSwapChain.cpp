@@ -102,6 +102,8 @@ namespace Hazel
 				VK_CHECK_RESULT(result);
 			}
 		}
+		m_CurrentFrameIndex = (m_CurrentFrameIndex + 1) % Renderer::GetConfig().FramesInFlight;
+
 	}
 
 	void VulkanSwapChain::InitSurface(GLFWwindow* windowHandle)
@@ -564,9 +566,6 @@ namespace Hazel
 
 	uint32_t VulkanSwapChain::AcquireNextImage()
 	{
-		m_CurrentFrameIndex = (m_CurrentFrameIndex + 1) % Renderer::GetConfig().FramesInFlight;
-
-
 		// Make sure the frame we're requesting has finished rendering (from previous iterations)
 		{
 			HZ_PROFILE_SCOPE("VulkanSwapChain::AcquireNextImage - WaitForFences");

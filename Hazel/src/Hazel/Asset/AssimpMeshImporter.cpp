@@ -10,6 +10,7 @@
 #include "Model/MaterialAsset.h"
 #include "Hazel/Asset/AssetManager.h"
 #include "Hazel/Asset/TextureImporter.h"
+#include <Platform/Vulkan/VulkanMaterial.h>
 namespace Hazel {
 #define MESH_DEBUG_LOG 0
 
@@ -735,6 +736,10 @@ namespace Hazel {
 
 					ma->SetMetalnessMap(metalnessTextureHandle);
 					ma->SetMetalness(1.0f);
+					if (Renderer::Current() == RendererAPI::Type::Vulkan) {
+						ma->GetMaterial().As<VulkanMaterial>()->UpdateDescriptorSet(true);
+					}
+
 				}
 
 				AssetHandle maHandle = AssetManager::AddMemoryOnlyAsset(ma);
