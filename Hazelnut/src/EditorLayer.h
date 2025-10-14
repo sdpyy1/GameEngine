@@ -5,6 +5,8 @@
 #include "Hazel/Renderer/EditorCamera.h"
 #include "../AssetManagerPanel.h"
 #include "imgui.h"
+#include "ImGuizmo.h"
+
 namespace Hazel {
 	// 编辑器层
 	class EditorLayer : public Layer
@@ -23,16 +25,18 @@ namespace Hazel {
 
 		// 各种窗口创建
 		void ViewportGUI();
+		void DrawGizmo();
 		void TestGUI();
 	private:
 		Ref<Scene> m_Scene;  // 场景
 		Ref<SceneRender> m_SceneRender; // 场景渲染器
 		EditorCamera m_EditorCamera; // 摄像机
-
-
+		// Gizmo
+		int m_GizmoType = -1;
+		Entity m_HoveredEntity;
+		Entity m_SelectedEntity;
 		// 面板
 		AssetManagerPanel m_AssetManagerPanel;
-
 
 		//状态
 		ImVec2 m_ViewportBounds[2];
