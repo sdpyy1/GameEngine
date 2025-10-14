@@ -1,11 +1,10 @@
 #pragma once
 
 #include "Hazel.h"
-#include "Panels/SceneHierarchyPanel.h"
-#include "Panels/ContentBrowserPanel.h"
 
 #include "Hazel/Renderer/EditorCamera.h"
-
+#include "../AssetManagerPanel.h"
+#include "imgui.h"
 namespace Hazel {
 	// ±à¼­Æ÷²ã
 	class EditorLayer : public Layer
@@ -26,9 +25,18 @@ namespace Hazel {
 		void ViewportGUI();
 		void TestGUI();
 	private:
-		Scene scene;  // ³¡¾°
+		Ref<Scene> m_Scene;  // ³¡¾°
 		Ref<SceneRender> m_SceneRender; // ³¡¾°äÖÈ¾Æ÷
 		EditorCamera m_EditorCamera; // ÉãÏñ»ú
+
+
+		// Ãæ°å
+		AssetManagerPanel m_AssetManagerPanel;
+
+
+		//×´Ì¬
+		ImVec2 m_ViewportBounds[2];
+		bool isMouseInViewport = false;
 	};
 
 }

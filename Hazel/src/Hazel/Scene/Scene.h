@@ -41,6 +41,7 @@ namespace Hazel {
 		{
 			return m_Registry.view<Components...>();
 		}
+		entt::registry& GetRegistry() { return m_Registry; }
 	private:
 		template<typename T>
 		void OnComponentAdded(Entity entity, T& component);

@@ -21,7 +21,7 @@ namespace Hazel {
 		void Init();
 
 		void Focus(const glm::vec3& focusPoint);
-		void OnUpdate(Timestep ts);
+		void OnUpdate(Timestep ts, bool isMouseInViewport);
 		void OnEvent(Event& e);
 
 		bool IsActive() const { return m_IsActive; }
@@ -104,6 +104,9 @@ namespace Hazel {
 
 		constexpr static float MIN_SPEED{ 0.0005f }, MAX_SPEED{ 2.0f };
 		friend class EditorLayer;
+
+		bool m_IsCapturing = false;
+
 	};
 
 }

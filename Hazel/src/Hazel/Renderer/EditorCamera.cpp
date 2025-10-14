@@ -48,87 +48,109 @@ namespace Hazel {
 		io.ConfigFlags &= ~ImGuiConfigFlags_NavNoCaptureKeyboard;
 	}
 
-	void EditorCamera::OnUpdate(const Timestep ts)
+	void EditorCamera::OnUpdate(const Timestep ts, bool isMouseInViewport)
 	{
-		const glm::vec2& mouse{ Input::GetMouseX(), Input::GetMouseY() };
-		const glm::vec2 delta = (mouse - m_InitialMousePosition) * 0.002f;
-		if (!m_IsActive)
-		{
-			auto& io = ImGui::GetIO();
-			io.ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
-			io.ConfigFlags &= ~ImGuiConfigFlags_NavNoCaptureKeyboard;
+		bool isButtonPressed = Input::IsMouseButtonDown(MouseButton::Right) ||Input::IsMouseButtonDown(MouseButton::Middle) ||(Input::IsMouseButtonDown(MouseButton::Left) && Input::IsKeyDown(KeyCode::LeftAlt));
+		// 如果用户按下按钮，开始捕获
+		if (isButtonPressed && isMouseInViewport && !m_IsCapturing) {
+			m_IsCapturing = true;
+			m_InitialMousePosition = { Input::GetMouseX(), Input::GetMouseY() };
+
+			// 同时可以重置 delta 相关量，防止跳跃
+			m_YawDelta = 0.0f;
+			m_PitchDelta = 0.0f;
+			m_PositionDelta = glm::vec3(0.0f);
 		}
 
-		if (Input::IsMouseButtonDown(MouseButton::Right) && !Input::IsKeyDown(KeyCode::LeftAlt))
-		{
-			m_CameraMode = CameraMode::FLYCAM;
-			DisableMouse();
-			const float yawSign = GetUpDirection().y < 0 ? -1.0f : 1.0f;
-
-			const float speed = GetCameraSpeed();
-
-			if (Input::IsKeyDown(KeyCode::Q))
-				m_PositionDelta -= ts.GetMilliseconds() * speed * glm::vec3{ 0.f, yawSign, 0.f };
-			if (Input::IsKeyDown(KeyCode::E))
-				m_PositionDelta += ts.GetMilliseconds() * speed * glm::vec3{ 0.f, yawSign, 0.f };
-			if (Input::IsKeyDown(KeyCode::S))
-				m_PositionDelta -= ts.GetMilliseconds() * speed * m_Direction;
-			if (Input::IsKeyDown(KeyCode::W))
-				m_PositionDelta += ts.GetMilliseconds() * speed * m_Direction;
-			if (Input::IsKeyDown(KeyCode::A))
-				m_PositionDelta -= ts.GetMilliseconds() * speed * m_RightDirection;
-			if (Input::IsKeyDown(KeyCode::D))
-				m_PositionDelta += ts.GetMilliseconds() * speed * m_RightDirection;
-
-			constexpr float maxRate{ 0.12f };
-			m_YawDelta += glm::clamp(yawSign * delta.x * RotationSpeed(), -maxRate, maxRate);
-			m_PitchDelta += glm::clamp(delta.y * RotationSpeed(), -maxRate, maxRate);
-
-			m_RightDirection = glm::cross(m_Direction, glm::vec3{ 0.f, yawSign, 0.f });
-
-			m_Direction = glm::rotate(glm::normalize(glm::cross(glm::angleAxis(-m_PitchDelta, m_RightDirection),
-				glm::angleAxis(-m_YawDelta, glm::vec3{ 0.f, yawSign, 0.f }))), m_Direction);
-
-			const float distance = glm::distance(m_FocalPoint, m_Position);
-			m_FocalPoint = m_Position + GetForwardDirection() * distance;
-			m_Distance = distance;
-		}
-		else if (Input::IsKeyDown(KeyCode::LeftAlt))
-		{
-			m_CameraMode = CameraMode::ARCBALL;
-
-			if (Input::IsMouseButtonDown(MouseButton::Middle))
-			{
-				DisableMouse();
-				MousePan(delta);
-			}
-			else if (Input::IsMouseButtonDown(MouseButton::Left))
-			{
-				DisableMouse();
-				MouseRotate(delta);
-			}
-			else if (Input::IsMouseButtonDown(MouseButton::Right))
-			{
-				DisableMouse();
-				MouseZoom((delta.x + delta.y) * 0.1f);
-			}
-			else
-				EnableMouse();
-		}
-		else
+		// 释放按钮则停止捕获
+		if (!isButtonPressed)
+			m_IsCapturing = false;
+		if (!m_IsCapturing)
 		{
 			EnableMouse();
+		}else {
+			const glm::vec2 mouse{ Input::GetMouseX(), Input::GetMouseY() };
+			const glm::vec2 delta = (mouse - m_InitialMousePosition) * 0.002f;
+			if (!m_IsActive)
+			{
+				auto& io = ImGui::GetIO();
+				io.ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
+				io.ConfigFlags &= ~ImGuiConfigFlags_NavNoCaptureKeyboard;
+			}
+
+			if (Input::IsMouseButtonDown(MouseButton::Right) && !Input::IsKeyDown(KeyCode::LeftAlt))
+			{
+				m_CameraMode = CameraMode::FLYCAM;
+				DisableMouse();
+				const float yawSign = GetUpDirection().y < 0 ? -1.0f : 1.0f;
+
+				const float speed = GetCameraSpeed();
+
+				if (Input::IsKeyDown(KeyCode::Q))
+					m_PositionDelta -= ts.GetMilliseconds() * speed * glm::vec3{ 0.f, yawSign, 0.f };
+				if (Input::IsKeyDown(KeyCode::E))
+					m_PositionDelta += ts.GetMilliseconds() * speed * glm::vec3{ 0.f, yawSign, 0.f };
+				if (Input::IsKeyDown(KeyCode::S))
+					m_PositionDelta -= ts.GetMilliseconds() * speed * m_Direction;
+				if (Input::IsKeyDown(KeyCode::W))
+					m_PositionDelta += ts.GetMilliseconds() * speed * m_Direction;
+				if (Input::IsKeyDown(KeyCode::A))
+					m_PositionDelta -= ts.GetMilliseconds() * speed * m_RightDirection;
+				if (Input::IsKeyDown(KeyCode::D))
+					m_PositionDelta += ts.GetMilliseconds() * speed * m_RightDirection;
+
+				constexpr float maxRate{ 0.12f };
+				m_YawDelta += glm::clamp(yawSign * delta.x * RotationSpeed(), -maxRate, maxRate);
+				m_PitchDelta += glm::clamp(delta.y * RotationSpeed(), -maxRate, maxRate);
+
+				m_RightDirection = glm::cross(m_Direction, glm::vec3{ 0.f, yawSign, 0.f });
+
+				m_Direction = glm::rotate(glm::normalize(glm::cross(glm::angleAxis(-m_PitchDelta, m_RightDirection),
+					glm::angleAxis(-m_YawDelta, glm::vec3{ 0.f, yawSign, 0.f }))), m_Direction);
+
+				const float distance = glm::distance(m_FocalPoint, m_Position);
+				m_FocalPoint = m_Position + GetForwardDirection() * distance;
+				m_Distance = distance;
+			}
+			else if (Input::IsKeyDown(KeyCode::LeftAlt))
+			{
+				m_CameraMode = CameraMode::ARCBALL;
+
+				if (Input::IsMouseButtonDown(MouseButton::Middle))
+				{
+					DisableMouse();
+					MousePan(delta);
+				}
+				else if (Input::IsMouseButtonDown(MouseButton::Left))
+				{
+					DisableMouse();
+					MouseRotate(delta);
+				}
+				else if (Input::IsMouseButtonDown(MouseButton::Right))
+				{
+					DisableMouse();
+					MouseZoom((delta.x + delta.y) * 0.1f);
+				}
+				else
+					EnableMouse();
+			}
+			else
+			{
+				EnableMouse();
+			}
+
+			m_InitialMousePosition = mouse;
+			m_Position += m_PositionDelta;
+			m_Yaw += m_YawDelta;
+			m_Pitch += m_PitchDelta;
+
+			if (m_CameraMode == CameraMode::ARCBALL)
+				m_Position = CalculatePosition();
+
+			UpdateCameraView();
 		}
 
-		m_InitialMousePosition = mouse;
-		m_Position += m_PositionDelta;
-		m_Yaw += m_YawDelta;
-		m_Pitch += m_PitchDelta;
-
-		if (m_CameraMode == CameraMode::ARCBALL)
-			m_Position = CalculatePosition();
-
-		UpdateCameraView();
+		
 	}
 
 	float EditorCamera::GetCameraSpeed() const

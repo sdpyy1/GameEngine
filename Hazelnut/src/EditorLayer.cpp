@@ -23,6 +23,8 @@ namespace Hazel {
 	EditorLayer::EditorLayer()
 		: Layer("EditorLayer"), m_EditorCamera(45.0f, 1600.0f, 1200.0f, 0.1f, 1000.0f)
 	{
+		m_Scene = Ref<Scene>::Create();
+		m_AssetManagerPanel.SetContext(m_Scene);
 		m_SceneRender = Ref<SceneRender>::Create();
 	}
 
@@ -31,12 +33,12 @@ namespace Hazel {
 		// 模型加载
 		AssetMetadata metadata;
 		//metadata.FilePath = "D:/Hazel-3D-2023/Hazelnut/Resources/Meshes/Default/Capsule.gltf";
-		//metadata.FilePath = "assets/model/helmet_pbr/DamagedHelmet.gltf";
-		metadata.FilePath = "assets/model/desert-eagle/scene.gltf";
+		metadata.FilePath = "assets/model/helmet_pbr/DamagedHelmet.gltf";
+		//metadata.FilePath = "assets/model/desert-eagle/scene.gltf";
 		metadata.Type = AssetType::MeshSource;
 		Ref<Asset> Helmet;
 		AssetImporter::TryLoadData(metadata, Helmet);
-		Entity a = scene.CreateEntity("aaa");
+		Entity a = m_Scene->CreateEntity("aaa");
 		a.AddComponent<StaticMeshComponent>(Helmet->Handle);
 	}
 
@@ -47,9 +49,13 @@ namespace Hazel {
 	void EditorLayer::OnUpdate(Timestep ts)
 	{
 		m_EditorCamera.SetActive(true);
-		m_EditorCamera.OnUpdate(ts);
+		ImVec2 mousePos = ImGui::GetIO().MousePos;
+		bool isMouseInViewport =
+			mousePos.x >= m_ViewportBounds[0].x && mousePos.x <= m_ViewportBounds[1].x &&
+			mousePos.y >= m_ViewportBounds[0].y && mousePos.y <= m_ViewportBounds[1].y;
+		m_EditorCamera.OnUpdate(ts,isMouseInViewport);
 
-		scene.OnEditorRender(m_SceneRender,m_EditorCamera);
+		m_Scene->OnEditorRender(m_SceneRender,m_EditorCamera);
 	}
 
 	void EditorLayer::OnImGuiRender()
@@ -83,6 +89,11 @@ namespace Hazel {
 		TestGUI();
 		ImGui::End();
 		ImGui::PopStyleVar(2); 
+
+
+		if (m_AssetManagerPanel.isOpen) {
+			m_AssetManagerPanel.OnImGuiRender();
+		}
 	}
 
 	void EditorLayer::OnEvent(Event& e)
@@ -93,7 +104,12 @@ namespace Hazel {
 	void EditorLayer::ViewportGUI()
 	{
 		ImGui::Begin("ViewPort");
-		scene.OutputRenderRes(m_SceneRender);
+		// 保存 Viewport 窗口位置和尺寸
+		m_ViewportBounds[0] = ImGui::GetWindowPos();
+		ImVec2 windowSize = ImGui::GetWindowSize();
+		m_ViewportBounds[1] = ImVec2(m_ViewportBounds[0].x + windowSize.x,
+			m_ViewportBounds[0].y + windowSize.y);
+		m_Scene->OutputRenderRes(m_SceneRender);
 		ImGui::End();
 	}
 	void EditorLayer::TestGUI()
