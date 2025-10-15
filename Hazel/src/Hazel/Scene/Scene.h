@@ -50,7 +50,7 @@ namespace Hazel {
 		using EntityMap = std::unordered_map<UUID, Entity>;
 
 		EntityMap m_EntityIDMap;
-		float ViewportWidth = 1200.0f, ViewportHeight = 800.0f;
+		float ViewportWidth = 1216.0f, ViewportHeight = 849.0f;
 		friend class Entity;
 		friend class SceneSerializer;
 		friend class SceneRender;

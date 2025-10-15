@@ -18,7 +18,7 @@
 namespace Hazel {
 
 	EditorLayer::EditorLayer()
-		: Layer("EditorLayer"), m_EditorCamera(45.0f, 1600.0f, 1200.0f, 0.1f, 1000.0f)
+		: Layer("EditorLayer"), m_EditorCamera(45.0f, 1216.0f, 849.0f, 0.1f, 1000.0f)
 	{
 		m_Scene = Ref<Scene>::Create();
 		m_AssetManagerPanel.SetContext(m_Scene);
@@ -38,12 +38,12 @@ namespace Hazel {
 		Entity helmet = m_Scene->CreateEntity("Helmet");
 		helmet.AddComponent<StaticMeshComponent>(Helmet->Handle);
 
-		metadata.FilePath = "assets/model/desert-eagle/scene.gltf";
-		metadata.Type = AssetType::MeshSource;
-		Ref<Asset> eagle;
-		AssetImporter::TryLoadData(metadata, eagle);
-		Entity eag = m_Scene->CreateEntity("Eagle");
-		eag.AddComponent<StaticMeshComponent>(eagle->Handle);
+		//metadata.FilePath = "assets/model/desert-eagle/scene.gltf";
+		//metadata.Type = AssetType::MeshSource;
+		//Ref<Asset> eagle;
+		//AssetImporter::TryLoadData(metadata, eagle);
+		//Entity eag = m_Scene->CreateEntity("Eagle");
+		//eag.AddComponent<StaticMeshComponent>(eagle->Handle);
 		m_HoveredEntity = helmet;
 		m_SelectedEntity = helmet;
 	}
@@ -72,16 +72,17 @@ namespace Hazel {
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+		// 覆盖GLFW窗口的Main窗口
 		ImGui::Begin("Main Window", nullptr, window_flags);
 		ImGuiID dockspaceID = ImGui::GetID("MyMainDockspace");
 		ImGui::DockSpace(dockspaceID, ImVec2(0.0f, 0.0f), 0);
 
-		ViewportGUI();
-		TestGUI();
-
 		ImGui::End();
 		ImGui::PopStyleVar(2);
 
+		// 其他窗口绘制
+		ViewportGUI();
+		TestGUI();
 		if (m_AssetManagerPanel.isOpen) {
 			m_AssetManagerPanel.OnImGuiRender();
 		}
@@ -95,12 +96,12 @@ namespace Hazel {
 	{
 		ImGui::Begin("Viewport");
 		m_ViewportBounds[0] = ImGui::GetWindowPos();
-		ImVec2 windowSize = ImGui::GetWindowSize();
-		m_ViewportBounds[1] = ImVec2(m_ViewportBounds[0].x + windowSize.x, m_ViewportBounds[0].y + windowSize.y);
-		auto viewportSize = ImGui::GetContentRegionAvail();
-		//m_EditorCamera.SetViewportSize(windowSize.x, windowSize.y);
-		m_Scene->SetSize(windowSize.x, windowSize.y);
-		Application::SetViewportSize(windowSize.x, windowSize.y);
+		ImVec2 viewportSize = ImGui::GetContentRegionAvail();
+		m_ViewportBounds[1] = ImVec2(m_ViewportBounds[0].x + viewportSize.x, m_ViewportBounds[0].y + viewportSize.y);
+		m_EditorCamera.SetViewportSize(viewportSize.x, viewportSize.y);
+		m_Scene->SetSize(viewportSize.x, viewportSize.y);
+		Application::SetViewportSize(viewportSize.x, viewportSize.y);
+		
 		ImVec2 mousePos = ImGui::GetIO().MousePos;
 		isMouseInViewport =
 			mousePos.x >= m_ViewportBounds[0].x && mousePos.x <= m_ViewportBounds[1].x &&

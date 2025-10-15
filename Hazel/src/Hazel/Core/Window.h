@@ -14,8 +14,8 @@ namespace Hazel {
 		uint32_t Height;
 		bool VSync;
 		WindowProps(const std::string& title = "Hazel Engine",
-			        uint32_t width = 1600,
-			        uint32_t height = 1200, bool VSync = false)
+			        uint32_t width = 800,
+			        uint32_t height = 600, bool VSync = false)
 			: Title(title), Width(width), Height(height), VSync(VSync)
 		{
 		}

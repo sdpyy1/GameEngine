@@ -39,8 +39,9 @@ namespace Hazel {
 		AssetManagerPanel m_AssetManagerPanel;
 
 		//״̬
-		ImVec2 m_ViewportBounds[2] = { {0,0},{1600,1200} };
+		ImVec2 m_ViewportBounds[2] = { {0,0},{1216,849} };
 		bool isMouseInViewport = false;
+		bool firstRenderGUI = true;
 	};
 
 }

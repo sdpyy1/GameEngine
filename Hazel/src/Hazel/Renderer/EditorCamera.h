@@ -39,8 +39,6 @@ namespace Hazel {
 			if (m_ViewportWidth == width && m_ViewportHeight == height)
 				return;
 			SetPerspectiveProjectionMatrix(m_VerticalFOV, (float)width, (float)height, m_NearClip, m_FarClip);
-			m_ViewportWidth = width;
-			m_ViewportHeight = height;
 		}
 		uint32_t GetViewportWidth() const { return m_ViewportWidth; }
 		uint32_t GetViewportHeight() const { return m_ViewportHeight; }

@@ -32,7 +32,7 @@ namespace Hazel {
 		if (!m_Specification.WorkingDirectory.empty())
 			std::filesystem::current_path(m_Specification.WorkingDirectory);
 
-		m_Window = Window::Create(WindowProps(m_Specification.Name));  // 这里创建了GLFW窗口、也初始化了RenderContext和SwapChain
+		m_Window = Window::Create(WindowProps(m_Specification.Name,1600,900));  // 这里创建了GLFW窗口、也初始化了RenderContext和SwapChain
 		m_Window->SetEventCallback(HZ_BIND_EVENT_FN(Application::OnEvent));
 		HZ_CORE_ASSERT(NFD::Init() == NFD_OKAY);
 
