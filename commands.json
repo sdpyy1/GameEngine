@@ -1,0 +1,19 @@
+{
+  "commands": {
+    "complie": {
+      "fileName": "cmd.exe",
+      "workingDirectory": ".",
+      "arguments": "/c Hazelnut\\assets\\shaders\\complie.bat"
+    },
+    "complie -2038715460": {
+      "fileName": "cmd.exe",
+      "workingDirectory": ".",
+      "arguments": "/c Hazelnut\\assets\\shaders\\complie.bat"
+    },
+    "complie 1893110652": {
+      "fileName": "cmd.exe",
+      "workingDirectory": ".",
+      "arguments": "/c Hazelnut\\assets\\shaders\\complie.bat"
+    }
+  }
+}

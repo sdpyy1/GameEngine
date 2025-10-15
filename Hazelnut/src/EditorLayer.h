@@ -3,7 +3,7 @@
 #include "Hazel.h"
 
 #include "Hazel/Renderer/EditorCamera.h"
-#include "../AssetManagerPanel.h"
+#include "Panels/AssetManagerPanel.h"
 #include "imgui.h"
 #include "ImGuizmo.h"
 
@@ -39,7 +39,7 @@ namespace Hazel {
 		AssetManagerPanel m_AssetManagerPanel;
 
 		//״̬
-		ImVec2 m_ViewportBounds[2];
+		ImVec2 m_ViewportBounds[2] = { {0,0},{1600,1200} };
 		bool isMouseInViewport = false;
 	};
 

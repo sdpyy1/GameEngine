@@ -22,13 +22,10 @@ namespace Hazel {
 		
 		void OnEditorRender(Ref<SceneRender> sceneRender,EditorCamera& editorCamera);
 		void OutputRenderRes(Ref<SceneRender> sceneRender);
-
+		void SetSize(float width, float height) {  ViewportWidth = width; ViewportHeight = height;}
 	public:
 		void CollectRenderableEntities(Ref<SceneRender> sceneRender);
-
 		glm::mat4 GetWorldSpaceTransformMatrix(Entity entity);
-
-
 		Entity CreateEntity(const std::string& name = std::string());
 		Entity CreateChildEntity(Entity parent, const std::string& name);
 		void SortEntities();
@@ -53,7 +50,7 @@ namespace Hazel {
 		using EntityMap = std::unordered_map<UUID, Entity>;
 
 		EntityMap m_EntityIDMap;
-
+		float ViewportWidth = 1200.0f, ViewportHeight = 800.0f;
 		friend class Entity;
 		friend class SceneSerializer;
 		friend class SceneRender;

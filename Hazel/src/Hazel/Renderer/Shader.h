@@ -34,7 +34,7 @@ namespace Hazel {
 	public:
 		void Add(const std::string& name, const Ref<Shader>& shader);
 		void Add(const Ref<Shader>& shader);
-		Ref<Shader> LoadCommonShader(const std::string& name, const std::string& vertFileShader, const std::string& fragFileShader,Shader::ShaderSpecification spec);
+		Ref<Shader> LoadCommonShader(const std::string& name,Shader::ShaderSpecification spec);
 		Ref<Shader> Get(const std::string& name);
 	private:
 		std::unordered_map<std::string, Ref<Shader>> m_Shaders;

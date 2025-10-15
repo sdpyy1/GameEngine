@@ -42,7 +42,8 @@ namespace Hazel {
 			m_ViewportWidth = width;
 			m_ViewportHeight = height;
 		}
-
+		uint32_t GetViewportWidth() const { return m_ViewportWidth; }
+		uint32_t GetViewportHeight() const { return m_ViewportHeight; }
 		const glm::mat4& GetViewMatrix() const { return m_ViewMatrix; }
 		glm::mat4 GetViewProjection() const { return GetProjectionMatrix() * m_ViewMatrix; }
 		glm::mat4 GetUnReversedViewProjection() const { return GetUnReversedProjectionMatrix() * m_ViewMatrix; }

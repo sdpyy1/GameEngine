@@ -15,6 +15,9 @@ namespace Hazel {
 	private:
 		// Pass
 		void GeoPass();
+
+		// Grid
+		void GridPass();
 	private:
 		void Init();
 		void Draw();
@@ -105,6 +108,8 @@ namespace Hazel {
 		struct UniformBufferObject {
 			glm::mat4 view;
 			glm::mat4 proj;
+			float width;
+			float height;
 		};
 		UniformBufferObject* m_VPMatrix = nullptr;
 		Ref<UniformBufferSet> m_VPUniformBufferSet;
@@ -115,7 +120,10 @@ namespace Hazel {
 		Ref<Pipeline> m_GeoPipeline;
 		Ref<Framebuffer> m_GeoFrameBuffer;
 
-
+		// GridPass
+		Ref<RenderPass> m_GridPass;
+		Ref<Pipeline> m_GridPipeline;
+		Ref<Framebuffer> m_GridFrameBuffer;
 	};
 
 }

@@ -1,4 +1,4 @@
-#include "hzpch.h"
+ï»¿#include "hzpch.h"
 #include "Hazel/Renderer/Renderer.h"
 #include "Platform/Vulkan/VulkanRenderer.h"
 #include "Hazel/Renderer/RendererAPI.h"
@@ -8,7 +8,7 @@
 
 namespace Hazel {
 	Ref<Texture2D> Renderer::WhiteTexture = nullptr;
-	// ÕâÀï´æ´¢³£ÓÃäÖÈ¾×ÊÔ´
+	// è¿™é‡Œå­˜å‚¨å¸¸ç”¨æ¸²æŸ“èµ„æº
 	struct RendererData
 	{
 		Ref<ShaderLibrary> m_ShaderLibrary;
@@ -22,82 +22,99 @@ namespace Hazel {
 	static RenderCommandQueue s_ResourceFreeQueue[3];
 	static RendererAPI* s_RendererAPI = nullptr;
 
-	// ÔÚÕâÀïÍê³É³õÊ¼×ÊÔ´µÄ¼ÓÔØ
+	// åœ¨è¿™é‡Œå®Œæˆåˆå§‹èµ„æºçš„åŠ è½½
 	void Renderer::Init()
 	{
-		// ´æ´¢Ò»Ğ©ÌáÇ°´´½¨ºÃµÄäÖÈ¾×ÊÔ´
+		// å­˜å‚¨ä¸€äº›æå‰åˆ›å»ºå¥½çš„æ¸²æŸ“èµ„æº
 		s_Data = new RendererData();
-		// Shader»º´æ
+		// Shaderç¼“å­˜
 		s_Data->m_ShaderLibrary = Ref<ShaderLibrary>::Create();
 
-		// »º´æ¶ÓÁĞ Í¨¹ıRenderer::submitÌá½»µÄÃüÁî¶¼»á´æ´¢ÔÚRenderCommandQueue
+		// ç¼“å­˜é˜Ÿåˆ— é€šè¿‡Renderer::submitæäº¤çš„å‘½ä»¤éƒ½ä¼šå­˜å‚¨åœ¨RenderCommandQueue
 		for (int i = 0; i < s_RenderCommandQueueCount; i++) {
 			s_CommandQueue[i] = new RenderCommandQueue();
 		}
-		// ²¢·¢äÖÈ¾Êı
+		// å¹¶å‘æ¸²æŸ“æ•°
 		s_Config.FramesInFlight = glm::min<uint32_t>(s_Config.FramesInFlight, Application::Get().GetWindow()->GetSwapChain().GetImageCount());
-		// ´´½¨¾ßÌåµÄäÖÈ¾API¶ÔÏó
+		// åˆ›å»ºå…·ä½“çš„æ¸²æŸ“APIå¯¹è±¡
 		s_RendererAPI = RendererAPI::CreateAPI();
-		// Shader»º´æ£¬ĞèÒª´«¸øShader×ÊÔ´ÃèÊö·ûĞÅÏ¢£¬Shader»á´´½¨ºÃ×ÊÔ´ÃèÊö·ûSet
+		// Shaderç¼“å­˜ï¼Œéœ€è¦ä¼ ç»™Shaderèµ„æºæè¿°ç¬¦ä¿¡æ¯ï¼ŒShaderä¼šåˆ›å»ºå¥½èµ„æºæè¿°ç¬¦Set
 		// gBufferShader
 		Shader::ShaderSpecification gbufferShaderSpec;
-		// 1. ¶¥µã×ÅÉ«Æ÷µÄ UBO£¨Ä£ĞÍ/ÊÓÍ¼/Í¶Ó°¾ØÕóµÈ£©
+		// 1. é¡¶ç‚¹ç€è‰²å™¨çš„ UBOï¼ˆæ¨¡å‹/è§†å›¾/æŠ•å½±çŸ©é˜µç­‰ï¼‰
 		Shader::DescriptorBinding uboBinding;
-		uboBinding.binding = 0;                  // ¶ÔÓ¦×ÅÉ«Æ÷ÖĞ binding = 0
+		uboBinding.binding = 0;                  // å¯¹åº”ç€è‰²å™¨ä¸­ binding = 0
 		uboBinding.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		uboBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;  // ¶¥µã×ÅÉ«Æ÷Ê¹ÓÃ
+		uboBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;  // é¡¶ç‚¹ç€è‰²å™¨ä½¿ç”¨
 		uboBinding.count = 1;
 		uboBinding.set = 0;
 		gbufferShaderSpec.bindings.push_back(uboBinding);
-		// 2. Albedo ÌùÍ¼£¨combined image sampler£©
+		// 2. Albedo è´´å›¾ï¼ˆcombined image samplerï¼‰
 		Shader::DescriptorBinding albedoBinding;
-		albedoBinding.binding = 0;               // ¶ÔÓ¦×ÅÉ«Æ÷ÖĞ set=0, binding=0£¨×¢ÒâË÷Òı¶ÔÓ¦£©
+		albedoBinding.binding = 0;               // å¯¹åº”ç€è‰²å™¨ä¸­ set=0, binding=0ï¼ˆæ³¨æ„ç´¢å¼•å¯¹åº”ï¼‰
 		albedoBinding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		albedoBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;  // Æ¬¶Î×ÅÉ«Æ÷Ê¹ÓÃ
+		albedoBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;  // ç‰‡æ®µç€è‰²å™¨ä½¿ç”¨
 		albedoBinding.count = 1;
 		albedoBinding.set = 1;
 		gbufferShaderSpec.bindings.push_back(albedoBinding);
-		// 3. Normal ÌùÍ¼
+		// 3. Normal è´´å›¾
 		Shader::DescriptorBinding normalBinding;
-		normalBinding.binding = 1;               // ¶ÔÓ¦×ÅÉ«Æ÷ÖĞ set=0, binding=1
+		normalBinding.binding = 1;               // å¯¹åº”ç€è‰²å™¨ä¸­ set=0, binding=1
 		normalBinding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 		normalBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 		normalBinding.count = 1;
 		normalBinding.set = 1;
 		gbufferShaderSpec.bindings.push_back(normalBinding);
-		// 4. Metalness ÌùÍ¼
+		// 4. Metalness è´´å›¾
 		Shader::DescriptorBinding metalnessBinding;
-		metalnessBinding.binding = 2;            // ¶ÔÓ¦×ÅÉ«Æ÷ÖĞ set=0, binding=2
+		metalnessBinding.binding = 2;            // å¯¹åº”ç€è‰²å™¨ä¸­ set=0, binding=2
 		metalnessBinding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 		metalnessBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 		metalnessBinding.count = 1;
 		metalnessBinding.set = 1;
 		gbufferShaderSpec.bindings.push_back(metalnessBinding);
-		// 5. Roughness ÌùÍ¼
+		// 5. Roughness è´´å›¾
 		Shader::DescriptorBinding roughnessBinding;
-		roughnessBinding.binding = 3;            // ¶ÔÓ¦×ÅÉ«Æ÷ÖĞ set=0, binding=3
+		roughnessBinding.binding = 3;            // å¯¹åº”ç€è‰²å™¨ä¸­ set=0, binding=3
 		roughnessBinding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 		roughnessBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 		roughnessBinding.count = 1;
 		roughnessBinding.set = 1;
 		gbufferShaderSpec.bindings.push_back(roughnessBinding);
 
-		// ¼ÓÔØ×ÅÉ«Æ÷£¨È·±£ vert.spv ºÍ frag.spv ÓëÉÏÊö°ó¶¨Æ¥Åä£©
-		s_Data->m_ShaderLibrary->LoadCommonShader(
-			"gBuffer",
-			"assets/shaders/Debug/vert.spv",
-			"assets/shaders/Debug/frag.spv",
-			gbufferShaderSpec
-		);
+		// åŠ è½½ç€è‰²å™¨ï¼ˆç¡®ä¿ vert.spv å’Œ frag.spv ä¸ä¸Šè¿°ç»‘å®šåŒ¹é…ï¼‰
+		s_Data->m_ShaderLibrary->LoadCommonShader("gBuffer",gbufferShaderSpec);
 
-		// ¼ÓÔØÎÆÀí
+
+		// æ·±åº¦è´´å›¾Binding
+		Shader::DescriptorBinding griduboBinding;
+		griduboBinding.binding = 0;                  // å¯¹åº”ç€è‰²å™¨ä¸­ binding = 0
+		griduboBinding.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		griduboBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;  // é¡¶ç‚¹ç€è‰²å™¨ä½¿ç”¨
+		griduboBinding.count = 1;
+		griduboBinding.set = 0;
+		gbufferShaderSpec.bindings.push_back(griduboBinding);
+		Shader::DescriptorBinding depthBinding;
+		depthBinding.binding = 1;            // å¯¹åº”ç€è‰²å™¨ä¸­ set=0, binding=3
+		depthBinding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		depthBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+		depthBinding.count = 1;
+		depthBinding.set = 0;
+		Shader::ShaderSpecification gridShaderSpec;
+		gridShaderSpec.bindings.push_back(griduboBinding);
+		gridShaderSpec.bindings.push_back(depthBinding);
+		s_Data->m_ShaderLibrary->LoadCommonShader("grid", gridShaderSpec);
+
+
+
+		// åŠ è½½çº¹ç†
 		uint32_t whiteTextureData = 0xffffffff;
 		TextureSpecification spec;
 		spec.Format = ImageFormat::RGBA;
 		spec.Width = 1;
 		spec.Height = 1;
 		WhiteTexture = Texture2D::Create(spec, Buffer(&whiteTextureData, sizeof(uint32_t)));
-		// Îª²¢·¢Ö¡´´½¨ÁËÃèÊö·û³Ø¡¢ÌáÇ°×¼±¸ÁËÈ«ÆÁ¶¥µãÊı¾İ´æÈëÁËGPU
+		// ä¸ºå¹¶å‘å¸§åˆ›å»ºäº†æè¿°ç¬¦æ± ã€æå‰å‡†å¤‡äº†å…¨å±é¡¶ç‚¹æ•°æ®å­˜å…¥äº†GPU
 		s_RendererAPI->Init();
 
 	}
@@ -156,9 +173,9 @@ namespace Hazel {
 	{
 		return s_RendererAPI->RenderStaticMeshWithMaterial(commandBuffer, pipeline,meshSource, submeshIndex, material, transformBuffer, transformOffset, instanceCount);
 	}
-	void Renderer::BindIndexDataAndDraw(Ref<RenderCommandBuffer> commandBuffer, Ref<IndexBuffer> indexBuffer)
+	void Renderer::DrawPrueVertex(Ref<RenderCommandBuffer> commandBuffer, uint32_t count)
 	{
-		return s_RendererAPI->BindIndexDataAndDraw(commandBuffer,indexBuffer);
+		return s_RendererAPI->DrawPrueVertex(commandBuffer, count);
 
 	}
 	uint32_t Renderer::RT_GetCurrentFrameIndex()
@@ -189,11 +206,11 @@ namespace Hazel {
 		// Wait for kick, then set render thread to busy  
 		{
 			HZ_PROFILE_SCOPE("Wait");
-			// äÖÈ¾Ïß³ÌÑ­»·µÈ´ıKickĞÅºÅ£¬ÊÕµ½ĞÅºÅºó£¬ÉèÖÃÎªBusyĞÅºÅ²¢¿ªÊ¼¹¤×÷
+			// æ¸²æŸ“çº¿ç¨‹å¾ªç¯ç­‰å¾…Kickä¿¡å·ï¼Œæ”¶åˆ°ä¿¡å·åï¼Œè®¾ç½®ä¸ºBusyä¿¡å·å¹¶å¼€å§‹å·¥ä½œ
 			renderThread->WaitAndSet(RenderThread::State::Kick, RenderThread::State::Busy);
 		}
-		// ¹¤×÷¾ÍÊÇ°Ñ»º´æÃüÁîÈ«²¿Ö´ĞĞ
-		s_CommandQueue[GetRenderQueueIndex()]->Execute();  // ???£º¸Ğ¾õÓĞÎÊÌâ£¬ÕâÔõÃ´×ÜÔÚÖ´ĞĞÏÂÒ»Ö¡µÄÃüÁî£¨½â¾ö£ºËûÔÚÖ´ĞĞNextFrame£¨£©Ê±£¬ÇĞ»»µ½ÁËÏÂÒ»Ö¡£¬ÕâÀïÔÙÇĞ»»Ò»ÏÂÓÖ»ØÈ¥ÁË£¬ËùÒÔÕâÌ×Âß¼­Ö»ÔÚÒ»¹²2¸ö»º³åÇøµÄÊ±ºòÃ»ÎÊÌâ£©
+		// å·¥ä½œå°±æ˜¯æŠŠç¼“å­˜å‘½ä»¤å…¨éƒ¨æ‰§è¡Œ
+		s_CommandQueue[GetRenderQueueIndex()]->Execute();  // ???ï¼šæ„Ÿè§‰æœ‰é—®é¢˜ï¼Œè¿™æ€ä¹ˆæ€»åœ¨æ‰§è¡Œä¸‹ä¸€å¸§çš„å‘½ä»¤ï¼ˆè§£å†³ï¼šä»–åœ¨æ‰§è¡ŒNextFrameï¼ˆï¼‰æ—¶ï¼Œåˆ‡æ¢åˆ°äº†ä¸‹ä¸€å¸§ï¼Œè¿™é‡Œå†åˆ‡æ¢ä¸€ä¸‹åˆå›å»äº†ï¼Œæ‰€ä»¥è¿™å¥—é€»è¾‘åªåœ¨ä¸€å…±2ä¸ªç¼“å†²åŒºçš„æ—¶å€™æ²¡é—®é¢˜ï¼‰
 
 		// Rendering has completed, set state to idle
 		renderThread->Set(RenderThread::State::Idle);

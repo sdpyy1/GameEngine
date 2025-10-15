@@ -28,8 +28,10 @@ namespace Hazel {
 	{
 		if (specification.Width == 0)
 		{
-			m_Width = Application::Get().GetWindow()->GetWidth();
-			m_Height = Application::Get().GetWindow()->GetHeight();
+			//m_Width = Application::Get().GetWindow()->GetWidth();
+			//m_Height = Application::Get().GetWindow()->GetHeight();
+			m_Width = Application::GetViewportWidth();
+			m_Height = Application::GetViewportHeight();
 		}
 		else
 		{

@@ -29,7 +29,7 @@ namespace Hazel {
 		//void DrawStaticMesh(Ref<RenderCommandBuffer> commandBuffer, Ref<VertexBuffer> vertexBuffer, Ref<MeshSource> meshSource, uint32_t subMeshIndex);
 		static void BindVertData(Ref<RenderCommandBuffer> commandBuffer, Ref<VertexBuffer> testVertexBuffer);
 		static void RenderStaticMeshWithMaterial(Ref<RenderCommandBuffer> commandBuffer, Ref<Pipeline> pipeline, Ref<MeshSource> meshSource,uint32_t submeshIndex,Ref<Material> material, Ref<VertexBuffer> transformBuffer, uint32_t transformOffset, uint32_t instanceCount);
-		static void BindIndexDataAndDraw(Ref<RenderCommandBuffer> commandBuffer, Ref<IndexBuffer> indexBuffer);
+		static void DrawPrueVertex(Ref<RenderCommandBuffer> commandBuffer, uint32_t count);
 		static RendererAPI::Type Current() { return RendererAPI::Current(); }
 		static void RenderThreadFunc(RenderThread* renderThread);
 		static void WaitAndRender(RenderThread* renderThread);

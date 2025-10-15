@@ -33,9 +33,10 @@ namespace Hazel {
 		Add(name, shader);
 	}
 	
-	Ref<Shader> ShaderLibrary::LoadCommonShader(const std::string& name, const std::string& vertFileShader, const std::string& fragFileShader,Shader::ShaderSpecification spec)
+	Ref<Shader> ShaderLibrary::LoadCommonShader(const std::string& name,Shader::ShaderSpecification spec)
 	{
-		Ref<VulkanShader> shader = Shader::Create(name, vertFileShader, fragFileShader,spec);
+		//TODO: ต๗สิ
+		Ref<VulkanShader> shader = Shader::Create(name, "D:/AAA_GameEngine/Hazelnut/assets/shaders/spv/"+ name + "Vert.spv", "D:/AAA_GameEngine/Hazelnut/assets/shaders/spv/" + name + "Frag.spv", spec);
 		Add(shader);
 		return shader;
 	}

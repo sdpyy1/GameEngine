@@ -5,11 +5,14 @@
 #include "Entity.h"
 #include <Hazel/Asset/AssetImporter.h>
 #include <Hazel/Asset/Model/Mesh.h>
+#include <Platform/Vulkan/VulkanRenderCommandBuffer.h>
 namespace Hazel {
 	SceneRender::SceneRender()
 	{
 		Init();
 	}
+
+
 
 	void SceneRender::Init()
 	{
@@ -34,13 +37,11 @@ namespace Hazel {
 			FramebufferTextureSpecification gMRSpec(ImageFormat::RGBA32F);
 			FramebufferTextureSpecification depthSpec(ImageFormat::DEPTH32F);
 			FramebufferAttachmentSpecification attachmentSpec;
-			attachmentSpec.Attachments = { gPositionSpec,gNormalSpec,gAlbedoSpec,gMRSpec,depthSpec };
 			FramebufferSpecification framebufferSpec;
-			framebufferSpec.Attachments = attachmentSpec;
+			framebufferSpec.Attachments = { gPositionSpec,gNormalSpec,gAlbedoSpec,gMRSpec,depthSpec };
 			framebufferSpec.DebugName = "GBuffer";
 			m_GeoFrameBuffer = Framebuffer::Create(framebufferSpec);
 			PipelineSpecification pSpec;
-			pSpec.BackfaceCulling = false;
 			pSpec.Layout = vertexLayout;
 			pSpec.InstanceLayout = instanceLayout;
 			pSpec.Shader = Renderer::GetShaderLibrary()->Get("gBuffer");
@@ -53,6 +54,30 @@ namespace Hazel {
 			m_GeoPass = RenderPass::Create(gBufferPassSpec);
 			m_GeoPass->SetInput(m_VPUniformBufferSet, 0);  // 设置binding=0的ubo
 		}
+
+		// GridPass
+		{
+			FramebufferTextureSpecification gridColorOutputSpec(ImageFormat::RGBA32F);
+			FramebufferSpecification gridPassFramebufferSpec;
+			gridPassFramebufferSpec.Attachments = { gridColorOutputSpec };
+			gridPassFramebufferSpec.DebugName = "Grid";
+			gridPassFramebufferSpec.ExistingImages[0] = m_GeoFrameBuffer->GetImage(2); 
+			gridPassFramebufferSpec.Attachments.Attachments[0].LoadOp = AttachmentLoadOp::Load;
+
+			m_GridFrameBuffer = Framebuffer::Create(gridPassFramebufferSpec);
+			PipelineSpecification gridPipelineSpec;
+			gridPipelineSpec.Shader = Renderer::GetShaderLibrary()->Get("grid");
+			gridPipelineSpec.TargetFramebuffer = m_GridFrameBuffer;
+			gridPipelineSpec.DepthTest = true;
+			gridPipelineSpec.DebugName = "GridPipeline";
+			m_GridPipeline = Pipeline::Create(gridPipelineSpec);
+			RenderPassSpecification gridPassSpec;
+			gridPassSpec.Pipeline = m_GridPipeline;
+			m_GridPass = RenderPass::Create(gridPassSpec);
+			m_GridPass->SetInput(m_VPUniformBufferSet, 0);  // 设置binding=0的ubo
+			m_GridPass->SetInput(m_GeoPass->GetDepthOutput(), 1);  // 设置binding=0的ubo
+		}
+
 	}
 
 	void SceneRender::PreRender(EditorCamera& camera)
@@ -82,6 +107,7 @@ namespace Hazel {
 
 	void SceneRender::Draw() {
 		GeoPass();
+		GridPass();
 	}
 	void SceneRender::GeoPass()
 	{
@@ -96,7 +122,15 @@ namespace Hazel {
 		}		
 		Renderer::EndRenderPass(m_CommandBuffer);
 	}
+	void SceneRender::GridPass()
+	{
 
+
+		Renderer::BeginRenderPass(m_CommandBuffer, m_GridPass, false);
+		Renderer::DrawPrueVertex(m_CommandBuffer,6);
+		Renderer::EndRenderPass(m_CommandBuffer);
+
+	}
 	void SceneRender::EndRender()
 	{
 		Draw();
@@ -112,6 +146,8 @@ namespace Hazel {
 		m_VPMatrix->view = camera.GetViewMatrix();
 		m_VPMatrix->proj = camera.GetProjectionMatrix();
 		m_VPMatrix->proj[1][1] *= -1; // Y轴反转
+		m_VPMatrix->width = camera.GetViewportWidth();
+		m_VPMatrix->height = camera.GetViewportHeight();
 		m_VPUniformBufferSet->RT_Get()->SetData((void*)m_VPMatrix, sizeof(UniformBufferObject));
 	}
 

@@ -241,13 +241,13 @@ namespace Hazel {
 			});
 
 	}
-	void VulkanRenderer::BindIndexDataAndDraw(Ref<RenderCommandBuffer> commandBuffer, Ref<IndexBuffer> indexBuffer)
+	void VulkanRenderer::DrawPrueVertex(Ref<RenderCommandBuffer> commandBuffer, uint32_t count)
 	{
-		Renderer::Submit([commandBuffer,indexBuffer] {
+		Renderer::Submit([commandBuffer, count] {
 			uint32_t frameIndex = Renderer::RT_GetCurrentFrameIndex();
 			VkCommandBuffer vkCommandBuffer = commandBuffer.As<VulkanRenderCommandBuffer>()->GetActiveCommandBuffer();
-			vkCmdBindIndexBuffer(vkCommandBuffer, indexBuffer.As<VulkanIndexBuffer>()->GetVulkanBuffer(), 0, VK_INDEX_TYPE_UINT32);
-			vkCmdDrawIndexed(vkCommandBuffer, indexBuffer->GetCount(), 1, 0, 0, 0);
+			vkCmdDraw(vkCommandBuffer, count, 1, 0, 0);
+
 		});
 
 	}
@@ -403,7 +403,6 @@ namespace Hazel {
 				// Bind input descriptors
 				Ref<VulkanRenderPass> vulkanRenderPass = renderPass.As<VulkanRenderPass>();
 				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderPass->GetPipeline().As<VulkanPipeline>()->GetVulkanPipelineLayout(), 0, 1, &renderPass->GetPipeline()->GetShader().As<VulkanShader>()->GetDescriptorSet()[frameIndex], 0, nullptr);
-
 			});
 	
 	}	

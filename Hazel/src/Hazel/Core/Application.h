@@ -53,7 +53,11 @@ namespace Hazel {
 		void RenderImGui();
 
 		void Close();
-
+		static void SetViewportSize(float width, float height){
+			Get().m_ViewportWidth = width; Get().m_ViewportHeight = height;
+		}
+		static float GetViewportWidth() { return Get().m_ViewportWidth; }
+		static float GetViewportHeight() { return Get().m_ViewportHeight; }
 		ImGuiLayer* GetImGuiLayer() { return m_ImGuiLayer; }
 
 		static Application& Get() { return *s_Instance; }
@@ -84,7 +88,7 @@ namespace Hazel {
 		static Application* s_Instance;
 		friend int ::main(int argc, char** argv);
 		uint32_t m_CurrentFrameIndex = 0;
-
+		float m_ViewportWidth = 1200.0f, m_ViewportHeight = 800.0f;
 	};
 
 	// To be defined in CLIENT

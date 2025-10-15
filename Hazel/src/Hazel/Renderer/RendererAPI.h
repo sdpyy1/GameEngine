@@ -34,7 +34,7 @@ namespace Hazel {
 		virtual void RenderStaticMeshWithMaterial(Ref<RenderCommandBuffer> commandBuffer, Ref<Pipeline> pipeline, Ref<MeshSource> meshSource, uint32_t submeshIndex, Ref<Material> material, Ref<VertexBuffer> transformBuffer, uint32_t transformOffset, uint32_t instanceCount) = 0;
 		static RendererAPI* CreateAPI();
 		virtual void BindVertData(Ref<RenderCommandBuffer> commandBuffer, Ref<VertexBuffer> testVertexBuffer) = 0;
-		virtual void BindIndexDataAndDraw(Ref<RenderCommandBuffer> commandBuffer, Ref<IndexBuffer> indexBuffer) = 0;
+		virtual void DrawPrueVertex(Ref<RenderCommandBuffer> commandBuffer, uint32_t count) = 0;
 		static Type Current() { return s_API; }
 	private:
 		static Type s_API;
