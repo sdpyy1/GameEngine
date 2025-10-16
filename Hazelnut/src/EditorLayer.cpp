@@ -18,7 +18,7 @@
 namespace Hazel {
 
 	EditorLayer::EditorLayer()
-		: Layer("EditorLayer"), m_EditorCamera(45.0f, 1216.0f, 849.0f, 0.1f, 1000.0f)
+		: Layer("EditorLayer"), m_EditorCamera(45.0f, 1280.0f, 720.0f, 0.1f, 1000.0f)
 	{
 		m_Scene = Ref<Scene>::Create();
 		m_AssetManagerPanel.SetContext(m_Scene);
@@ -96,10 +96,11 @@ namespace Hazel {
 	{
 		ImGui::Begin("Viewport");
 		m_ViewportBounds[0] = ImGui::GetWindowPos();
+		// 程序中ViewportSize都来自这里
 		ImVec2 viewportSize = ImGui::GetContentRegionAvail();
 		m_ViewportBounds[1] = ImVec2(m_ViewportBounds[0].x + viewportSize.x, m_ViewportBounds[0].y + viewportSize.y);
 		m_EditorCamera.SetViewportSize(viewportSize.x, viewportSize.y);
-		m_Scene->SetSize(viewportSize.x, viewportSize.y);
+		m_Scene->SetViewprotSize(viewportSize.x, viewportSize.y);
 		Application::SetViewportSize(viewportSize.x, viewportSize.y);
 		
 		ImVec2 mousePos = ImGui::GetIO().MousePos;

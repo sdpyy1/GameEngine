@@ -45,7 +45,6 @@ namespace Hazel {
 		CollectRenderableEntities(sceneRender);
 		sceneRender->PreRender(editorCamera);
 
-
 		sceneRender->EndRender();
 	};
 

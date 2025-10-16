@@ -76,29 +76,47 @@ namespace Hazel {
 		return framebuffer->GetDepthImage();
 	}
 
-	void VulkanRenderPass::SetInput(Ref<Image2D> image, uint32_t Binding)
+	void VulkanRenderPass::SetInput(Ref<Image2D> image, uint32_t Binding,bool isInit)
 	{
 		Renderer::Submit([=]() {
 			VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 			auto vulkanTexture = image.As<VulkanImage2D>();
 
-			for (size_t i = 0; i < Renderer::GetConfig().FramesInFlight; i++) {
+			if (isInit) {
+				for (size_t i = 0; i < Renderer::GetConfig().FramesInFlight; i++) {
+					VkDescriptorImageInfo imageInfo{};
+					imageInfo.sampler = vulkanTexture->GetDescriptorInfoVulkan().sampler;
+					imageInfo.imageView = vulkanTexture->GetDescriptorInfoVulkan().imageView;
+					imageInfo.imageLayout = vulkanTexture->GetDescriptorInfoVulkan().imageLayout;
+
+					std::array<VkWriteDescriptorSet, 1> descriptorWrites{};
+					descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+					descriptorWrites[0].dstSet = GetSpecification().Pipeline->GetShader().As<VulkanShader>()->GetDescriptorSet()[i];
+					descriptorWrites[0].dstBinding = Binding;
+					descriptorWrites[0].dstArrayElement = 0;
+					descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+					descriptorWrites[0].descriptorCount = 1;
+					descriptorWrites[0].pImageInfo = &imageInfo;
+
+					vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+				}
+			}else {
 				VkDescriptorImageInfo imageInfo{};
-				imageInfo.sampler = vulkanTexture->GetDescriptorInfoVulkan().sampler; 
-				imageInfo.imageView = vulkanTexture->GetDescriptorInfoVulkan().imageView; 
-				imageInfo.imageLayout = vulkanTexture->GetDescriptorInfoVulkan().imageLayout; 
+				imageInfo.sampler = vulkanTexture->GetDescriptorInfoVulkan().sampler;
+				imageInfo.imageView = vulkanTexture->GetDescriptorInfoVulkan().imageView;
+				imageInfo.imageLayout = vulkanTexture->GetDescriptorInfoVulkan().imageLayout;
 
 				std::array<VkWriteDescriptorSet, 1> descriptorWrites{};
 				descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-				descriptorWrites[0].dstSet = GetSpecification().Pipeline->GetShader().As<VulkanShader>()->GetDescriptorSet()[i];
-				descriptorWrites[0].dstBinding = Binding; 
+				descriptorWrites[0].dstSet = GetSpecification().Pipeline->GetShader().As<VulkanShader>()->GetDescriptorSet()[Renderer::RT_GetCurrentFrameIndex()];
+				descriptorWrites[0].dstBinding = Binding;
 				descriptorWrites[0].dstArrayElement = 0;
 				descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-				descriptorWrites[0].descriptorCount = 1;  
+				descriptorWrites[0].descriptorCount = 1;
 				descriptorWrites[0].pImageInfo = &imageInfo;
 
 				vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
 			}
-			});
+		});
 	}
 }

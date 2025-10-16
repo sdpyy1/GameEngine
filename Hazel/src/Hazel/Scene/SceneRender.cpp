@@ -31,14 +31,9 @@ namespace Hazel {
 
 		// GeoPass
 		{
-			FramebufferTextureSpecification gPositionSpec(ImageFormat::RGBA32F);
-			FramebufferTextureSpecification gNormalSpec(ImageFormat::RGBA32F);
-			FramebufferTextureSpecification gAlbedoSpec(ImageFormat::RGBA32F);
-			FramebufferTextureSpecification gMRSpec(ImageFormat::RGBA32F);
-			FramebufferTextureSpecification depthSpec(ImageFormat::DEPTH32F);
-			FramebufferAttachmentSpecification attachmentSpec;
 			FramebufferSpecification framebufferSpec;
-			framebufferSpec.Attachments = { gPositionSpec,gNormalSpec,gAlbedoSpec,gMRSpec,depthSpec };
+			// pos normal albedo mr depth
+			framebufferSpec.Attachments = { ImageFormat::RGBA32F,ImageFormat::RGBA32F,ImageFormat::RGBA32F,ImageFormat::RGBA32F,ImageFormat::DEPTH32F };
 			framebufferSpec.DebugName = "GBuffer";
 			m_GeoFrameBuffer = Framebuffer::Create(framebufferSpec);
 			PipelineSpecification pSpec;
@@ -75,15 +70,19 @@ namespace Hazel {
 			gridPassSpec.Pipeline = m_GridPipeline;
 			m_GridPass = RenderPass::Create(gridPassSpec);
 			m_GridPass->SetInput(m_VPUniformBufferSet, 0);  // 设置binding=0的ubo
-			m_GridPass->SetInput(m_GeoPass->GetDepthOutput(), 1);  // 设置binding=0的ubo
 		}
 
 	}
 
 	void SceneRender::PreRender(EditorCamera& camera)
-	{
-		UpdateVPMatrix(camera); // 更新VP矩阵的UniformBuffer
+	{	
+		// 更新FBO尺寸
+		m_GeoFrameBuffer->Resize(camera.GetViewportWidth(), camera.GetViewportHeight());
+		m_GridFrameBuffer->Resize(camera.GetViewportWidth(), camera.GetViewportHeight());
+		m_GridPass->SetInput(m_GeoPass->GetDepthOutput(), 1);  // 这种会随着FBO尺寸变化而变化的输入，必须每帧更新
 
+		// 更新VP矩阵的UniformBuffer
+		UpdateVPMatrix(camera); 
 		// 收集所有参与渲染的Mesh的变换矩阵存储在m_SubmeshTransformBuffers
 		{
 			uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
@@ -124,8 +123,6 @@ namespace Hazel {
 	}
 	void SceneRender::GridPass()
 	{
-
-
 		Renderer::BeginRenderPass(m_CommandBuffer, m_GridPass, false);
 		Renderer::DrawPrueVertex(m_CommandBuffer,6);
 		Renderer::EndRenderPass(m_CommandBuffer);

@@ -28,10 +28,8 @@ namespace Hazel {
 	{
 		if (specification.Width == 0)
 		{
-			//m_Width = Application::Get().GetWindow()->GetWidth();
-			//m_Height = Application::Get().GetWindow()->GetHeight();
-			m_Width = Application::GetViewportWidth();
-			m_Height = Application::GetViewportHeight();
+			m_Width = Application::Get().GetWindow()->GetWidth();
+			m_Height = Application::Get().GetWindow()->GetHeight();
 		}
 		else
 		{
@@ -136,10 +134,11 @@ namespace Hazel {
 	{
 		if (!forceRecreate && (m_Width == width && m_Height == height))
 			return;
-
 		Ref<VulkanFramebuffer> instance = this;
 		Renderer::Submit([instance, width, height]() mutable
 			{
+				HZ_CORE_INFO("RT_Resizing Framebuffer to {0}, {1}", width, height);
+
 				instance->m_Width = (uint32_t)(width * instance->m_Specification.Scale);
 				instance->m_Height = (uint32_t)(height * instance->m_Specification.Scale);
 				if (!instance->m_Specification.SwapChainTarget)

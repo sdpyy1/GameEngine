@@ -22,7 +22,7 @@ namespace Hazel {
 		
 		void OnEditorRender(Ref<SceneRender> sceneRender,EditorCamera& editorCamera);
 		void OutputRenderRes(Ref<SceneRender> sceneRender);
-		void SetSize(float width, float height) {  ViewportWidth = width; ViewportHeight = height;}
+		void SetViewprotSize(float width, float height) {  ViewportWidth = width; ViewportHeight = height;}
 	public:
 		void CollectRenderableEntities(Ref<SceneRender> sceneRender);
 		glm::mat4 GetWorldSpaceTransformMatrix(Entity entity);

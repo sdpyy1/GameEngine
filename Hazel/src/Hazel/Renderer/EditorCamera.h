@@ -39,6 +39,8 @@ namespace Hazel {
 			if (m_ViewportWidth == width && m_ViewportHeight == height)
 				return;
 			SetPerspectiveProjectionMatrix(m_VerticalFOV, (float)width, (float)height, m_NearClip, m_FarClip);
+			m_ViewportWidth = width;
+			m_ViewportHeight = height;
 		}
 		uint32_t GetViewportWidth() const { return m_ViewportWidth; }
 		uint32_t GetViewportHeight() const { return m_ViewportHeight; }
@@ -99,7 +101,7 @@ namespace Hazel {
 
 		float m_MinFocusDistance{ 100.0f };
 
-		uint32_t m_ViewportWidth{ 1280 }, m_ViewportHeight{ 720 };
+		uint32_t m_ViewportWidth= 1280, m_ViewportHeight= 720;
 
 		constexpr static float MIN_SPEED{ 0.0005f }, MAX_SPEED{ 2.0f };
 		friend class EditorLayer;

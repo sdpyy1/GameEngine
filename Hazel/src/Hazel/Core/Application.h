@@ -88,7 +88,7 @@ namespace Hazel {
 		static Application* s_Instance;
 		friend int ::main(int argc, char** argv);
 		uint32_t m_CurrentFrameIndex = 0;
-		float m_ViewportWidth = 1200.0f, m_ViewportHeight = 800.0f;
+		float m_ViewportWidth = 1200.0f, m_ViewportHeight = 720.0f;
 	};
 
 	// To be defined in CLIENT
