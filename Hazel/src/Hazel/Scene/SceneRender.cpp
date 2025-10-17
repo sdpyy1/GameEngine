@@ -76,6 +76,8 @@ namespace Hazel {
 
 	void SceneRender::PreRender(EditorCamera& camera)
 	{	
+		// 更新VP矩阵的UniformBuffer
+		UpdateVPMatrix(camera);
 		if (NeedResize) {
 			// 更新FBO尺寸
 			m_GeoFrameBuffer->Resize(camera.GetViewportWidth(), camera.GetViewportHeight());
@@ -84,8 +86,6 @@ namespace Hazel {
 		}
 		m_GridPass->SetInput(m_GeoPass->GetDepthOutput(), 1);  // 这种会随着FBO尺寸变化而变化的输入，必须每帧更新
 
-		// 更新VP矩阵的UniformBuffer
-		UpdateVPMatrix(camera); 
 		// 收集所有参与渲染的Mesh的变换矩阵存储在m_SubmeshTransformBuffers
 		{
 			uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
@@ -146,8 +146,10 @@ namespace Hazel {
 		m_CameraData->view = camera.GetViewMatrix();
 		m_CameraData->proj = camera.GetProjectionMatrix();
 		m_CameraData->proj[1][1] *= -1; // Y轴反转
-		m_CameraData->width = camera.GetViewportWidth();
-		m_CameraData->height = camera.GetViewportHeight();
+		m_CameraData->Near = camera.GetNearClip();
+		m_CameraData->Far = camera.GetFarClip();
+		m_CameraData->Width = camera.GetViewportWidth();
+		m_CameraData->Height = camera.GetViewportHeight();
 		m_VPUniformBufferSet->RT_Get()->SetData((void*)m_CameraData, sizeof(UniformBufferObject));
 	}
 

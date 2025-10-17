@@ -1,4 +1,5 @@
 #version 460 core
+// 两个三角形覆盖全屏
 vec3 kNdcPoints[6] = vec3[](
     vec3( 1,  1, 0), 
     vec3(-1, -1, 0), 
@@ -7,12 +8,14 @@ vec3 kNdcPoints[6] = vec3[](
     vec3( 1,  1, 0), 
     vec3( 1, -1, 0)
 );
-layout(set=0,binding = 0) uniform UniformBufferObject {
+layout(set = 0,binding = 0) uniform UniformBufferObject {
     mat4 view;
     mat4 proj;
 	float width;
 	float height;
-} ubo;
+	float Near;
+	float Far;
+} cameraData;
 // 描述符集
 layout (set = 0, binding = 1) uniform sampler2D inDepth;
 
@@ -21,13 +24,14 @@ layout(location = 0) out vec3 nearPoint;
 layout(location = 1) out vec3 farPoint; 
 vec3 deprojectNDC2World(vec2 pos, float z) 
 {
-    vec4 worldH = inverse(ubo.proj * ubo.view) * vec4(pos, z, 1.0);
+    vec4 worldH = inverse(cameraData.proj * cameraData.view) * vec4(pos, z, 1.0);
     return worldH.xyz / worldH.w;
 }
 void main()
 {
-    nearPoint = deprojectNDC2World(kNdcPoints[gl_VertexIndex].xy, 1.0);
-    farPoint  = deprojectNDC2World(kNdcPoints[gl_VertexIndex].xy, 0.0);
+	// 插值后获得每个像素的近远平面上的位置
+    nearPoint = deprojectNDC2World(kNdcPoints[gl_VertexIndex].xy, 0.0);
+    farPoint  = deprojectNDC2World(kNdcPoints[gl_VertexIndex].xy, 1.0);
 
     gl_Position = vec4(kNdcPoints[gl_VertexIndex].xyz, 1.0);
 }
@@ -88,33 +92,36 @@ vec4 grid(vec3 fragPos3D)
 
 float computeDepth(vec3 pos) 
 {
-    vec4 posH = inverse(ubo.proj * ubo.view) * vec4(pos, 1.0);
-    return posH.z / posH.w;
+    vec4 posH = cameraData.proj * cameraData.view * vec4(pos, 1.0);
+    return posH.z / posH.w;	
 }
 float linearizeDepth(float z, float n, float f)
 {
-    return n * f / (z * (f - n) + n);
+    return (n * f) / (f - z * (f - n));
 }
 
 vec4 getColor(vec3 fragPos3D, float t)
 {
+	// 获得渲染点的深度
     float deviceZ = computeDepth(fragPos3D);
 
-    vec2 uv = gl_FragCoord.xy / vec2(ubo.width, ubo.height);
+	// 获取场景深度，做深度测试
+    vec2 uv = gl_FragCoord.xy / vec2(cameraData.width, cameraData.height);
     float sceneZ = texture(inDepth,uv).r;
 
-    float linearDepth = linearizeDepth(deviceZ,0.1,1000); // 转线性
-    float fading = exp2(-linearDepth * 0.05);
+    float linearDepth = linearizeDepth(deviceZ,cameraData.Near,cameraData.Far);
+    float fading = exp2(-linearDepth * 0.05); // 让远处更淡
 
     vec4 result = grid(fragPos3D) * float(t > 0);
-    result.a = (deviceZ > sceneZ) ? result.a : 0.0;
+    result.a = (deviceZ < sceneZ) ? result.a : 0.0;
     result.a *= fading * 0.75;
-
+		
     return result;
 }
 
 void main()
 {
+	// 计算每个像素看向y=0平面时，所表示的空间坐标，fragPos就是y=0这个平面上的一个点
     float t = -nearPoint.y / (farPoint.y - nearPoint.y);
     vec3 fragPos3D = nearPoint + t * (farPoint - nearPoint);
     outColor = getColor(fragPos3D, t);

@@ -112,8 +112,10 @@ namespace Hazel {
 		struct UniformBufferObject {
 			glm::mat4 view;
 			glm::mat4 proj;
-			float width;
-			float height;
+			float Width;
+			float Height;
+			float Near;
+			float Far;
 		};
 		UniformBufferObject* m_CameraData = nullptr;
 		Ref<UniformBufferSet> m_VPUniformBufferSet;

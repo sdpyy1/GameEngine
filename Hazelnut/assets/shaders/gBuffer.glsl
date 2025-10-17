@@ -5,6 +5,8 @@ layout(binding = 0) uniform UniformBufferObject {
     mat4 proj;
 	float width;
 	float height;
+	float Near;
+	float Far;
 } ubo;
 
 layout(location = 0) in vec3 inPosition;
