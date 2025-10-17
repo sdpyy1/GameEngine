@@ -26,7 +26,6 @@ namespace Hazel {
 		static void BeginRenderPass(Ref<RenderCommandBuffer> commandBuffer,Ref<RenderPass> renderPass,bool explicitClear);
 		static void EndRenderPass(Ref<RenderCommandBuffer> commandBuffer);
 		static void SwapQueues(); // ΩªªªBuffer√¸¡Óª∫≥Â
-		//void DrawStaticMesh(Ref<RenderCommandBuffer> commandBuffer, Ref<VertexBuffer> vertexBuffer, Ref<MeshSource> meshSource, uint32_t subMeshIndex);
 		static void BindVertData(Ref<RenderCommandBuffer> commandBuffer, Ref<VertexBuffer> testVertexBuffer);
 		static void RenderStaticMeshWithMaterial(Ref<RenderCommandBuffer> commandBuffer, Ref<Pipeline> pipeline, Ref<MeshSource> meshSource,uint32_t submeshIndex,Ref<Material> material, Ref<VertexBuffer> transformBuffer, uint32_t transformOffset, uint32_t instanceCount);
 		static void DrawPrueVertex(Ref<RenderCommandBuffer> commandBuffer, uint32_t count);

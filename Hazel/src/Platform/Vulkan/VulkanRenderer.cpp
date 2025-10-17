@@ -218,6 +218,7 @@ namespace Hazel {
 	{
 		Renderer::Submit([]()
 			{
+				//HZ_CORE_WARN("开始执行第{0}帧渲染命令缓冲", Renderer::RT_GetCurrentFrameIndex());
 				VulkanSwapChain& swapChain = Application::Get().GetWindow()->GetSwapChain();
 				// 清空命令缓冲区、获取下一帧图片索引
 				swapChain.BeginFrame();

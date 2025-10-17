@@ -12,17 +12,17 @@ namespace Hazel {
 		Init();
 	}
 
-
-
 	void SceneRender::Init()
 	{
 		uint32_t framesInFlight = Renderer::GetConfig().FramesInFlight;
 		m_CommandBuffer = RenderCommandBuffer::Create("PassCommandBuffer");
 		// MVP矩阵的UBO
-		m_VPMatrix = new UniformBufferObject();
+		m_CameraData = new UniformBufferObject();
 		m_VPUniformBufferSet = UniformBufferSet::Create(sizeof(UniformBufferObject));
+
+		// 用一个很大的顶点缓冲区来存储所有的变换矩阵
 		const size_t TransformBufferCount = 10 * 1024; // 10240 transforms
-		m_SubmeshTransformBuffers.resize(framesInFlight); // 用一个很大的顶点缓冲区来存储所有的变换矩阵
+		m_SubmeshTransformBuffers.resize(framesInFlight);
 		for (uint32_t i = 0; i < framesInFlight; i++)
 		{
 			m_SubmeshTransformBuffers[i].Buffer = VertexBuffer::Create(sizeof(TransformVertexData) * TransformBufferCount);
@@ -76,9 +76,12 @@ namespace Hazel {
 
 	void SceneRender::PreRender(EditorCamera& camera)
 	{	
-		// 更新FBO尺寸
-		m_GeoFrameBuffer->Resize(camera.GetViewportWidth(), camera.GetViewportHeight());
-		m_GridFrameBuffer->Resize(camera.GetViewportWidth(), camera.GetViewportHeight());
+		if (NeedResize) {
+			// 更新FBO尺寸
+			m_GeoFrameBuffer->Resize(camera.GetViewportWidth(), camera.GetViewportHeight());
+			m_GridFrameBuffer->Resize(camera.GetViewportWidth(), camera.GetViewportHeight());
+			NeedResize = false;
+		}
 		m_GridPass->SetInput(m_GeoPass->GetDepthOutput(), 1);  // 这种会随着FBO尺寸变化而变化的输入，必须每帧更新
 
 		// 更新VP矩阵的UniformBuffer
@@ -140,12 +143,12 @@ namespace Hazel {
 	}
 	void SceneRender::UpdateVPMatrix(EditorCamera& camera)
 	{
-		m_VPMatrix->view = camera.GetViewMatrix();
-		m_VPMatrix->proj = camera.GetProjectionMatrix();
-		m_VPMatrix->proj[1][1] *= -1; // Y轴反转
-		m_VPMatrix->width = camera.GetViewportWidth();
-		m_VPMatrix->height = camera.GetViewportHeight();
-		m_VPUniformBufferSet->RT_Get()->SetData((void*)m_VPMatrix, sizeof(UniformBufferObject));
+		m_CameraData->view = camera.GetViewMatrix();
+		m_CameraData->proj = camera.GetProjectionMatrix();
+		m_CameraData->proj[1][1] *= -1; // Y轴反转
+		m_CameraData->width = camera.GetViewportWidth();
+		m_CameraData->height = camera.GetViewportHeight();
+		m_VPUniformBufferSet->RT_Get()->SetData((void*)m_CameraData, sizeof(UniformBufferObject));
 	}
 
 	// 把Mesh数据解析为DrawList
@@ -171,4 +174,15 @@ namespace Hazel {
 			dc.InstanceCount++;
 		}
 	};
+
+
+	void SceneRender::SetViewprotSize(float width, float height) {
+		if(width != ViewportWidth || height != ViewportHeight)
+		{
+			ViewportWidth = width;
+			ViewportHeight = height;
+			NeedResize = true;
+		}
+	}
+
 }

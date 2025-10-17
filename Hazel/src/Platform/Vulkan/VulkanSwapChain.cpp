@@ -39,9 +39,7 @@ namespace Hazel
 		GET_INSTANCE_PROC_ADDR(m_Instance, GetQueueCheckpointDataNV);
 	}
 	void VulkanSwapChain::BeginFrame() {
-		// Resource release queue
-		auto& queue = Renderer::GetRenderResourceReleaseQueue(m_CurrentFrameIndex);
-		queue.Execute();
+
 		// 获取下一帧图片
 		m_CurrentImageIndex = AcquireNextImage();
 		// 内部的CommandBuffer也会Reset
@@ -102,8 +100,13 @@ namespace Hazel
 				VK_CHECK_RESULT(result);
 			}
 		}
-		m_CurrentFrameIndex = (m_CurrentFrameIndex + 1) % Renderer::GetConfig().FramesInFlight;
 
+		//HZ_CORE_WARN("第{}帧渲染完成", m_CurrentFrameIndex);
+		m_CurrentFrameIndex = (m_CurrentFrameIndex + 1) % Renderer::GetConfig().FramesInFlight;
+		// Resource release queue
+		//HZ_CORE_WARN("第{}帧资源释放", m_CurrentFrameIndex);
+		auto& queue = Renderer::GetRenderResourceReleaseQueue(m_CurrentFrameIndex);
+		queue.Execute();
 	}
 
 	void VulkanSwapChain::InitSurface(GLFWwindow* windowHandle)

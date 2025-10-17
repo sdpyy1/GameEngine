@@ -9,14 +9,21 @@ namespace Hazel {
 		: m_Size(size)
 	{
 		m_LocalStorage = new uint8_t[size];
-		RT_Invalidate();
+		RT_Invalidate(); // 因为这个创建好，在初始化渲染器时马上就要用到，所以不能推迟到渲染线程再执行
 	}
 
 	VulkanUniformBuffer::~VulkanUniformBuffer()
 	{
 		Release();
 	}
-
+	void VulkanUniformBuffer::Invalidate()
+	{
+		Ref<VulkanUniformBuffer> instance = this;
+		Renderer::Submit([instance]() mutable
+			{
+				instance->RT_Invalidate();
+			});
+	}
 	void VulkanUniformBuffer::Release()
 	{
 		if (!m_MemoryAlloc)

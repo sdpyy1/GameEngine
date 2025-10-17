@@ -27,15 +27,7 @@ namespace Hazel {
 
 	void VulkanImage2D::Invalidate()
 	{
-#if INVESTIGATE
-		Ref<VulkanImage2D> instance = this;
-		Renderer::Submit([instance]() mutable
-			{
-				instance->RT_Invalidate();
-			});
-#endif
-
-		RT_Invalidate();
+		RT_Invalidate();  // 创建了马上就要用，不能延迟创建
 	}
 
 	void VulkanImage2D::Release()
@@ -44,8 +36,10 @@ namespace Hazel {
 			return;
 
 		const VulkanImageInfo& info = m_Info;
-		Renderer::SubmitResourceFree([info, mipViews = m_PerMipImageViews, layerViews = m_PerLayerImageViews]() mutable
+		std::string name = m_Specification.DebugName;
+		Renderer::SubmitResourceFree([info, mipViews = m_PerMipImageViews, layerViews = m_PerLayerImageViews, name]() mutable
 			{
+				HZ_CORE_TRACE("Releasing VulkanImage2D: {0}", name);
 				const auto vulkanDevice = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 				vkDestroyImageView(vulkanDevice, info.ImageView, nullptr);
 				Vulkan::DestroySampler(info.Sampler);

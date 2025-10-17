@@ -79,7 +79,7 @@ namespace Hazel {
 
 		// Specify existing images to attach instead of creating
 		// new images. attachment index -> image
-		std::map<uint32_t, Ref<Image2D>> ExistingImages;
+		std::map<uint32_t, Ref<Image2D>> ExistingImages; // 直接把上边定义的某个image传进来已经有的
 
 		// At the moment this will just create a new render pass
 		// with an existing framebuffer

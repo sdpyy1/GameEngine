@@ -11,6 +11,7 @@ namespace Hazel {
 		void PreRender(EditorCamera& camera);
 		void EndRender();
 		void SubmitStaticMesh(Ref<MeshSource> meshSource, const glm::mat4& transform);
+		void SetViewprotSize(float width, float height);
 
 	private:
 		// Pass
@@ -23,6 +24,8 @@ namespace Hazel {
 		void Draw();
 		void UpdateVPMatrix(EditorCamera& camera);
 	private:
+		float ViewportWidth = 1216.0f, ViewportHeight = 849.0f;
+
 		VertexBufferLayout vertexLayout = {
 			{ ShaderDataType::Float3, "a_Position" },
 			{ ShaderDataType::Float3, "a_Normal" },
@@ -100,6 +103,7 @@ namespace Hazel {
 		std::map<MeshKey, TransformMapData> m_MeshTransformMap;
 
 	private:
+		bool NeedResize = false;
 		Scene* m_scene;
 		// command buffer
 		Ref<RenderCommandBuffer> m_CommandBuffer;
@@ -111,7 +115,7 @@ namespace Hazel {
 			float width;
 			float height;
 		};
-		UniformBufferObject* m_VPMatrix = nullptr;
+		UniformBufferObject* m_CameraData = nullptr;
 		Ref<UniformBufferSet> m_VPUniformBufferSet;
 
 

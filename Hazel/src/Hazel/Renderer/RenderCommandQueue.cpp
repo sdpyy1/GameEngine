@@ -42,7 +42,6 @@ namespace Hazel {
 	void RenderCommandQueue::Execute()
 	{
 		//HZ_RENDER_TRACE("RenderCommandQueue::Execute -- {0} commands, {1} bytes", m_CommandCount, (m_CommandBufferPtr - m_CommandBuffer));
-
 		byte* buffer = m_CommandBuffer;
 		if (Application::Get().isRunning() && !Application::Get().isMinimized()) {  // 因为即使最小化事件触发，命令缓存中还有上一帧数据要处理，而窗口大小已经变0了，会出Bug
 			for (uint32_t i = 0; i < m_CommandCount; i++)

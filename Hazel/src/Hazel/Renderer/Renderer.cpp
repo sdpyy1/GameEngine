@@ -16,7 +16,7 @@ namespace Hazel {
 
 	static RendererConfig s_Config;
 	static RendererData* s_Data = nullptr;
-	constexpr static uint32_t s_RenderCommandQueueCount = 2;
+	constexpr static uint32_t s_RenderCommandQueueCount = 2; // 目前代码只支持=2
 	static RenderCommandQueue* s_CommandQueue[s_RenderCommandQueueCount];
 	static std::atomic<uint32_t> s_RenderCommandQueueSubmissionIndex = 0;
 	static RenderCommandQueue s_ResourceFreeQueue[3];
@@ -210,7 +210,7 @@ namespace Hazel {
 			renderThread->WaitAndSet(RenderThread::State::Kick, RenderThread::State::Busy);
 		}
 		// 工作就是把缓存命令全部执行
-		s_CommandQueue[GetRenderQueueIndex()]->Execute();  // ???：感觉有问题，这怎么总在执行下一帧的命令（解决：他在执行NextFrame（）时，切换到了下一帧，这里再切换一下又回去了，所以这套逻辑只在一共2个缓冲区的时候没问题）
+		s_CommandQueue[GetRenderQueueIndex()]->Execute();  // ???：感觉有问题，这怎么总在执行下一帧的命令（解决：他在执行NextFrame（）时，切换到了下一帧，这里再切换一下又回去了，所以这套逻辑只在一共2个缓冲区的时候没问题）再次解决：NextFrame已经切换了缓冲区，这里要执行的是上一个缓冲区，所以要切换，不过还是再能有2个缓冲区这代码才能跑
 
 		// Rendering has completed, set state to idle
 		renderThread->Set(RenderThread::State::Idle);

@@ -19,14 +19,14 @@ namespace Hazel {
 	static std::thread::id s_MainThreadID;
 
 	Application::Application(const ApplicationSpecification& specification)
-		: m_Specification(specification), m_RenderThread(ThreadingPolicy::SingleThreaded)
+		: m_Specification(specification), m_RenderThread(ThreadingPolicy::SingleThreaded) // SingleThreaded MultiThreaded
 	{
 		HZ_PROFILE_FUNCTION();
 
 		HZ_CORE_ASSERT(!s_Instance, "Application already exists!");
 		s_Instance = this;
 		s_MainThreadID = std::this_thread::get_id();
-		m_RenderThread.Run();
+		m_RenderThread.Run();  // 如果是多线程，每次执行kick，线程就会被唤醒，把Renderer::submit的命令执行掉，同时主线程开始收集下一帧的命令
 
 		// Set working directory here
 		if (!m_Specification.WorkingDirectory.empty())
@@ -62,11 +62,17 @@ namespace Hazel {
 			float time = Time::GetTime();
 			Timestep timestep = time - m_LastFrameTime;
 			m_LastFrameTime = time;
-
-			// 这里就做一件事：交换Submit用的命令缓冲区的Index，用下一个命令记录新命令
+			
+			// 这里就做一件事：交换Submit用的命令缓冲区的Index，用下一个命令记录新命令。 这个切换只是用于多线程渲染的缓冲区，和渲染内部的Index无关
 			m_RenderThread.NextFrame();
+
+			// -----------------同步点结束------------------------------------------------
+
+
 			// 提醒渲染线程工作，渲染上一帧信息
 			m_RenderThread.Kick(); 
+
+	
 			// 上一行和下一行表示GPU和渲染线程都开始工作了，在渲染线程渲染上一帧的时候,CPU开始收集下一帧渲染命令
 			if (!m_Minimized)
 			{
@@ -91,7 +97,6 @@ namespace Hazel {
 			}
 			// 主线程 FrameIndex 更新
 			m_CurrentFrameIndex = (m_CurrentFrameIndex + 1) % Renderer::GetConfig().FramesInFlight;
-
 			m_Window->OnUpdate();
 			ExecuteMainThreadQueue();
 

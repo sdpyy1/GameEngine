@@ -19,6 +19,7 @@ namespace Hazel {
 	private:
 		void Release();
 		void RT_Invalidate();
+		void Invalidate();
 	private:
 		VmaAllocation m_MemoryAlloc = nullptr;
 		VkBuffer m_Buffer;

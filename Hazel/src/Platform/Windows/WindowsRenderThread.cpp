@@ -116,8 +116,7 @@ namespace Hazel {
 		if (m_ThreadingPolicy == ThreadingPolicy::MultiThreaded)
 		{
 			Set(State::Kick);
-		}
-		else
+		}else
 		{
 			Renderer::WaitAndRender(this);
 		}

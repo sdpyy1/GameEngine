@@ -36,12 +36,14 @@ namespace Hazel {
 			m_Width = (uint32_t)(specification.Width * m_Specification.Scale);
 			m_Height = (uint32_t)(specification.Height * m_Specification.Scale);
 		}
+		HZ_CORE_ASSERT(specification.Attachments.Attachments.size());
 
 		// Create all image objects immediately so we can start referencing them
 		// elsewhere
 		uint32_t attachmentIndex = 0;
 		if (!m_Specification.ExistingFramebuffer)
 		{
+			// 根据传入的specification来创建image
 			for (auto& attachmentSpec : m_Specification.Attachments.Attachments)
 			{
 				if (m_Specification.ExistingImage)
@@ -84,7 +86,6 @@ namespace Hazel {
 			}
 		}
 
-		HZ_CORE_ASSERT(specification.Attachments.Attachments.size());
 		Resize(m_Width, m_Height, true);
 	}
 
@@ -98,14 +99,16 @@ namespace Hazel {
 	{
 		if (m_Framebuffer)
 		{
+			std::string name = m_Specification.DebugName;
 			VkFramebuffer framebuffer = m_Framebuffer;
-			Renderer::SubmitResourceFree([framebuffer]()
+			Renderer::SubmitResourceFree([framebuffer, name]()
 				{
+					HZ_CORE_TRACE("Destroying Framebuffer [{}]",name);
 					const auto device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 					vkDestroyFramebuffer(device, framebuffer, nullptr);
 				});
 
-			// Don't free the images if we don't own them
+			// 传递进来的Image不会被销毁
 			if (!m_Specification.ExistingFramebuffer)
 			{
 				uint32_t attachmentIndex = 0;
@@ -137,7 +140,7 @@ namespace Hazel {
 		Ref<VulkanFramebuffer> instance = this;
 		Renderer::Submit([instance, width, height]() mutable
 			{
-				HZ_CORE_INFO("RT_Resizing Framebuffer to {0}, {1}", width, height);
+				HZ_CORE_TRACE("RT_Resizing Framebuffer to {0}, {1}", width, height);
 
 				instance->m_Width = (uint32_t)(width * instance->m_Specification.Scale);
 				instance->m_Height = (uint32_t)(height * instance->m_Specification.Scale);
@@ -176,7 +179,7 @@ namespace Hazel {
 
 	void VulkanFramebuffer::RT_Invalidate()
 	{
-		// HZ_CORE_TRACE("VulkanFramebuffer::RT_Invalidate ({})", m_Specification.DebugName);
+		 HZ_CORE_TRACE("RT_开始创建FrameBuffer ({})", m_Specification.DebugName);
 
 		auto device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 
@@ -250,8 +253,6 @@ namespace Hazel {
 			}
 			else
 			{
-				//HZ_CORE_ASSERT(!m_Specification.ExistingImage, "Not supported for color attachments");
-
 				Ref<VulkanImage2D> colorAttachment;
 				if (m_Specification.ExistingFramebuffer)
 				{

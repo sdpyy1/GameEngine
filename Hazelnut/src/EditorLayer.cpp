@@ -101,6 +101,7 @@ namespace Hazel {
 		m_ViewportBounds[1] = ImVec2(m_ViewportBounds[0].x + viewportSize.x, m_ViewportBounds[0].y + viewportSize.y);
 		m_EditorCamera.SetViewportSize(viewportSize.x, viewportSize.y);
 		m_Scene->SetViewprotSize(viewportSize.x, viewportSize.y);
+		m_SceneRender->SetViewprotSize(viewportSize.x, viewportSize.y);
 		Application::SetViewportSize(viewportSize.x, viewportSize.y);
 		
 		ImVec2 mousePos = ImGui::GetIO().MousePos;
