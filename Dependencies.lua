@@ -25,6 +25,8 @@ IncludeDir["VulkanSDK"] = "%{VULKAN_SDK}"
 IncludeDir["msdfgen"] = "%{wks.location}/Hazel/vendor/msdf-atlas-gen/msdfgen"
 IncludeDir["msdf_atlas_gen"] = "%{wks.location}/Hazel/vendor/msdf-atlas-gen/msdf-atlas-gen"
 IncludeDir["assimp"] = "%{wks.location}/Hazel/vendor/assimp/include"
+IncludeDir["acl"] = "%{wks.location}/Hazel/vendor/acl/include"
+IncludeDir["rtm"] = "%{wks.location}/Hazel/vendor/rtm/include"
 
 LibraryDir = {}
 

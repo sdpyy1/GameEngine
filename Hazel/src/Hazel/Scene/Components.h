@@ -57,23 +57,45 @@ namespace Hazel {
 	struct TransformComponent
 	{
 		glm::vec3 Translation = { 0.0f, 0.0f, 0.0f };
-		glm::vec3 Rotation = { 0.0f, 0.0f, 0.0f };
+		glm::vec3 Rotation = { 0.0f, 0.0f, 0.0f }; // 弧度制
 		glm::vec3 Scale = { 1.0f, 1.0f, 1.0f };
 
 		TransformComponent() = default;
 		TransformComponent(const TransformComponent&) = default;
 		TransformComponent(const glm::vec3& translation)
-			: Translation(translation) {}
+			: Translation(translation) {
+		}
 
+		// === 变换矩阵 ===
 		glm::mat4 GetTransform() const
 		{
 			glm::mat4 rotation = glm::toMat4(glm::quat(Rotation));
-
 			return glm::translate(glm::mat4(1.0f), Translation)
 				* rotation
 				* glm::scale(glm::mat4(1.0f), Scale);
 		}
+
+		// === 设置函数 ===
+		void SetTranslation(const glm::vec3& t) { Translation = t; }
+		void SetRotation(const glm::vec3& r) { Rotation = r; }     // 弧度
+		void SetScale(const glm::vec3& s) { Scale = s; }
+		void SetUniformScale(float s) { Scale = glm::vec3(s); }
+
+		// === 增量操作 ===
+		void Translate(const glm::vec3& delta) { Translation += delta; }
+		void Rotate(const glm::vec3& delta) { Rotation += delta; }     // 弧度增量
+		void ScaleBy(const glm::vec3& factor) { Scale *= factor; }
+		void ScaleBy(float factor) { Scale *= factor; }
+
+		// === 重置 ===
+		void Reset()
+		{
+			Translation = glm::vec3(0.0f);
+			Rotation = glm::vec3(0.0f);
+			Scale = glm::vec3(1.0f);
+		}
 	};
+
 
 	struct SpriteRendererComponent
 	{

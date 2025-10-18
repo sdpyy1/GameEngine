@@ -103,7 +103,6 @@ namespace Hazel {
 			VkFramebuffer framebuffer = m_Framebuffer;
 			Renderer::SubmitResourceFree([framebuffer, name]()
 				{
-					HZ_CORE_TRACE("Destroying Framebuffer [{}]",name);
 					const auto device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 					vkDestroyFramebuffer(device, framebuffer, nullptr);
 				});
@@ -140,8 +139,6 @@ namespace Hazel {
 		Ref<VulkanFramebuffer> instance = this;
 		Renderer::Submit([instance, width, height]() mutable
 			{
-				HZ_CORE_TRACE("RT_Resizing Framebuffer to {0}, {1}", width, height);
-
 				instance->m_Width = (uint32_t)(width * instance->m_Specification.Scale);
 				instance->m_Height = (uint32_t)(height * instance->m_Specification.Scale);
 				if (!instance->m_Specification.SwapChainTarget)
@@ -179,8 +176,6 @@ namespace Hazel {
 
 	void VulkanFramebuffer::RT_Invalidate()
 	{
-		 HZ_CORE_TRACE("RT_开始创建FrameBuffer ({})", m_Specification.DebugName);
-
 		auto device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 
 		Release();

@@ -31,21 +31,25 @@ namespace Hazel {
 	{
 		// Ä£ÐÍ¼ÓÔØ
 		AssetMetadata metadata;
-		metadata.FilePath = "assets/model/helmet_pbr/DamagedHelmet.gltf";
-		metadata.Type = AssetType::MeshSource;
-		Ref<Asset> Helmet;
-		AssetImporter::TryLoadData(metadata, Helmet);
-		Entity helmet = m_Scene->CreateEntity("Helmet");
-		helmet.AddComponent<StaticMeshComponent>(Helmet->Handle);
-
-		//metadata.FilePath = "assets/model/desert-eagle/scene.gltf";
+		//metadata.FilePath = "assets/model/helmet_pbr/DamagedHelmet.gltf";
 		//metadata.Type = AssetType::MeshSource;
-		//Ref<Asset> eagle;
-		//AssetImporter::TryLoadData(metadata, eagle);
-		//Entity eag = m_Scene->CreateEntity("Eagle");
-		//eag.AddComponent<StaticMeshComponent>(eagle->Handle);
-		m_HoveredEntity = helmet;
-		m_SelectedEntity = helmet;
+		//Ref<Asset> Helmet;
+		//AssetImporter::TryLoadData(metadata, Helmet);
+		//Entity helmet = m_Scene->CreateEntity("Helmet");
+		//helmet.AddComponent<StaticMeshComponent>(Helmet->Handle);
+
+		metadata.FilePath = "assets/model/m1911/m1911.gltf";
+		metadata.Type = AssetType::MeshSource;
+		Ref<Asset> eagle;
+		AssetImporter::TryLoadData(metadata, eagle);	
+		Entity gun = m_Scene->CreateEntity("Eagle");
+		gun.AddComponent<StaticMeshComponent>(eagle->Handle);
+		gun.GetComponent<TransformComponent>().SetTranslation(glm::vec3(0.0f, 2.0f, 0.0f));
+		gun.GetComponent<TransformComponent>().SetUniformScale(15);
+		Ref<MeshSource> ms = eagle.As<MeshSource>();
+		ms->GetAnimation("Fire", *ms->GetSkeleton(), false, glm::vec3(1), 0);
+		m_HoveredEntity = gun;
+		m_SelectedEntity = gun;
 	}
 
 	void EditorLayer::OnDetach() {}

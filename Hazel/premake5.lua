@@ -51,7 +51,10 @@ project "Hazel"
 		"%{IncludeDir.VulkanSDK}/Include",
 		"%{IncludeDir.choc}",
 		"%{IncludeDir.nfd}",
-		"%{IncludeDir.assimp}"
+		"%{IncludeDir.assimp}",
+		"%{IncludeDir.acl}",
+		"%{IncludeDir.rtm}",
+
 	}
 
 	libdirs

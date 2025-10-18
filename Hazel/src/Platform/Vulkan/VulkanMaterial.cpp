@@ -9,6 +9,7 @@ namespace Hazel {
 	{
 		m_Device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 		CreateDescriptorSet();
+		UpdateDescriptorSet(true);// 如果一个模型没有材质，也需要先初始化一次 DescriptorSet
 	}
 	void VulkanMaterial::CreateDescriptorSet()
 	{

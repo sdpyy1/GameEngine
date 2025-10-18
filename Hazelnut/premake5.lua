@@ -25,6 +25,10 @@ project "Hazelnut"
 		"%{IncludeDir.VulkanSDK}/Include",
 		"%{IncludeDir.VMA}",
 		"%{IncludeDir.ImGui}",
+		"%{IncludeDir.assimp}",
+		"%{IncludeDir.acl}",
+		"%{IncludeDir.rtm}",
+
 	}
 	-- includedirs
 	-- {
