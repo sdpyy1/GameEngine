@@ -7,6 +7,7 @@ namespace Hazel {
 		AssimpMeshImporter(const std::filesystem::path& path);
 		bool ImportAnimation(const std::string_view animationName, const Skeleton& skeleton, const bool isMaskedRootMotion, const glm::vec3& rootTranslationMask, float rootRotationMask, Scope<Animation>& animation);
 
+		// 从文件加载MeshSource
 		Ref<MeshSource> ImportToMeshSource();
 
 	private:

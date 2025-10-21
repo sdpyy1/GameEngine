@@ -28,7 +28,14 @@ namespace Hazel {
 			m_SubmeshTransformBuffers[i].Buffer = VertexBuffer::Create(sizeof(TransformVertexData) * TransformBufferCount);
 			m_SubmeshTransformBuffers[i].Data = new TransformVertexData[TransformBufferCount];
 		}
-
+		{
+			StorageBufferSpecification spec;
+			spec.DebugName = "BoneTransforms";
+			spec.GPUOnly = false;
+			const size_t BoneTransformBufferCount = 1 * 1024; // basically means limited to 1024 animated meshes   TODO(0x): resizeable/flushable
+			m_SBSBoneTransforms = StorageBufferSet::Create(spec, sizeof(BoneTransforms) * BoneTransformBufferCount);
+			m_BoneTransformsData = new BoneTransforms[BoneTransformBufferCount];
+		}
 		// GeoPass
 		{
 			FramebufferSpecification framebufferSpec;
@@ -104,6 +111,26 @@ namespace Hazel {
 			m_SubmeshTransformBuffers[frameIndex].Buffer->SetData(m_SubmeshTransformBuffers[frameIndex].Data, offset * sizeof(TransformVertexData)); 
 		}
 
+		uint32_t index = 0;
+		for (auto& [key, boneTransformsData] : m_MeshBoneTransformsMap)
+		{
+			boneTransformsData.BoneTransformsBaseIndex = index;
+			for (const auto& boneTransforms : boneTransformsData.BoneTransformsData)
+			{
+				m_BoneTransformsData[index++] = boneTransforms;
+			}
+		}
+
+		if (index > 0)
+		{
+			Ref<SceneRender> instance = this;
+			Renderer::Submit([instance, index]() mutable
+				{
+					instance->m_SBSBoneTransforms->RT_Get()->RT_SetData(instance->m_BoneTransformsData, static_cast<uint32_t>(index * sizeof(BoneTransforms)));
+				});
+		}
+
+
 		m_CommandBuffer->Begin();
 	}
 
@@ -122,6 +149,12 @@ namespace Hazel {
 			const auto& transformData = m_MeshTransformMap.at(mk);
 			Renderer::RenderStaticMeshWithMaterial(m_CommandBuffer, m_GeoPipeline,dc.MeshSource, dc.SubmeshIndex, dc.MaterialAsset->GetMaterial(), m_SubmeshTransformBuffers[frameIndex].Buffer, transformData.TransformOffset, dc.InstanceCount);
 		}		
+		for (auto& [mk, dc] : m_DrawList)
+		{
+			const auto& transformData = m_MeshTransformMap.at(mk);
+			const auto& boneTransformsData = m_MeshBoneTransformsMap.at(mk);
+			Renderer::RenderSkeletonMeshWithMaterial(m_CommandBuffer, m_GeoPipeline, dc.MeshSource, dc.SubmeshIndex, dc.MaterialAsset->GetMaterial(),m_SubmeshTransformBuffers[frameIndex].Buffer, transformData.TransformOffset, boneTransformsData.BoneTransformsBaseIndex, dc.InstanceCount);
+		}
 		Renderer::EndRenderPass(m_CommandBuffer);
 	}
 	void SceneRender::GridPass()
@@ -137,9 +170,11 @@ namespace Hazel {
 		m_CommandBuffer->End();
 		m_CommandBuffer->Submit();
 
+		m_DrawList.clear();
+
 		m_StaticMeshDrawList.clear();
 		m_MeshTransformMap.clear();
-
+		m_MeshBoneTransformsMap.clear();
 	}
 	void SceneRender::UpdateVPMatrix(EditorCamera& camera)
 	{
@@ -177,7 +212,54 @@ namespace Hazel {
 		}
 	};
 
+	void SceneRender::SubmitMesh(Ref<MeshSource> meshSource, uint32_t submeshIndex, const glm::mat4& transform, const std::vector<glm::mat4>& boneTransforms)
+	{
+		// TODO: Culling, sorting, etc.
 
+		const auto& submeshes = meshSource->GetSubmeshes();
+		const auto& submesh = submeshes[submeshIndex];
+		uint32_t materialIndex = submesh.MaterialIndex;
+		bool isRigged = submesh.IsRigged;
+
+		AssetHandle materialHandle = meshSource->GetMaterialHandle(submeshes[submeshIndex].MaterialIndex);
+		Ref<MaterialAsset> material = AssetManager::GetAsset<MaterialAsset>(materialHandle);
+
+		MeshKey meshKey = { meshSource->Handle, materialHandle, submeshIndex, false };
+		auto& transformStorage = m_MeshTransformMap[meshKey].Transforms.emplace_back();
+
+		transformStorage.MRow[0] = { transform[0][0], transform[1][0], transform[2][0], transform[3][0] };
+		transformStorage.MRow[1] = { transform[0][1], transform[1][1], transform[2][1], transform[3][1] };
+		transformStorage.MRow[2] = { transform[0][2], transform[1][2], transform[2][2], transform[3][2] };
+
+		if (isRigged)
+		{
+			CopyToBoneTransformStorage(meshKey, meshSource, boneTransforms);
+		}
+		// Main geo
+		{
+			auto& destDrawList =  m_DrawList;
+			auto& dc = destDrawList[meshKey];
+			dc.MeshSource = meshSource;
+			dc.SubmeshIndex = submeshIndex;
+			dc.InstanceCount++;
+			dc.IsRigged = isRigged;  // TODO: would it be better to have separate draw list for rigged meshes, or this flag is OK?
+		}
+	}
+	void SceneRender::CopyToBoneTransformStorage(const MeshKey& meshKey, const Ref<MeshSource>& meshSource, const std::vector<glm::mat4>& boneTransforms)
+	{
+		auto& boneTransformStorage = m_MeshBoneTransformsMap[meshKey].BoneTransformsData.emplace_back();
+		if (boneTransforms.empty())
+		{
+			boneTransformStorage.fill(glm::identity<glm::mat4>());
+		}
+		else
+		{
+			for (size_t i = 0; i < meshSource->m_BoneInfo.size(); ++i)
+			{
+				boneTransformStorage[i] = meshSource->GetSkeleton()->GetTransform() * boneTransforms[meshSource->m_BoneInfo[i].BoneIndex] * meshSource->m_BoneInfo[i].InverseBindPose;
+			}
+		}
+	}
 	void SceneRender::SetViewprotSize(float width, float height) {
 		if(width != ViewportWidth || height != ViewportHeight)
 		{

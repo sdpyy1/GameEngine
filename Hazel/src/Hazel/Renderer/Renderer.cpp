@@ -173,6 +173,11 @@ namespace Hazel {
 	{
 		return s_RendererAPI->RenderStaticMeshWithMaterial(commandBuffer, pipeline,meshSource, submeshIndex, material, transformBuffer, transformOffset, instanceCount);
 	}
+	void Renderer::RenderSkeletonMeshWithMaterial(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<Pipeline> pipeline, Ref<MeshSource> meshSource, uint32_t submeshIndex, Ref<Material> material, Ref<VertexBuffer> transformBuffer, uint32_t transformOffset, uint32_t boneTransformsOffset, uint32_t instanceCount)
+	{
+		s_RendererAPI->RenderSkeletonMeshWithMaterial(renderCommandBuffer, pipeline, meshSource, submeshIndex, material, transformBuffer, transformOffset, boneTransformsOffset, instanceCount);
+
+	}
 	void Renderer::DrawPrueVertex(Ref<RenderCommandBuffer> commandBuffer, uint32_t count)
 	{
 		return s_RendererAPI->DrawPrueVertex(commandBuffer, count);

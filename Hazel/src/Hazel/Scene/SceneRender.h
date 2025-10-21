@@ -11,6 +11,7 @@ namespace Hazel {
 		void PreRender(EditorCamera& camera);
 		void EndRender();
 		void SubmitStaticMesh(Ref<MeshSource> meshSource, const glm::mat4& transform);
+		void SubmitMesh(Ref<MeshSource> meshSource, uint32_t submeshIndex, const glm::mat4& transform, const std::vector<glm::mat4>& boneTransforms);
 		void SetViewprotSize(float width, float height);
 
 	private:
@@ -75,6 +76,8 @@ namespace Hazel {
 
 			}
 		};
+		void CopyToBoneTransformStorage(const MeshKey& meshKey, const Ref<MeshSource>& meshSource, const std::vector<glm::mat4>& boneTransforms);
+
 		struct StaticDrawCommand
 		{
 			Ref<MeshSource> MeshSource;
@@ -82,7 +85,16 @@ namespace Hazel {
 			Ref<MaterialAsset> MaterialAsset;
 			uint32_t InstanceCount = 0;
 		};
-
+		struct DrawCommand
+		{
+			Ref<MeshSource> MeshSource;
+			uint32_t SubmeshIndex;
+			Ref<MaterialAsset> MaterialAsset;
+			uint32_t InstanceCount = 0;
+			uint32_t InstanceOffset = 0;
+			bool IsRigged = false;
+		};
+		std::map<MeshKey, DrawCommand> m_DrawList;
 		std::map<MeshKey, StaticDrawCommand> m_StaticMeshDrawList;
 		struct TransformVertexData
 		{
@@ -101,6 +113,18 @@ namespace Hazel {
 			uint32_t TransformOffset = 0;
 		};
 		std::map<MeshKey, TransformMapData> m_MeshTransformMap;
+
+
+		using BoneTransforms = std::array<glm::mat4, 100>; // Note: 100 == MAX_BONES from the shaders
+		struct BoneTransformsMapData
+		{
+			std::vector<BoneTransforms> BoneTransformsData;
+			uint32_t BoneTransformsBaseIndex = 0;
+		};	
+		std::map<MeshKey, BoneTransformsMapData> m_MeshBoneTransformsMap;
+		BoneTransforms* m_BoneTransformsData = nullptr;
+		Ref<StorageBufferSet> m_SBSBoneTransforms;
+
 
 	private:
 		bool NeedResize = false;

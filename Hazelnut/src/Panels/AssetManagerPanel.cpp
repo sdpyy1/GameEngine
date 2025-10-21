@@ -237,9 +237,9 @@ namespace Hazel {
 		DrawComponent<TransformComponent>("Transform", entity, [](auto& component)
 			{
 				DrawVec3Control("Translation", component.Translation);
-				glm::vec3 rotation = glm::degrees(component.Rotation);
+				glm::vec3 rotation = glm::degrees(component.GetRotationEuler());
 				DrawVec3Control("Rotation", rotation);
-				component.Rotation = glm::radians(rotation);
+				component.SetRotationEuler(glm::radians(rotation));
 				DrawVec3Control("Scale", component.Scale, 1.0f);
 			});
 

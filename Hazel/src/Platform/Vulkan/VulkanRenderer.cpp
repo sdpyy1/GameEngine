@@ -418,6 +418,74 @@ namespace Hazel {
 				fpCmdEndDebugUtilsLabelEXT(commandBuffer);
 			});
 	}
+	void VulkanRenderer::RenderSkeletonMeshWithMaterial(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<Pipeline> pipeline, Ref<MeshSource> meshSource, uint32_t submeshIndex, Ref<Material> material, Ref<VertexBuffer> transformBuffer, uint32_t transformOffset, uint32_t boneTransformsOffset, uint32_t instanceCount)
+	{
+		HZ_CORE_VERIFY(meshSource);
+		HZ_CORE_VERIFY(material);
+
+		Buffer pushConstantBuffer;
+		bool isRigged = meshSource->IsSubmeshRigged(submeshIndex);
+
+		if (isRigged)
+		{
+			pushConstantBuffer.Allocate(sizeof(uint32_t));
+			if (isRigged)
+				pushConstantBuffer.Write(&boneTransformsOffset, sizeof(uint32_t));
+		}
+
+		Ref<VulkanMaterial> vulkanMaterial = material.As<VulkanMaterial>();
+		Renderer::Submit([renderCommandBuffer, pipeline, meshSource, submeshIndex, vulkanMaterial, transformBuffer, transformOffset, instanceCount, pushConstantBuffer]() mutable
+			{
+				uint32_t frameIndex = Renderer::RT_GetCurrentFrameIndex();
+				VkCommandBuffer commandBuffer = renderCommandBuffer.As<VulkanRenderCommandBuffer>()->GetActiveCommandBuffer();
+
+				VkBuffer meshVB = meshSource->GetVertexBuffer().As<VulkanVertexBuffer>()->GetVulkanBuffer();
+				VkDeviceSize vertexOffsets[1] = { 0 };
+				vkCmdBindVertexBuffers(commandBuffer, 0, 1, &meshVB, vertexOffsets);
+
+				VkBuffer transformVB = transformBuffer.As<VulkanVertexBuffer>()->GetVulkanBuffer();
+				VkDeviceSize instanceOffsets[1] = { transformOffset };
+				vkCmdBindVertexBuffers(commandBuffer, 1, 1, &transformVB, instanceOffsets);
+
+				VkBuffer meshIB = meshSource->GetIndexBuffer().As<VulkanIndexBuffer>()->GetVulkanBuffer();
+				vkCmdBindIndexBuffer(commandBuffer, meshIB, 0, VK_INDEX_TYPE_UINT32);
+
+				//RT_UpdateMaterialForRendering(vulkanMaterial, uniformBufferSet, storageBufferSet);
+
+				Ref<VulkanPipeline> vulkanPipeline = pipeline.As<VulkanPipeline>();
+
+				const auto& submeshes = meshSource->GetSubmeshes();
+				const auto& submesh = submeshes[submeshIndex];
+
+				if (submesh.IsRigged)
+				{
+					Ref<VulkanVertexBuffer> vulkanBoneInfluencesVB = meshSource->GetBoneInfluenceBuffer().As<VulkanVertexBuffer>();
+					VkBuffer vbBoneInfluencesBuffer = vulkanBoneInfluencesVB->GetVulkanBuffer();
+					vkCmdBindVertexBuffers(commandBuffer, 2, 1, &vbBoneInfluencesBuffer, vertexOffsets);
+				}
+
+				VkPipelineLayout layout = vulkanPipeline->GetVulkanPipelineLayout();
+
+				uint32_t pushConstantOffset = 0;
+				if (pushConstantBuffer.Size)
+				{
+					vkCmdPushConstants(commandBuffer, layout, VK_SHADER_STAGE_VERTEX_BIT, pushConstantOffset, pushConstantBuffer.Size, pushConstantBuffer.Data);
+					pushConstantOffset += 16;  // TODO: it's 16 because that happens to be what's declared in the layouts in the shaders.  Need a better way of doing this.  Cannot just use the size of the pushConstantBuffer, because you dont know what alignment the next push constant range might have
+				}
+
+				// 每个材质绑定自己的 Set=1
+				VkDescriptorSet matSet = vulkanMaterial->GetDescriptorSets()[frameIndex];
+				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+					pipeline.As<VulkanPipeline>()->GetVulkanPipelineLayout(),
+					1, // Set=1
+					1, &matSet,
+					0, nullptr);
+
+				vkCmdDrawIndexed(commandBuffer, submesh.IndexCount, instanceCount, submesh.BaseIndex, submesh.BaseVertex, 0);
+
+				pushConstantBuffer.Release();
+			});
+	}
 	namespace Utils {
 
 		void InsertImageMemoryBarrier(

@@ -12,7 +12,7 @@
 #include "Hazel/Asset/TextureImporter.h"
 #include <Platform/Vulkan/VulkanMaterial.h>
 #include "Hazel/Asset/AssimpAnimationImporter.h"
-
+#include "Hazel/Math/Math.h"
 namespace Hazel {
 #define MESH_DEBUG_LOG 0
 
@@ -93,7 +93,7 @@ namespace Hazel {
 			HZ_CORE_ERROR_TAG("Animation", "Failed to load mesh source file: {0}", m_Path.string());
 			return false;
 		}
-
+		// 只加载指定动画
 		uint32_t animationIndex = AssimpAnimationImporter::GetAnimationIndex(scene, animationName);
 
 		if (animationIndex == ~0)
@@ -109,7 +109,6 @@ namespace Hazel {
 
 	Ref<MeshSource> AssimpMeshImporter::ImportToMeshSource()
 	{
-		HZ_CORE_WARN("开始加载模型:[{}]", m_Path.string());
 		Ref<MeshSource> meshSource = Ref<MeshSource>::Create();
 		meshSource->m_FilePath = m_Path;
 		HZ_CORE_INFO_TAG("Mesh", "Loading mesh: {0}", m_Path.string());
@@ -125,7 +124,6 @@ namespace Hazel {
 			return nullptr;
 		}
 
-		meshSource->m_Skeleton = AssimpAnimationImporter::ImportSkeleton(scene);
 		HZ_CORE_TRACE_TAG("Skeletion","Skeleton {0} found in mesh file '{1}'", meshSource->HasSkeleton() ? "" : "Not found Skeleton", m_Path.string());
 
 		//// Actual load of the animations is deferred until later.
@@ -182,7 +180,7 @@ namespace Hazel {
 				auto& aabb = submesh.BoundingBox;
 				aabb.Min = { FLT_MAX, FLT_MAX, FLT_MAX };
 				aabb.Max = { -FLT_MAX, -FLT_MAX, -FLT_MAX };
-				HZ_CORE_INFO("顶点数 = {}", mesh->mNumVertices);
+				HZ_CORE_TRACE("加载顶点数 = {}", mesh->mNumVertices);
 				for (size_t i = 0; i < mesh->mNumVertices; i++)
 				{
 					Vertex vertex;
@@ -206,8 +204,6 @@ namespace Hazel {
 
 					meshSource->m_Vertices.push_back(vertex);
 				}
-				HZ_CORE_INFO("索引数 = {}", mesh->mNumFaces*3);
-
 				// Indices
 				for (size_t i = 0; i < mesh->mNumFaces; i++)
 				{
@@ -218,16 +214,19 @@ namespace Hazel {
 
 					meshSource->m_TriangleCache[m].emplace_back(meshSource->m_Vertices[index.V1 + submesh.BaseVertex], meshSource->m_Vertices[index.V2 + submesh.BaseVertex], meshSource->m_Vertices[index.V3 + submesh.BaseVertex]);
 				}
-			}
+				HZ_CORE_TRACE("加载索引数 = {}", mesh->mNumFaces * 3);
 
+			}
+			HZ_CORE_TRACE("顶点数据加载完成，共 [{0}] 顶点，共[{1}] 索引", vertexCount,indexCount);
 #if MESH_DEBUG_LOG
 			HZ_CORE_INFO_TAG("Mesh", "Traversing nodes for scene '{0}'", m_Path);
 			Utils::PrintNode(scene->mRootNode, 0);
 #endif
 
+			HZ_CORE_INFO("开始处理SubMesh变换信息");
 			MeshNode& rootNode = meshSource->m_Nodes.emplace_back();
 			TraverseNodes(meshSource, scene->mRootNode, 0);
-
+			HZ_CORE_INFO("开始计算Mesh的AABB包围盒");
 			for (const auto& submesh : meshSource->m_Submeshes)
 			{
 				AABB transformedSubmeshAABB = submesh.BoundingBox;
@@ -242,8 +241,8 @@ namespace Hazel {
 				meshSource->m_BoundingBox.Max.z = glm::max(meshSource->m_BoundingBox.Max.z, max.z);
 			}
 		}
-
 		// skinning weights
+		meshSource->m_Skeleton = AssimpAnimationImporter::ImportSkeleton(scene);
 		if (meshSource->HasSkeleton())
 		{
 			HZ_CORE_INFO_TAG("Mesh", "开始处理骨骼信息");
@@ -265,6 +264,7 @@ namespace Hazel {
 							if (bone->mWeights[j].mWeight > 0.000001f)
 							{
 								hasNonZeroWeight = true;
+								break;
 							}
 						}
 						if (!hasNonZeroWeight)
@@ -293,22 +293,16 @@ namespace Hazel {
 							HZ_CORE_INFO_TAG("Mesh", "BoneInfo for bone '{0}'", bone->mName.C_Str());
 							HZ_CORE_INFO_TAG("Mesh", "  SubMeshIndex = {0}", m);
 							HZ_CORE_INFO_TAG("Mesh", "  BoneIndex = {0}", boneIndex);
-#if MESH_DEBUG_LOG
-							HZ_CORE_INFO_TAG("Mesh", "BoneInfo for bone '{0}'", bone->mName.C_Str());
-							HZ_CORE_INFO_TAG("Mesh", "  SubMeshIndex = {0}", m);
-							HZ_CORE_INFO_TAG("Mesh", "  BoneIndex = {0}", boneIndex);
-
 							glm::vec3 translation;
 							glm::quat rotationQuat;
 							glm::vec3 scale;
 							Math::DecomposeTransform(boneInfo.InverseBindPose, translation, rotationQuat, scale);
 							glm::vec3 rotation = glm::degrees(glm::eulerAngles(rotationQuat));
 							HZ_CORE_INFO_TAG("Mesh", "  Inverse Bind Pose = {");
-							HZ_MESH_LOG("    translation: ({0:8.4f}, {1:8.4f}, {2:8.4f})", translation.x, translation.y, translation.z);
-							HZ_MESH_LOG("    rotation:    ({0:8.4f}, {1:8.4f}, {2:8.4f})", rotation.x, rotation.y, rotation.z);
-							HZ_MESH_LOG("    scale:       ({0:8.4f}, {1:8.4f}, {2:8.4f})", scale.x, scale.y, scale.z);
-							HZ_MESH_LOG("  }");
-#endif
+							HZ_CORE_INFO("    translation: ({0:8.4f}, {1:8.4f}, {2:8.4f})", translation.x, translation.y, translation.z);
+							HZ_CORE_INFO("    rotation:    ({0:8.4f}, {1:8.4f}, {2:8.4f})", rotation.x, rotation.y, rotation.z);
+							HZ_CORE_INFO("    scale:       ({0:8.4f}, {1:8.4f}, {2:8.4f})", scale.x, scale.y, scale.z);
+							HZ_CORE_INFO("  }");
 						}
 
 						for (size_t j = 0; j < bone->mNumWeights; j++)

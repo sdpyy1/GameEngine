@@ -57,6 +57,7 @@ namespace Hazel {
 			animationNames.reserve(scene->mNumAnimations);
 			for (size_t i = 0; i < scene->mNumAnimations; ++i)
 			{
+				HZ_CORE_INFO("找到动画: {}", scene->mAnimations[i]->mName.C_Str());
 				animationNames.emplace_back(SanitiseAnimationName(scene->mAnimations[i]->mName.C_Str()));
 			}
 		}
@@ -77,7 +78,7 @@ namespace Hazel {
 		std::vector<KeyFrame<glm::vec3>> Scales;
 		uint32_t Index;
 	};
-	static auto ImportChannels(aiAnimation* anim, const Skeleton& skeleton, const bool isMaskedRootMotion, const glm::vec3& rootTranslationMask, float rootRotationMask)
+	static std::vector<Channel> ImportChannels(aiAnimation* anim, const Skeleton& skeleton, const bool isMaskedRootMotion, const glm::vec3& rootTranslationMask, float rootRotationMask)
 	{
 		std::vector<Channel> channels;
 
@@ -435,8 +436,9 @@ namespace Hazel {
 		}
 
 		aiAnimation* anim = scene->mAnimations[animationIndex];
-		auto channels = ImportChannels(anim, skeleton, isMaskedRootMotion, rootTranslationMask, rootRotationMask);
-
+		// 导入所有通道
+		std::vector<Channel> channels = ImportChannels(anim, skeleton, isMaskedRootMotion, rootTranslationMask, rootRotationMask);
+		// 统一化所有的通道，使它们具有相同的关键帧数量
 		SanitizeChannels(channels);
 
 		double samplingRate = anim->mTicksPerSecond;

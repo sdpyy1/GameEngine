@@ -41,7 +41,7 @@ namespace Hazel
 			{
 				m_Bones.emplace(mesh->mBones[boneIndex]->mName.C_Str());
 			}
-		}
+		}	
 
 		// Extract also any nodes that are animated (but don't have any skin bound to them)
 		for (uint32_t animationIndex = 0; animationIndex < m_Scene->mNumAnimations; ++animationIndex)

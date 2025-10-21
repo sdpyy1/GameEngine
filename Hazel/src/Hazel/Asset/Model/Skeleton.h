@@ -52,7 +52,7 @@ namespace Hazel {
 
 		Scope<Skeleton> CreateSkeleton();
 
-		void ExtractBones();
+		void ExtractBones(); // 提取所有骨骼名称到 m_Bones 集合中
 
 		void TraverseNode(aiNode* node, Skeleton* skeleton, const glm::mat4& transform = glm::identity<glm::mat4>());
 

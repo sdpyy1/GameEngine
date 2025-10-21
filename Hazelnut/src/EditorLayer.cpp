@@ -14,6 +14,7 @@
 #include <Hazel/Asset/AssetImporter.h>
 #include <Hazel/Asset/Model/Mesh.h>
 #include "Hazel/Scene/SceneRender.h"
+#include <random>
 
 namespace Hazel {
 
@@ -29,27 +30,48 @@ namespace Hazel {
 
 	void EditorLayer::OnAttach()
 	{
-		// 模型加载
+	// ===== 1. 加载模型 =====
 		AssetMetadata metadata;
-		//metadata.FilePath = "assets/model/helmet_pbr/DamagedHelmet.gltf";
-		//metadata.Type = AssetType::MeshSource;
-		//Ref<Asset> Helmet;
-		//AssetImporter::TryLoadData(metadata, Helmet);
-		//Entity helmet = m_Scene->CreateEntity("Helmet");
-		//helmet.AddComponent<StaticMeshComponent>(Helmet->Handle);
-
 		metadata.FilePath = "assets/model/m1911/m1911.gltf";
 		metadata.Type = AssetType::MeshSource;
-		Ref<Asset> eagle;
-		AssetImporter::TryLoadData(metadata, eagle);	
-		Entity gun = m_Scene->CreateEntity("Eagle");
-		gun.AddComponent<StaticMeshComponent>(eagle->Handle);
-		gun.GetComponent<TransformComponent>().SetTranslation(glm::vec3(0.0f, 2.0f, 0.0f));
-		gun.GetComponent<TransformComponent>().SetUniformScale(15);
-		Ref<MeshSource> ms = eagle.As<MeshSource>();
+
+		Ref<Asset> gunAsset;
+		AssetImporter::TryLoadData(metadata, gunAsset);
+
+		if (!gunAsset)
+		{
+			HZ_CORE_ERROR("Failed to load gun model!");
+			return;
+		}
+
+		// ===== 2. 随机数生成器 =====
+		std::random_device rd;
+		std::mt19937 gen(rd());
+		std::uniform_real_distribution<float> distPos(-20.0f, 20.0f);   // 随机位置范围
+		std::uniform_real_distribution<float> distHeight(0.0f, 5.0f);   // 随机高度
+		std::uniform_real_distribution<float> distRot(0.0f, 360.0f);    // 随机旋转
+		std::uniform_real_distribution<float> distScale(10.0f, 20.0f);  // 随机缩放
+
+		for (int i = 0; i < 100; i++)
+		{
+			std::string name = "Gun_" + std::to_string(i);
+			Entity gun = m_Scene->CreateEntity(name);
+
+			gun.AddComponent<StaticMeshComponent>(gunAsset->Handle);
+
+			auto& transform = gun.GetComponent<TransformComponent>();
+			// 随机位置
+			transform.Translation = glm::vec3(distPos(gen), distHeight(gen), distPos(gen));
+			// 随机旋转，使用 SetRotationEuler 保证 quaternion 同步
+			transform.SetRotationEuler(glm::vec3(0.0f, glm::radians(distRot(gen)), 0.0f));
+			// 随机缩放
+			transform.Scale = glm::vec3(distScale(gen));
+		}
+
+		/*Ref<MeshSource> ms = eagle.As<MeshSource>();
 		ms->GetAnimation("Fire", *ms->GetSkeleton(), false, glm::vec3(1), 0);
 		m_HoveredEntity = gun;
-		m_SelectedEntity = gun;
+		m_SelectedEntity = gun;*/
 	}
 
 	void EditorLayer::OnDetach() {}
@@ -163,9 +185,9 @@ namespace Hazel {
 			glm::vec3 translation, rotation, scale;
 			Math::DecomposeTransform(transform, translation, rotation, scale);
 
-			glm::vec3 deltaRotation = rotation - tc.Rotation;
+			glm::vec3 deltaRotation = rotation - tc.GetRotationEuler();
 			tc.Translation = translation;
-			tc.Rotation += deltaRotation;
+			tc.SetRotation(tc.GetRotationEuler() += deltaRotation);
 			tc.Scale = scale;
 		}
 	}

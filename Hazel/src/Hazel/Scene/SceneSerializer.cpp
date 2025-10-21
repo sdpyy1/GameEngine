@@ -190,18 +190,18 @@ namespace Hazel {
 			out << YAML::EndMap; // TagComponent
 		}
 
-		if (entity.HasComponent<TransformComponent>())
-		{
-			out << YAML::Key_old << "TransformComponent";
-			out << YAML::BeginMap; // TransformComponent
+		//if (entity.HasComponent<TransformComponent>())
+		//{
+		//	out << YAML::Key_old << "TransformComponent";
+		//	out << YAML::BeginMap; // TransformComponent
 
-			auto& tc = entity.GetComponent<TransformComponent>();
-			out << YAML::Key_old << "Translation" << YAML::Value << tc.Translation;
-			out << YAML::Key_old << "Rotation" << YAML::Value << tc.Rotation;
-			out << YAML::Key_old << "Scale" << YAML::Value << tc.Scale;
+		//	auto& tc = entity.GetComponent<TransformComponent>();
+		//	out << YAML::Key_old << "Translation" << YAML::Value << tc.Translation;
+		//	out << YAML::Key_old << "Rotation" << YAML::Value << tc.Rotation;
+		//	out << YAML::Key_old << "Scale" << YAML::Value << tc.Scale;
 
-			out << YAML::EndMap; // TransformComponent
-		}
+		//	out << YAML::EndMap; // TransformComponent
+		//}
 
 		//if (entity.HasComponent<CameraComponent>())
 		//{

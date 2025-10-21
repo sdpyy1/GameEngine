@@ -48,8 +48,8 @@ namespace Hazel {
 	};
 	struct BoneInfluence
 	{
-		uint32_t BoneInfoIndices[4] = { 0, 0, 0, 0 };
-		float Weights[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+		uint32_t BoneInfoIndices[4] = { 0, 0, 0, 0 };  // 影响当前顶点的骨骼索引（最多4个）
+		float Weights[4] = { 0.0f, 0.0f, 0.0f, 0.0f }; // 对应骨骼的影响权重（最多4个）
 
 		void AddBoneData(uint32_t boneInfoIndex, float weight)
 		{
@@ -114,7 +114,7 @@ namespace Hazel {
 		uint32_t VertexCount;
 
 		glm::mat4 Transform{ 1.0f }; // World transform
-		glm::mat4 LocalTransform{ 1.0f };
+		glm::mat4 LocalTransform{ 1.0f }; // 相对于自己的父结点的变换
 		AABB BoundingBox;
 
 		std::string NodeName, MeshName;
@@ -130,9 +130,14 @@ namespace Hazel {
 		bool HasSkeleton() const { return (bool)m_Skeleton; }
 		const Skeleton* GetSkeleton() const { return m_Skeleton.get(); }
 		const Animation* GetAnimation(const std::string& animationName, const Skeleton& skeleton, const bool isMaskedRootMotion, const glm::vec3& rootTranslationMask, float rootRotationMask) const;
-
+		bool IsSubmeshRigged(uint32_t submeshIndex) const { return m_Submeshes[submeshIndex].IsRigged; }
+		Ref<VertexBuffer> GetBoneInfluenceBuffer() { return m_BoneInfluenceBuffer; }
+		std::filesystem::path GetFilePath() { return m_FilePath; }
 		virtual ~MeshSource();
 		std::vector<AssetHandle> m_Materials;
+		const MeshNode& GetRootNode() const { return m_Nodes[0]; }
+		const std::vector<MeshNode>& GetNodes() const { return m_Nodes; }
+
 	private:
 		std::vector<Submesh> m_Submeshes;
 		std::vector<Vertex> m_Vertices;
@@ -143,8 +148,8 @@ namespace Hazel {
 		std::vector<std::string> m_AnimationNames;
 		mutable std::vector<Scope<Animation>> m_Animations;
 
-		std::vector<BoneInfluence> m_BoneInfluences;
-		std::vector<BoneInfo> m_BoneInfo;
+		std::vector<BoneInfluence> m_BoneInfluences; // 每个顶点对应的骨骼影响数据
+		std::vector<BoneInfo> m_BoneInfo; // 骨骼信息
 
 
 		std::filesystem::path m_FilePath;
@@ -156,6 +161,7 @@ namespace Hazel {
 		friend class AssimpMeshImporter;
 		friend class MaterialAsset;
 		friend class Skeleton;
+		friend class SceneRender;
 	};
 
 }

@@ -6,7 +6,7 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-
+#include <Hazel/Math/Math.h>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
 
@@ -43,6 +43,27 @@ namespace Hazel {
 			: StaticMesh(staticMesh) {
 		}
 	};
+	struct DynamicMeshComponent
+	{
+		AssetHandle Mesh;
+	};
+	struct SubmeshComponent
+	{
+		AssetHandle Mesh; // 就是meshSource
+		std::vector<UUID> BoneEntityIds; 
+		uint32_t SubmeshIndex = 0;
+		bool Visible = true;
+
+		SubmeshComponent() = default;
+		SubmeshComponent(const SubmeshComponent& other)
+			: Mesh(other.Mesh), BoneEntityIds(other.BoneEntityIds), SubmeshIndex(other.SubmeshIndex), Visible(other.Visible)
+		{
+		}
+		SubmeshComponent(AssetHandle mesh, uint32_t submeshIndex = 0)
+			: Mesh(mesh), SubmeshIndex(submeshIndex)
+		{
+		}
+	};
 	struct RelationshipComponent
 	{
 		UUID ParentHandle = 0;
@@ -57,44 +78,122 @@ namespace Hazel {
 	struct TransformComponent
 	{
 		glm::vec3 Translation = { 0.0f, 0.0f, 0.0f };
-		glm::vec3 Rotation = { 0.0f, 0.0f, 0.0f }; // 弧度制
 		glm::vec3 Scale = { 1.0f, 1.0f, 1.0f };
+	private:
+		// These are private so that you are forced to set them via
+		// SetRotation() or SetRotationEuler()
+		// This avoids situation where one of them gets set and the other is forgotten.
+		//
+		// Why do we need both a quat and Euler angle representation for rotation?
+		// Because Euler suffers from gimbal lock -> rotations should be stored as quaternions.
+		//
+		// BUT: quaternions are confusing, and humans like to work with Euler angles.
+		// We cannot store just the quaternions and translate to/from Euler because the conversion
+		// Euler -> quat -> Euler is not invariant.
+		//
+		// It's also sometimes useful to be able to store rotations > 360 degrees which
+		// quats do not support.
+		//
+		// Accordingly, we store Euler for "editor" stuff that humans work with, 
+		// and quats for everything else.  The two are maintained in-sync via the SetRotation()
+		// methods.
+		glm::vec3 RotationEuler = { 0.0f, 0.0f, 0.0f };
+		glm::quat Rotation = { 1.0f, 0.0f, 0.0f, 0.0f };
 
+	public:
 		TransformComponent() = default;
-		TransformComponent(const TransformComponent&) = default;
+		TransformComponent(const TransformComponent& other) = default;
 		TransformComponent(const glm::vec3& translation)
-			: Translation(translation) {
+			: Translation(translation)
+		{
 		}
 
-		// === 变换矩阵 ===
 		glm::mat4 GetTransform() const
 		{
-			glm::mat4 rotation = glm::toMat4(glm::quat(Rotation));
 			return glm::translate(glm::mat4(1.0f), Translation)
-				* rotation
+				* glm::toMat4(Rotation)
 				* glm::scale(glm::mat4(1.0f), Scale);
 		}
 
-		// === 设置函数 ===
-		void SetTranslation(const glm::vec3& t) { Translation = t; }
-		void SetRotation(const glm::vec3& r) { Rotation = r; }     // 弧度
-		void SetScale(const glm::vec3& s) { Scale = s; }
-		void SetUniformScale(float s) { Scale = glm::vec3(s); }
-
-		// === 增量操作 ===
-		void Translate(const glm::vec3& delta) { Translation += delta; }
-		void Rotate(const glm::vec3& delta) { Rotation += delta; }     // 弧度增量
-		void ScaleBy(const glm::vec3& factor) { Scale *= factor; }
-		void ScaleBy(float factor) { Scale *= factor; }
-
-		// === 重置 ===
-		void Reset()
+		void SetTransform(const glm::mat4& transform)
 		{
-			Translation = glm::vec3(0.0f);
-			Rotation = glm::vec3(0.0f);
-			Scale = glm::vec3(1.0f);
+			Math::DecomposeTransform(transform, Translation, Rotation, Scale);
+			RotationEuler = glm::eulerAngles(Rotation);
 		}
+
+		glm::vec3 GetRotationEuler() const
+		{
+			return RotationEuler;
+		}
+
+		void SetRotationEuler(const glm::vec3& euler)
+		{
+			RotationEuler = euler;
+			Rotation = glm::quat(RotationEuler);
+		}
+
+		glm::quat GetRotation() const
+		{
+			return Rotation;
+		}
+
+		void SetRotation(const glm::quat& quat)
+		{
+			// wrap given euler angles to range [-pi, pi]
+			auto wrapToPi = [](glm::vec3 v)
+				{
+					return glm::mod(v + glm::pi<float>(), 2.0f * glm::pi<float>()) - glm::pi<float>();
+				};
+
+			auto originalEuler = RotationEuler;
+			Rotation = quat;
+			RotationEuler = glm::eulerAngles(Rotation);
+
+			// A given quat can be represented by many Euler angles (technically infinitely many),
+			// and glm::eulerAngles() can only give us one of them which may or may not be the one we want.
+			// Here we have a look at some likely alternatives and pick the one that is closest to the original Euler angles.
+			// This is an attempt to avoid sudden 180deg flips in the Euler angles when we SetRotation(quat).
+
+			glm::vec3 alternate1 = { RotationEuler.x - glm::pi<float>(), glm::pi<float>() - RotationEuler.y, RotationEuler.z - glm::pi<float>() };
+			glm::vec3 alternate2 = { RotationEuler.x + glm::pi<float>(), glm::pi<float>() - RotationEuler.y, RotationEuler.z - glm::pi<float>() };
+			glm::vec3 alternate3 = { RotationEuler.x + glm::pi<float>(), glm::pi<float>() - RotationEuler.y, RotationEuler.z + glm::pi<float>() };
+			glm::vec3 alternate4 = { RotationEuler.x - glm::pi<float>(), glm::pi<float>() - RotationEuler.y, RotationEuler.z + glm::pi<float>() };
+
+			// We pick the alternative that is closest to the original value.
+			float distance0 = glm::length2(wrapToPi(RotationEuler - originalEuler));
+			float distance1 = glm::length2(wrapToPi(alternate1 - originalEuler));
+			float distance2 = glm::length2(wrapToPi(alternate2 - originalEuler));
+			float distance3 = glm::length2(wrapToPi(alternate3 - originalEuler));
+			float distance4 = glm::length2(wrapToPi(alternate4 - originalEuler));
+
+			float best = distance0;
+			if (distance1 < best)
+			{
+				best = distance1;
+				RotationEuler = alternate1;
+			}
+			if (distance2 < best)
+			{
+				best = distance2;
+				RotationEuler = alternate2;
+			}
+			if (distance3 < best)
+			{
+				best = distance3;
+				RotationEuler = alternate3;
+			}
+			if (distance4 < best)
+			{
+				best = distance4;
+				RotationEuler = alternate4;
+			}
+
+			RotationEuler = wrapToPi(RotationEuler);
+		}
+
+		friend class SceneSerializer;
 	};
+
 
 
 	struct SpriteRendererComponent
@@ -224,6 +323,6 @@ namespace Hazel {
 		ComponentGroup<StaticMeshComponent,TransformComponent, SpriteRendererComponent,
 			CircleRendererComponent, /*CameraComponent,*/ ScriptComponent,
 			NativeScriptComponent, Rigidbody2DComponent, BoxCollider2DComponent,
-			CircleCollider2DComponent, TextComponent, RelationshipComponent>;
+			CircleCollider2DComponent, TextComponent, RelationshipComponent, SubmeshComponent,DynamicMeshComponent>;
 
 }

@@ -8,6 +8,7 @@
 #include <Hazel/Renderer/RenderContext.h>
 #include "Platform/Vulkan/VulkanContext.h"
 #include <Hazel/Renderer/IndexBuffer.h>
+#include <Hazel/Asset/Model/Mesh.h>
 class b2World;
 
 namespace Hazel {
@@ -39,6 +40,14 @@ namespace Hazel {
 			return m_Registry.view<Components...>();
 		}
 		entt::registry& GetRegistry() { return m_Registry; }
+		Entity BuildDynamicMeshEntity(Ref<MeshSource> mesh);
+		void BuildMeshBoneEntityIds(Entity entity, Entity rootEntity);
+		std::vector<UUID> FindBoneEntityIds(Entity entity, Entity rootEntity, const Skeleton* skeleton);
+		Entity TryGetDescendantEntityWithTag(Entity entity, const std::string& tag);
+		void BuildBoneEntityIds(Entity entity);
+		void BuildAnimationBoneEntityIds(Entity entity, Entity rootEntity);
+		void BuildMeshEntityHierarchy(Entity parent, Ref<MeshSource> mesh, const MeshNode& node);
+
 	private:
 		template<typename T>
 		void OnComponentAdded(Entity entity, T& component);
@@ -54,6 +63,7 @@ namespace Hazel {
 		friend class Entity;
 		friend class SceneSerializer;
 		friend class SceneRender;
+		std::vector<glm::mat4> GetModelSpaceBoneTransforms(const std::vector<UUID>& boneEntityIds, Ref<MeshSource> meshSource);
 	};
 
 }

@@ -37,8 +37,6 @@ namespace Hazel {
 	{
 	}
 
-
-
 	void Scene::OnEditorRender(Ref<SceneRender> sceneRender,EditorCamera & editorCamera) {
 		sceneRender->SetScene(this);
 
@@ -48,16 +46,14 @@ namespace Hazel {
 		sceneRender->EndRender();
 	};
 
-
-
 	void Scene::OutputRenderRes(Ref<SceneRender> sceneRender)
 	{
 		UI::Image(sceneRender->GetFinalImage(), ImGui::GetContentRegionAvail(), {0, 0}, {1, 1});
 	}
 	
-
 	void Scene::CollectRenderableEntities(Ref<SceneRender> sceneRender)
 	{
+		// 收集StaticMesh
 		auto allEntityOwnMesh = GetAllEntitiesWith<StaticMeshComponent>();
 		for (auto entity : allEntityOwnMesh) {
 			auto& staticMeshComponent = allEntityOwnMesh.get<StaticMeshComponent>(entity);
@@ -65,12 +61,30 @@ namespace Hazel {
 			Ref<MeshSource> mesh = AssetManager::GetAsset<MeshSource>(staticMeshComponent.StaticMesh);
 			if (mesh == nullptr) continue;
 			Entity e = Entity(entity, this);
-			// 这里获取Model变换信息
 			glm::mat4 transform = GetWorldSpaceTransformMatrix(e);
-
-			// 注册Mesh
 			sceneRender->SubmitStaticMesh(mesh, transform);
 		}
+	}
+	std::vector<glm::mat4> Scene::GetModelSpaceBoneTransforms(const std::vector<UUID>& boneEntityIds, Ref<MeshSource> meshSource)
+	{
+		std::vector<glm::mat4> boneTransforms(boneEntityIds.size());
+		if (meshSource)
+		{
+			if (const auto skeleton = meshSource->GetSkeleton(); skeleton)
+			{
+				// Can get mismatches if user changes which mesh an entity refers to after the bone entities have been set up
+				// TODO(0x): need a better way to handle the bone entities
+				//HZ_CORE_ASSERT(boneEntityIds.size() == skeleton.GetNumBones(), "Wrong number of boneEntityIds for mesh skeleton!");
+				for (uint32_t i = 0; i < std::min(skeleton->GetNumBones(), (uint32_t)boneEntityIds.size()); ++i)
+				{
+					auto boneEntity = GetEntityByUUID(boneEntityIds[i]);
+					glm::mat4 localTransform = boneEntity ? boneEntity.GetComponent<TransformComponent>().GetTransform() : glm::identity<glm::mat4>();
+					auto parentIndex = skeleton->GetParentBoneIndex(i);
+					boneTransforms[i] = (parentIndex == Skeleton::NullIndex) ? localTransform : boneTransforms[parentIndex] * localTransform;
+				}
+			}
+		}
+		return boneTransforms;
 	}
 	glm::mat4 Scene::GetWorldSpaceTransformMatrix(Entity entity)
 	{
@@ -192,7 +206,189 @@ namespace Hazel {
 		return Entity{};
 	}
 
+	Entity Scene::BuildDynamicMeshEntity(Ref<MeshSource> mesh)
+	{
+		Entity rootEntity = CreateEntity(mesh->GetFilePath().stem().string());
+		rootEntity.AddComponent<DynamicMeshComponent>(mesh->Handle);
+		BuildMeshEntityHierarchy(rootEntity, mesh,mesh->GetRootNode());
+		BuildBoneEntityIds(rootEntity);
 
+		return rootEntity;
+	}
+
+	void Scene::BuildMeshBoneEntityIds(Entity entity, Entity rootEntity)
+	{
+		SubmeshComponent& mc = entity.GetComponent<SubmeshComponent>();
+		AssetHandle meshSourceHandle = mc.Mesh;
+		Ref<MeshSource> meshSource = AssetManager::GetAsset<MeshSource>(meshSourceHandle);
+		mc.BoneEntityIds = FindBoneEntityIds(entity, rootEntity, meshSource->GetSkeleton());
+
+		for (auto childId : entity.Children())
+		{
+			Entity child = GetEntityByUUID(childId);
+			BuildMeshBoneEntityIds(child, rootEntity);
+		}
+	}
+	std::vector<UUID> Scene::FindBoneEntityIds(Entity entity, Entity rootEntity, const Skeleton* skeleton)
+	{
+		std::vector<UUID> boneEntityIds;
+
+		// given an entity, find descendant entities holding the transforms for the specified mesh's bones
+		if (skeleton)
+		{
+			Entity rootParentEntity = rootEntity ? rootEntity.GetParent() : rootEntity;
+			{
+				auto boneNames = skeleton->GetBoneNames();
+				boneEntityIds.reserve(boneNames.size());
+				bool foundAtLeastOne = false;
+				for (const auto& boneName : boneNames)
+				{
+					bool found = false;
+					Entity e = entity;
+					while (e && e != rootParentEntity)
+					{
+						Entity boneEntity = TryGetDescendantEntityWithTag(e, boneName);
+						if (boneEntity)
+						{
+							boneEntityIds.emplace_back(boneEntity.GetUUID());
+							found = true;
+							break;
+						}
+						e = e.GetParent();
+					}
+					if (found)
+						foundAtLeastOne = true;
+					else
+						boneEntityIds.emplace_back(0);
+				}
+				if (!foundAtLeastOne)
+					boneEntityIds.resize(0);
+			}
+		}
+		return boneEntityIds;
+	}
+	Entity Scene::TryGetDescendantEntityWithTag(Entity entity, const std::string& tag)
+	{
+		//HZ_PROFILE_FUNC();
+		if (entity)
+		{
+			if (entity.GetComponent<TagComponent>().Tag == tag)
+				return entity;
+
+			for (const auto childId : entity.Children())
+			{
+				Entity descendant = TryGetDescendantEntityWithTag(GetEntityByUUID(childId), tag);
+				if (descendant)
+					return descendant;
+			}
+		}
+		return {};
+	}
+	void Scene::BuildBoneEntityIds(Entity entity)
+	{
+		//BuildMeshBoneEntityIds(entity, entity);
+
+		//// AnimationComponent may not be a direct child of the entity.
+		//// We must rebuild the animation component bone entity ids from the oldest ancestor
+		//Entity animationEntity = entity;
+		//Entity parent = entity.GetParent();
+		//while (parent)
+		//{
+		//	if (parent.HasComponent<AnimationComponent>())
+		//	{
+		//		animationEntity = parent;
+		//	}
+		//	parent = parent.GetParent();
+		//}
+
+		//BuildAnimationBoneEntityIds(animationEntity, animationEntity);
+	}
+	void Scene::BuildAnimationBoneEntityIds(Entity entity, Entity rootEntity)
+	{
+		//if (auto anim = entity.GetComponent<AnimationComponent>(); anim && anim->AnimationGraph)
+		//{
+		//	anim->BoneEntityIds = FindBoneEntityIds(entity, rootEntity, anim->AnimationGraph->GetSkeleton());
+		//}
+		//for (auto childId : entity.Children())
+		//{
+		//	Entity child = GetEntityByUUID(childId);
+		//	BuildAnimationBoneEntityIds(child, rootEntity);
+		//}
+	}
+	void Scene::BuildMeshEntityHierarchy(Entity parent, Ref<MeshSource> meshSource,const MeshNode& node)
+	{
+		const auto& nodes = meshSource->GetNodes();
+
+		// capture meshSource and nodes so we don't have to keep getting them as we recurse
+		std::function<void(Entity, const MeshNode&)> recurse = [&](Entity parent, const MeshNode& node)
+			{
+				// Skip empty root node
+				// We should still apply its transform though, as there will sometimes be a 90 degree rotation here
+				// particularly for GLTF assets (where DCC tool may have tried to convert Z-up to Y-up)
+				if (node.IsRoot() && node.Submeshes.size() == 0)
+				{
+					for (uint32_t child : node.Children)
+					{
+						MeshNode childNode = nodes[child];
+						childNode.LocalTransform = node.LocalTransform * childNode.LocalTransform;
+						recurse(parent, childNode);
+					}
+					return;
+				}
+
+				Entity nodeEntity = CreateChildEntity(parent, node.Name);
+				nodeEntity.Transform().SetTransform(node.LocalTransform);
+				//nodeEntity.AddComponent<MeshTagComponent>(); // TODO: (0x) Add correct root entity id
+
+				if (node.Submeshes.size() == 1)
+				{
+					// Node == Mesh in this case
+					uint32_t submeshIndex = node.Submeshes[0];
+					auto& mc = nodeEntity.AddComponent<SubmeshComponent>(meshSource->Handle, submeshIndex);
+
+					/*if (mesh->ShouldGenerateColliders())
+					{
+						auto& colliderComponent = nodeEntity.AddComponent<MeshColliderComponent>();
+						Ref<MeshColliderAsset> colliderAsset = PhysicsSystem::GetOrCreateColliderAsset(nodeEntity, colliderComponent);
+						colliderComponent.ColliderAsset = colliderAsset->Handle;
+						colliderComponent.SubmeshIndex = submeshIndex;
+						colliderComponent.UseSharedShape = colliderAsset->AlwaysShareShape;
+						nodeEntity.AddComponent<RigidBodyComponent>();
+					}*/
+				}
+				else if (node.Submeshes.size() > 1)
+				{
+					// Create one entity per child mesh, parented under node
+					for (uint32_t i = 0; i < node.Submeshes.size(); i++)
+					{
+						uint32_t submeshIndex = node.Submeshes[i];
+
+						// NOTE(Yan): original implemenation use to use "mesh name" from assimp;
+						//            we don't store that so use node name instead. Maybe we
+						//            should store it?
+						Entity childEntity = CreateChildEntity(nodeEntity, node.Name);
+
+						//childEntity.AddComponent<MeshTagComponent>(); // TODO: (0x) Add correct root entity id
+						childEntity.AddComponent<SubmeshComponent>(meshSource->Handle, submeshIndex);
+
+						/*if (mesh->ShouldGenerateColliders())
+						{
+							auto& colliderComponent = childEntity.AddComponent<MeshColliderComponent>();
+							Ref<MeshColliderAsset> colliderAsset = PhysicsSystem::GetOrCreateColliderAsset(childEntity, colliderComponent);
+							colliderComponent.ColliderAsset = colliderAsset->Handle;
+							colliderComponent.SubmeshIndex = submeshIndex;
+							colliderComponent.UseSharedShape = colliderAsset->AlwaysShareShape;
+							childEntity.AddComponent<RigidBodyComponent>();
+						}*/
+					}
+				}
+
+				for (uint32_t child : node.Children)
+					recurse(nodeEntity, nodes[child]);
+			};
+
+		recurse(parent, node);
+	}
 	Scene::~Scene()
 	{
 		delete m_PhysicsWorld;
@@ -228,7 +424,14 @@ namespace Hazel {
 	void Scene::OnComponentAdded<ScriptComponent>(Entity entity, ScriptComponent& component)
 	{
 	}
-
+	template<>
+	void Scene::OnComponentAdded<DynamicMeshComponent>(Entity entity, DynamicMeshComponent& component)
+	{
+	}
+	template<>
+	void Scene::OnComponentAdded<SubmeshComponent>(Entity entity, SubmeshComponent& component)
+	{
+	}
 	template<>
 	void Scene::OnComponentAdded<SpriteRendererComponent>(Entity entity, SpriteRendererComponent& component)
 	{
