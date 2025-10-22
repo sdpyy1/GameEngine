@@ -67,12 +67,10 @@ namespace Hazel {
 			transform.SetRotationEuler(glm::vec3(0.0f, glm::radians(distRot(gen)), 0.0f));
 			// Ëæ»úËõ·Å
 			transform.Scale = glm::vec3(distScale(gen));
+			Ref<MeshSource> ms = AssetManager::GetAsset<MeshSource>(gun.GetComponent<DynamicMeshComponent>().MeshSource);
+			ms->GetAnimation("Fire", *ms->GetSkeleton(), false, glm::vec3(1), 0);
+			gun.GetComponent<AnimationComponent>().CurrentAnimation = ms->GetAnimation("Fire", *ms->GetSkeleton(), false, glm::vec3(1), 0);
 		}
-
-		/*Ref<MeshSource> ms = eagle.As<MeshSource>();
-		ms->GetAnimation("Fire", *ms->GetSkeleton(), false, glm::vec3(1), 0);
-		m_HoveredEntity = gun;
-		m_SelectedEntity = gun;*/
 	}
 
 	void EditorLayer::OnDetach() {}
@@ -81,7 +79,7 @@ namespace Hazel {
 	{
 		m_EditorCamera.SetActive(true);
 		m_EditorCamera.OnUpdate(ts, isMouseInViewport);
-		m_Scene->OnEditorRender(m_SceneRender, m_EditorCamera);
+		m_Scene->OnEditorRender(ts,m_SceneRender, m_EditorCamera);
 	}
 
 	void EditorLayer::OnImGuiRender()

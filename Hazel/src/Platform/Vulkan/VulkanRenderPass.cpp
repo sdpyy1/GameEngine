@@ -81,8 +81,30 @@ namespace Hazel {
 	{
 		Renderer::Submit([=]() mutable {
 			VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-			for (size_t i = 0; i < Renderer::GetConfig().FramesInFlight; i++) {
-				auto vulkanBuffer = bufferSet->Get(i).As<VulkanStorageBuffer>();
+			if (isInit) {
+				for (size_t i = 0; i < Renderer::GetConfig().FramesInFlight; i++) {
+					auto vulkanBuffer = bufferSet->Get(i).As<VulkanStorageBuffer>();
+					VkDescriptorBufferInfo bufferInfo{};
+					bufferInfo.buffer = vulkanBuffer->GetVulkanBuffer();
+					bufferInfo.offset = 0;
+					bufferInfo.range = bufferSet.As<VulkanStorageBufferSet>()->Get_PreSize();
+
+					// 描述符写入操作（结构与 UniformBuffer 完全一致，仅改类型）
+					std::array<VkWriteDescriptorSet, 1> descriptorWrites{};
+					descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+					descriptorWrites[0].dstSet = GetSpecification().Pipeline->GetShader().As<VulkanShader>()->GetDescriptorSet()[i]; // 目标描述符集（当前帧）
+					descriptorWrites[0].dstBinding = Binding;         // 绑定点索引
+					descriptorWrites[0].dstArrayElement = 0;          // 数组索引（非数组资源为 0）
+					descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER; // 存储缓冲区类型（只读，根据需求可改）
+					descriptorWrites[0].descriptorCount = 1;          // 资源数量
+					descriptorWrites[0].pBufferInfo = &bufferInfo;    // 绑定缓冲区信息（直接使用上面的 bufferInfo）
+
+					// 更新描述符集（与 UniformBuffer 调用方式一致）
+					vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+				}
+			}
+			else {
+				auto vulkanBuffer = bufferSet->Get(Renderer::RT_GetCurrentFrameIndex()).As<VulkanStorageBuffer>();
 				VkDescriptorBufferInfo bufferInfo{};
 				bufferInfo.buffer = vulkanBuffer->GetVulkanBuffer();
 				bufferInfo.offset = 0;
@@ -91,7 +113,7 @@ namespace Hazel {
 				// 描述符写入操作（结构与 UniformBuffer 完全一致，仅改类型）
 				std::array<VkWriteDescriptorSet, 1> descriptorWrites{};
 				descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-				descriptorWrites[0].dstSet = GetSpecification().Pipeline->GetShader().As<VulkanShader>()->GetDescriptorSet()[i]; // 目标描述符集（当前帧）
+				descriptorWrites[0].dstSet = GetSpecification().Pipeline->GetShader().As<VulkanShader>()->GetDescriptorSet()[Renderer::RT_GetCurrentFrameIndex()]; // 目标描述符集（当前帧）
 				descriptorWrites[0].dstBinding = Binding;         // 绑定点索引
 				descriptorWrites[0].dstArrayElement = 0;          // 数组索引（非数组资源为 0）
 				descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER; // 存储缓冲区类型（只读，根据需求可改）
@@ -100,8 +122,9 @@ namespace Hazel {
 
 				// 更新描述符集（与 UniformBuffer 调用方式一致）
 				vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+
 			}
-			});
+		});
 	}
 
 	void VulkanRenderPass::SetInput(Ref<Image2D> image, uint32_t Binding,bool isInit)

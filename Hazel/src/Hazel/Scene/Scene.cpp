@@ -37,14 +37,56 @@ namespace Hazel {
 	{
 	}
 
-	void Scene::OnEditorRender(Ref<SceneRender> sceneRender,EditorCamera & editorCamera) {
+	void Scene::OnEditorRender(Timestep ts,Ref<SceneRender> sceneRender,EditorCamera & editorCamera) {
 		sceneRender->SetScene(this);
-
+		UpdateAnimation(ts); // 动画更新
 		CollectRenderableEntities(sceneRender);
 		sceneRender->PreRender(editorCamera);
 
 		sceneRender->EndRender();
 	};
+
+	void Scene::UpdateAnimation(Timestep ts) {
+		auto view = GetAllEntitiesWith<AnimationComponent>();
+		for (auto e : view) {
+			Entity entity = { e, this };
+			auto& animComp = entity.GetComponent<AnimationComponent>();
+
+			if (animComp.BoneEntityIds.empty() || !animComp.CurrentAnimation)
+				continue;
+
+			const auto& animation = animComp.CurrentAnimation;
+			float duration = animation->GetDuration();
+
+			// 如果时间步长为0，不更新动画（避免覆盖bind pose）
+			if (ts > 0.0f) {
+				animComp.CurrentTime += ts;
+				if (animComp.IsLooping)
+					animComp.CurrentTime = std::fmod(animComp.CurrentTime, duration);
+				else
+					animComp.CurrentTime = std::clamp(animComp.CurrentTime, 0.0f, duration);
+
+				// 采样动画
+				animation->Sample(animComp.CurrentTime, animComp.CurrentPose);
+
+				// 更新局部Transform	
+				for (size_t i = 0; i < animComp.BoneEntityIds.size(); ++i) {
+					Entity boneEntity = GetEntityByUUID(animComp.BoneEntityIds[i]);
+					HZ_CORE_TRACE("Bone In Update {}", boneEntity.GetComponent<TagComponent>().Tag);
+					if (!boneEntity.HasComponent<TransformComponent>())
+						continue;
+
+					auto& boneTransform = boneEntity.GetComponent<TransformComponent>();
+					const auto& sampled = animComp.CurrentPose.BoneTransforms[i == 0?0:i+1];  // ？？？ 这应该和设计有关系
+
+					boneTransform.Translation = sampled.Translation;
+					boneTransform.SetRotation(sampled.Rotation);
+					boneTransform.Scale = sampled.Scale;
+				}
+			}
+		}
+	}
+
 
 	void Scene::OutputRenderRes(Ref<SceneRender> sceneRender)
 	{
@@ -227,6 +269,7 @@ namespace Hazel {
 	{
 		Entity rootEntity = CreateEntity(mesh->GetFilePath().stem().string());
 		rootEntity.AddComponent<DynamicMeshComponent>(mesh->Handle);
+		rootEntity.AddComponent<AnimationComponent>(mesh->Handle);
 		BuildMeshEntityHierarchy(rootEntity, mesh,mesh->GetRootNode());
 		BuildBoneEntityIds(rootEntity);
 
@@ -257,10 +300,10 @@ namespace Hazel {
 	}
 	void Scene::BuildAnimationBoneEntityIds(Entity entity, Entity rootEntity)
 	{
-		/*if (auto anim = entity.GetComponent<AnimationComponent>(); anim && anim->AnimationGraph)
-		{
-			anim->BoneEntityIds = FindBoneEntityIds(entity, rootEntity, anim->AnimationGraph->GetSkeleton());
-		}*/
+		if(entity.HasComponent<AnimationComponent>()){
+			auto &anim = entity.GetComponent<AnimationComponent>();
+			anim.BoneEntityIds = FindBoneEntityIds(entity, rootEntity, AssetManager::GetAsset<MeshSource>(anim.Mesh)->GetSkeleton());
+		}
 		for (auto childId : entity.Children())
 		{
 			Entity child = GetEntityByUUID(childId);

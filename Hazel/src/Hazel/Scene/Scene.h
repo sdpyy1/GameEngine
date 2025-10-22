@@ -21,7 +21,8 @@ namespace Hazel {
 		Scene();
 		~Scene();
 		
-		void OnEditorRender(Ref<SceneRender> sceneRender,EditorCamera& editorCamera);
+		void OnEditorRender(Timestep ts,Ref<SceneRender> sceneRender,EditorCamera& editorCamera);
+		void UpdateAnimation(Timestep ts);
 		void OutputRenderRes(Ref<SceneRender> sceneRender);
 		void SetViewprotSize(float width, float height) {  ViewportWidth = width; ViewportHeight = height;}
 	public:

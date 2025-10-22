@@ -130,6 +130,85 @@ namespace Hazel {
 	}
 
 
+	void Animation::Sample(float time, Pose& outPose) const
+	{
+		if (!m_Data)
+			return;
+
+		// =============== 1. 初始化 ACL 解压上下文 ===============
+		acl::decompression_context<acl::default_transform_decompression_settings> context;
+		const acl::compressed_tracks* tracks = static_cast<const acl::compressed_tracks*>(m_Data);
+		context.initialize(*tracks);
+
+		// =============== 2. 时间规整（循环播放） ===============
+		if (m_Duration > 0.0f)
+			time = fmod(time, m_Duration);
+		else
+			time = 0.0f;
+
+		context.seek(time, acl::sample_rounding_policy::none);
+
+		// =============== 3. 输出 Pose 初始化 ===============
+		outPose.AnimationDuration = m_Duration;
+		outPose.AnimationTimePos = time;
+		outPose.NumBones = m_NumTracks;
+
+		// 根运动（root motion）单独计算
+		glm::vec3 rootTranslation(0.0f);
+		glm::quat rootRotation(1.0f, 0.0f, 0.0f, 0.0f);
+
+		// 我们用自定义 writer 写入骨骼变换
+		struct TrackWriter : public acl::track_writer
+		{
+			std::array<LocalTransform, Animation::MAXBONES>& BoneTransforms;
+			glm::vec3& RootTranslation;
+			glm::quat& RootRotation;
+
+			TrackWriter(std::array<LocalTransform, Animation::MAXBONES>& bones,
+				glm::vec3& rootT, glm::quat& rootR)
+				: BoneTransforms(bones), RootTranslation(rootT), RootRotation(rootR) {
+			}
+
+			void RTM_SIMD_CALL write_rotation(uint32_t track_index, rtm::quatf_arg0 rotation)
+			{
+				if (track_index >= Animation::MAXBONES) return;
+				glm::quat q;
+				rtm::quat_store(rotation, glm::value_ptr(q));
+				if (track_index == 0)
+					RootRotation = q;
+				BoneTransforms[track_index].Rotation = q;
+			}
+
+			void RTM_SIMD_CALL write_translation(uint32_t track_index, rtm::vector4f_arg0 translation)
+			{
+				if (track_index >= Animation::MAXBONES) return;
+				glm::vec3 t;
+				rtm::vector_store3(translation, glm::value_ptr(t));
+				if (track_index == 0)
+					RootTranslation = t;
+				BoneTransforms[track_index].Translation = t;
+			}
+
+			void RTM_SIMD_CALL write_scale(uint32_t track_index, rtm::vector4f_arg0 scale)
+			{
+				if (track_index >= Animation::MAXBONES) return;
+				glm::vec3 s;
+				rtm::vector_store3(scale, glm::value_ptr(s));
+				BoneTransforms[track_index].Scale = s;
+			}
+		};
+
+		// =============== 4. 解压当前帧的所有骨骼变换 ===============
+		TrackWriter writer(outPose.BoneTransforms, rootTranslation, rootRotation);
+		context.decompress_tracks(writer);
+
+		// =============== 5. 记录根运动（Root Motion） ===============
+		outPose.RootMotion.Translation = rootTranslation;
+		outPose.RootMotion.Rotation = rootRotation;
+		outPose.RootMotion.Scale = glm::one<glm::vec3>();
+	}
+
+
 	AssetHandle AnimationAsset::GetAnimationSource() const
 	{
 		return m_AnimationSource;

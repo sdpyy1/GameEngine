@@ -56,7 +56,7 @@ namespace Hazel {
 			gBufferPassSpec.Pipeline = m_GeoPipeline;
 			m_GeoPass = RenderPass::Create(gBufferPassSpec);
 			m_GeoPass->SetInput(m_VPUniformBufferSet, 0);  // 设置binding=0的ubo
-			m_GeoPass->SetInput(m_SBSBoneTransforms, 1);  // 设置binding=1的ubo
+			m_GeoPass->SetInput(m_SBSBoneTransforms, 1, true);  // 设置binding=1的ubo
 		}
 
 		// GridPass
@@ -94,6 +94,7 @@ namespace Hazel {
 			NeedResize = false;
 		}
 		m_GridPass->SetInput(m_GeoPass->GetDepthOutput(), 1);  // 这种会随着FBO尺寸变化而变化的输入，必须每帧更新
+		m_GeoPass->SetInput(m_SBSBoneTransforms, 1);  // 设置binding=1的ubo
 
 		// 收集所有参与渲染的Mesh的变换矩阵存储在m_SubmeshTransformBuffers
 		{

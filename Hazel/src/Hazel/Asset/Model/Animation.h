@@ -2,6 +2,22 @@
 #include "Hazel/Asset/Asset.h"
 namespace Hazel {
 	class MeshSource;
+	struct LocalTransform
+	{
+		glm::vec3 Translation = glm::zero<glm::vec3>();
+		glm::quat Rotation = glm::identity<glm::quat>();
+		glm::vec3 Scale = glm::one<glm::vec3>();
+	};
+
+
+	struct Pose
+	{
+		LocalTransform RootMotion;
+		std::array<LocalTransform, 101> BoneTransforms;
+		float AnimationDuration = 0.0f;
+		float AnimationTimePos = 0.0f;
+		uint32_t NumBones = 0;
+	};
 	class Animation
 	{
 	public:
@@ -13,6 +29,7 @@ namespace Hazel {
 
 		Animation(Animation&& other);
 		Animation& operator=(Animation&& other);
+		void Sample(float time, Pose& outPose) const;
 
 		~Animation();
 
@@ -51,7 +68,6 @@ namespace Hazel {
 
 		static AssetType GetStaticType() { return AssetType::Animation; }
 		virtual AssetType GetAssetType() const override { return GetStaticType(); }
-
 		AssetHandle GetAnimationSource() const;
 		AssetHandle GetSkeletonSource() const;
 		const std::string& GetAnimationName() const;
@@ -75,21 +91,6 @@ namespace Hazel {
 	};
 
 
-	struct LocalTransform
-	{
-		glm::vec3 Translation = glm::zero<glm::vec3>();
-		glm::quat Rotation = glm::identity<glm::quat>();
-		glm::vec3 Scale = glm::one<glm::vec3>();
-	};
 
-
-	struct Pose
-	{
-		LocalTransform RootMotion;
-		std::array<LocalTransform, Animation::MAXBONES> BoneTransforms;
-		float AnimationDuration = 0.0f;
-		float AnimationTimePos = 0.0f;
-		uint32_t NumBones = 0;
-	};
 }
 

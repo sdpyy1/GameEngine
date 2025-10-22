@@ -77,10 +77,19 @@ namespace Hazel {
 	};
 	struct AnimationComponent
 	{
+		AssetHandle Mesh;
 		AssetHandle AnimationGraphHandle;
+		const Animation* CurrentAnimation;   // 当前播放的动画（你的 Animation 类实例）
+		float CurrentTime = 0.0f;          // 当前动画播放时间
+		bool IsLooping = true;             // 是否循环播放
+		Pose CurrentPose;      
+
 		std::vector<UUID> BoneEntityIds; // AnimationGraph refers to a skeleton.  Skeleton has a collection of bones.  Each bone affects the transform of an entity. These are those entities.
 		//Ref<AnimationGraph::AnimationGraph> AnimationGraph;  // 这个还没有
+		AnimationComponent(AssetHandle mesh):Mesh(mesh)
+		{
 
+		}
 		// Note: generally if you copy an AnimationComponent, then you will need to:
 		// a) Reset the bone entity ids (e.g.to point to copied entities that the copied component belongs to).  See Scene::DuplicateEntity()
 		// b) Create a new independent AnimationGraph instance.  See Scene::DuplicateEntity()
