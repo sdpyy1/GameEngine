@@ -21,6 +21,8 @@ namespace Hazel {
 		VkDescriptorPool GetDescriptorPool() {return m_DescriptorPool;}
 		virtual ~VulkanShader();
 		void Release();
+		const std::vector<PushConstantRange>& GetPushConstantRanges() const { return m_PushConstantRanges; }
+
 		virtual const std::string& GetName() const override { return m_Name; }
 		//const std::vector<ShaderResource::ShaderDescriptorSet>& GetShaderDescriptorSets() const { return m_ReflectionData.ShaderDescriptorSets; }
 
@@ -34,5 +36,6 @@ namespace Hazel {
 		std::vector<VkDescriptorSetLayout> m_DescriptorSetLayouts;
 		VkDescriptorPool m_DescriptorPool;
 		std::vector<VkDescriptorSet> m_DescriptorSets;
+		std::vector<PushConstantRange> m_PushConstantRanges;
 	};
 }

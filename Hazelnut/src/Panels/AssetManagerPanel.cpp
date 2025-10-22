@@ -32,10 +32,16 @@ namespace Hazel {
 
 		if (m_Context)
 		{
+			// 只绘制根实体（没有父节点的实体）
 			m_Context->GetRegistry().each([&](auto entityID)
 				{
 					Entity entity{ entityID , m_Context };
-					DrawEntityNode(entity);
+					// 检查是否是根实体（ParentHandle为0）
+					if (!entity.HasComponent<RelationshipComponent>() ||
+						entity.GetComponent<RelationshipComponent>().ParentHandle == 0)
+					{
+						DrawEntityNode(entity);
+					}
 				});
 
 			if (ImGui::IsMouseDown(0) && ImGui::IsWindowHovered())
@@ -56,7 +62,6 @@ namespace Hazel {
 			DrawComponents(m_SelectionContext);
 		ImGui::End();
 	}
-
 	void AssetManagerPanel::SetSelectedEntity(Entity entity)
 	{
 		m_SelectionContext = entity;
@@ -65,12 +70,21 @@ namespace Hazel {
 	void AssetManagerPanel::DrawEntityNode(Entity entity)
 	{
 		auto& tag = entity.GetComponent<TagComponent>().Tag;
-		ImGuiTreeNodeFlags flags = ((m_SelectionContext == entity) ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
+		auto& relationship = entity.GetComponent<RelationshipComponent>();
+		bool hasChildren = !relationship.Children.empty();
+
+		// 节点标志：如果有子节点则显示箭头，否则显示叶子节点
+		ImGuiTreeNodeFlags flags = ((m_SelectionContext == entity) ? ImGuiTreeNodeFlags_Selected : 0) |
+			ImGuiTreeNodeFlags_OpenOnArrow |
+			ImGuiTreeNodeFlags_SpanAvailWidth;
+
+		if (!hasChildren)
+			flags |= ImGuiTreeNodeFlags_Leaf; // 没有子节点时显示为叶子节点
 
 		bool opened = ImGui::TreeNodeEx((void*)(uint64_t)(uint32_t)entity, flags, tag.c_str());
 		if (ImGui::IsItemClicked())
 			m_SelectionContext = entity;
-			
+
 		bool entityDeleted = false;
 		if (ImGui::BeginPopupContextItem())
 		{
@@ -81,6 +95,13 @@ namespace Hazel {
 
 		if (opened)
 		{
+			// 递归绘制所有子实体
+			for (const UUID& childId : relationship.Children)
+			{
+				Entity child = m_Context->GetEntityByUUID(childId);
+				if (child)
+					DrawEntityNode(child);
+			}
 			ImGui::TreePop();
 		}
 

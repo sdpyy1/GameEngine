@@ -46,7 +46,8 @@ namespace Hazel {
 			PipelineSpecification pSpec;
 			pSpec.Layout = vertexLayout;
 			pSpec.InstanceLayout = instanceLayout;
-			pSpec.Shader = Renderer::GetShaderLibrary()->Get("gBuffer");
+			pSpec.BoneInfluenceLayout = boneInfluenceLayout;
+			pSpec.Shader = Renderer::GetShaderLibrary()->Get("gBufferAnim");
 			pSpec.TargetFramebuffer = m_GeoFrameBuffer;
 			pSpec.DebugName = "GbufferPipeline";
 			m_GeoPipeline = Pipeline::Create(pSpec);
@@ -55,6 +56,7 @@ namespace Hazel {
 			gBufferPassSpec.Pipeline = m_GeoPipeline;
 			m_GeoPass = RenderPass::Create(gBufferPassSpec);
 			m_GeoPass->SetInput(m_VPUniformBufferSet, 0);  // 设置binding=0的ubo
+			m_GeoPass->SetInput(m_SBSBoneTransforms, 1);  // 设置binding=1的ubo
 		}
 
 		// GridPass
@@ -111,6 +113,7 @@ namespace Hazel {
 			m_SubmeshTransformBuffers[frameIndex].Buffer->SetData(m_SubmeshTransformBuffers[frameIndex].Data, offset * sizeof(TransformVertexData)); 
 		}
 
+		// 平铺骨骼信息到一个顶点缓冲区
 		uint32_t index = 0;
 		for (auto& [key, boneTransformsData] : m_MeshBoneTransformsMap)
 		{
@@ -143,17 +146,16 @@ namespace Hazel {
 		uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
 
 		Renderer::BeginRenderPass(m_CommandBuffer, m_GeoPass, true);
-		for (auto& [mk, dc] : m_StaticMeshDrawList)
+		for (auto& [meshKey, drawCommand] : m_StaticMeshDrawList)
 		{
-			// 获取具体一个SubMesh的变换矩阵信息（包含多个实例）
-			const auto& transformData = m_MeshTransformMap.at(mk);
-			Renderer::RenderStaticMeshWithMaterial(m_CommandBuffer, m_GeoPipeline,dc.MeshSource, dc.SubmeshIndex, dc.MaterialAsset->GetMaterial(), m_SubmeshTransformBuffers[frameIndex].Buffer, transformData.TransformOffset, dc.InstanceCount);
+			const auto& transformData = m_MeshTransformMap.at(meshKey); // 其中已经记录好了每个DrawCall对应的变换矩阵偏移
+			Renderer::RenderStaticMeshWithMaterial(m_CommandBuffer, m_GeoPipeline,drawCommand.MeshSource, drawCommand.SubmeshIndex, drawCommand.MaterialAsset->GetMaterial(), m_SubmeshTransformBuffers[frameIndex].Buffer, transformData.TransformOffset, drawCommand.InstanceCount);
 		}		
-		for (auto& [mk, dc] : m_DrawList)
+		for (auto& [meshKey, drawCommand] : m_DrawList)
 		{
-			const auto& transformData = m_MeshTransformMap.at(mk);
-			const auto& boneTransformsData = m_MeshBoneTransformsMap.at(mk);
-			Renderer::RenderSkeletonMeshWithMaterial(m_CommandBuffer, m_GeoPipeline, dc.MeshSource, dc.SubmeshIndex, dc.MaterialAsset->GetMaterial(),m_SubmeshTransformBuffers[frameIndex].Buffer, transformData.TransformOffset, boneTransformsData.BoneTransformsBaseIndex, dc.InstanceCount);
+			const auto& transformData = m_MeshTransformMap.at(meshKey);
+			const auto& boneTransformsData = m_MeshBoneTransformsMap.at(meshKey);
+			Renderer::RenderSkeletonMeshWithMaterial(m_CommandBuffer, m_GeoPipeline, drawCommand.MeshSource, drawCommand.SubmeshIndex, drawCommand.MaterialAsset->GetMaterial(),m_SubmeshTransformBuffers[frameIndex].Buffer, transformData.TransformOffset, boneTransformsData.BoneTransformsBaseIndex, drawCommand.InstanceCount);
 		}
 		Renderer::EndRenderPass(m_CommandBuffer);
 	}
@@ -171,7 +173,6 @@ namespace Hazel {
 		m_CommandBuffer->Submit();
 
 		m_DrawList.clear();
-
 		m_StaticMeshDrawList.clear();
 		m_MeshTransformMap.clear();
 		m_MeshBoneTransformsMap.clear();
@@ -203,12 +204,11 @@ namespace Hazel {
 			transformStorage.MRow[1] = { submeshTransform[0][1], submeshTransform[1][1], submeshTransform[2][1], submeshTransform[3][1] };
 			transformStorage.MRow[2] = { submeshTransform[0][2], submeshTransform[1][2], submeshTransform[2][2], submeshTransform[3][2] };
 			// 缓存绘制命令
-			auto& destDrawList = m_StaticMeshDrawList;
-			auto& dc = destDrawList[meshKey];
-			dc.MeshSource = meshSource;
-			dc.SubmeshIndex = submeshIndex;
-			dc.MaterialAsset = material;
-			dc.InstanceCount++;
+			StaticDrawCommand& drawCommand = m_StaticMeshDrawList[meshKey];
+			drawCommand.MeshSource = meshSource;
+			drawCommand.SubmeshIndex = submeshIndex;
+			drawCommand.MaterialAsset = material;
+			drawCommand.InstanceCount++;
 		}
 	};
 
@@ -237,12 +237,12 @@ namespace Hazel {
 		}
 		// Main geo
 		{
-			auto& destDrawList =  m_DrawList;
-			auto& dc = destDrawList[meshKey];
-			dc.MeshSource = meshSource;
-			dc.SubmeshIndex = submeshIndex;
-			dc.InstanceCount++;
-			dc.IsRigged = isRigged;  // TODO: would it be better to have separate draw list for rigged meshes, or this flag is OK?
+			DrawCommand& drawCommand = m_DrawList[meshKey];
+			drawCommand.MeshSource = meshSource;
+			drawCommand.SubmeshIndex = submeshIndex;
+			drawCommand.InstanceCount++;
+			drawCommand.MaterialAsset = material;
+			drawCommand.IsRigged = isRigged;  // TODO: would it be better to have separate draw list for rigged meshes, or this flag is OK?
 		}
 	}
 	void SceneRender::CopyToBoneTransformStorage(const MeshKey& meshKey, const Ref<MeshSource>& meshSource, const std::vector<glm::mat4>& boneTransforms)
@@ -256,6 +256,7 @@ namespace Hazel {
 		{
 			for (size_t i = 0; i < meshSource->m_BoneInfo.size(); ++i)
 			{
+				// 1. 逆变换矩阵转移到骨骼空间 2. 跟随骨骼在世界空间移动 3. 全局变换
 				boneTransformStorage[i] = meshSource->GetSkeleton()->GetTransform() * boneTransforms[meshSource->m_BoneInfo[i].BoneIndex] * meshSource->m_BoneInfo[i].InverseBindPose;
 			}
 		}

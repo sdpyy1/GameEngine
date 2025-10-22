@@ -94,30 +94,28 @@ namespace Hazel {
 
 				const std::vector<VkDescriptorSetLayout>& descriptorSetLayouts = vulkanShader->GetDescriptorSetLayout();
 
-				//const auto& pushConstantRanges = vulkanShader->GetPushConstantRanges();
+				const auto& pushConstantRanges = vulkanShader->GetPushConstantRanges();
 
-				//// TODO: 推送常量未来再看
-				//std::vector<VkPushConstantRange> vulkanPushConstantRanges(pushConstantRanges.size());
-				//for (uint32_t i = 0; i < pushConstantRanges.size(); i++)
-				//{
-				//	const auto& pushConstantRange = pushConstantRanges[i];
-				//	auto& vulkanPushConstantRange = vulkanPushConstantRanges[i];
+				// 转换为 Vulkan 原生的 VkPushConstantRange 结构
+				std::vector<VkPushConstantRange> vulkanPushConstantRanges(pushConstantRanges.size());
+				for (uint32_t i = 0; i < pushConstantRanges.size(); i++) {
+					const auto& pushConstantRange = pushConstantRanges[i];
+					auto& vulkanPushConstantRange = vulkanPushConstantRanges[i];
 
-				//	vulkanPushConstantRange.stageFlags = pushConstantRange.ShaderStage;
-				//	vulkanPushConstantRange.offset = pushConstantRange.Offset;
-				//	vulkanPushConstantRange.size = pushConstantRange.Size;
-				//}
+					vulkanPushConstantRange.stageFlags = pushConstantRange.shaderStage;  // 作用阶段
+					vulkanPushConstantRange.offset = pushConstantRange.offset;            // 偏移量
+					vulkanPushConstantRange.size = pushConstantRange.size;                // 大小
+				}
 
 				// Create the pipeline layout that is used to generate the rendering pipelines that are based on this descriptor set layout
 				// In a more complex scenario you would have different pipeline layouts for different descriptor set layouts that could be reused
 				VkPipelineLayoutCreateInfo pPipelineLayoutCreateInfo = {};
 				pPipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 				pPipelineLayoutCreateInfo.pNext = nullptr;
-				//pPipelineLayoutCreateInfo.setLayoutCount = (uint32_t)descriptorSetLayouts.size();
-				pPipelineLayoutCreateInfo.setLayoutCount = static_cast<uint32_t>(descriptorSetLayouts.size());
+				pPipelineLayoutCreateInfo.setLayoutCount = (uint32_t)descriptorSetLayouts.size();
 				pPipelineLayoutCreateInfo.pSetLayouts = descriptorSetLayouts.data();
-				//pPipelineLayoutCreateInfo.pushConstantRangeCount = (uint32_t)vulkanPushConstantRanges.size();
-				//pPipelineLayoutCreateInfo.pPushConstantRanges = vulkanPushConstantRanges.data();
+				pPipelineLayoutCreateInfo.pushConstantRangeCount = (uint32_t)vulkanPushConstantRanges.size();
+				pPipelineLayoutCreateInfo.pPushConstantRanges = vulkanPushConstantRanges.data();
 
 				VK_CHECK_RESULT(vkCreatePipelineLayout(device, &pPipelineLayoutCreateInfo, nullptr, &instance->m_PipelineLayout));
 

@@ -20,6 +20,7 @@ namespace Hazel {
 		m_VertFilePath = vertFilePath;
 		m_FragFilePath = fragFilePath;
 		m_Spec = spec;
+		m_PushConstantRanges = spec.pushConstantRanges;
 		Reload();
 	}
 
@@ -71,13 +72,27 @@ namespace Hazel {
 			setBindingsMap[binding.set].push_back(layoutBinding);
 		}
 
+		if (setBindingsMap.empty()) {
+			m_DescriptorSetLayouts.clear();
+			return;
+		}
+
 		VkDevice device = Application::Get().GetRenderContext().As<VulkanContext>()->GetCurrentDevice()->GetVulkanDevice();
 
-		m_DescriptorSetLayouts.clear();
-		m_DescriptorSetLayouts.resize(setBindingsMap.size());
+		// 步骤1：找到最大的setIndex，确定vector的大小
+		uint32_t maxSetIndex = 0;
+		for (const auto& [setIndex, _] : setBindingsMap) {
+			if (setIndex > maxSetIndex) {
+				maxSetIndex = setIndex;
+			}
+		}
 
-		// 为每个 set 创建独立 layout
-		for (auto& [setIndex, bindings] : setBindingsMap) {
+		// 步骤2：初始化vector，大小为 maxSetIndex + 1（确保能容纳所有set）
+		m_DescriptorSetLayouts.clear();
+		m_DescriptorSetLayouts.resize(maxSetIndex + 1, VK_NULL_HANDLE);
+
+		// 步骤3：按setIndex顺序创建布局，确保索引对应
+		for (const auto& [setIndex, bindings] : setBindingsMap) {
 			VkDescriptorSetLayoutCreateInfo layoutInfo{};
 			layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
 			layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());

@@ -45,7 +45,7 @@ namespace Hazel {
 	};
 	struct DynamicMeshComponent
 	{
-		AssetHandle Mesh;
+		AssetHandle MeshSource;
 	};
 	struct SubmeshComponent
 	{
@@ -75,28 +75,21 @@ namespace Hazel {
 			: ParentHandle(parent) {
 		}
 	};
+	struct AnimationComponent
+	{
+		AssetHandle AnimationGraphHandle;
+		std::vector<UUID> BoneEntityIds; // AnimationGraph refers to a skeleton.  Skeleton has a collection of bones.  Each bone affects the transform of an entity. These are those entities.
+		//Ref<AnimationGraph::AnimationGraph> AnimationGraph;  // 这个还没有
+
+		// Note: generally if you copy an AnimationComponent, then you will need to:
+		// a) Reset the bone entity ids (e.g.to point to copied entities that the copied component belongs to).  See Scene::DuplicateEntity()
+		// b) Create a new independent AnimationGraph instance.  See Scene::DuplicateEntity()
+	};
 	struct TransformComponent
 	{
 		glm::vec3 Translation = { 0.0f, 0.0f, 0.0f };
 		glm::vec3 Scale = { 1.0f, 1.0f, 1.0f };
 	private:
-		// These are private so that you are forced to set them via
-		// SetRotation() or SetRotationEuler()
-		// This avoids situation where one of them gets set and the other is forgotten.
-		//
-		// Why do we need both a quat and Euler angle representation for rotation?
-		// Because Euler suffers from gimbal lock -> rotations should be stored as quaternions.
-		//
-		// BUT: quaternions are confusing, and humans like to work with Euler angles.
-		// We cannot store just the quaternions and translate to/from Euler because the conversion
-		// Euler -> quat -> Euler is not invariant.
-		//
-		// It's also sometimes useful to be able to store rotations > 360 degrees which
-		// quats do not support.
-		//
-		// Accordingly, we store Euler for "editor" stuff that humans work with, 
-		// and quats for everything else.  The two are maintained in-sync via the SetRotation()
-		// methods.
 		glm::vec3 RotationEuler = { 0.0f, 0.0f, 0.0f };
 		glm::quat Rotation = { 1.0f, 0.0f, 0.0f, 0.0f };
 
@@ -323,6 +316,6 @@ namespace Hazel {
 		ComponentGroup<StaticMeshComponent,TransformComponent, SpriteRendererComponent,
 			CircleRendererComponent, /*CameraComponent,*/ ScriptComponent,
 			NativeScriptComponent, Rigidbody2DComponent, BoxCollider2DComponent,
-			CircleCollider2DComponent, TextComponent, RelationshipComponent, SubmeshComponent,DynamicMeshComponent>;
+			CircleCollider2DComponent, TextComponent, RelationshipComponent, SubmeshComponent,DynamicMeshComponent, AnimationComponent>;
 
 }

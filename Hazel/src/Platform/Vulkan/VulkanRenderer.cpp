@@ -103,7 +103,6 @@ namespace Hazel {
 			const auto& submeshes = meshSource->GetSubmeshes();
 			const auto& submesh = submeshes[submeshIndex];
 			vkCmdDrawIndexed(commandBuffer, submesh.IndexCount/*索引数量*/, instanceCount/*实例数量*/, submesh.BaseIndex/*索引缓冲区的偏移*/, submesh.BaseVertex/*顶点偏移*/, 0/*实例化ID开始的编号*/);
-			
 		});
 	}
 	void VulkanRenderer::Init()
@@ -457,7 +456,7 @@ namespace Hazel {
 				const auto& submeshes = meshSource->GetSubmeshes();
 				const auto& submesh = submeshes[submeshIndex];
 
-				if (submesh.IsRigged)
+				if (submesh.IsRigged) // 设置4个骨骼Id和权重作为顶点信息
 				{
 					Ref<VulkanVertexBuffer> vulkanBoneInfluencesVB = meshSource->GetBoneInfluenceBuffer().As<VulkanVertexBuffer>();
 					VkBuffer vbBoneInfluencesBuffer = vulkanBoneInfluencesVB->GetVulkanBuffer();

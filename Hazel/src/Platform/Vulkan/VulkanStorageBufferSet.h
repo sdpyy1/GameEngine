@@ -11,7 +11,7 @@ namespace Hazel {
 	{
 	public:
 		explicit VulkanStorageBufferSet(const StorageBufferSpecification& specification, uint32_t size, uint32_t framesInFlight)
-			: m_Specification(specification), m_FramesInFlight(framesInFlight)
+			: m_Specification(specification), m_FramesInFlight(framesInFlight), m_PreSize(size)
 		{
 			if (framesInFlight == 0)
 				m_FramesInFlight = Renderer::GetConfig().FramesInFlight;
@@ -21,6 +21,7 @@ namespace Hazel {
 		}
 
 		~VulkanStorageBufferSet() override = default;
+		uint32_t Get_PreSize() { return m_PreSize; };
 
 		virtual Ref<StorageBuffer> Get() override
 		{
@@ -53,6 +54,7 @@ namespace Hazel {
 	private:
 		StorageBufferSpecification m_Specification;
 		uint32_t m_FramesInFlight = 0;
+		uint32_t m_PreSize = 0;
 		std::map<uint32_t, Ref<StorageBuffer>> m_StorageBuffers;
 	};
 }

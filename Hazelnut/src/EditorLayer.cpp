@@ -33,6 +33,7 @@ namespace Hazel {
 	// ===== 1. 加载模型 =====
 		AssetMetadata metadata;
 		metadata.FilePath = "assets/model/m1911/m1911.gltf";
+		//metadata.FilePath = "assets/model/gun/scene.gltf";
 		metadata.Type = AssetType::MeshSource;
 
 		Ref<Asset> gunAsset;
@@ -52,12 +53,12 @@ namespace Hazel {
 		std::uniform_real_distribution<float> distRot(0.0f, 360.0f);    // 随机旋转
 		std::uniform_real_distribution<float> distScale(10.0f, 20.0f);  // 随机缩放
 
-		for (int i = 0; i < 100; i++)
+		for (int i = 0; i < 1; i++)
 		{
 			std::string name = "Gun_" + std::to_string(i);
-			Entity gun = m_Scene->CreateEntity(name);
+			Entity gun = m_Scene->BuildDynamicMeshEntity(gunAsset);
 
-			gun.AddComponent<StaticMeshComponent>(gunAsset->Handle);
+			//gun.AddComponent<StaticMeshComponent>(gunAsset->Handle);
 
 			auto& transform = gun.GetComponent<TransformComponent>();
 			// 随机位置

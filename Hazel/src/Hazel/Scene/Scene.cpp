@@ -64,6 +64,23 @@ namespace Hazel {
 			glm::mat4 transform = GetWorldSpaceTransformMatrix(e);
 			sceneRender->SubmitStaticMesh(mesh, transform);
 		}
+		// 收集SkeletalMesh
+		auto allEntityOwnSubmesh = GetAllEntitiesWith<SubmeshComponent>();
+		for (auto entity : allEntityOwnSubmesh)
+		{
+			HZ_PROFILE_SCOPE("Scene-SubmitDynamicMesh");
+			auto meshComponent = allEntityOwnSubmesh.get<SubmeshComponent>(entity);
+			if (!meshComponent.Visible)
+				continue;
+
+			if (auto meshSource = AssetManager::GetAsset<MeshSource>(meshComponent.Mesh); meshSource)
+			{
+				Entity e = Entity(entity, this);
+				glm::mat4 transform = GetWorldSpaceTransformMatrix(e);
+				// 在这里就把骨骼信息转换为了模型空间的变换
+				sceneRender->SubmitMesh(meshSource, meshComponent.SubmeshIndex, transform, GetModelSpaceBoneTransforms(meshComponent.BoneEntityIds, meshSource));
+			}
+		}
 	}
 	std::vector<glm::mat4> Scene::GetModelSpaceBoneTransforms(const std::vector<UUID>& boneEntityIds, Ref<MeshSource> meshSource)
 	{
@@ -216,24 +233,60 @@ namespace Hazel {
 		return rootEntity;
 	}
 
+	
+	void Scene::BuildBoneEntityIds(Entity entity)
+	{
+		// 给这个Entity所有包含SubMesh组件的子Entity设置SubMesh组件的骨骼信息
+		BuildMeshBoneEntityIds(entity, entity);
+
+		//// AnimationComponent may not be a direct child of the entity.
+		//// We must rebuild the animation component bone entity ids from the oldest ancestor
+		// 从下往上找到谁包含动画组件
+		Entity animationEntity = entity;
+		Entity parent = entity.GetParent();
+		while (parent)
+		{
+			if (parent.HasComponent<AnimationComponent>())
+			{
+				animationEntity = parent;
+			}
+			parent = parent.GetParent();
+		}
+
+		BuildAnimationBoneEntityIds(animationEntity, animationEntity);
+	}
+	void Scene::BuildAnimationBoneEntityIds(Entity entity, Entity rootEntity)
+	{
+		/*if (auto anim = entity.GetComponent<AnimationComponent>(); anim && anim->AnimationGraph)
+		{
+			anim->BoneEntityIds = FindBoneEntityIds(entity, rootEntity, anim->AnimationGraph->GetSkeleton());
+		}*/
+		for (auto childId : entity.Children())
+		{
+			Entity child = GetEntityByUUID(childId);
+			BuildAnimationBoneEntityIds(child, rootEntity);
+		}
+	}
 	void Scene::BuildMeshBoneEntityIds(Entity entity, Entity rootEntity)
 	{
-		SubmeshComponent& mc = entity.GetComponent<SubmeshComponent>();
-		AssetHandle meshSourceHandle = mc.Mesh;
-		Ref<MeshSource> meshSource = AssetManager::GetAsset<MeshSource>(meshSourceHandle);
-		mc.BoneEntityIds = FindBoneEntityIds(entity, rootEntity, meshSource->GetSkeleton());
-
+		if (entity.HasComponent<SubmeshComponent>()) {
+			SubmeshComponent& mc = entity.GetComponent<SubmeshComponent>();
+			AssetHandle meshSourceHandle = mc.Mesh;
+			Ref<MeshSource> meshSource = AssetManager::GetAsset<MeshSource>(meshSourceHandle);
+			mc.BoneEntityIds = FindBoneEntityIds(entity, rootEntity, meshSource->GetSkeleton()); // 设置组件的骨骼信息
+		}
 		for (auto childId : entity.Children())
 		{
 			Entity child = GetEntityByUUID(childId);
 			BuildMeshBoneEntityIds(child, rootEntity);
 		}
+
 	}
 	std::vector<UUID> Scene::FindBoneEntityIds(Entity entity, Entity rootEntity, const Skeleton* skeleton)
 	{
 		std::vector<UUID> boneEntityIds;
 
-		// given an entity, find descendant entities holding the transforms for the specified mesh's bones
+		// 从下往上一层一层找，直到找到Skeleton所有的骨骼Entity
 		if (skeleton)
 		{
 			Entity rootParentEntity = rootEntity ? rootEntity.GetParent() : rootEntity;
@@ -283,37 +336,6 @@ namespace Hazel {
 			}
 		}
 		return {};
-	}
-	void Scene::BuildBoneEntityIds(Entity entity)
-	{
-		//BuildMeshBoneEntityIds(entity, entity);
-
-		//// AnimationComponent may not be a direct child of the entity.
-		//// We must rebuild the animation component bone entity ids from the oldest ancestor
-		//Entity animationEntity = entity;
-		//Entity parent = entity.GetParent();
-		//while (parent)
-		//{
-		//	if (parent.HasComponent<AnimationComponent>())
-		//	{
-		//		animationEntity = parent;
-		//	}
-		//	parent = parent.GetParent();
-		//}
-
-		//BuildAnimationBoneEntityIds(animationEntity, animationEntity);
-	}
-	void Scene::BuildAnimationBoneEntityIds(Entity entity, Entity rootEntity)
-	{
-		//if (auto anim = entity.GetComponent<AnimationComponent>(); anim && anim->AnimationGraph)
-		//{
-		//	anim->BoneEntityIds = FindBoneEntityIds(entity, rootEntity, anim->AnimationGraph->GetSkeleton());
-		//}
-		//for (auto childId : entity.Children())
-		//{
-		//	Entity child = GetEntityByUUID(childId);
-		//	BuildAnimationBoneEntityIds(child, rootEntity);
-		//}
 	}
 	void Scene::BuildMeshEntityHierarchy(Entity parent, Ref<MeshSource> meshSource,const MeshNode& node)
 	{
@@ -407,7 +429,10 @@ namespace Hazel {
 	void Scene::OnComponentAdded<IDComponent>(Entity entity, IDComponent& component)
 	{
 	}
-
+	template<>
+	void Scene::OnComponentAdded<AnimationComponent>(Entity entity, AnimationComponent& component)
+	{
+	}
 	template<>
 	void Scene::OnComponentAdded<TransformComponent>(Entity entity, TransformComponent& component)
 	{

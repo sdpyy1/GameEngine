@@ -40,6 +40,10 @@ namespace Hazel {
 			{ ShaderDataType::Float4, "a_MRow1" },
 			{ ShaderDataType::Float4, "a_MRow2" },
 		};
+		VertexBufferLayout boneInfluenceLayout = {
+			{ ShaderDataType::Int4,   "a_BoneIDs" },
+			{ ShaderDataType::Float4, "a_BoneWeights" },
+		};
 		struct MeshKey
 		{
 			AssetHandle MeshHandle;
@@ -98,7 +102,7 @@ namespace Hazel {
 		std::map<MeshKey, StaticDrawCommand> m_StaticMeshDrawList;
 		struct TransformVertexData
 		{
-			glm::vec4 MRow[3]; // 4行4列存储Model变换矩阵
+			glm::vec4 MRow[3]; // 4行4列存储Model变换矩阵，最后一行不存，因为固定是0001
 		};
 		struct TransformBuffer
 		{
@@ -112,7 +116,7 @@ namespace Hazel {
 			std::vector<TransformVertexData> Transforms;
 			uint32_t TransformOffset = 0;
 		};
-		std::map<MeshKey, TransformMapData> m_MeshTransformMap;
+		std::map<MeshKey, TransformMapData> m_MeshTransformMap;  // 每个MeshKey对应多个实例的变换矩阵
 
 
 		using BoneTransforms = std::array<glm::mat4, 100>; // Note: 100 == MAX_BONES from the shaders

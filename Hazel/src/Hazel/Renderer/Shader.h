@@ -18,8 +18,14 @@ namespace Hazel {
 			uint32_t count = 1;             // 数组长度（默认1，非数组资源）
 			uint32_t set;
 		};
+		struct PushConstantRange {
+			VkShaderStageFlags shaderStage;  // 作用的着色器阶段（顶点、片段等）
+			uint32_t offset = 0;             // 数据起始偏移量（字节）
+			uint32_t size = 0;               // 数据总大小（字节）
+		};
 		struct ShaderSpecification {
 			std::vector<DescriptorBinding> bindings;
+			std::vector<PushConstantRange> pushConstantRanges;
 		};
 		virtual ~Shader() = default;
 		static Ref<Shader> Create(const std::string& name,const std::string& vertFilePath, const std::string& fragFilePath, ShaderSpecification spec);

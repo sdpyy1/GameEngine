@@ -84,7 +84,19 @@ namespace Hazel {
 
 		// 加载着色器（确保 vert.spv 和 frag.spv 与上述绑定匹配）
 		s_Data->m_ShaderLibrary->LoadCommonShader("gBuffer",gbufferShaderSpec);
-
+		Shader::PushConstantRange pr;
+		pr.shaderStage = VK_SHADER_STAGE_VERTEX_BIT;
+		pr.offset = 0;
+		pr.size = 4;
+		gbufferShaderSpec.pushConstantRanges = { pr };
+		Shader::DescriptorBinding boneTrasnfromBinding;
+		boneTrasnfromBinding.binding = 1;            // 对应着色器中 set=0, binding=1
+		boneTrasnfromBinding.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+		boneTrasnfromBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+		boneTrasnfromBinding.count = 1;
+		boneTrasnfromBinding.set = 0;
+		gbufferShaderSpec.bindings.push_back(boneTrasnfromBinding);
+		s_Data->m_ShaderLibrary->LoadCommonShader("gBufferAnim", gbufferShaderSpec);
 
 		// 深度贴图Binding
 		Shader::DescriptorBinding griduboBinding;

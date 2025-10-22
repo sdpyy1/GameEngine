@@ -42,13 +42,12 @@ namespace Hazel {
 		entt::registry& GetRegistry() { return m_Registry; }
 		Entity BuildDynamicMeshEntity(Ref<MeshSource> mesh);
 		void BuildMeshBoneEntityIds(Entity entity, Entity rootEntity);
-		std::vector<UUID> FindBoneEntityIds(Entity entity, Entity rootEntity, const Skeleton* skeleton);
 		Entity TryGetDescendantEntityWithTag(Entity entity, const std::string& tag);
+	private:
 		void BuildBoneEntityIds(Entity entity);
 		void BuildAnimationBoneEntityIds(Entity entity, Entity rootEntity);
 		void BuildMeshEntityHierarchy(Entity parent, Ref<MeshSource> mesh, const MeshNode& node);
-
-	private:
+		std::vector<UUID> FindBoneEntityIds(Entity entity, Entity rootEntity, const Skeleton* skeleton);
 		template<typename T>
 		void OnComponentAdded(Entity entity, T& component);
 	private:
