@@ -23,6 +23,7 @@ namespace Hazel {
 	{
 		m_Scene = Ref<Scene>::Create();
 		m_AssetManagerPanel.SetContext(m_Scene);
+		m_FolderPreviewPanel.SetContext(m_Scene);
 		m_SceneRender = Ref<SceneRender>::Create();
 		m_SelectedEntity = Entity();
 		m_GizmoType = -1;
@@ -30,29 +31,29 @@ namespace Hazel {
 
 	void EditorLayer::OnAttach()
 	{
-		// ===== 1. 加载模型 =====
-		AssetMetadata metadata;
-		//metadata.FilePath = "assets/model/m1911/m1911.gltf";
-		metadata.FilePath = "assets/model/monster/scene.gltf";
-		metadata.Type = AssetType::MeshSource;
+		//// ===== 1. 加载模型 =====
+		//AssetMetadata metadata;
+		////metadata.FilePath = "assets/model/m1911/m1911.gltf";
+		//metadata.FilePath = "assets/model/monster/scene.gltf";
+		//metadata.Type = AssetType::MeshSource;
 
-		Ref<Asset> gunAsset;
-		AssetImporter::TryLoadData(metadata, gunAsset);
+		//Ref<Asset> gunAsset;
+		//AssetImporter::TryLoadData(metadata, gunAsset);
 
-		if (!gunAsset)
-		{
-			HZ_CORE_ERROR("Failed to load gun model!");
-			return;
-		}
+		//if (!gunAsset)
+		//{
+		//	HZ_CORE_ERROR("Failed to load gun model!");
+		//	return;
+		//}
 
-		for (int i = 0; i < 1; i++)
-		{
-			std::string name = "Gun_" + std::to_string(i);
-			Entity gun = m_Scene->BuildDynamicMeshEntity(gunAsset,{});
-			auto& transform = gun.GetComponent<TransformComponent>();
-			transform.Scale = glm::vec3(15);
-			Ref<MeshSource> ms = AssetManager::GetAsset<MeshSource>(gun.GetComponent<DynamicMeshComponent>().MeshSource);
-		}
+		//for (int i = 0; i < 1; i++)
+		//{
+		//	std::string name = "Gun_" + std::to_string(i);
+		//	Entity gun = m_Scene->BuildDynamicMeshEntity(gunAsset,{});
+		//	auto& transform = gun.GetComponent<TransformComponent>();
+		//	transform.Scale = glm::vec3(15);
+		//	Ref<MeshSource> ms = AssetManager::GetAsset<MeshSource>(gun.GetComponent<DynamicMeshComponent>().MeshSource);
+		//}
 	}
 
 	void EditorLayer::OnDetach() {}
@@ -90,12 +91,13 @@ namespace Hazel {
 		// 其他窗口绘制
 		ViewportGUI();
 		TestGUI();
-		if (m_AssetManagerPanel.isOpen) {
-			m_AssetManagerPanel.OnImGuiRender();
-		}
 		if (m_FolderPreviewPanel.isOpen) {
 			m_FolderPreviewPanel.OnImGuiRender();
 		}
+		if (m_AssetManagerPanel.isOpen) {
+			m_AssetManagerPanel.OnImGuiRender();
+		}
+
 	}
 
 	void EditorLayer::OnEvent(Event& e)

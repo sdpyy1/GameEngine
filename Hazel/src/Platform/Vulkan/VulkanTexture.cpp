@@ -86,8 +86,8 @@ namespace Hazel {
 
 	VulkanTexture2D::~VulkanTexture2D()
 	{
-		//	if (m_Image)
-		//		m_Image->Release();
+		if (m_Image)
+			m_Image->Release();
 
 		m_ImageData.Release();
 	}

@@ -52,7 +52,7 @@ namespace Hazel {
 			Entity entity = { e, this };
 			auto& animComp = entity.GetComponent<AnimationComponent>();
 
-			if (animComp.Mesh = 0 || animComp.BoneEntityIds.empty() || !animComp.CurrentAnimation)
+			if (animComp.meshSource == 0 || animComp.BoneEntityIds.empty() || !animComp.CurrentAnimation)
 				continue;
 
 			const auto& animation = animComp.CurrentAnimation;
@@ -259,16 +259,16 @@ namespace Hazel {
 		return Entity{};
 	}
 
-	Entity Scene::BuildDynamicMeshEntity(Ref<MeshSource> mesh, Entity root)
+	Entity Scene::BuildDynamicMeshEntity(Ref<MeshSource> mesh, Entity& root)
 	{
-		if (!root) {
-			root = CreateEntity(mesh->GetFilePath().stem().string());
-		}
-		root.AddComponent<DynamicMeshComponent>(mesh->Handle);
-		root.AddComponent<AnimationComponent>(mesh->Handle);
+		AssetHandle handle = mesh->Handle;
+		root.AddComponent<DynamicMeshComponent>(handle);
+		root.AddComponent<AnimationComponent>(handle);
+		auto com = root.GetComponent<AnimationComponent>();
+		HZ_CORE_INFO("MeshSource Handle: {}", com.meshSource);
+
 		BuildMeshEntityHierarchy(root, mesh,mesh->GetRootNode());
 		BuildBoneEntityIds(root);
-
 		return root;
 	}
 
@@ -298,7 +298,7 @@ namespace Hazel {
 	{
 		if(entity.HasComponent<AnimationComponent>()){
 			auto &anim = entity.GetComponent<AnimationComponent>();
-			anim.BoneEntityIds = FindBoneEntityIds(entity, rootEntity, AssetManager::GetAsset<MeshSource>(anim.Mesh)->GetSkeleton());
+			anim.BoneEntityIds = FindBoneEntityIds(entity, rootEntity, AssetManager::GetAsset<MeshSource>(anim.meshSource)->GetSkeleton());
 		}
 		for (auto childId : entity.Children())
 		{

@@ -45,7 +45,13 @@ namespace Hazel {
 	};
 	struct DynamicMeshComponent
 	{
-		AssetHandle MeshSource = 0;
+		AssetHandle meshSource = 0;
+		DynamicMeshComponent() {
+
+		}
+		DynamicMeshComponent(AssetHandle handle) {
+			meshSource = handle;
+		}
 	};
 	struct SubmeshComponent
 	{
@@ -77,15 +83,15 @@ namespace Hazel {
 	};
 	struct AnimationComponent
 	{
-		AssetHandle Mesh = 0;
+		AssetHandle meshSource = 0;
 		const Animation* CurrentAnimation = nullptr; 
 		float CurrentTime = 0.0f;
 		bool IsLooping = true; 
 		Pose CurrentPose;      
-
+		int SelectedAnimIndex = 0;
 		std::vector<UUID> BoneEntityIds; 
 		AnimationComponent() = default;
-		AnimationComponent(AssetHandle mesh):Mesh(mesh)
+		AnimationComponent(AssetHandle mesh):meshSource(mesh)
 		{
 		}
 	};

@@ -25,8 +25,7 @@ namespace Hazel {
 		}
 
 	private:		
-		static std::unordered_map<AssetHandle, Ref<Asset>> m_MemoryAssets; // ¼ÓÔØµÄAsset
+		static std::unordered_map<AssetHandle, Ref<Asset>> m_MemoryAssets;
 		static std::unordered_map<AssetHandle, std::unordered_set<AssetHandle>> m_AssetDependencies;
-
 	};
 }

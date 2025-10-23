@@ -40,7 +40,7 @@ namespace Hazel {
 			return m_Registry.view<Components...>();
 		}
 		entt::registry& GetRegistry() { return m_Registry; }
-		Entity BuildDynamicMeshEntity(Ref<MeshSource> mesh,Entity root);
+		Entity BuildDynamicMeshEntity(Ref<MeshSource> mesh,Entity& root);
 
 	private:
 		void BuildMeshBoneEntityIds(Entity entity, Entity rootEntity);

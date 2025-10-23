@@ -244,8 +244,6 @@ namespace Hazel {
 			// TODO:这里添加新组件的添加按钮
 			DisplayAddComponentEntry<StaticMeshComponent>("StaticMesh");
 			DisplayAddComponentEntry<DynamicMeshComponent>("DynamicMesh");
-			DisplayAddComponentEntry<AnimationComponent>("Animation");
-
 			ImGui::EndPopup();
 		}
 
@@ -275,7 +273,7 @@ namespace Hazel {
 
 		DrawComponent<DynamicMeshComponent>("Dynamic Mesh", entity, [](auto& component)
 			{
-				ImGui::Text("Mesh Source Handle: %u", component.MeshSource);
+				ImGui::Text("Mesh Source Handle: %llu", (uint64_t)component.meshSource);
 				if (ImGui::Button("Select Source"))
 				{
 				}
@@ -284,31 +282,30 @@ namespace Hazel {
 
 		DrawComponent<AnimationComponent>("Animation", entity, [](auto& component)
 			{
-				ImGui::Text("Mesh Source Handle: %u", component.Mesh);
-				static int selectedAnimIndex = 0;
+				ImGui::Text("Mesh Source Handle: %llu", (uint64_t)component.meshSource);
 
-				Ref<MeshSource> meshSource = AssetManager::GetAsset<MeshSource>(component.Mesh);
-				if (meshSource) // 确保资产有效
+				Ref<MeshSource> meshSource = AssetManager::GetAsset<MeshSource>(component.meshSource);
+				if (meshSource)
 				{
 					std::vector<std::string> animNames = meshSource->GetAnimationNames();
-
 					if (!animNames.empty())
 					{
-						// 限制索引范围（防止资产动画列表变化导致索引失效）
-						selectedAnimIndex = glm::clamp(selectedAnimIndex, 0, (int)animNames.size() - 1);
+						// 确保索引在范围内
+						component.SelectedAnimIndex = glm::clamp(component.SelectedAnimIndex, 0, (int)animNames.size() - 1);
 
-						// 渲染动画选择框
 						ImGui::Text("Animation");
 						ImGui::SameLine();
-						if (ImGui::BeginCombo("##AnimationSelector", animNames[selectedAnimIndex].c_str()))
+						if (ImGui::BeginCombo("##AnimationSelector", animNames[component.SelectedAnimIndex].c_str()))
 						{
 							for (int i = 0; i < animNames.size(); i++)
 							{
-								bool isSelected = (selectedAnimIndex == i);
+								bool isSelected = (component.SelectedAnimIndex == i);
 								if (ImGui::Selectable(animNames[i].c_str(), isSelected))
 								{
-									selectedAnimIndex = i;
-									component.CurrentAnimation = meshSource->GetAnimation(animNames[i], *meshSource->GetSkeleton(), false, glm::vec3(1), 0);
+									component.SelectedAnimIndex = i;
+									component.CurrentAnimation = meshSource->GetAnimation(
+										animNames[i], *meshSource->GetSkeleton(), false, glm::vec3(1), 0
+									);
 								}
 								if (isSelected)
 									ImGui::SetItemDefaultFocus();
@@ -326,8 +323,8 @@ namespace Hazel {
 					ImGui::Text("Invalid MeshSource asset");
 				}
 			});
-	}
 
+	}
 	template<typename T>
 	void AssetManagerPanel::DisplayAddComponentEntry(const std::string& entryName)
 	{
