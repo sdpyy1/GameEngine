@@ -27,7 +27,6 @@ namespace Hazel {
 		void SetViewprotSize(float width, float height) {  ViewportWidth = width; ViewportHeight = height;}
 	public:
 		void CollectRenderableEntities(Ref<SceneRender> sceneRender);
-		glm::mat4 GetWorldSpaceTransformMatrix(Entity entity);
 		Entity CreateEntity(const std::string& name = std::string());
 		Entity CreateChildEntity(Entity parent, const std::string& name);
 		void SortEntities();
@@ -41,10 +40,12 @@ namespace Hazel {
 			return m_Registry.view<Components...>();
 		}
 		entt::registry& GetRegistry() { return m_Registry; }
-		Entity BuildDynamicMeshEntity(Ref<MeshSource> mesh);
+		Entity BuildDynamicMeshEntity(Ref<MeshSource> mesh,Entity root);
+
+	private:
 		void BuildMeshBoneEntityIds(Entity entity, Entity rootEntity);
 		Entity TryGetDescendantEntityWithTag(Entity entity, const std::string& tag);
-	private:
+		glm::mat4 GetWorldSpaceTransformMatrix(Entity entity);
 		void BuildBoneEntityIds(Entity entity);
 		void BuildAnimationBoneEntityIds(Entity entity, Entity rootEntity);
 		void BuildMeshEntityHierarchy(Entity parent, Ref<MeshSource> mesh, const MeshNode& node);

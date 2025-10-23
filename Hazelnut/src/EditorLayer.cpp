@@ -19,21 +19,21 @@
 namespace Hazel {
 
 	EditorLayer::EditorLayer()
-		: Layer("EditorLayer"), m_EditorCamera(45.0f, 1280.0f, 720.0f, 0.1f, 1000.0f)
+		: Layer("EditorLayer"), m_EditorCamera(45.0f, 1280.0f, 720.0f, 0.1f, 1000.0f), m_FolderPreviewPanel("assets")
 	{
 		m_Scene = Ref<Scene>::Create();
 		m_AssetManagerPanel.SetContext(m_Scene);
 		m_SceneRender = Ref<SceneRender>::Create();
-		m_SelectedEntity = Entity(); // 初始无选中实体
-		m_GizmoType = -1;           // 初始无 Gizmo
+		m_SelectedEntity = Entity();
+		m_GizmoType = -1;
 	}
 
 	void EditorLayer::OnAttach()
 	{
-	// ===== 1. 加载模型 =====
+		// ===== 1. 加载模型 =====
 		AssetMetadata metadata;
-		metadata.FilePath = "assets/model/m1911/m1911.gltf";
-		//metadata.FilePath = "assets/model/gun/scene.gltf";
+		//metadata.FilePath = "assets/model/m1911/m1911.gltf";
+		metadata.FilePath = "assets/model/monster/scene.gltf";
 		metadata.Type = AssetType::MeshSource;
 
 		Ref<Asset> gunAsset;
@@ -45,31 +45,13 @@ namespace Hazel {
 			return;
 		}
 
-		// ===== 2. 随机数生成器 =====
-		std::random_device rd;
-		std::mt19937 gen(rd());
-		std::uniform_real_distribution<float> distPos(-20.0f, 20.0f);   // 随机位置范围
-		std::uniform_real_distribution<float> distHeight(0.0f, 5.0f);   // 随机高度
-		std::uniform_real_distribution<float> distRot(0.0f, 360.0f);    // 随机旋转
-		std::uniform_real_distribution<float> distScale(10.0f, 20.0f);  // 随机缩放
-
 		for (int i = 0; i < 1; i++)
 		{
 			std::string name = "Gun_" + std::to_string(i);
-			Entity gun = m_Scene->BuildDynamicMeshEntity(gunAsset);
-
-			//gun.AddComponent<StaticMeshComponent>(gunAsset->Handle);
-
+			Entity gun = m_Scene->BuildDynamicMeshEntity(gunAsset,{});
 			auto& transform = gun.GetComponent<TransformComponent>();
-			// 随机位置
-			transform.Translation = glm::vec3(distPos(gen), distHeight(gen), distPos(gen));
-			// 随机旋转，使用 SetRotationEuler 保证 quaternion 同步
-			transform.SetRotationEuler(glm::vec3(0.0f, glm::radians(distRot(gen)), 0.0f));
-			// 随机缩放
-			transform.Scale = glm::vec3(distScale(gen));
+			transform.Scale = glm::vec3(15);
 			Ref<MeshSource> ms = AssetManager::GetAsset<MeshSource>(gun.GetComponent<DynamicMeshComponent>().MeshSource);
-			ms->GetAnimation("Fire", *ms->GetSkeleton(), false, glm::vec3(1), 0);
-			gun.GetComponent<AnimationComponent>().CurrentAnimation = ms->GetAnimation("Fire", *ms->GetSkeleton(), false, glm::vec3(1), 0);
 		}
 	}
 
@@ -110,6 +92,9 @@ namespace Hazel {
 		TestGUI();
 		if (m_AssetManagerPanel.isOpen) {
 			m_AssetManagerPanel.OnImGuiRender();
+		}
+		if (m_FolderPreviewPanel.isOpen) {
+			m_FolderPreviewPanel.OnImGuiRender();
 		}
 	}
 

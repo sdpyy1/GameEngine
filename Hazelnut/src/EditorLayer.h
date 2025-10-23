@@ -6,6 +6,7 @@
 #include "Panels/AssetManagerPanel.h"
 #include "imgui.h"
 #include "ImGuizmo.h"
+#include "Panels/FolderPreviewPanel.h"
 
 namespace Hazel {
 	// ±à¼­Æ÷²ã
@@ -37,6 +38,7 @@ namespace Hazel {
 		Entity m_SelectedEntity;
 		// Ãæ°å
 		AssetManagerPanel m_AssetManagerPanel;
+		FolderPreviewPanel m_FolderPreviewPanel;
 
 		//×´Ì¬
 		ImVec2 m_ViewportBounds[2] = { {0,0},{1216,849} };

@@ -28,7 +28,7 @@ namespace Hazel {
 
 	void AssetManagerPanel::OnImGuiRender()
 	{
-		ImGui::Begin("Asset Manager");
+		ImGui::Begin("Scene Manager");
 
 		if (m_Context)
 		{
@@ -241,20 +241,17 @@ namespace Hazel {
 
 		if (ImGui::BeginPopup("AddComponent"))
 		{
-			DisplayAddComponentEntry<ScriptComponent>("Script");
-			DisplayAddComponentEntry<SpriteRendererComponent>("Sprite Renderer");
-			DisplayAddComponentEntry<CircleRendererComponent>("Circle Renderer");
-			DisplayAddComponentEntry<Rigidbody2DComponent>("Rigidbody 2D");
-			DisplayAddComponentEntry<BoxCollider2DComponent>("Box Collider 2D");
-			DisplayAddComponentEntry<CircleCollider2DComponent>("Circle Collider 2D");
-			DisplayAddComponentEntry<TextComponent>("Text Component");
+			// TODO:这里添加新组件的添加按钮
+			DisplayAddComponentEntry<StaticMeshComponent>("StaticMesh");
+			DisplayAddComponentEntry<DynamicMeshComponent>("DynamicMesh");
+			DisplayAddComponentEntry<AnimationComponent>("Animation");
+
 			ImGui::EndPopup();
 		}
 
 		ImGui::PopItemWidth();
 
-		// 这里可以继续按 SceneHierarchyPanel 中逻辑添加 Transform、Camera、Script 等组件绘制
-		// 例如：
+		// 这里描述组件渲染
 		DrawComponent<TransformComponent>("Transform", entity, [](auto& component)
 			{
 				DrawVec3Control("Translation", component.Translation);
@@ -264,7 +261,71 @@ namespace Hazel {
 				DrawVec3Control("Scale", component.Scale, 1.0f);
 			});
 
-		// 你可以继续照原来的逻辑加 Camera、SpriteRenderer、CircleRenderer 等
+		DrawComponent<StaticMeshComponent>("Static Mesh", entity, [](auto& component)
+			{
+				ImGui::Text("Asset Handle: %u", component.StaticMesh);
+
+				ImGui::Checkbox("Visible", &component.Visible);
+
+				if (ImGui::Button("Select Mesh"))
+				{
+				}
+			});
+
+
+		DrawComponent<DynamicMeshComponent>("Dynamic Mesh", entity, [](auto& component)
+			{
+				ImGui::Text("Mesh Source Handle: %u", component.MeshSource);
+				if (ImGui::Button("Select Source"))
+				{
+				}
+			});
+
+
+		DrawComponent<AnimationComponent>("Animation", entity, [](auto& component)
+			{
+				ImGui::Text("Mesh Source Handle: %u", component.Mesh);
+				static int selectedAnimIndex = 0;
+
+				Ref<MeshSource> meshSource = AssetManager::GetAsset<MeshSource>(component.Mesh);
+				if (meshSource) // 确保资产有效
+				{
+					std::vector<std::string> animNames = meshSource->GetAnimationNames();
+
+					if (!animNames.empty())
+					{
+						// 限制索引范围（防止资产动画列表变化导致索引失效）
+						selectedAnimIndex = glm::clamp(selectedAnimIndex, 0, (int)animNames.size() - 1);
+
+						// 渲染动画选择框
+						ImGui::Text("Animation");
+						ImGui::SameLine();
+						if (ImGui::BeginCombo("##AnimationSelector", animNames[selectedAnimIndex].c_str()))
+						{
+							for (int i = 0; i < animNames.size(); i++)
+							{
+								bool isSelected = (selectedAnimIndex == i);
+								if (ImGui::Selectable(animNames[i].c_str(), isSelected))
+								{
+									selectedAnimIndex = i;
+									component.CurrentAnimation = meshSource->GetAnimation(animNames[i], *meshSource->GetSkeleton(), false, glm::vec3(1), 0);
+								}
+								if (isSelected)
+									ImGui::SetItemDefaultFocus();
+							}
+							ImGui::EndCombo();
+						}
+					}
+					else
+					{
+						ImGui::Text("No animations available");
+					}
+				}
+				else
+				{
+					ImGui::Text("Invalid MeshSource asset");
+				}
+			});
 	}
 
 	template<typename T>

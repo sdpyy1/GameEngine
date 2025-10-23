@@ -16,5 +16,17 @@ namespace Hazel {
 				ImGui::Image(textureID, size, uv0, uv1, tint_col, border_col);
 			}
 		}
+		static ImTextureID GetImageId(const Ref<Image2D>& image)
+		{
+			HZ_CORE_VERIFY(image, "Image is null");
+			if (RendererAPI::Current() == RendererAPI::Type::Vulkan)
+			{
+				Ref<VulkanImage2D> vulkanImage = image.As<VulkanImage2D>();
+				const auto& imageInfo = vulkanImage->GetImageInfo();
+				if (!imageInfo.ImageView)
+					return 0;
+				return ImGui_ImplVulkan_AddTexture(imageInfo.Sampler, imageInfo.ImageView, vulkanImage->GetDescriptorInfoVulkan().imageLayout);
+			}
+		}
 	}
 }

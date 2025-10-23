@@ -133,6 +133,7 @@ namespace Hazel {
 		bool IsSubmeshRigged(uint32_t submeshIndex) const { return m_Submeshes[submeshIndex].IsRigged; }
 		Ref<VertexBuffer> GetBoneInfluenceBuffer() { return m_BoneInfluenceBuffer; }
 		std::filesystem::path GetFilePath() { return m_FilePath; }
+		std::vector<std::string> GetAnimationNames() const { return m_AnimationNames; }
 		virtual ~MeshSource();
 		std::vector<AssetHandle> m_Materials;
 		const MeshNode& GetRootNode() const { return m_Nodes[0]; }

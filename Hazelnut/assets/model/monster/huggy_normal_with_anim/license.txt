@@ -1,0 +1,11 @@
+Model Information:
+* title:	Huggy Normal With Anim
+* source:	https://sketchfab.com/3d-models/huggy-normal-with-anim-517e56a07dd84a8ea8fec228f9b15a36
+* author:	kirbendozen (https://sketchfab.com/kirbendozen)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Huggy Normal With Anim" (https://sketchfab.com/3d-models/huggy-normal-with-anim-517e56a07dd84a8ea8fec228f9b15a36) by kirbendozen (https://sketchfab.com/kirbendozen) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

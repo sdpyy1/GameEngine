@@ -52,13 +52,12 @@ namespace Hazel {
 			Entity entity = { e, this };
 			auto& animComp = entity.GetComponent<AnimationComponent>();
 
-			if (animComp.BoneEntityIds.empty() || !animComp.CurrentAnimation)
+			if (animComp.Mesh = 0 || animComp.BoneEntityIds.empty() || !animComp.CurrentAnimation)
 				continue;
 
 			const auto& animation = animComp.CurrentAnimation;
 			float duration = animation->GetDuration();
 
-			// 如果时间步长为0，不更新动画（避免覆盖bind pose）
 			if (ts > 0.0f) {
 				animComp.CurrentTime += ts;
 				if (animComp.IsLooping)
@@ -66,16 +65,12 @@ namespace Hazel {
 				else
 					animComp.CurrentTime = std::clamp(animComp.CurrentTime, 0.0f, duration);
 
-				// 采样动画
 				animation->Sample(animComp.CurrentTime, animComp.CurrentPose);
 
-				// 更新局部Transform	
 				for (size_t i = 0; i < animComp.BoneEntityIds.size(); ++i) {
 					Entity boneEntity = GetEntityByUUID(animComp.BoneEntityIds[i]);
-					HZ_CORE_TRACE("Bone In Update {}", boneEntity.GetComponent<TagComponent>().Tag);
 					if (!boneEntity.HasComponent<TransformComponent>())
 						continue;
-
 					auto& boneTransform = boneEntity.GetComponent<TransformComponent>();
 					const auto& sampled = animComp.CurrentPose.BoneTransforms[i == 0?0:i+1];  // ？？？ 这应该和设计有关系
 
@@ -259,21 +254,22 @@ namespace Hazel {
 
 	Entity Scene::GetEntityByUUID(UUID uuid)
 	{
-		// TODO(Yan): Maybe should be assert
 		if (const auto iter = m_EntityIDMap.find(uuid); iter != m_EntityIDMap.end())
 			return iter->second;
 		return Entity{};
 	}
 
-	Entity Scene::BuildDynamicMeshEntity(Ref<MeshSource> mesh)
+	Entity Scene::BuildDynamicMeshEntity(Ref<MeshSource> mesh, Entity root)
 	{
-		Entity rootEntity = CreateEntity(mesh->GetFilePath().stem().string());
-		rootEntity.AddComponent<DynamicMeshComponent>(mesh->Handle);
-		rootEntity.AddComponent<AnimationComponent>(mesh->Handle);
-		BuildMeshEntityHierarchy(rootEntity, mesh,mesh->GetRootNode());
-		BuildBoneEntityIds(rootEntity);
+		if (!root) {
+			root = CreateEntity(mesh->GetFilePath().stem().string());
+		}
+		root.AddComponent<DynamicMeshComponent>(mesh->Handle);
+		root.AddComponent<AnimationComponent>(mesh->Handle);
+		BuildMeshEntityHierarchy(root, mesh,mesh->GetRootNode());
+		BuildBoneEntityIds(root);
 
-		return rootEntity;
+		return root;
 	}
 
 	

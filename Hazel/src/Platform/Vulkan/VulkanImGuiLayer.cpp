@@ -131,59 +131,7 @@ namespace Hazel {
 		//io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
 		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows  开启这个会让多线程渲染出问题，无法控制主窗口之外的窗口
-		//// Configure Fonts
-		//{
-		//	UI::FontConfiguration robotoBold;
-		//	robotoBold.FontName = "Bold";
-		//	robotoBold.FilePath = "Resources/Fonts/Roboto/Roboto-Bold.ttf";
-		//	robotoBold.Size = 18.0f;
-		//	UI::Fonts::Add(robotoBold);
-
-		//	UI::FontConfiguration robotoLarge;
-		//	robotoLarge.FontName = "Large";
-		//	robotoLarge.FilePath = "Resources/Fonts/Roboto/Roboto-Regular.ttf";
-		//	robotoLarge.Size = 24.0f;
-		//	UI::Fonts::Add(robotoLarge);
-
-		//	UI::FontConfiguration robotoDefault;
-		//	robotoDefault.FontName = "Default";
-		//	robotoDefault.FilePath = "Resources/Fonts/Roboto/Roboto-SemiMedium.ttf";
-		//	robotoDefault.Size = 15.0f;
-		//	UI::Fonts::Add(robotoDefault, true);
-
-		//	static const ImWchar s_FontAwesomeRanges[] = { HZ_ICON_MIN, HZ_ICON_MAX, 0 };
-		//	UI::FontConfiguration fontAwesome;
-		//	fontAwesome.FontName = "FontAwesome";
-		//	fontAwesome.FilePath = "Resources/Fonts/FontAwesome/fontawesome-webfont.ttf";
-		//	fontAwesome.Size = 16.0f;
-		//	fontAwesome.GlyphRanges = s_FontAwesomeRanges;
-		//	fontAwesome.MergeWithLast = true;
-		//	UI::Fonts::Add(fontAwesome);
-
-		//	UI::FontConfiguration robotoMedium;
-		//	robotoMedium.FontName = "Medium";
-		//	robotoMedium.FilePath = "Resources/Fonts/Roboto/Roboto-SemiMedium.ttf";
-		//	robotoMedium.Size = 18.0f;
-		//	UI::Fonts::Add(robotoMedium);
-
-		//	UI::FontConfiguration robotoSmall;
-		//	robotoSmall.FontName = "Small";
-		//	robotoSmall.FilePath = "Resources/Fonts/Roboto/Roboto-SemiMedium.ttf";
-		//	robotoSmall.Size = 12.0f;
-		//	UI::Fonts::Add(robotoSmall);
-
-		//	UI::FontConfiguration robotoExtraSmall;
-		//	robotoExtraSmall.FontName = "ExtraSmall";
-		//	robotoExtraSmall.FilePath = "Resources/Fonts/Roboto/Roboto-SemiMedium.ttf";
-		//	robotoExtraSmall.Size = 10.0f;
-		//	UI::Fonts::Add(robotoExtraSmall);
-
-		//	UI::FontConfiguration robotoBoldTitle;
-		//	robotoBoldTitle.FontName = "BoldTitle";
-		//	robotoBoldTitle.FilePath = "Resources/Fonts/Roboto/Roboto-Bold.ttf";
-		//	robotoBoldTitle.Size = 16.0f;
-		//	UI::Fonts::Add(robotoBoldTitle);
-		//}
+	
 
 		// Setup Dear ImGui style
 		ImGui::StyleColorsDark();
@@ -251,8 +199,9 @@ namespace Hazel {
 
 				// Upload Fonts
 				{
-					// Use any command queue
+					ImGuiIO& io = ImGui::GetIO();
 
+					io.Fonts->AddFontFromFileTTF("assets/fonts/opensans/OpenSans-SemiBoldItalic.ttf", 18.0f, nullptr, io.Fonts->GetGlyphRangesChineseFull());
 					VkCommandBuffer commandBuffer = vulkanContext->GetCurrentDevice()->GetCommandBuffer(true);
 					ImGui_ImplVulkan_CreateFontsTexture(commandBuffer);
 					vulkanContext->GetCurrentDevice()->FlushCommandBuffer(commandBuffer);
