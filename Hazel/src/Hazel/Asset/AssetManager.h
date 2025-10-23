@@ -1,6 +1,8 @@
 #pragma once
 #include "Asset.h"
 #include "Hazel/Asset/Model/MaterialAsset.h"
+#include "AssetMetadata.h"
+#include "AssetImporter.h"
 namespace Hazel {
 	class AssetManager {
 	public:
@@ -18,7 +20,20 @@ namespace Hazel {
 			if (asset==nullptr || !asset->IsValid()) return nullptr;
 			return asset.As<T>();
 		}
-
+		// 加载Mesh并缓存
+		static Ref<Asset> GetMesh(std::filesystem::path path) {
+			Ref<Asset> meshAsset = MesheSourceCacheMap[path];
+			if (!meshAsset) {
+				AssetMetadata metadata;
+				metadata.FilePath = path;
+				metadata.Type = AssetType::MeshSource;
+				AssetImporter::TryLoadData(metadata, meshAsset);
+			}
+			MesheSourceCacheMap[path] = meshAsset;
+			m_MemoryAssets[meshAsset->Handle] = meshAsset;
+			m_MemoryAssets[meshAsset->Handle] = meshAsset;
+			return meshAsset;
+		}
 		static void RegisterDependency(AssetHandle handle, AssetHandle dependency) { 
 			// TODO:这里缺少handle校验
 			m_AssetDependencies[handle].insert(dependency);
@@ -27,5 +42,7 @@ namespace Hazel {
 	private:		
 		static std::unordered_map<AssetHandle, Ref<Asset>> m_MemoryAssets;
 		static std::unordered_map<AssetHandle, std::unordered_set<AssetHandle>> m_AssetDependencies;
+		static std::map<std::filesystem::path, Ref<Asset>> MesheSourceCacheMap;
+
 	};
 }

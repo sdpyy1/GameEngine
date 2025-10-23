@@ -34,20 +34,12 @@ namespace Hazel {
 		}
 		else if (ext == ".fbx" || ext == ".gltf")
 		{
+			Ref<MeshSource> meshSource = AssetManager::GetMesh(path);
 			Entity meshRoot = m_Context->CreateEntity(path.string());
-			Ref<Asset> asset = MesheSourceCacheMap[path];
-			if (!asset) {
-				AssetMetadata metadata;
-				metadata.FilePath = path;
-				metadata.Type = AssetType::MeshSource;
-				AssetImporter::TryLoadData(metadata, asset);
-				MesheSourceCacheMap[path] = asset;
-			}
-			Ref<MeshSource> meshSource = asset.As<MeshSource>();
 			if (meshSource->GetAnimationNames().size() == 0) {
-				meshRoot.AddComponent<StaticMeshComponent>(meshSource->Handle);
+				meshRoot.AddComponent<StaticMeshComponent>(meshSource->Handle,path);
 			}else {
-				m_Context->BuildDynamicMeshEntity(meshSource, meshRoot);
+				m_Context->BuildDynamicMeshEntity(meshSource, meshRoot, path);
 			}
 
 		}

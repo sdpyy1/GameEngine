@@ -46,28 +46,54 @@ namespace Hazel {
 			PipelineSpecification pSpec;
 			pSpec.Layout = vertexLayout;
 			pSpec.InstanceLayout = instanceLayout;
-			pSpec.BoneInfluenceLayout = boneInfluenceLayout;
-			pSpec.Shader = Renderer::GetShaderLibrary()->Get("gBufferAnim");
+			//pSpec.BoneInfluenceLayout = boneInfluenceLayout; //静态没有骨骼影响
+			pSpec.Shader = Renderer::GetShaderLibrary()->Get("gBuffer");
 			pSpec.TargetFramebuffer = m_GeoFrameBuffer;
 			pSpec.DebugName = "GbufferPipeline";
 			m_GeoPipeline = Pipeline::Create(pSpec);
-
 			RenderPassSpecification gBufferPassSpec;
 			gBufferPassSpec.Pipeline = m_GeoPipeline;
+			gBufferPassSpec.DebugName = "gBufferPass";
 			m_GeoPass = RenderPass::Create(gBufferPassSpec);
 			m_GeoPass->SetInput(m_VPUniformBufferSet, 0);  // 设置binding=0的ubo
-			m_GeoPass->SetInput(m_SBSBoneTransforms, 1, true);  // 设置binding=1的ubo
-		}
 
+		}
+		// GeoAnimPass
+		{
+			FramebufferSpecification framebufferSpec;
+			framebufferSpec.Attachments = { ImageFormat::RGBA32F,ImageFormat::RGBA32F,ImageFormat::RGBA32F,ImageFormat::RGBA32F,ImageFormat::DEPTH32F };
+			framebufferSpec.DebugName = "GBufferAmin";
+			framebufferSpec.ClearDepthOnLoad = false;
+			framebufferSpec.ClearColorOnLoad = false;
+			framebufferSpec.ExistingImages[0] = m_GeoFrameBuffer->GetImage(0);
+			framebufferSpec.ExistingImages[1] = m_GeoFrameBuffer->GetImage(1);
+			framebufferSpec.ExistingImages[2] = m_GeoFrameBuffer->GetImage(2);
+			framebufferSpec.ExistingImages[3] = m_GeoFrameBuffer->GetImage(3);
+			framebufferSpec.ExistingImages[4] = m_GeoFrameBuffer->GetDepthImage();
+			m_GeoAnimFrameBuffer = Framebuffer::Create(framebufferSpec);
+			PipelineSpecification pSpec;
+			pSpec.Layout = vertexLayout;
+			pSpec.InstanceLayout = instanceLayout;
+			pSpec.BoneInfluenceLayout = boneInfluenceLayout;
+			pSpec.Shader = Renderer::GetShaderLibrary()->Get("gBufferAnim");
+			pSpec.TargetFramebuffer = m_GeoAnimFrameBuffer;
+			pSpec.DebugName = "GbufferAnimPipeline";
+			m_GeoAnimPipeline = Pipeline::Create(pSpec);
+			RenderPassSpecification gBufferPassSpec;
+			gBufferPassSpec.Pipeline = m_GeoAnimPipeline;
+			gBufferPassSpec.DebugName = "gBufferAnimPass";
+			m_GeoAnimPass = RenderPass::Create(gBufferPassSpec);
+			m_GeoAnimPass->SetInput(m_VPUniformBufferSet, 0);  // 设置binding=0的ubo
+			m_GeoAnimPass->SetInput(m_SBSBoneTransforms, 1, true);  // 设置binding=1的ubo
+		}
 		// GridPass
 		{
 			FramebufferTextureSpecification gridColorOutputSpec(ImageFormat::RGBA32F);
 			FramebufferSpecification gridPassFramebufferSpec;
 			gridPassFramebufferSpec.Attachments = { gridColorOutputSpec };
 			gridPassFramebufferSpec.DebugName = "Grid";
-			gridPassFramebufferSpec.ExistingImages[0] = m_GeoFrameBuffer->GetImage(2); 
+			gridPassFramebufferSpec.ExistingImages[0] = m_GeoFrameBuffer->GetImage(1);  // 这张图片谁创建的就指向它，不然会报错
 			gridPassFramebufferSpec.Attachments.Attachments[0].LoadOp = AttachmentLoadOp::Load;
-
 			m_GridFrameBuffer = Framebuffer::Create(gridPassFramebufferSpec);
 			PipelineSpecification gridPipelineSpec;
 			gridPipelineSpec.Shader = Renderer::GetShaderLibrary()->Get("grid");
@@ -77,6 +103,7 @@ namespace Hazel {
 			m_GridPipeline = Pipeline::Create(gridPipelineSpec);
 			RenderPassSpecification gridPassSpec;
 			gridPassSpec.Pipeline = m_GridPipeline;
+			gridPassSpec.DebugName = "gridPass";
 			m_GridPass = RenderPass::Create(gridPassSpec);
 			m_GridPass->SetInput(m_VPUniformBufferSet, 0);  // 设置binding=0的ubo
 		}
@@ -90,11 +117,12 @@ namespace Hazel {
 		if (NeedResize) {
 			// 更新FBO尺寸
 			m_GeoFrameBuffer->Resize(camera.GetViewportWidth(), camera.GetViewportHeight());
+			m_GeoAnimFrameBuffer->Resize(camera.GetViewportWidth(), camera.GetViewportHeight());
 			m_GridFrameBuffer->Resize(camera.GetViewportWidth(), camera.GetViewportHeight());
 			NeedResize = false;
 		}
-		m_GridPass->SetInput(m_GeoPass->GetDepthOutput(), 1);  // 这种会随着FBO尺寸变化而变化的输入，必须每帧更新
-		m_GeoPass->SetInput(m_SBSBoneTransforms, 1);  // 设置binding=1的ubo
+		m_GridPass->SetInput(m_GeoAnimPass->GetDepthOutput(), 1);  // 这种会随着FBO尺寸变化而变化的输入，必须每帧更新
+		m_GeoAnimPass->SetInput(m_SBSBoneTransforms, 1);  // 设置binding=1的ubo
 
 		// 收集所有参与渲染的Mesh的变换矩阵存储在m_SubmeshTransformBuffers
 		{
@@ -140,23 +168,31 @@ namespace Hazel {
 
 	void SceneRender::Draw() {
 		GeoPass();
+		GeoAnimPass();
 		GridPass();
+	}
+	void SceneRender::GeoAnimPass() 
+	{
+		uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
+
+		Renderer::BeginRenderPass(m_CommandBuffer, m_GeoAnimPass, false);
+		for (auto& [meshKey, drawCommand] : m_DrawList)
+		{
+			const auto& transformData = m_MeshTransformMap.at(meshKey);
+			const auto& boneTransformsData = m_MeshBoneTransformsMap.at(meshKey);
+			Renderer::RenderSkeletonMeshWithMaterial(m_CommandBuffer, m_GeoAnimPipeline, drawCommand.MeshSource, drawCommand.SubmeshIndex, drawCommand.MaterialAsset->GetMaterial(), m_SubmeshTransformBuffers[frameIndex].Buffer, transformData.TransformOffset, boneTransformsData.BoneTransformsBaseIndex, drawCommand.InstanceCount);
+		}
+		Renderer::EndRenderPass(m_CommandBuffer);
 	}
 	void SceneRender::GeoPass()
 	{
 		uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
 
-		Renderer::BeginRenderPass(m_CommandBuffer, m_GeoPass, true);
+		Renderer::BeginRenderPass(m_CommandBuffer, m_GeoPass, false);
 		for (auto& [meshKey, drawCommand] : m_StaticMeshDrawList)
 		{
-			const auto& transformData = m_MeshTransformMap.at(meshKey); // 其中已经记录好了每个DrawCall对应的变换矩阵偏移
+			const auto& transformData = m_MeshTransformMap.at(meshKey); 
 			Renderer::RenderStaticMeshWithMaterial(m_CommandBuffer, m_GeoPipeline,drawCommand.MeshSource, drawCommand.SubmeshIndex, drawCommand.MaterialAsset->GetMaterial(), m_SubmeshTransformBuffers[frameIndex].Buffer, transformData.TransformOffset, drawCommand.InstanceCount);
-		}		
-		for (auto& [meshKey, drawCommand] : m_DrawList)
-		{
-			const auto& transformData = m_MeshTransformMap.at(meshKey);
-			const auto& boneTransformsData = m_MeshBoneTransformsMap.at(meshKey);
-			Renderer::RenderSkeletonMeshWithMaterial(m_CommandBuffer, m_GeoPipeline, drawCommand.MeshSource, drawCommand.SubmeshIndex, drawCommand.MaterialAsset->GetMaterial(),m_SubmeshTransformBuffers[frameIndex].Buffer, transformData.TransformOffset, boneTransformsData.BoneTransformsBaseIndex, drawCommand.InstanceCount);
 		}
 		Renderer::EndRenderPass(m_CommandBuffer);
 	}

@@ -139,6 +139,7 @@ namespace Hazel {
 		Ref<VulkanFramebuffer> instance = this;
 		Renderer::Submit([instance, width, height]() mutable
 			{
+				HZ_CORE_TRACE("开始创建FrameBuffer[{}]", instance->m_Specification.DebugName);
 				instance->m_Width = (uint32_t)(width * instance->m_Specification.Scale);
 				instance->m_Height = (uint32_t)(height * instance->m_Specification.Scale);
 				if (!instance->m_Specification.SwapChainTarget)

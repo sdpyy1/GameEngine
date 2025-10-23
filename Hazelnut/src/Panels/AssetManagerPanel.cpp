@@ -290,7 +290,6 @@ namespace Hazel {
 					std::vector<std::string> animNames = meshSource->GetAnimationNames();
 					if (!animNames.empty())
 					{
-						// 确保索引在范围内
 						component.SelectedAnimIndex = glm::clamp(component.SelectedAnimIndex, 0, (int)animNames.size() - 1);
 
 						ImGui::Text("Animation");

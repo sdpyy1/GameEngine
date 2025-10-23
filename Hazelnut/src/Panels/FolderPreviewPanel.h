@@ -29,7 +29,6 @@ namespace Hazel {
 
 		Ref<Texture2D> m_DirectoryIcon;
 		Ref<Texture2D> m_FileIcon;
-		std::map<std::filesystem::path, Ref<Asset>> MesheSourceCacheMap;
 		Ref<Texture2D> m_PreviewTexture;
 		bool m_ShowPreview = false;
 		std::filesystem::path m_PreviewPath;

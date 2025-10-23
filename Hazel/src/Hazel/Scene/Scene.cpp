@@ -259,11 +259,11 @@ namespace Hazel {
 		return Entity{};
 	}
 
-	Entity Scene::BuildDynamicMeshEntity(Ref<MeshSource> mesh, Entity& root)
+	Entity Scene::BuildDynamicMeshEntity(Ref<MeshSource> mesh, Entity& root,const std::filesystem::path& path)
 	{
 		AssetHandle handle = mesh->Handle;
-		root.AddComponent<DynamicMeshComponent>(handle);
-		root.AddComponent<AnimationComponent>(handle);
+		root.AddComponent<DynamicMeshComponent>(handle,path);
+		root.AddComponent<AnimationComponent>(handle, path);
 		auto com = root.GetComponent<AnimationComponent>();
 		HZ_CORE_INFO("MeshSource Handle: {}", com.meshSource);
 

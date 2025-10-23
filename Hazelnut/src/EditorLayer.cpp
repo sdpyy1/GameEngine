@@ -31,29 +31,6 @@ namespace Hazel {
 
 	void EditorLayer::OnAttach()
 	{
-		//// ===== 1. º”‘ÿƒ£–Õ =====
-		//AssetMetadata metadata;
-		////metadata.FilePath = "assets/model/m1911/m1911.gltf";
-		//metadata.FilePath = "assets/model/monster/scene.gltf";
-		//metadata.Type = AssetType::MeshSource;
-
-		//Ref<Asset> gunAsset;
-		//AssetImporter::TryLoadData(metadata, gunAsset);
-
-		//if (!gunAsset)
-		//{
-		//	HZ_CORE_ERROR("Failed to load gun model!");
-		//	return;
-		//}
-
-		//for (int i = 0; i < 1; i++)
-		//{
-		//	std::string name = "Gun_" + std::to_string(i);
-		//	Entity gun = m_Scene->BuildDynamicMeshEntity(gunAsset,{});
-		//	auto& transform = gun.GetComponent<TransformComponent>();
-		//	transform.Scale = glm::vec3(15);
-		//	Ref<MeshSource> ms = AssetManager::GetAsset<MeshSource>(gun.GetComponent<DynamicMeshComponent>().MeshSource);
-		//}
 	}
 
 	void EditorLayer::OnDetach() {}

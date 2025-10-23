@@ -33,24 +33,26 @@ namespace Hazel {
 	{
 		AssetHandle StaticMesh = 0;
 		bool Visible = true;
-
+		std::filesystem::path path;
 		StaticMeshComponent() = default;
 		StaticMeshComponent(const StaticMeshComponent& other)
 			: StaticMesh(other.StaticMesh), Visible(other.Visible)
 		{
 		}
-		StaticMeshComponent(AssetHandle staticMesh)
-			: StaticMesh(staticMesh) {
+		StaticMeshComponent(AssetHandle staticMesh, std::filesystem::path filePath)
+			: StaticMesh(staticMesh),path(filePath){
 		}
 	};
 	struct DynamicMeshComponent
 	{
+		std::filesystem::path path;
 		AssetHandle meshSource = 0;
 		DynamicMeshComponent() {
 
 		}
-		DynamicMeshComponent(AssetHandle handle) {
+		DynamicMeshComponent(AssetHandle handle, std::filesystem::path filePath) {
 			meshSource = handle;
+			path = filePath;
 		}
 	};
 	struct SubmeshComponent
@@ -84,6 +86,7 @@ namespace Hazel {
 	struct AnimationComponent
 	{
 		AssetHandle meshSource = 0;
+		std::filesystem::path path;
 		const Animation* CurrentAnimation = nullptr; 
 		float CurrentTime = 0.0f;
 		bool IsLooping = true; 
@@ -91,7 +94,7 @@ namespace Hazel {
 		int SelectedAnimIndex = 0;
 		std::vector<UUID> BoneEntityIds; 
 		AnimationComponent() = default;
-		AnimationComponent(AssetHandle mesh):meshSource(mesh)
+		AnimationComponent(AssetHandle mesh, std::filesystem::path filePath) :meshSource(mesh), path(filePath)
 		{
 		}
 	};

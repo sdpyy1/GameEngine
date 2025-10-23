@@ -6,7 +6,7 @@ namespace Hazel {
 	{
 	public:
 		SceneRender();
-		Ref<Image2D> GetFinalImage() { return m_GeoFrameBuffer->GetImage(2); }
+		Ref<Image2D> GetFinalImage() { return m_GridFrameBuffer->GetImage(0); }
 		void SetScene(Scene* scene) { m_scene = scene; }
 		void PreRender(EditorCamera& camera);
 		void EndRender();
@@ -23,6 +23,7 @@ namespace Hazel {
 	private:
 		void Init();
 		void Draw();
+		void GeoAnimPass();
 		void UpdateVPMatrix(EditorCamera& camera);
 	private:
 		float ViewportWidth = 1216.0f, ViewportHeight = 849.0f;
@@ -153,7 +154,10 @@ namespace Hazel {
 		Ref<RenderPass> m_GeoPass;
 		Ref<Pipeline> m_GeoPipeline;
 		Ref<Framebuffer> m_GeoFrameBuffer;
-
+		// GeoAnimPass
+		Ref<RenderPass> m_GeoAnimPass;
+		Ref<Pipeline> m_GeoAnimPipeline;
+		Ref<Framebuffer> m_GeoAnimFrameBuffer;
 		// GridPass
 		Ref<RenderPass> m_GridPass;
 		Ref<Pipeline> m_GridPipeline;
