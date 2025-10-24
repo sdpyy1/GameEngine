@@ -39,6 +39,7 @@ namespace Hazel {
 		std::string name = m_Specification.DebugName;
 		Renderer::SubmitResourceFree([info, mipViews = m_PerMipImageViews, layerViews = m_PerLayerImageViews, name]() mutable
 			{
+				HZ_CORE_TRACE("RT: VulkanImage2D [{0}] Release!", name);
 				const auto vulkanDevice = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 				vkDestroyImageView(vulkanDevice, info.ImageView, nullptr);
 				Vulkan::DestroySampler(info.Sampler);

@@ -105,7 +105,7 @@ namespace Hazel {
 			gridPassSpec.DebugName = "gridPass";
 			m_GridPass = RenderPass::Create(gridPassSpec);
 			m_GridPass->SetInput(m_CameraDataBufferSet, 0);  // 设置binding=0的ubo
-			m_GridPass->SetInput(m_GeoAnimPass->GetDepthOutput(), 1);
+			m_GridPass->SetInput(m_GeoAnimPass->GetDepthOutput(), 1,true);
 
 		}
 
@@ -117,12 +117,17 @@ namespace Hazel {
 		UpdateVPMatrix(camera);
 		if (NeedResize) {
 			// 更新FBO尺寸
+			HZ_CORE_WARN("SceneRender::PreRender Resize FBO to {0}x{1}", camera.GetViewportWidth(), camera.GetViewportHeight());
 			m_GeoFrameBuffer->Resize(camera.GetViewportWidth(), camera.GetViewportHeight());
-			m_GeoAnimFrameBuffer->Resize(camera.GetViewportWidth(), camera.GetViewportHeight());
+			m_GeoAnimFrameBuffer->Resize(camera.GetViewportWidth(), camera.GetViewportHeight()); // ReSize会重新获取引用的图片，之前的FBO的图片必须立刻创建好
 			m_GridFrameBuffer->Resize(camera.GetViewportWidth(), camera.GetViewportHeight());
+			// m_GridPass->SetInput(m_GeoAnimPass->GetDepthOutput(), 1,true);  // 目前的报错是初始化时Resize引起的，更新深度图片引用如果写在这里必须所有fly都更新，因为他们的资源描述符一直绑定的都是旧的马上会被销毁的图片，但是在这一帧更新其他帧的资源描述符会出报错，因为别的资源描述符可能正在被使用
 			NeedResize = false;
 		}
+		// 只有Resize或图片信息变化时才会触发更新资源描述符
 		m_GridPass->SetInput(m_GeoAnimPass->GetDepthOutput(), 1);
+
+
 
 		// 收集所有参与渲染的Mesh的变换矩阵存储在m_SubmeshTransformBuffers
 		{

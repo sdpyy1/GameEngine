@@ -26,6 +26,7 @@ namespace Hazel {
 		bool IsInvalidated(uint32_t set, uint32_t binding) const;
 	private:
 		RenderPassSpecification m_Specification;
+		std::vector<std::unordered_map<uint32_t, VkImage>> m_BindImages;
 	};
 
 }

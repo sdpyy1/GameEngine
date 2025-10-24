@@ -103,6 +103,7 @@ namespace Hazel {
 			VkFramebuffer framebuffer = m_Framebuffer;
 			Renderer::SubmitResourceFree([framebuffer, name]()
 				{
+					HZ_CORE_TRACE("RT: FrameBuffer [{}] Release!", name);
 					const auto device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 					vkDestroyFramebuffer(device, framebuffer, nullptr);
 				});
@@ -245,7 +246,7 @@ namespace Hazel {
 					attachmentDescription.finalLayout = VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL; // TODO: if sampling
 					depthAttachmentReference = { attachmentIndex, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL };
 				}
-				m_ClearValues[attachmentIndex].depthStencil = { m_Specification.DepthClearValue, 1 };
+				m_ClearValues[attachmentIndex].depthStencil = { m_Specification.DepthClearValue, 0 };
 			}
 			else
 			{

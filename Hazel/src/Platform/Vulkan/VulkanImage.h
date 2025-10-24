@@ -67,7 +67,7 @@ namespace Hazel {
 
 		virtual ResourceDescriptorInfo GetDescriptorInfo() const override { return (ResourceDescriptorInfo)&m_DescriptorImageInfo; }
 		const VkDescriptorImageInfo& GetDescriptorInfoVulkan() const { return *(VkDescriptorImageInfo*)GetDescriptorInfo(); }
-
+		VkImage GetVulkanImage() const { return m_Info.Image; }
 		virtual Buffer GetBuffer() const override { return m_ImageData; }
 		virtual Buffer& GetBuffer() override { return m_ImageData; }
 
