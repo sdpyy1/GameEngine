@@ -46,7 +46,6 @@ namespace Hazel {
 		else if (ext == ".png" || ext == ".jpg")
 		{
 			HZ_CORE_INFO("Preview texture: {}", path.string());
-
 			TextureSpecification spec;
 			spec.DebugName = "PreviewImage";
 			m_PreviewTexture = Texture2D::Create(spec, path);

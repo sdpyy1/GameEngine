@@ -258,7 +258,29 @@ namespace Hazel {
 				component.SetRotationEuler(glm::radians(rotation));
 				DrawVec3Control("Scale", component.Scale, 1.0f);
 			});
-
+		DrawComponent<SubmeshComponent>("SubmeshComponent", entity, [](auto& component)
+			{
+				ImGui::Text("Mesh Source Handle: %llu", (uint64_t)component.Mesh);
+				ImGui::Checkbox("Visible", &component.Visible);
+				// 显示骨骼ID列表
+				if (ImGui::TreeNode("Bone Entity IDs")) // 可折叠节点，方便查看
+				{
+					if (component.BoneEntityIds.empty())
+					{
+						ImGui::Text("No bones"); // 空列表提示
+					}
+					else
+					{
+						// 遍历所有骨骼ID并显示
+						for (size_t i = 0; i < component.BoneEntityIds.size(); ++i)
+						{
+							// 假设UUID可转换为uint64_t，若为128位可分两部分显示
+							ImGui::Text("Bone %zu: %llu", i, (uint64_t)component.BoneEntityIds[i]);
+						}
+					}
+					ImGui::TreePop(); // 闭合节点
+				}
+			});
 		DrawComponent<StaticMeshComponent>("Static Mesh", entity, [](auto& component)
 			{
 				ImGui::Text("Asset Handle: %u", component.StaticMesh);
@@ -274,6 +296,7 @@ namespace Hazel {
 		DrawComponent<DynamicMeshComponent>("Dynamic Mesh", entity, [](auto& component)
 			{
 				ImGui::Text("Mesh Source Handle: %llu", (uint64_t)component.meshSource);
+
 				if (ImGui::Button("Select Source"))
 				{
 				}

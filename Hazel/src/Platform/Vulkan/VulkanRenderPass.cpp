@@ -27,6 +27,7 @@ namespace Hazel {
 	void VulkanRenderPass::SetInput(Ref<UniformBufferSet> UboSet, uint32_t Binding)
 	{
 		Renderer::Submit([=]() mutable {
+			//HZ_CORE_TRACE("RT: VulkanRenderPass [{0}]::SetInput UBO Binding {1}", m_Specification.DebugName, Binding);
 			VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 			for (size_t i = 0; i < Renderer::GetConfig().FramesInFlight; i++) {
 				VkDescriptorBufferInfo bufferInfo{};
@@ -48,26 +49,29 @@ namespace Hazel {
 
 	void VulkanRenderPass::SetInput(Ref<Texture2D> texture, uint32_t Binding)
 	{
-		VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-		auto vulkanTexture = texture.As<VulkanTexture2D>();
+		Renderer::Submit([=]() {
+			//HZ_CORE_TRACE("RT: VulkanRenderPass [{0}]::SetInput texture Binding {1}", m_Specification.DebugName, Binding);
+			VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+			auto vulkanTexture = texture.As<VulkanTexture2D>();
 
-		for (size_t i = 0; i < Renderer::GetConfig().FramesInFlight; i++) {
-			VkDescriptorImageInfo imageInfo{};
-			imageInfo.sampler = vulkanTexture->GetDescriptorInfoVulkan().sampler;         
-			imageInfo.imageView = vulkanTexture->GetDescriptorInfoVulkan().imageView;      
-			imageInfo.imageLayout = vulkanTexture->GetDescriptorInfoVulkan().imageLayout; 
+			for (size_t i = 0; i < Renderer::GetConfig().FramesInFlight; i++) {
+				VkDescriptorImageInfo imageInfo{};
+				imageInfo.sampler = vulkanTexture->GetDescriptorInfoVulkan().sampler;
+				imageInfo.imageView = vulkanTexture->GetDescriptorInfoVulkan().imageView;
+				imageInfo.imageLayout = vulkanTexture->GetDescriptorInfoVulkan().imageLayout;
 
-			std::array<VkWriteDescriptorSet, 1> descriptorWrites{};
-			descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			descriptorWrites[0].dstSet = GetSpecification().Pipeline->GetShader().As<VulkanShader>()->GetDescriptorSet()[i];
-			descriptorWrites[0].dstBinding = Binding;
-			descriptorWrites[0].dstArrayElement = 0; 
-			descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER; 
-			descriptorWrites[0].descriptorCount = 1; 
-			descriptorWrites[0].pImageInfo = &imageInfo;
+				std::array<VkWriteDescriptorSet, 1> descriptorWrites{};
+				descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+				descriptorWrites[0].dstSet = GetSpecification().Pipeline->GetShader().As<VulkanShader>()->GetDescriptorSet()[i];
+				descriptorWrites[0].dstBinding = Binding;
+				descriptorWrites[0].dstArrayElement = 0;
+				descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+				descriptorWrites[0].descriptorCount = 1;
+				descriptorWrites[0].pImageInfo = &imageInfo;
 
-			vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
-		}
+				vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+			}
+			});
 	}
 
 	Ref<Image2D> VulkanRenderPass::GetDepthOutput()
@@ -80,6 +84,8 @@ namespace Hazel {
 	void VulkanRenderPass::SetInput(Ref<StorageBufferSet> bufferSet, uint32_t Binding, bool isInit)
 	{
 		Renderer::Submit([=]() mutable {
+			//HZ_CORE_TRACE("RT: VulkanRenderPass [{0}]::SetInput StorageBuffer Binding {1}", m_Specification.DebugName, Binding);
+
 			VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 			if (isInit) {
 				for (size_t i = 0; i < Renderer::GetConfig().FramesInFlight; i++) {
@@ -130,6 +136,7 @@ namespace Hazel {
 	void VulkanRenderPass::SetInput(Ref<Image2D> image, uint32_t Binding,bool isInit)
 	{
 		Renderer::Submit([=]() {
+			//HZ_CORE_TRACE("RT: VulkanRenderPass [{0}]::SetInput Image2D Binding {1}", m_Specification.DebugName, Binding);
 			VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 			auto vulkanTexture = image.As<VulkanImage2D>();
 

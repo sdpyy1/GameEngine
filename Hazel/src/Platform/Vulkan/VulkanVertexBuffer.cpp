@@ -8,14 +8,15 @@
 
 namespace Hazel {
 
-	VulkanVertexBuffer::VulkanVertexBuffer(uint64_t size, VertexBufferUsage usage)
+	VulkanVertexBuffer::VulkanVertexBuffer(uint64_t size, std::string debugeName, VertexBufferUsage usage)
 		: m_Size(size)
 	{
 		m_LocalData.Allocate(size);
-
+		m_DebugName = debugeName;
 		Ref<VulkanVertexBuffer> instance = this;
 		Renderer::Submit([instance]() mutable
 			{
+				HZ_CORE_TRACE("RT: VulkanVertexBuffer [{0}] Create!  size {1} bytes", instance->m_DebugName, instance->m_Size);
 				auto device = VulkanContext::GetCurrentDevice();
 				VulkanAllocator allocator("VertexBuffer");
 
@@ -28,14 +29,15 @@ namespace Hazel {
 			});
 	}
 
-	VulkanVertexBuffer::VulkanVertexBuffer(void* data, uint64_t size, VertexBufferUsage usage)
+	VulkanVertexBuffer::VulkanVertexBuffer(void* data, uint64_t size, std::string debugeName, VertexBufferUsage usage)
 		: m_Size(size)
 	{
 		m_LocalData = Buffer::Copy(data, size);
-
+		m_DebugName = debugeName;
 		Ref<VulkanVertexBuffer> instance = this;
 		Renderer::Submit([instance]() mutable
 			{
+				HZ_CORE_TRACE("RT: VulkanVertexBuffer [{0}] Create!  size {1} bytes", instance->m_DebugName, instance->m_Size);
 				auto device = VulkanContext::GetCurrentDevice();
 				VulkanAllocator allocator("VertexBuffer");
 

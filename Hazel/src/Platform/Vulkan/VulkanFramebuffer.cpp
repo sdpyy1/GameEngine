@@ -26,6 +26,7 @@ namespace Hazel {
 	VulkanFramebuffer::VulkanFramebuffer(const FramebufferSpecification& specification)
 		: m_Specification(specification)
 	{
+		HZ_CORE_TRACE("Main: FrameBuffer [{}] Create! [Only Submit,Depth Ref already attach]", m_Specification.DebugName);
 		if (specification.Width == 0)
 		{
 			m_Width = Application::Get().GetWindow()->GetWidth();
@@ -52,13 +53,13 @@ namespace Hazel {
 						m_DepthAttachmentImage = m_Specification.ExistingImage;
 					else
 						m_AttachmentImages.emplace_back(m_Specification.ExistingImage);
-				}
+				} // 指定引用
 				else if (m_Specification.ExistingImages.find(attachmentIndex) != m_Specification.ExistingImages.end())
 				{
 					if (Utils::IsDepthFormat(attachmentSpec.Format))
 						m_DepthAttachmentImage = m_Specification.ExistingImages.at(attachmentIndex);
 					else
-						m_AttachmentImages.emplace_back(); // This will be set later
+						m_AttachmentImages.emplace_back(); // This will be set later 来自其他的FBO的图片引用先在Main线程占位
 				}
 				else if (Utils::IsDepthFormat(attachmentSpec.Format))
 				{
@@ -69,7 +70,7 @@ namespace Hazel {
 					spec.Width = (uint32_t)(m_Width * m_Specification.Scale);
 					spec.Height = (uint32_t)(m_Height * m_Specification.Scale);
 					spec.DebugName = fmt::format("{0}-DepthAttachment{1}", m_Specification.DebugName.empty() ? "Unnamed FB" : m_Specification.DebugName, attachmentIndex);
-					m_DepthAttachmentImage = Image2D::Create(spec);
+					m_DepthAttachmentImage = Image2D::Create(spec); // 只是存储格式，调用invalidate时才真正创建
 				}
 				else
 				{
@@ -80,12 +81,11 @@ namespace Hazel {
 					spec.Width = (uint32_t)(m_Width * m_Specification.Scale);
 					spec.Height = (uint32_t)(m_Height * m_Specification.Scale);
 					spec.DebugName = fmt::format("{0}-ColorAttachment{1}", m_Specification.DebugName.empty() ? "Unnamed FB" : m_Specification.DebugName, attachmentIndex);
-					m_AttachmentImages.emplace_back(Image2D::Create(spec));
+					m_AttachmentImages.emplace_back(Image2D::Create(spec));// 只是存储格式，调用invalidate时才真正创建
 				}
 				attachmentIndex++;
 			}
 		}
-
 		Resize(m_Width, m_Height, true);
 	}
 
@@ -139,7 +139,7 @@ namespace Hazel {
 		Ref<VulkanFramebuffer> instance = this;
 		Renderer::Submit([instance, width, height]() mutable
 			{
-				HZ_CORE_TRACE("开始创建FrameBuffer[{}]", instance->m_Specification.DebugName);
+				HZ_CORE_TRACE("RT: FrameBuffer [{}] Create! [Start To Create Image Or Attach Ref And Create RenderPass]", instance->m_Specification.DebugName);
 				instance->m_Width = (uint32_t)(width * instance->m_Specification.Scale);
 				instance->m_Height = (uint32_t)(height * instance->m_Specification.Scale);
 				if (!instance->m_Specification.SwapChainTarget)
@@ -179,7 +179,7 @@ namespace Hazel {
 	{
 		auto device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 
-		Release();
+		Release(); // 初始化时不会释放，因为m_Framebuffer为空
 
 		VulkanAllocator allocator("Framebuffer");
 
@@ -245,7 +245,7 @@ namespace Hazel {
 					attachmentDescription.finalLayout = VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL; // TODO: if sampling
 					depthAttachmentReference = { attachmentIndex, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL };
 				}
-				m_ClearValues[attachmentIndex].depthStencil = { m_Specification.DepthClearValue, 0 };
+				m_ClearValues[attachmentIndex].depthStencil = { m_Specification.DepthClearValue, 1 };
 			}
 			else
 			{

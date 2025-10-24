@@ -11,23 +11,23 @@
 
 namespace Hazel {
 
-	Ref<VertexBuffer> VertexBuffer::Create(void* data, uint64_t size, VertexBufferUsage usage)
+	Ref<VertexBuffer> VertexBuffer::Create(void* data, uint64_t size,std::string debugeName, VertexBufferUsage usage)
 	{
 		switch (RendererAPI::Current())
 		{
 		case RendererAPI::Type::None:    return nullptr;
-		case RendererAPI::Type::Vulkan:  return Ref<VulkanVertexBuffer>::Create(data, size, usage);
+		case RendererAPI::Type::Vulkan:  return Ref<VulkanVertexBuffer>::Create(data, size, debugeName,usage);
 		}
 		HZ_CORE_ASSERT(false, "Unknown RendererAPI");
 		return nullptr;
 	}
 
-	Ref<VertexBuffer> VertexBuffer::Create(uint64_t size, VertexBufferUsage usage)
+	Ref<VertexBuffer> VertexBuffer::Create(uint64_t size, std::string debugeName, VertexBufferUsage usage)
 	{
 		switch (RendererAPI::Current())
 		{
 		case RendererAPI::Type::None:    return nullptr;
-		case RendererAPI::Type::Vulkan:  return Ref<VulkanVertexBuffer>::Create(size, usage);
+		case RendererAPI::Type::Vulkan:  return Ref<VulkanVertexBuffer>::Create(size,debugeName, usage);
 		}
 		HZ_CORE_ASSERT(false, "Unknown RendererAPI");
 		return nullptr;

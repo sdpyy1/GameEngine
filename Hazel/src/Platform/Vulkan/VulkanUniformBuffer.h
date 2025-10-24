@@ -9,7 +9,7 @@ namespace Hazel {
 	class VulkanUniformBuffer : public UniformBuffer
 	{
 	public:
-		VulkanUniformBuffer(uint32_t size);
+		VulkanUniformBuffer(uint32_t size, std::string debugName);
 		virtual ~VulkanUniformBuffer();
 
 		virtual void SetData(const void* data, uint32_t size, uint32_t offset = 0) override;

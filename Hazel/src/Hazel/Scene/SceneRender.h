@@ -138,7 +138,7 @@ namespace Hazel {
 		Ref<RenderCommandBuffer> m_CommandBuffer;
 
 		// uniform buffer
-		struct UniformBufferObject {
+		struct CameraData {
 			glm::mat4 view;
 			glm::mat4 proj;
 			float Width;
@@ -146,8 +146,8 @@ namespace Hazel {
 			float Near;
 			float Far;
 		};
-		UniformBufferObject* m_CameraData = nullptr;
-		Ref<UniformBufferSet> m_VPUniformBufferSet;
+		CameraData* m_CameraData = nullptr;
+		Ref<UniformBufferSet> m_CameraDataBufferSet;
 
 
 		// GeoPass

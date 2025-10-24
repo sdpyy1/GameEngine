@@ -91,7 +91,9 @@ namespace Hazel {
 		virtual unsigned int GetSize() const = 0;
 		virtual RendererID GetRendererID() const = 0;
 
-		static Ref<VertexBuffer> Create(void* data, uint64_t size, VertexBufferUsage usage = VertexBufferUsage::Static);
-		static Ref<VertexBuffer> Create(uint64_t size, VertexBufferUsage usage = VertexBufferUsage::Dynamic);
+		static Ref<VertexBuffer> Create(void* data, uint64_t size, std::string debugeName, VertexBufferUsage usage = VertexBufferUsage::Static);
+		static Ref<VertexBuffer> Create(uint64_t size, std::string debugeName, VertexBufferUsage usage = VertexBufferUsage::Dynamic);
+	protected:
+		std::string m_DebugName;
 	};
 }

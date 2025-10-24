@@ -17,15 +17,15 @@ namespace Hazel {
 		uint32_t framesInFlight = Renderer::GetConfig().FramesInFlight;
 		m_CommandBuffer = RenderCommandBuffer::Create("PassCommandBuffer");
 		// MVP矩阵的UBO
-		m_CameraData = new UniformBufferObject();
-		m_VPUniformBufferSet = UniformBufferSet::Create(sizeof(UniformBufferObject));
+		m_CameraData = new CameraData();
+		m_CameraDataBufferSet = UniformBufferSet::Create(sizeof(CameraData),"CameraData");
 
 		// 用一个很大的顶点缓冲区来存储所有的变换矩阵
 		const size_t TransformBufferCount = 10 * 1024; // 10240 transforms
 		m_SubmeshTransformBuffers.resize(framesInFlight);
 		for (uint32_t i = 0; i < framesInFlight; i++)
 		{
-			m_SubmeshTransformBuffers[i].Buffer = VertexBuffer::Create(sizeof(TransformVertexData) * TransformBufferCount);
+			m_SubmeshTransformBuffers[i].Buffer = VertexBuffer::Create(sizeof(TransformVertexData) * TransformBufferCount, "TransformBuffers");
 			m_SubmeshTransformBuffers[i].Data = new TransformVertexData[TransformBufferCount];
 		}
 		{
@@ -46,7 +46,6 @@ namespace Hazel {
 			PipelineSpecification pSpec;
 			pSpec.Layout = vertexLayout;
 			pSpec.InstanceLayout = instanceLayout;
-			//pSpec.BoneInfluenceLayout = boneInfluenceLayout; //静态没有骨骼影响
 			pSpec.Shader = Renderer::GetShaderLibrary()->Get("gBuffer");
 			pSpec.TargetFramebuffer = m_GeoFrameBuffer;
 			pSpec.DebugName = "GbufferPipeline";
@@ -55,7 +54,7 @@ namespace Hazel {
 			gBufferPassSpec.Pipeline = m_GeoPipeline;
 			gBufferPassSpec.DebugName = "gBufferPass";
 			m_GeoPass = RenderPass::Create(gBufferPassSpec);
-			m_GeoPass->SetInput(m_VPUniformBufferSet, 0);  // 设置binding=0的ubo
+			m_GeoPass->SetInput(m_CameraDataBufferSet, 0);  // 设置binding=0的ubo
 
 		}
 		// GeoAnimPass
@@ -83,7 +82,7 @@ namespace Hazel {
 			gBufferPassSpec.Pipeline = m_GeoAnimPipeline;
 			gBufferPassSpec.DebugName = "gBufferAnimPass";
 			m_GeoAnimPass = RenderPass::Create(gBufferPassSpec);
-			m_GeoAnimPass->SetInput(m_VPUniformBufferSet, 0);  // 设置binding=0的ubo
+			m_GeoAnimPass->SetInput(m_CameraDataBufferSet, 0);  // 设置binding=0的ubo
 			m_GeoAnimPass->SetInput(m_SBSBoneTransforms, 1, true);  // 设置binding=1的ubo
 		}
 		// GridPass
@@ -105,7 +104,9 @@ namespace Hazel {
 			gridPassSpec.Pipeline = m_GridPipeline;
 			gridPassSpec.DebugName = "gridPass";
 			m_GridPass = RenderPass::Create(gridPassSpec);
-			m_GridPass->SetInput(m_VPUniformBufferSet, 0);  // 设置binding=0的ubo
+			m_GridPass->SetInput(m_CameraDataBufferSet, 0);  // 设置binding=0的ubo
+			m_GridPass->SetInput(m_GeoAnimPass->GetDepthOutput(), 1);
+
 		}
 
 	}
@@ -121,8 +122,7 @@ namespace Hazel {
 			m_GridFrameBuffer->Resize(camera.GetViewportWidth(), camera.GetViewportHeight());
 			NeedResize = false;
 		}
-		m_GridPass->SetInput(m_GeoAnimPass->GetDepthOutput(), 1);  // 这种会随着FBO尺寸变化而变化的输入，必须每帧更新
-		m_GeoAnimPass->SetInput(m_SBSBoneTransforms, 1);  // 设置binding=1的ubo
+		m_GridPass->SetInput(m_GeoAnimPass->GetDepthOutput(), 1);
 
 		// 收集所有参与渲染的Mesh的变换矩阵存储在m_SubmeshTransformBuffers
 		{
@@ -223,7 +223,7 @@ namespace Hazel {
 		m_CameraData->Far = camera.GetFarClip();
 		m_CameraData->Width = camera.GetViewportWidth();
 		m_CameraData->Height = camera.GetViewportHeight();
-		m_VPUniformBufferSet->RT_Get()->SetData((void*)m_CameraData, sizeof(UniformBufferObject));
+		m_CameraDataBufferSet->Get()->SetData((void*)m_CameraData, sizeof(CameraData));
 	}
 
 	// 把Mesh数据解析为DrawList

@@ -787,11 +787,11 @@ namespace Hazel {
 		if (meshSource->m_Vertices.size())
 		{
 			HZ_CORE_INFO("模型共{}顶点", meshSource->m_Vertices.size());
-			meshSource->m_VertexBuffer = VertexBuffer::Create(meshSource->m_Vertices.data(), (uint32_t)(meshSource->m_Vertices.size() * sizeof(Vertex)));
+			meshSource->m_VertexBuffer = VertexBuffer::Create(meshSource->m_Vertices.data(), (uint32_t)(meshSource->m_Vertices.size() * sizeof(Vertex)),"VertexBuffer");
 		}
 		if (meshSource->m_BoneInfluences.size() > 0)
 		{
-			meshSource->m_BoneInfluenceBuffer = VertexBuffer::Create(meshSource->m_BoneInfluences.data(), (uint32_t)(meshSource->m_BoneInfluences.size() * sizeof(BoneInfluence)));
+			meshSource->m_BoneInfluenceBuffer = VertexBuffer::Create(meshSource->m_BoneInfluences.data(), (uint32_t)(meshSource->m_BoneInfluences.size() * sizeof(BoneInfluence)),"BoneInfluenceBuffer");
 		}
 
 		if (meshSource->m_Indices.size())

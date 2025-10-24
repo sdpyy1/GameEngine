@@ -118,7 +118,6 @@ namespace Hazel {
 		s_Data->m_ShaderLibrary->LoadCommonShader("grid", gridShaderSpec);
 
 
-
 		// 加载纹理
 		uint32_t whiteTextureData = 0xffffffff;
 		TextureSpecification spec;

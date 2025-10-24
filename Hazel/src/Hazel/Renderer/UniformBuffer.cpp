@@ -6,12 +6,12 @@
 
 namespace Hazel {
 
-	Ref<UniformBuffer> UniformBuffer::Create(uint32_t size)
+	Ref<UniformBuffer> UniformBuffer::Create(uint32_t size, std::string debugName)
 	{
 		switch (RendererAPI::Current())
 		{
 		case RendererAPI::Type::None:     return nullptr;
-		case RendererAPI::Type::Vulkan:  return Ref<VulkanUniformBuffer>::Create(size);
+		case RendererAPI::Type::Vulkan:  return Ref<VulkanUniformBuffer>::Create(size,debugName);
 		}
 
 		HZ_CORE_ASSERT(false, "Unknown RendererAPI!");

@@ -13,8 +13,10 @@ namespace Hazel {
 		: m_Specification(specification), m_Size(size)
 	{
 		Ref<VulkanStorageBuffer> instance = this;
+
 		Renderer::Submit([instance]() mutable
 			{
+				HZ_CORE_TRACE("RT: VulkanStorageBuffer [{0}] Create! size = {1}", instance->m_Specification.DebugName, instance->m_Size);
 				instance->RT_Invalidate();
 			});
 	}

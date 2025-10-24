@@ -10,8 +10,8 @@ namespace Hazel {
 	class VulkanVertexBuffer : public VertexBuffer
 	{
 	public:
-		VulkanVertexBuffer(void* data, uint64_t size, VertexBufferUsage usage = VertexBufferUsage::Static);
-		VulkanVertexBuffer(uint64_t size, VertexBufferUsage usage = VertexBufferUsage::Dynamic);
+		VulkanVertexBuffer(void* data, uint64_t size, std::string debugeName, VertexBufferUsage usage);
+		VulkanVertexBuffer(uint64_t size,std::string debugeName, VertexBufferUsage usage);
 
 		virtual ~VulkanVertexBuffer() override;
 

@@ -107,8 +107,7 @@ namespace Hazel {
 		{
 			HZ_PROFILE_SCOPE("Scene-SubmitDynamicMesh");
 			auto meshComponent = allEntityOwnSubmesh.get<SubmeshComponent>(entity);
-			if (!meshComponent.Visible)
-				continue;
+			if (!meshComponent.Visible) continue;
 
 			if (auto meshSource = AssetManager::GetAsset<MeshSource>(meshComponent.Mesh); meshSource)
 			{

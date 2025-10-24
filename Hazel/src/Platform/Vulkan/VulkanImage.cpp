@@ -86,6 +86,7 @@ namespace Hazel {
 	void VulkanImage2D::RT_Invalidate()
 	{
 		HZ_CORE_ASSERT(m_Specification.Width > 0 && m_Specification.Height > 0);
+		HZ_CORE_TRACE("RT: VulkanImage2D [{0}] Create!", m_Specification.DebugName);
 
 		// Try release first if necessary
 		Release();

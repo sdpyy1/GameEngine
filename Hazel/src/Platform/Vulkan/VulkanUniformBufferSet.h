@@ -10,14 +10,14 @@ namespace Hazel {
 	{
 	public:
 
-		VulkanUniformBufferSet(uint32_t size, uint32_t framesInFlight)
+		VulkanUniformBufferSet(uint32_t size, std::string debugName, uint32_t framesInFlight)
 			: m_FramesInFlight(framesInFlight),m_PreSize(size)
 		{
+			m_DebugName = debugName;
 			if (framesInFlight == 0)
 				m_FramesInFlight = Renderer::GetConfig().FramesInFlight;
-
 			for (uint32_t frame = 0; frame < m_FramesInFlight; frame++)
-				m_UniformBuffers[frame] = UniformBuffer::Create(size);
+				m_UniformBuffers[frame] = UniformBuffer::Create(size,debugName);
 		}
 
 		virtual ~VulkanUniformBufferSet() {}

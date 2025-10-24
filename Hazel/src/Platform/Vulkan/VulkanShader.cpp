@@ -28,7 +28,7 @@ namespace Hazel {
 	void VulkanShader::Reload()
 	{
 		Renderer::Submit([instance = Ref(this)]() mutable{
-			HZ_CORE_INFO("Create Shader :{0}", instance->m_Name);
+			HZ_CORE_INFO("RT: Create Shader :{0}", instance->m_Name);
 			instance->RT_Reload();
 		});
 	}

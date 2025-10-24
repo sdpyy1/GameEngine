@@ -5,10 +5,11 @@
 
 namespace Hazel {
 
-	VulkanUniformBuffer::VulkanUniformBuffer(uint32_t size)
+	VulkanUniformBuffer::VulkanUniformBuffer(uint32_t size, std::string debugName)
 		: m_Size(size)
 	{
 		m_LocalStorage = new uint8_t[size];
+		m_DebugName = debugName;
 		RT_Invalidate(); // 因为这个创建好，在初始化渲染器时马上就要用到，所以不能推迟到渲染线程再执行
 	}
 
@@ -44,6 +45,7 @@ namespace Hazel {
 
 	void VulkanUniformBuffer::RT_Invalidate()
 	{
+		HZ_CORE_TRACE("Main: VulkanUniformBuffer [{0}] Create! size = {1}", m_DebugName,m_Size);
 		Release();
 
 		VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();

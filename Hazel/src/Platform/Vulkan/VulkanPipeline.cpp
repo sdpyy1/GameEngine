@@ -86,7 +86,7 @@ namespace Hazel {
 		Renderer::Submit([instance]() mutable
 			{
 				// HZ_CORE_WARN("[VulkanPipeline] Creating pipeline {0}", instance->m_Specification.DebugName);
-
+				HZ_CORE_TRACE("RT: VulkanPipeline [{0}] Create!", instance->m_Specification.DebugName);
 				VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 				HZ_CORE_ASSERT(instance->m_Specification.Shader);
 				Ref<VulkanShader> vulkanShader = Ref<VulkanShader>(instance->m_Specification.Shader);

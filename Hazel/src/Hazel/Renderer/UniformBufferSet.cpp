@@ -9,12 +9,12 @@
 
 namespace Hazel {
 
-	Ref<UniformBufferSet> UniformBufferSet::Create(uint32_t size, uint32_t framesInFlight)
+	Ref<UniformBufferSet> UniformBufferSet::Create(uint32_t size,std::string debugName, uint32_t framesInFlight)
 	{
 		switch (RendererAPI::Current())
 		{
 		case RendererAPI::Type::None:   return nullptr;
-		case RendererAPI::Type::Vulkan: return Ref<VulkanUniformBufferSet>::Create(size, framesInFlight);
+		case RendererAPI::Type::Vulkan: return Ref<VulkanUniformBufferSet>::Create(size, debugName, framesInFlight);
 		}
 
 		HZ_CORE_ASSERT(false, "Unknown RendererAPI!");

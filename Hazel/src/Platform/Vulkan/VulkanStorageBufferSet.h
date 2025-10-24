@@ -15,7 +15,7 @@ namespace Hazel {
 		{
 			if (framesInFlight == 0)
 				m_FramesInFlight = Renderer::GetConfig().FramesInFlight;
-
+			HZ_CORE_TRACE("Main: VulkanStorageBufferSet [{0}] Create! size = {1} [Only Submit]", specification.DebugName, m_PreSize);
 			for (uint32_t frame = 0; frame < m_FramesInFlight; frame++)
 				m_StorageBuffers[frame] = StorageBuffer::Create(size, specification);
 		}
