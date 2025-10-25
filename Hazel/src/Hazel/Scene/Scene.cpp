@@ -38,10 +38,14 @@ namespace Hazel {
 	}
 
 	void Scene::OnEditorRender(Timestep ts,Ref<SceneRender> sceneRender,EditorCamera & editorCamera) {
+		// 打包一帧的场景数据
+		SceneInfo sceneData;
+		sceneData.camera = editorCamera;
+		
 		sceneRender->SetScene(this);
 		UpdateAnimation(ts); // 动画更新
 		CollectRenderableEntities(sceneRender);
-		sceneRender->PreRender(editorCamera);
+		sceneRender->PreRender(sceneData);
 
 		sceneRender->EndRender();
 	};

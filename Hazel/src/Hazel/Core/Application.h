@@ -33,7 +33,7 @@ namespace Hazel {
 		std::string Name = "Hazel Application";
 		std::string WorkingDirectory;
 		ApplicationCommandLineArgs CommandLineArgs;
-		bool EnableImGui = true;
+		bool EnableImGui = true; // TODO：现在设置为False会报错
 	};
 	class VulkanContext;
 	class Application
@@ -66,6 +66,9 @@ namespace Hazel {
 		const ApplicationSpecification& GetSpecification() const { return m_Specification; }
 		uint32_t GetCurrentFrameIndex() const { return m_CurrentFrameIndex; }
 		void SubmitToMainThread(const std::function<void()>& function);
+		static bool isRenderImGUI() {
+			return Get().GetSpecification().EnableImGui;
+		}
 	private:
 		void Run();
 		bool OnWindowClose(WindowCloseEvent& e);

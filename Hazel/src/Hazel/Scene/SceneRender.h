@@ -8,24 +8,39 @@ namespace Hazel {
 		SceneRender();
 		Ref<Image2D> GetFinalImage() { return m_GridFrameBuffer->GetImage(0); }
 		void SetScene(Scene* scene) { m_scene = scene; }
-		void PreRender(EditorCamera& camera);
+		void PreRender(SceneInfo& sceneData);
 		void EndRender();
 		void SubmitStaticMesh(Ref<MeshSource> meshSource, const glm::mat4& transform);
 		void SubmitMesh(Ref<MeshSource> meshSource, uint32_t submeshIndex, const glm::mat4& transform, const std::vector<glm::mat4>& boneTransforms);
 		void SetViewprotSize(float width, float height);
 
 	private:
-		// Pass
+		// Shadow
+		void ShadowPass();
+		// Geo
 		void GeoPass();
-
 		// Grid
 		void GridPass();
 	private:
 		void Init();
 		void Draw();
-		void GeoAnimPass();
-		void UpdateVPMatrix(EditorCamera& camera);
+		void InitBuffers();
+		void UploadCameraData();
+		void BuildDirShadowPass();
+		void BuildGeoPass();
+		void BuildGridPass();
+		void UpLoadMeshAndBoneTransForm();
+		void UploadCSMShadowData();
+
+		void HandleResizeRuntime();
+		void UploadDescriptorRuntime();
+
+		void ClearPass(Ref<RenderPass> renderPass, bool explicitClear = false);
+
 	private:
+		SceneInfo *m_SceneData = nullptr;
+		uint32_t shadowMapResolution = 4096;
+		uint32_t NumShadowCascades = 4;
 		float ViewportWidth = 1216.0f, ViewportHeight = 849.0f;
 
 		VertexBufferLayout vertexLayout = {
@@ -130,7 +145,10 @@ namespace Hazel {
 		BoneTransforms* m_BoneTransformsData = nullptr;
 		Ref<StorageBufferSet> m_SBSBoneTransforms;
 
-
+		struct UBShadow
+		{
+			glm::mat4 ViewProjection[4];
+		} ShadowData;
 	private:
 		bool NeedResize = false;
 		Scene* m_scene;
@@ -147,9 +165,15 @@ namespace Hazel {
 			float Far;
 		};
 		CameraData* m_CameraData = nullptr;
-		Ref<UniformBufferSet> m_CameraDataBufferSet;
+		Ref<UniformBufferSet> m_UBSCameraData;
+		UBShadow* m_ShadowData = nullptr;
+		Ref<UniformBufferSet> m_UBSShadow;
 
-
+		// shadowPass
+		std::vector<Ref<RenderPass>> m_DirectionalShadowMapPass; // Per-cascade
+		std::vector<Ref<RenderPass>> m_DirectionalShadowMapAnimPass; // Per-cascade
+		Ref<Pipeline> m_ShadowPassPipelines[4];
+		Ref<Pipeline> m_ShadowPassPipelinesAnim[4];
 		// GeoPass
 		Ref<RenderPass> m_GeoPass;
 		Ref<Pipeline> m_GeoPipeline;
@@ -162,6 +186,7 @@ namespace Hazel {
 		Ref<RenderPass> m_GridPass;
 		Ref<Pipeline> m_GridPipeline;
 		Ref<Framebuffer> m_GridFrameBuffer;
+
 	};
 
 }

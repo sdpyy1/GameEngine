@@ -14,7 +14,68 @@ class b2World;
 namespace Hazel {
 	class SceneRender;
 	class Entity;
+	struct DirLight
+	{
+		glm::vec3 Direction = { 0.0f, 0.0f, 0.0f };
+		glm::vec3 Radiance = { 0.0f, 0.0f, 0.0f };
 
+		float Intensity = 1.0f;
+	};
+
+	struct DirectionalLight
+	{
+		glm::vec3 Direction = { 0.0f, 0.0f, 0.0f };
+		glm::vec3 Radiance = { 0.0f, 0.0f, 0.0f };
+		float Intensity = 0.0f;
+		float ShadowAmount = 1.0f;
+		// C++ only
+		bool CastShadows = true;
+	};
+
+	struct PointLight
+	{
+		glm::vec3 Position = { 0.0f, 0.0f, 0.0f };
+		float Intensity = 0.0f;
+		glm::vec3 Radiance = { 0.0f, 0.0f, 0.0f };
+		float MinRadius = 0.001f;
+		float Radius = 25.0f;
+		float Falloff = 1.f;
+		float SourceSize = 0.1f;
+		bool CastsShadows = true;
+		char Padding[3]{ 0, 0, 0 };
+	};
+
+	struct SpotLight
+	{
+		glm::vec3 Position = { 0.0f, 0.0f, 0.0f };
+		float Intensity = 0.0f;
+		glm::vec3 Direction = { 0.0f, 0.0f, 0.0f };
+		float AngleAttenuation = 0.0f;
+		glm::vec3 Radiance = { 0.0f, 0.0f, 0.0f };
+		float Range = 0.1f;
+		float Angle = 0.0f;
+		float Falloff = 1.0f;
+		bool SoftShadows = true;
+		char Padding0[3]{ 0, 0, 0 };
+		bool CastsShadows = true;
+		char Padding1[3]{ 0, 0, 0 };
+	};
+
+	struct LightEnvironment
+	{
+		static constexpr size_t MaxDirectionalLights = 4;
+
+		DirectionalLight DirectionalLights[MaxDirectionalLights];
+		std::vector<PointLight> PointLights;
+		std::vector<SpotLight> SpotLights;
+		[[nodiscard]] uint32_t GetPointLightsSize() const { return (uint32_t)(PointLights.size() * sizeof(PointLight)); }
+		[[nodiscard]] uint32_t GetSpotLightsSize() const { return (uint32_t)(SpotLights.size() * sizeof(SpotLight)); }
+	};
+	struct SceneInfo
+	{
+		EditorCamera camera;
+		LightEnvironment SceneLightEnvironment;
+	};
 	class Scene: public RefCounted
 	{
 	public:

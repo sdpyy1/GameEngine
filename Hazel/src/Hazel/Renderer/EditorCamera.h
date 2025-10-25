@@ -17,6 +17,7 @@ namespace Hazel {
 	class EditorCamera : public Camera
 	{
 	public:
+		EditorCamera() = default;
 		EditorCamera(const float degFov, const float width, const float height, const float nearP, const float farP);
 		void Init();
 

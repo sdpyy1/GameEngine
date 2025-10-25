@@ -109,33 +109,24 @@ namespace Hazel {
 
 	void VulkanMaterial::SetNormalTexture(Ref<Texture2D> texture)
 	{
-		Renderer::Submit([this, texture]() {
-			NormalTexture = texture;
-			UpdateDescriptorSet(false);
-			});
+		NormalTexture = texture;
+		UpdateDescriptorSet(true);
 	}
 	void VulkanMaterial::SetMetalnessTexture(Ref<Texture2D> texture)
 	{
-		Renderer::Submit([this, texture]() {
-			MetalnessTexture = texture;
-			UpdateDescriptorSet(false);
-			});
+		MetalnessTexture = texture;
+		UpdateDescriptorSet(true);
 	}
 	void VulkanMaterial::SetRoughnessTexture(Ref<Texture2D> texture)
 	{
-		Renderer::Submit([this, texture]() {
-			RoughnessTexture = texture;
-			UpdateDescriptorSet(false);
-			});
+		RoughnessTexture = texture;
+		UpdateDescriptorSet(true);
 
 	}
 	void VulkanMaterial::SetAlbedoTexture(Ref<Texture2D> texture)
 	{
-		Renderer::Submit([this, texture]() {
-			AlbedoTexture = texture;
-			UpdateDescriptorSet(false);
-		});
-
+		AlbedoTexture = texture;
+		UpdateDescriptorSet(true);
 	}
 	VulkanMaterial::~VulkanMaterial()
 	{

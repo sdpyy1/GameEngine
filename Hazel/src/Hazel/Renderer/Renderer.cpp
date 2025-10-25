@@ -38,85 +38,118 @@ namespace Hazel {
 		s_Config.FramesInFlight = glm::min<uint32_t>(s_Config.FramesInFlight, Application::Get().GetWindow()->GetSwapChain().GetImageCount());
 		// 创建具体的渲染API对象
 		s_RendererAPI = RendererAPI::CreateAPI();
+
 		// Shader缓存，需要传给Shader资源描述符信息，Shader会创建好资源描述符Set
 		// gBufferShader
-		Shader::ShaderSpecification gbufferShaderSpec;
-		// 1. 顶点着色器的 UBO（模型/视图/投影矩阵等）
-		Shader::DescriptorBinding uboBinding;
-		uboBinding.binding = 0;                  // 对应着色器中 binding = 0
-		uboBinding.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		uboBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;  // 顶点着色器使用
-		uboBinding.count = 1;
-		uboBinding.set = 0;
-		gbufferShaderSpec.bindings.push_back(uboBinding);
-		// 2. Albedo 贴图（combined image sampler）
-		Shader::DescriptorBinding albedoBinding;
-		albedoBinding.binding = 0;               // 对应着色器中 set=0, binding=0（注意索引对应）
-		albedoBinding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		albedoBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;  // 片段着色器使用
-		albedoBinding.count = 1;
-		albedoBinding.set = 1;
-		gbufferShaderSpec.bindings.push_back(albedoBinding);
-		// 3. Normal 贴图
-		Shader::DescriptorBinding normalBinding;
-		normalBinding.binding = 1;               // 对应着色器中 set=0, binding=1
-		normalBinding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		normalBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-		normalBinding.count = 1;
-		normalBinding.set = 1;
-		gbufferShaderSpec.bindings.push_back(normalBinding);
-		// 4. Metalness 贴图
-		Shader::DescriptorBinding metalnessBinding;
-		metalnessBinding.binding = 2;            // 对应着色器中 set=0, binding=2
-		metalnessBinding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		metalnessBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-		metalnessBinding.count = 1;
-		metalnessBinding.set = 1;
-		gbufferShaderSpec.bindings.push_back(metalnessBinding);
-		// 5. Roughness 贴图
-		Shader::DescriptorBinding roughnessBinding;
-		roughnessBinding.binding = 3;            // 对应着色器中 set=0, binding=3
-		roughnessBinding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		roughnessBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-		roughnessBinding.count = 1;
-		roughnessBinding.set = 1;
-		gbufferShaderSpec.bindings.push_back(roughnessBinding);
+		
+		{
+			Shader::ShaderSpecification gbufferShaderSpec;
+			// 1. 顶点着色器的 UBO（模型/视图/投影矩阵等）
+			Shader::DescriptorBinding uboBinding;
+			uboBinding.binding = 0;                  // 对应着色器中 binding = 0
+			uboBinding.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+			uboBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;  // 顶点着色器使用
+			uboBinding.count = 1;
+			uboBinding.set = 0;
+			gbufferShaderSpec.bindings.push_back(uboBinding);
+			// 2. Albedo 贴图（combined image sampler）
+			Shader::DescriptorBinding albedoBinding;
+			albedoBinding.binding = 0;               // 对应着色器中 set=0, binding=0（注意索引对应）
+			albedoBinding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+			albedoBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;  // 片段着色器使用
+			albedoBinding.count = 1;
+			albedoBinding.set = 1;
+			gbufferShaderSpec.bindings.push_back(albedoBinding);
+			// 3. Normal 贴图
+			Shader::DescriptorBinding normalBinding;
+			normalBinding.binding = 1;               // 对应着色器中 set=0, binding=1
+			normalBinding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+			normalBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+			normalBinding.count = 1;
+			normalBinding.set = 1;
+			gbufferShaderSpec.bindings.push_back(normalBinding);
+			// 4. Metalness 贴图
+			Shader::DescriptorBinding metalnessBinding;
+			metalnessBinding.binding = 2;            // 对应着色器中 set=0, binding=2
+			metalnessBinding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+			metalnessBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+			metalnessBinding.count = 1;
+			metalnessBinding.set = 1;
+			gbufferShaderSpec.bindings.push_back(metalnessBinding);
+			// 5. Roughness 贴图
+			Shader::DescriptorBinding roughnessBinding;
+			roughnessBinding.binding = 3;            // 对应着色器中 set=0, binding=3
+			roughnessBinding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+			roughnessBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+			roughnessBinding.count = 1;
+			roughnessBinding.set = 1;
+			gbufferShaderSpec.bindings.push_back(roughnessBinding);
 
-		// 加载着色器（确保 vert.spv 和 frag.spv 与上述绑定匹配）
-		s_Data->m_ShaderLibrary->LoadCommonShader("gBuffer",gbufferShaderSpec);
-		Shader::PushConstantRange pr;
-		pr.shaderStage = VK_SHADER_STAGE_VERTEX_BIT;
-		pr.offset = 0;
-		pr.size = 4;
-		gbufferShaderSpec.pushConstantRanges = { pr };
-		Shader::DescriptorBinding boneTrasnfromBinding;
-		boneTrasnfromBinding.binding = 1;            // 对应着色器中 set=0, binding=1
-		boneTrasnfromBinding.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-		boneTrasnfromBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-		boneTrasnfromBinding.count = 1;
-		boneTrasnfromBinding.set = 0;
-		gbufferShaderSpec.bindings.push_back(boneTrasnfromBinding);
-		s_Data->m_ShaderLibrary->LoadCommonShader("gBufferAnim", gbufferShaderSpec);
+			// 加载着色器（确保 vert.spv 和 frag.spv 与上述绑定匹配）
+			s_Data->m_ShaderLibrary->LoadCommonShader("gBuffer", gbufferShaderSpec);
+			Shader::PushConstantRange pr;
+			pr.shaderStage = VK_SHADER_STAGE_VERTEX_BIT;
+			pr.offset = 0;
+			pr.size = 4;
+			gbufferShaderSpec.pushConstantRanges = { pr };
+			Shader::DescriptorBinding boneTrasnfromBinding;
+			boneTrasnfromBinding.binding = 1;            // 对应着色器中 set=0, binding=1
+			boneTrasnfromBinding.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+			boneTrasnfromBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+			boneTrasnfromBinding.count = 1;
+			boneTrasnfromBinding.set = 0;
+			gbufferShaderSpec.bindings.push_back(boneTrasnfromBinding);
+			s_Data->m_ShaderLibrary->LoadCommonShader("gBufferAnim", gbufferShaderSpec);
+	}
 
-		// 深度贴图Binding
-		Shader::DescriptorBinding griduboBinding;
-		griduboBinding.binding = 0;                  // 对应着色器中 binding = 0
-		griduboBinding.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		griduboBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;  // 顶点着色器使用
-		griduboBinding.count = 1;
-		griduboBinding.set = 0;
-		gbufferShaderSpec.bindings.push_back(griduboBinding);
-		Shader::DescriptorBinding depthBinding;
-		depthBinding.binding = 1;            // 对应着色器中 set=0, binding=3
-		depthBinding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		depthBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-		depthBinding.count = 1;
-		depthBinding.set = 0;
-		Shader::ShaderSpecification gridShaderSpec;
-		gridShaderSpec.bindings.push_back(griduboBinding);
-		gridShaderSpec.bindings.push_back(depthBinding);
-		s_Data->m_ShaderLibrary->LoadCommonShader("grid", gridShaderSpec);
+		// ShadowPass
+		{
+			Shader::ShaderSpecification shadowShaderSpec;
+			Shader::PushConstantRange pr;
+			pr.shaderStage = VK_SHADER_STAGE_VERTEX_BIT;
+			pr.offset = 0;
+			pr.size = 4;
+			shadowShaderSpec.pushConstantRanges = { pr };
+			Shader::DescriptorBinding shadowDataBinding;
+			shadowDataBinding.binding = 0;
+			shadowDataBinding.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+			shadowDataBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+			shadowDataBinding.count = 1;
+			shadowDataBinding.set = 0;
+			shadowShaderSpec.bindings.push_back(shadowDataBinding);
+			s_Data->m_ShaderLibrary->LoadCommonShader("DirShadowMap", shadowShaderSpec);
+			Shader::DescriptorBinding boneBinding;
+			boneBinding.binding = 1;
+			boneBinding.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+			boneBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+			boneBinding.count = 1;
+			boneBinding.set = 0;
+			shadowShaderSpec.bindings.push_back(boneBinding);
+			pr.size = 8;
+			shadowShaderSpec.pushConstantRanges = { pr };
+			s_Data->m_ShaderLibrary->LoadCommonShader("DirShadowMapAnim", shadowShaderSpec);
+		}
 
+
+		// GridPass
+		{
+			Shader::ShaderSpecification gridShaderSpec;
+			Shader::DescriptorBinding griduboBinding;
+			griduboBinding.binding = 0;                  // 对应着色器中 binding = 0
+			griduboBinding.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+			griduboBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+			griduboBinding.count = 1;
+			griduboBinding.set = 0;
+			Shader::DescriptorBinding depthBinding;
+			depthBinding.binding = 1;            // 对应着色器中 set=0, binding=3
+			depthBinding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+			depthBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+			depthBinding.count = 1;
+			depthBinding.set = 0;
+			gridShaderSpec.bindings.push_back(griduboBinding);
+			gridShaderSpec.bindings.push_back(depthBinding);
+			s_Data->m_ShaderLibrary->LoadCommonShader("grid", gridShaderSpec);
+		}
 
 		// 加载纹理
 		uint32_t whiteTextureData = 0xffffffff;
