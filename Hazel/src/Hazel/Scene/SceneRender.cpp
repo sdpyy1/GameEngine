@@ -53,7 +53,7 @@ namespace Hazel {
 			{
 				HZ_CORE_VERIFY(m_MeshTransformMap.find(mk) != m_MeshTransformMap.end());
 				const auto& transformData = m_MeshTransformMap.at(mk);
-				Renderer::RenderSkeletonMeshWithMaterial(m_CommandBuffer, m_ShadowPassPipelines[i], dc.MeshSource, dc.SubmeshIndex, nullptr, m_SubmeshTransformBuffers[frameIndex].Buffer, transformData.TransformOffset, 0, dc.InstanceCount, cascade);
+				Renderer::RenderSkeletonMeshWithMaterial(m_CommandBuffer, m_ShadowPassPipelinesAnim[i], dc.MeshSource, dc.SubmeshIndex, nullptr, m_SubmeshTransformBuffers[frameIndex].Buffer, transformData.TransformOffset, 0, dc.InstanceCount, cascade);
 			}
 			Renderer::EndRenderPass(m_CommandBuffer);
 		}

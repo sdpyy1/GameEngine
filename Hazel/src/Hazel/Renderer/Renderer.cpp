@@ -109,11 +109,8 @@ namespace Hazel {
 			shadowShaderSpec.pushConstantRanges = { casPushRange };
 			s_Data->m_ShaderLibrary->LoadCommonShader("DirShadowMap", shadowShaderSpec);
 			shadowShaderSpec.bindings.push_back(boneTrasnfromBinding);
-			Shader::PushConstantRange BoneAndCasPushRange;
-			BoneAndCasPushRange.shaderStage = VK_SHADER_STAGE_VERTEX_BIT;
-			BoneAndCasPushRange.offset = 0;
-			BoneAndCasPushRange.size = 4 + 4;
-			shadowShaderSpec.pushConstantRanges = { BoneAndCasPushRange };
+			casPushRange.size = 8;
+			shadowShaderSpec.pushConstantRanges = { casPushRange };
 			s_Data->m_ShaderLibrary->LoadCommonShader("DirShadowMapAnim", shadowShaderSpec);
 		}
 

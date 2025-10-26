@@ -457,7 +457,6 @@ namespace Hazel {
 			{
 				uint32_t frameIndex = Renderer::RT_GetCurrentFrameIndex();
 				VkCommandBuffer commandBuffer = renderCommandBuffer.As<VulkanRenderCommandBuffer>()->GetActiveCommandBuffer();
-
 				VkBuffer meshVB = meshSource->GetVertexBuffer().As<VulkanVertexBuffer>()->GetVulkanBuffer();
 				VkDeviceSize vertexOffsets[1] = { 0 };
 				vkCmdBindVertexBuffers(commandBuffer, 0, 1, &meshVB, vertexOffsets);
