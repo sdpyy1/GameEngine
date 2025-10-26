@@ -59,11 +59,68 @@ namespace Hazel {
 		}
 	}
 
+	void SceneRender::InitPreDepthPass() {
+		FramebufferSpecification preDepthFramebufferSpec;
+		preDepthFramebufferSpec.DebugName = "PreDepth";
+		preDepthFramebufferSpec.Attachments = {ImageFormat::Depth };
+		preDepthFramebufferSpec.DepthClearValue = 1.0f;
+		m_PreDepthClearFramebuffer = Framebuffer::Create(preDepthFramebufferSpec);
+		preDepthFramebufferSpec.ClearDepthOnLoad = false;
+		preDepthFramebufferSpec.ExistingImages[0] = m_PreDepthClearFramebuffer->GetDepthImage();
+		preDepthFramebufferSpec.DebugName = "PreDepthAnim";
+		m_PreDepthLoadFramebuffer = Framebuffer::Create(preDepthFramebufferSpec);
+		PipelineSpecification pipelineSpec;
+		pipelineSpec.DebugName = preDepthFramebufferSpec.DebugName;
+		pipelineSpec.TargetFramebuffer = m_PreDepthClearFramebuffer;
+		pipelineSpec.Shader = Renderer::GetShaderLibrary()->Get("PreDepth");
+		pipelineSpec.Layout = vertexLayout;
+		pipelineSpec.InstanceLayout = instanceLayout;
+		m_PreDepthPipeline = Pipeline::Create(pipelineSpec);
+		pipelineSpec.TargetFramebuffer = m_PreDepthLoadFramebuffer;
+		pipelineSpec.DebugName = "PreDepth-Anim";
+		pipelineSpec.Shader = Renderer::GetShaderLibrary()->Get("PreDepthAnim");
+		pipelineSpec.BoneInfluenceLayout = boneInfluenceLayout;
+		m_PreDepthPipelineAnim = Pipeline::Create(pipelineSpec);
+		RenderPassSpecification preDepthRenderPassSpec;
+		preDepthRenderPassSpec.DebugName = preDepthFramebufferSpec.DebugName;
+		preDepthRenderPassSpec.Pipeline = m_PreDepthPipeline;
+		m_PreDepthPass = RenderPass::Create(preDepthRenderPassSpec);
+		preDepthRenderPassSpec.DebugName = "PreDepth-Anim";
+		preDepthRenderPassSpec.Pipeline = m_PreDepthPipelineAnim;
+		m_PreDepthAnimPass = RenderPass::Create(preDepthRenderPassSpec);
+
+		m_PreDepthPass->SetInput(m_UBSCameraData,0);
+		m_PreDepthAnimPass->SetInput(m_UBSCameraData, 0);
+		m_PreDepthAnimPass->SetInput(m_SBSBoneTransforms, 1,true);
+	}
+	void SceneRender::PreDepthPass() {
+		uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
+		Renderer::BeginRenderPass(m_CommandBuffer, m_PreDepthPass);
+		for (auto& [mk, dc] : m_StaticMeshDrawList)
+		{
+			const auto& transformData = m_MeshTransformMap.at(mk);
+			Renderer::RenderStaticMeshWithMaterial(m_CommandBuffer, m_PreDepthPipeline,dc.MeshSource, dc.SubmeshIndex, nullptr, m_SubmeshTransformBuffers[frameIndex].Buffer, transformData.TransformOffset, dc.InstanceCount);
+		}		
+		Renderer::EndRenderPass(m_CommandBuffer);
+		Renderer::BeginRenderPass(m_CommandBuffer, m_PreDepthAnimPass);
+		for (auto& [mk, dc] : m_DynamicDrawList)
+		{
+			const auto& transformData = m_MeshTransformMap.at(mk);
+			if (dc.IsRigged)
+			{
+				const auto& boneTransformsData = m_MeshBoneTransformsMap.at(mk);
+				Renderer::RenderSkeletonMeshWithMaterial(m_CommandBuffer, m_PreDepthPipelineAnim, dc.MeshSource, dc.SubmeshIndex, nullptr,m_SubmeshTransformBuffers[frameIndex].Buffer,transformData.TransformOffset, boneTransformsData.BoneTransformsBaseIndex, dc.InstanceCount);
+			}
+		}
+		Renderer::EndRenderPass(m_CommandBuffer);
+
+	}
 	void SceneRender::Init()
 	{
 		m_CommandBuffer = RenderCommandBuffer::Create("PassCommandBuffer");
 		InitBuffers();
 		InitDirShadowPass();
+		InitPreDepthPass();
 		InitGeoPass();
 		InitGridPass();
 	}
@@ -84,6 +141,7 @@ namespace Hazel {
 
 	void SceneRender::Draw() {
 		ShadowPass();
+		PreDepthPass();
 		GeoPass();
 		GridPass();
 	}
@@ -301,7 +359,7 @@ namespace Hazel {
 			shadowMapRenderPassSpec.Pipeline = m_ShadowPassPipelinesAnim[i];
 			m_DirectionalShadowMapAnimPass[i] = RenderPass::Create(shadowMapRenderPassSpec);
 			m_DirectionalShadowMapAnimPass[i]->SetInput(m_UBSShadow, 0);
-			m_DirectionalShadowMapAnimPass[i]->SetInput(m_SBSBoneTransforms, 1); // TODO:注意绑定点
+			m_DirectionalShadowMapAnimPass[i]->SetInput(m_SBSBoneTransforms, 1,true); // TODO:注意绑定点
 		}
 	}
 	void SceneRender::InitGeoPass() {
@@ -310,8 +368,10 @@ namespace Hazel {
 		{
 			FramebufferSpecification framebufferSpec;
 			// pos normal albedo mr depth
-			framebufferSpec.Attachments = { ImageFormat::RGBA32F,ImageFormat::RGBA32F,ImageFormat::RGBA32F,ImageFormat::RGBA32F,ImageFormat::DEPTH32F };
+			framebufferSpec.Attachments = { ImageFormat::RGBA32F,ImageFormat::RGBA32F,ImageFormat::RGBA32F,ImageFormat::RGBA32F,ImageFormat::Depth };
 			framebufferSpec.DebugName = "GBuffer";
+			framebufferSpec.ExistingImages[4] = m_PreDepthLoadFramebuffer->GetDepthImage();
+			framebufferSpec.ClearDepthOnLoad = false;
 			m_GeoFrameBuffer = Framebuffer::Create(framebufferSpec);
 			PipelineSpecification pSpec;
 			pSpec.Layout = vertexLayout;
@@ -319,18 +379,18 @@ namespace Hazel {
 			pSpec.Shader = Renderer::GetShaderLibrary()->Get("gBuffer");
 			pSpec.TargetFramebuffer = m_GeoFrameBuffer;
 			pSpec.DebugName = "GbufferPipeline";
+			pSpec.DepthOperator = DepthCompareOperator::LessOrEqual;
 			m_GeoPipeline = Pipeline::Create(pSpec);
 			RenderPassSpecification gBufferPassSpec;
 			gBufferPassSpec.Pipeline = m_GeoPipeline;
 			gBufferPassSpec.DebugName = "gBufferPass";
 			m_GeoPass = RenderPass::Create(gBufferPassSpec);
 			m_GeoPass->SetInput(m_UBSCameraData, 0);  // 设置binding=0的ubo
-
 		}
 		// GeoAnimPass
 		{
 			FramebufferSpecification framebufferSpec;
-			framebufferSpec.Attachments = { ImageFormat::RGBA32F,ImageFormat::RGBA32F,ImageFormat::RGBA32F,ImageFormat::RGBA32F,ImageFormat::DEPTH32F };
+			framebufferSpec.Attachments = { ImageFormat::RGBA32F,ImageFormat::RGBA32F,ImageFormat::RGBA32F,ImageFormat::RGBA32F,ImageFormat::Depth };
 			framebufferSpec.DebugName = "GBufferAmin";
 			framebufferSpec.ClearDepthOnLoad = false;
 			framebufferSpec.ClearColorOnLoad = false;
@@ -347,6 +407,7 @@ namespace Hazel {
 			pSpec.Shader = Renderer::GetShaderLibrary()->Get("gBufferAnim");
 			pSpec.TargetFramebuffer = m_GeoAnimFrameBuffer;
 			pSpec.DebugName = "GbufferAnimPipeline";
+			pSpec.DepthOperator = DepthCompareOperator::LessOrEqual;
 			m_GeoAnimPipeline = Pipeline::Create(pSpec);
 			RenderPassSpecification gBufferPassSpec;
 			gBufferPassSpec.Pipeline = m_GeoAnimPipeline;
@@ -421,6 +482,8 @@ namespace Hazel {
 		if (NeedResize) {
 			// 更新FBO尺寸
 			HZ_CORE_WARN("SceneRender::PreRender Resize FBO to {0}x{1}", m_SceneData->camera.GetViewportWidth(), m_SceneData->camera.GetViewportHeight());
+			m_PreDepthClearFramebuffer->Resize(m_SceneData->camera.GetViewportWidth(), m_SceneData->camera.GetViewportHeight());
+			m_PreDepthLoadFramebuffer->Resize(m_SceneData->camera.GetViewportWidth(), m_SceneData->camera.GetViewportHeight());
 			m_GeoFrameBuffer->Resize(m_SceneData->camera.GetViewportWidth(), m_SceneData->camera.GetViewportHeight());
 			m_GeoAnimFrameBuffer->Resize(m_SceneData->camera.GetViewportWidth(), m_SceneData->camera.GetViewportHeight()); // ReSize会重新获取引用的图片，之前的FBO的图片必须立刻创建好
 			m_GridFrameBuffer->Resize(m_SceneData->camera.GetViewportWidth(), m_SceneData->camera.GetViewportHeight());

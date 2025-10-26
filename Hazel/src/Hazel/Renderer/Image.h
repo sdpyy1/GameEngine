@@ -31,7 +31,7 @@ namespace Hazel {
 		DEPTH24STENCIL8,
 
 		// Defaults
-		Depth = DEPTH24STENCIL8,
+		Depth = DEPTH32F,
 	};
 
 	// Õº∆¨”√Õæ

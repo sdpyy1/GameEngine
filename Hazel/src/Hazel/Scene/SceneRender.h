@@ -30,6 +30,9 @@ namespace Hazel {
 		void InitGridPass();
 		void UpLoadMeshAndBoneTransForm();
 		void UploadCSMShadowData();
+		void InitPreDepthPass();
+
+		void PreDepthPass();
 
 		void HandleResizeRuntime();
 		void UploadDescriptorRuntime();
@@ -172,7 +175,11 @@ namespace Hazel {
 		std::vector<Ref<RenderPass>> m_DirectionalShadowMapAnimPass; // Per-cascade
 		Ref<Pipeline> m_ShadowPassPipelines[4];
 		Ref<Pipeline> m_ShadowPassPipelinesAnim[4];
-
+		//PreDepthPass
+		Ref<Pipeline> m_PreDepthPipeline;
+		Ref<Pipeline> m_PreDepthPipelineAnim;
+		Ref<RenderPass> m_PreDepthPass, m_PreDepthAnimPass;
+		Ref<Framebuffer> m_PreDepthClearFramebuffer, m_PreDepthLoadFramebuffer;
 		// GeoPass
 		Ref<RenderPass> m_GeoPass;
 		Ref<Pipeline> m_GeoPipeline;
