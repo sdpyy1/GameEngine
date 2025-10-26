@@ -85,7 +85,7 @@ namespace Hazel {
 		// Perspective projection params
 		float m_VerticalFOV, m_AspectRatio, m_NearClip, m_FarClip;
 
-		bool m_IsActive = false;
+		bool m_IsActive = true;
 		bool m_Panning, m_Rotating;
 		glm::vec2 m_InitialMousePosition{};
 		glm::vec3 m_InitialFocalPoint, m_InitialRotation;

@@ -9,6 +9,7 @@
 #include <Hazel/Math/Math.h>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
+#include <Hazel/Renderer/EditorCamera.h>
 
 namespace Hazel {
 
@@ -224,16 +225,23 @@ namespace Hazel {
 		CircleRendererComponent(const CircleRendererComponent&) = default;
 	};
 
-	//struct CameraComponent
-	//{
-	//	EditorCamera Camera;
-	//	bool Primary = true; // TODO: think about moving to Scene
-	//	bool FixedAspectRatio = false;
+	struct CameraComponent
+	{
+		EditorCamera Camera;
+		bool Primary = true; 
 
-	//	CameraComponent() = default;
-	//	CameraComponent(const CameraComponent&) = default;
-	//};
-
+		CameraComponent() = default;
+		CameraComponent(const CameraComponent&) = default;
+	};
+	struct DirectionalLightComponent
+	{
+		glm::vec3 Radiance = { 1.0f, 1.0f, 1.0f };
+		float Intensity = 1.0f;
+		bool CastShadows = true;
+		bool SoftShadows = true;
+		float LightSize = 0.5f; // For PCSS
+		float ShadowAmount = 1.0f;
+	};
 	struct ScriptComponent
 	{
 		std::string ClassName;
@@ -327,8 +335,8 @@ namespace Hazel {
 
 	using AllComponents = 
 		ComponentGroup<StaticMeshComponent,TransformComponent, SpriteRendererComponent,
-			CircleRendererComponent, /*CameraComponent,*/ ScriptComponent,
+			CircleRendererComponent, CameraComponent, ScriptComponent,
 			NativeScriptComponent, Rigidbody2DComponent, BoxCollider2DComponent,
-			CircleCollider2DComponent, TextComponent, RelationshipComponent, SubmeshComponent,DynamicMeshComponent, AnimationComponent>;
+			CircleCollider2DComponent, TextComponent, RelationshipComponent, DirectionalLightComponent, SubmeshComponent,DynamicMeshComponent, AnimationComponent>;
 
 }

@@ -80,14 +80,15 @@ namespace Hazel {
 	{
 	public:
 		Scene();
+		void PackupSceneInfo(EditorCamera& editorCamera);
 		~Scene();
 		
-		void OnEditorRender(Timestep ts,Ref<SceneRender> sceneRender,EditorCamera& editorCamera);
+		void OnEditorRender(Timestep ts,EditorCamera& editorCamera);
 		void UpdateAnimation(Timestep ts);
-		void OutputRenderRes(Ref<SceneRender> sceneRender);
-		void SetViewprotSize(float width, float height) {  ViewportWidth = width; ViewportHeight = height;}
+		void OutputViewport();
+		void SetViewprotSize(float width, float height) {  m_ViewportWidth = width; m_ViewportHeight = height;}
 	public:
-		void CollectRenderableEntities(Ref<SceneRender> sceneRender);
+		void CollectRenderableEntities();
 		Entity CreateEntity(const std::string& name = std::string());
 		Entity CreateChildEntity(Entity parent, const std::string& name);
 		void SortEntities();
@@ -113,19 +114,19 @@ namespace Hazel {
 		std::vector<UUID> FindBoneEntityIds(Entity entity, Entity rootEntity, const Skeleton* skeleton);
 		template<typename T>
 		void OnComponentAdded(Entity entity, T& component);
+		std::vector<glm::mat4> GetModelSpaceBoneTransforms(const std::vector<UUID>& boneEntityIds, Ref<MeshSource> meshSource);
+
 	private:
 		entt::registry m_Registry;
-
 		b2World* m_PhysicsWorld = nullptr;
-
 		using EntityMap = std::unordered_map<UUID, Entity>;
-
 		EntityMap m_EntityIDMap;
-		float ViewportWidth = 1216.0f, ViewportHeight = 849.0f;
+		float m_ViewportWidth = 1216.0f, m_ViewportHeight = 849.0f;
 		friend class Entity;
 		friend class SceneSerializer;
 		friend class SceneRender;
-		std::vector<glm::mat4> GetModelSpaceBoneTransforms(const std::vector<UUID>& boneEntityIds, Ref<MeshSource> meshSource);
+		SceneInfo m_SceneInfo;
+		Ref<SceneRender> m_SceneRender = nullptr;
 	};
 
 }

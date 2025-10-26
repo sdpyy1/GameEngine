@@ -23,15 +23,13 @@ namespace Hazel {
 		virtual void OnImGuiRender() override;
 		void OnEvent(Event& e) override;
 
-
 		// 各种窗口创建
 		void ViewportGUI();
 		void DrawGizmo();
 		void TestGUI();
 	private:
 		Ref<Scene> m_Scene;  // 场景
-		Ref<SceneRender> m_SceneRender; // 场景渲染器
-		EditorCamera m_EditorCamera; // 摄像机
+		EditorCamera m_EditorCamera; // 摄像机（目前设计摄像机不归场景管理）
 		// Gizmo
 		int m_GizmoType = -1;
 		Entity m_HoveredEntity;

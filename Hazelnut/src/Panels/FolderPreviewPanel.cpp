@@ -145,7 +145,9 @@ namespace Hazel {
 			if (!open)
 			{
 				m_ShowPreview = false;
-				m_PreviewTexture = nullptr;
+				Renderer::SubmitResourceFree([texture = m_PreviewTexture]() mutable {
+					texture = nullptr;
+					});
 				HZ_CORE_INFO("Closed preview window, texture destroyed.");
 			}
 		}

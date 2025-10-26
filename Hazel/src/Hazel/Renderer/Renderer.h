@@ -23,12 +23,12 @@ namespace Hazel {
 		static void Shutdown();
 		static Ref<ShaderLibrary> GetShaderLibrary();
 
-		static void BeginRenderPass(Ref<RenderCommandBuffer> commandBuffer,Ref<RenderPass> renderPass,bool explicitClear);
+		static void BeginRenderPass(Ref<RenderCommandBuffer> commandBuffer,Ref<RenderPass> renderPass,bool explicitClear = false);
 		static void EndRenderPass(Ref<RenderCommandBuffer> commandBuffer);
 		static void SwapQueues(); // ΩªªªBuffer√¸¡Óª∫≥Â
 		static void BindVertData(Ref<RenderCommandBuffer> commandBuffer, Ref<VertexBuffer> testVertexBuffer);
-		static void RenderStaticMeshWithMaterial(Ref<RenderCommandBuffer> commandBuffer, Ref<Pipeline> pipeline, Ref<MeshSource> meshSource,uint32_t submeshIndex,Ref<Material> material, Ref<VertexBuffer> transformBuffer, uint32_t transformOffset, uint32_t instanceCount);
-		static void RenderSkeletonMeshWithMaterial(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<Pipeline> pipeline, Ref<MeshSource> meshSource, uint32_t submeshIndex, Ref<Material> material, Ref<VertexBuffer> transformBuffer, uint32_t transformOffset, uint32_t boneTransformsOffset, uint32_t instanceCount);
+		static void RenderStaticMeshWithMaterial(Ref<RenderCommandBuffer> commandBuffer, Ref<Pipeline> pipeline, Ref<MeshSource> meshSource,uint32_t submeshIndex,Ref<Material> material, Ref<VertexBuffer> transformBuffer, uint32_t transformOffset, uint32_t instanceCount, Buffer additionalUniforms = Buffer());
+		static void RenderSkeletonMeshWithMaterial(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<Pipeline> pipeline, Ref<MeshSource> meshSource, uint32_t submeshIndex, Ref<Material> material, Ref<VertexBuffer> transformBuffer, uint32_t transformOffset, uint32_t boneTransformsOffset, uint32_t instanceCount, Buffer additionalUniforms = Buffer());
 		static void DrawPrueVertex(Ref<RenderCommandBuffer> commandBuffer, uint32_t count);
 		static RendererAPI::Type Current() { return RendererAPI::Current(); }
 		static void RenderThreadFunc(RenderThread* renderThread);

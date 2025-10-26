@@ -72,39 +72,6 @@ namespace Hazel {
 		s_Data->DescriptorPoolAllocationCount[bufferIndex] += allocInfo.descriptorSetCount;
 		return result;
 	}
-	void VulkanRenderer::RenderStaticMeshWithMaterial(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<Pipeline> pipeline, Ref<MeshSource> meshSource, uint32_t submeshIndex, Ref<Material> material, Ref<VertexBuffer> transformBuffer, uint32_t transformOffset, uint32_t instanceCount)
-	{
-		HZ_CORE_ASSERT(meshSource);
-		HZ_CORE_ASSERT(material);
-		Ref<VulkanMaterial> vulkanMaterial = material.As<VulkanMaterial>();
-		Renderer::Submit([renderCommandBuffer, pipeline,meshSource, submeshIndex, vulkanMaterial, transformBuffer, transformOffset, instanceCount]() mutable {
-			uint32_t frameIndex = Renderer::RT_GetCurrentFrameIndex();
-			VkCommandBuffer commandBuffer = renderCommandBuffer.As<VulkanRenderCommandBuffer>()->GetActiveCommandBuffer();
-			Ref<VulkanVertexBuffer> meshVertBuffer = meshSource->GetVertexBuffer().As<VulkanVertexBuffer>();
-			VkBuffer vkMeshVertBuffer = meshVertBuffer->GetVulkanBuffer();
-			VkDeviceSize vertexOffsets[1] = { 0 };
-			vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vkMeshVertBuffer, vertexOffsets);  // 把整个Mesh的顶点都绑定
-			Ref<VulkanVertexBuffer> vulkanTransformBuffer = transformBuffer.As<VulkanVertexBuffer>();
-			VkBuffer vkTransformBuffer = vulkanTransformBuffer->GetVulkanBuffer();
-			VkDeviceSize instanceOffsets[1] = { transformOffset };
-			vkCmdBindVertexBuffers(commandBuffer, 1, 1, &vkTransformBuffer, instanceOffsets); // 第二个顶点缓冲区绑定当前SubMesh的变换矩阵数据
-
-			auto vulkanMeshIB = Ref<VulkanIndexBuffer>(meshSource->GetIndexBuffer());
-			VkBuffer ibBuffer = vulkanMeshIB->GetVulkanBuffer();
-			vkCmdBindIndexBuffer(commandBuffer, ibBuffer, 0, VK_INDEX_TYPE_UINT32); // 索引缓冲区全绑定
-
-			// 每个材质绑定自己的 Set=1
-			VkDescriptorSet matSet = vulkanMaterial->GetDescriptorSets()[frameIndex];
-			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-				pipeline.As<VulkanPipeline>()->GetVulkanPipelineLayout(),
-				1, // Set=1
-				1, &matSet,
-				0, nullptr);
-			const auto& submeshes = meshSource->GetSubmeshes();
-			const auto& submesh = submeshes[submeshIndex];
-			vkCmdDrawIndexed(commandBuffer, submesh.IndexCount/*索引数量*/, instanceCount/*实例数量*/, submesh.BaseIndex/*索引缓冲区的偏移*/, submesh.BaseVertex/*顶点偏移*/, 0/*实例化ID开始的编号*/);
-		});
-	}
 	void VulkanRenderer::Init()
 	{
 		// 初始化一些资源
@@ -417,23 +384,76 @@ namespace Hazel {
 				fpCmdEndDebugUtilsLabelEXT(commandBuffer);
 			});
 	}
-	void VulkanRenderer::RenderSkeletonMeshWithMaterial(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<Pipeline> pipeline, Ref<MeshSource> meshSource, uint32_t submeshIndex, Ref<Material> material, Ref<VertexBuffer> transformBuffer, uint32_t transformOffset, uint32_t boneTransformsOffset, uint32_t instanceCount)
+	void VulkanRenderer::RenderStaticMeshWithMaterial(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<Pipeline> pipeline, Ref<MeshSource> meshSource, uint32_t submeshIndex, Ref<Material> material, Ref<VertexBuffer> transformBuffer, uint32_t transformOffset, uint32_t instanceCount, Buffer additionalUniforms)
+	{
+		HZ_CORE_ASSERT(meshSource);
+		Buffer pushConstantBuffer;
+		if (additionalUniforms.Size)
+		{
+			pushConstantBuffer.Allocate(additionalUniforms.Size);
+			if (additionalUniforms.Size)
+				pushConstantBuffer.Write(additionalUniforms.Data, additionalUniforms.Size);
+		}
+		Renderer::Submit([renderCommandBuffer, pipeline, meshSource, submeshIndex, material, pushConstantBuffer,transformBuffer, transformOffset, instanceCount]() mutable {
+			uint32_t frameIndex = Renderer::RT_GetCurrentFrameIndex();
+			VkCommandBuffer commandBuffer = renderCommandBuffer.As<VulkanRenderCommandBuffer>()->GetActiveCommandBuffer();
+			Ref<VulkanVertexBuffer> meshVertBuffer = meshSource->GetVertexBuffer().As<VulkanVertexBuffer>();
+			VkBuffer vkMeshVertBuffer = meshVertBuffer->GetVulkanBuffer();
+			VkDeviceSize vertexOffsets[1] = { 0 };
+			vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vkMeshVertBuffer, vertexOffsets);  // 把整个Mesh的顶点都绑定
+			Ref<VulkanVertexBuffer> vulkanTransformBuffer = transformBuffer.As<VulkanVertexBuffer>();
+			VkBuffer vkTransformBuffer = vulkanTransformBuffer->GetVulkanBuffer();
+			VkDeviceSize instanceOffsets[1] = { transformOffset };
+			vkCmdBindVertexBuffers(commandBuffer, 1, 1, &vkTransformBuffer, instanceOffsets); // 第二个顶点缓冲区绑定当前SubMesh的变换矩阵数据
+
+			auto vulkanMeshIB = Ref<VulkanIndexBuffer>(meshSource->GetIndexBuffer());
+			VkBuffer ibBuffer = vulkanMeshIB->GetVulkanBuffer();
+			vkCmdBindIndexBuffer(commandBuffer, ibBuffer, 0, VK_INDEX_TYPE_UINT32); // 索引缓冲区全绑定
+
+			// 每个材质绑定自己的 Set=1
+			if (material) {
+				Ref<VulkanMaterial> vulkanMaterial = material.As<VulkanMaterial>();
+				VkDescriptorSet matSet = vulkanMaterial->GetDescriptorSets()[frameIndex];
+				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+					pipeline.As<VulkanPipeline>()->GetVulkanPipelineLayout(),
+					1, // Set=1
+					1, &matSet,
+					0, nullptr);
+			}
+			const auto& submeshes = meshSource->GetSubmeshes();
+			const auto& submesh = submeshes[submeshIndex];
+			VkPipelineLayout layout = pipeline.As<VulkanPipeline>()->GetVulkanPipelineLayout();
+
+			uint32_t pushConstantOffset = 0;
+			if (pushConstantBuffer.Size)
+			{
+				vkCmdPushConstants(commandBuffer, layout, VK_SHADER_STAGE_VERTEX_BIT, pushConstantOffset, pushConstantBuffer.Size, pushConstantBuffer.Data);
+			}
+
+
+			vkCmdDrawIndexed(commandBuffer, submesh.IndexCount/*索引数量*/, instanceCount/*实例数量*/, submesh.BaseIndex/*索引缓冲区的偏移*/, submesh.BaseVertex/*顶点偏移*/, 0/*实例化ID开始的编号*/);
+			});
+	}
+
+	void VulkanRenderer::RenderSkeletonMeshWithMaterial(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<Pipeline> pipeline, Ref<MeshSource> meshSource, uint32_t submeshIndex, Ref<Material> material, Ref<VertexBuffer> transformBuffer, uint32_t transformOffset, uint32_t boneTransformsOffset, uint32_t instanceCount, Buffer additionalUniforms)
 	{
 		HZ_CORE_VERIFY(meshSource);
-		HZ_CORE_VERIFY(material);
 
 		Buffer pushConstantBuffer;
 		bool isRigged = meshSource->IsSubmeshRigged(submeshIndex);
 
-		if (isRigged)
+		if (additionalUniforms.Size || isRigged)
 		{
-			pushConstantBuffer.Allocate(sizeof(uint32_t));
+			pushConstantBuffer.Allocate(additionalUniforms.Size + (isRigged ? sizeof(uint32_t) : 0));
+			if (additionalUniforms.Size)
+				pushConstantBuffer.Write(additionalUniforms.Data, additionalUniforms.Size);
+
 			if (isRigged)
-				pushConstantBuffer.Write(&boneTransformsOffset, sizeof(uint32_t));
+				pushConstantBuffer.Write(&boneTransformsOffset, sizeof(uint32_t), additionalUniforms.Size);
 		}
 
-		Ref<VulkanMaterial> vulkanMaterial = material.As<VulkanMaterial>();
-		Renderer::Submit([renderCommandBuffer, pipeline, meshSource, submeshIndex, vulkanMaterial, transformBuffer, transformOffset, instanceCount, pushConstantBuffer]() mutable
+
+		Renderer::Submit([renderCommandBuffer, pipeline, meshSource, submeshIndex, material, transformBuffer, transformOffset, instanceCount, pushConstantBuffer]() mutable
 			{
 				uint32_t frameIndex = Renderer::RT_GetCurrentFrameIndex();
 				VkCommandBuffer commandBuffer = renderCommandBuffer.As<VulkanRenderCommandBuffer>()->GetActiveCommandBuffer();
@@ -469,16 +489,19 @@ namespace Hazel {
 				if (pushConstantBuffer.Size)
 				{
 					vkCmdPushConstants(commandBuffer, layout, VK_SHADER_STAGE_VERTEX_BIT, pushConstantOffset, pushConstantBuffer.Size, pushConstantBuffer.Data);
-					pushConstantOffset += 16;  // TODO: it's 16 because that happens to be what's declared in the layouts in the shaders.  Need a better way of doing this.  Cannot just use the size of the pushConstantBuffer, because you dont know what alignment the next push constant range might have
 				}
 
 				// 每个材质绑定自己的 Set=1
-				VkDescriptorSet matSet = vulkanMaterial->GetDescriptorSets()[frameIndex];
-				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-					pipeline.As<VulkanPipeline>()->GetVulkanPipelineLayout(),
-					1, // Set=1
-					1, &matSet,
-					0, nullptr);
+				if (material) {
+					Ref<VulkanMaterial> vulkanMaterial = material.As<VulkanMaterial>();
+
+					VkDescriptorSet matSet = vulkanMaterial->GetDescriptorSets()[frameIndex];
+					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+						pipeline.As<VulkanPipeline>()->GetVulkanPipelineLayout(),
+						1, // Set=1
+						1, &matSet,
+						0, nullptr);
+				}
 
 				vkCmdDrawIndexed(commandBuffer, submesh.IndexCount, instanceCount, submesh.BaseIndex, submesh.BaseVertex, 0);
 

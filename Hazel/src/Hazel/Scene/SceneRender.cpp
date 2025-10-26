@@ -14,37 +14,62 @@ namespace Hazel {
 
 	void SceneRender::UploadCSMShadowData() {
 		// TODO：CSM的阴影矩阵更新 这部分还没学
-		//for (int i = 0; i < 4; i++)
-		//{
-		//	CascadeSplits[i] = cascades[i].SplitDepth;
-		//	shadowData.ViewProjection[i] = cascades[i].ViewProj;
-		//}
-		//Renderer::Submit([instance, shadowData]() mutable
-		//	{
-		//		instance->m_UBSShadow->RT_Get()->RT_SetData(&shadowData, sizeof(shadowData));
-		//	});
+		for (int i = 0; i < 4; i++)
+		{
+			m_ShadowData->ViewProjection[i] = m_SceneData->camera.GetProjectionMatrix();
+		}
+		m_UBSShadow->Get()->SetData(m_ShadowData, sizeof(UBShadow));
 	}
 	void SceneRender::ShadowPass() {
+		uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
 		auto& directionalLights = m_SceneData->SceneLightEnvironment.DirectionalLights;
 		if (directionalLights[0].Intensity == 0.0f || !directionalLights[0].CastShadows)
 		{
-			for (uint32_t i = 0; i < NumShadowCascades; i++)
-				ClearPass(m_DirectionalShadowMapPass[i]);
+			//for (uint32_t i = 0; i < NumShadowCascades; i++)
+				//ClearPass(m_DirectionalShadowMapPass[i]);
 			return;
 		}
-		// TODO：Pass开始！
+		for (uint32_t i = 0; i < NumShadowCascades; i++)
+		{
+			Renderer::BeginRenderPass(m_CommandBuffer, m_DirectionalShadowMapPass[i]);
+
+			// Render entities
+			const Buffer cascade(&i, sizeof(uint32_t));
+			for (auto& [mk, dc] : m_StaticMeshDrawList)
+			{
+				HZ_CORE_VERIFY(m_MeshTransformMap.find(mk) != m_MeshTransformMap.end());
+				const auto& transformData = m_MeshTransformMap.at(mk);
+				Renderer::RenderStaticMeshWithMaterial(m_CommandBuffer, m_ShadowPassPipelines[i], dc.MeshSource, dc.SubmeshIndex, nullptr, m_SubmeshTransformBuffers[frameIndex].Buffer, transformData.TransformOffset, dc.InstanceCount, cascade);
+			}
+			Renderer::EndRenderPass(m_CommandBuffer);
+		}
+		for (uint32_t i = 0; i < NumShadowCascades; i++)
+		{
+			Renderer::BeginRenderPass(m_CommandBuffer, m_DirectionalShadowMapAnimPass[i]);
+
+			// Render entities
+			const Buffer cascade(&i, sizeof(uint32_t));
+			for (auto& [mk, dc] : m_DynamicDrawList)
+			{
+				HZ_CORE_VERIFY(m_MeshTransformMap.find(mk) != m_MeshTransformMap.end());
+				const auto& transformData = m_MeshTransformMap.at(mk);
+				Renderer::RenderSkeletonMeshWithMaterial(m_CommandBuffer, m_ShadowPassPipelines[i], dc.MeshSource, dc.SubmeshIndex, nullptr, m_SubmeshTransformBuffers[frameIndex].Buffer, transformData.TransformOffset, 0, dc.InstanceCount, cascade);
+			}
+			Renderer::EndRenderPass(m_CommandBuffer);
+		}
 	}
 
 	void SceneRender::Init()
 	{
 		m_CommandBuffer = RenderCommandBuffer::Create("PassCommandBuffer");
 		InitBuffers();
-		BuildDirShadowPass();
-		BuildGeoPass();
-		BuildGridPass();
+		InitDirShadowPass();
+		InitGeoPass();
+		InitGridPass();
 	}
 
-	void SceneRender::PreRender(SceneInfo& sceneData)
+
+	void SceneRender::PreRender(SceneInfo sceneData)
 	{	
 		m_SceneData = &sceneData;
 		// 更新各种资源信息
@@ -58,18 +83,14 @@ namespace Hazel {
 	}
 
 	void SceneRender::Draw() {
-		m_CommandBuffer->Begin();
 		ShadowPass();
 		GeoPass();
 		GridPass();
-		m_CommandBuffer->End();
-		m_CommandBuffer->Submit();
 	}
-
 	void SceneRender::GeoPass()
 	{
 		uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
-
+		// 静态网格
 		Renderer::BeginRenderPass(m_CommandBuffer, m_GeoPass, false);
 		for (auto& [meshKey, drawCommand] : m_StaticMeshDrawList)
 		{
@@ -77,8 +98,10 @@ namespace Hazel {
 			Renderer::RenderStaticMeshWithMaterial(m_CommandBuffer, m_GeoPipeline,drawCommand.MeshSource, drawCommand.SubmeshIndex, drawCommand.MaterialAsset->GetMaterial(), m_SubmeshTransformBuffers[frameIndex].Buffer, transformData.TransformOffset, drawCommand.InstanceCount);
 		}
 		Renderer::EndRenderPass(m_CommandBuffer);
+
+		// 动态网格
 		Renderer::BeginRenderPass(m_CommandBuffer, m_GeoAnimPass, false);
-		for (auto& [meshKey, drawCommand] : m_DrawList)
+		for (auto& [meshKey, drawCommand] : m_DynamicDrawList)
 		{
 			const auto& transformData = m_MeshTransformMap.at(meshKey);
 			const auto& boneTransformsData = m_MeshBoneTransformsMap.at(meshKey);
@@ -91,12 +114,14 @@ namespace Hazel {
 		Renderer::BeginRenderPass(m_CommandBuffer, m_GridPass, false);
 		Renderer::DrawPrueVertex(m_CommandBuffer,6);
 		Renderer::EndRenderPass(m_CommandBuffer);
-
 	}
 	void SceneRender::EndRender()
 	{
+		m_CommandBuffer->Begin();
 		Draw(); // 执行渲染命令
-		m_DrawList.clear();
+		m_CommandBuffer->End();
+		m_CommandBuffer->Submit();
+		m_DynamicDrawList.clear();
 		m_StaticMeshDrawList.clear();
 		m_MeshTransformMap.clear();
 		m_MeshBoneTransformsMap.clear();
@@ -112,7 +137,6 @@ namespace Hazel {
 		m_CameraData->Height = m_SceneData->camera.GetViewportHeight();
 		m_UBSCameraData->Get()->SetData((void*)m_CameraData, sizeof(CameraData));
 	}
-	// 把静态Mesh数据解析为StaticDrawList
 	void SceneRender::SubmitStaticMesh(Ref<MeshSource> meshSource, const glm::mat4& transform) {
 		const auto& submeshData = meshSource->GetSubmeshes();
 		for(uint32_t submeshIndex = 0; submeshIndex <submeshData.size(); submeshIndex++){
@@ -134,8 +158,7 @@ namespace Hazel {
 			drawCommand.InstanceCount++;
 		}
 	};
-	// 把动态Mesh数据解析为DrawList
-	void SceneRender::SubmitMesh(Ref<MeshSource> meshSource, uint32_t submeshIndex, const glm::mat4& transform, const std::vector<glm::mat4>& boneTransforms)
+	void SceneRender::SubmitDynamicMesh(Ref<MeshSource> meshSource, uint32_t submeshIndex, const glm::mat4& transform, const std::vector<glm::mat4>& boneTransforms)
 	{
 		// TODO: Culling, sorting, etc.
 
@@ -160,7 +183,7 @@ namespace Hazel {
 		}
 		// Main geo
 		{
-			DrawCommand& drawCommand = m_DrawList[meshKey];
+			DynamicDrawCommand& drawCommand = m_DynamicDrawList[meshKey];
 			drawCommand.MeshSource = meshSource;
 			drawCommand.SubmeshIndex = submeshIndex;
 			drawCommand.InstanceCount++;
@@ -185,10 +208,10 @@ namespace Hazel {
 		}
 	}
 	void SceneRender::SetViewprotSize(float width, float height) {
-		if(width != ViewportWidth || height != ViewportHeight)
+		if(width != m_ViewportWidth || height != m_ViewportHeight)
 		{
-			ViewportWidth = width;
-			ViewportHeight = height;
+			m_ViewportWidth = width;
+			m_ViewportHeight = height;
 			NeedResize = true;
 		}
 	}
@@ -218,9 +241,7 @@ namespace Hazel {
 			m_BoneTransformsData = new BoneTransforms[BoneTransformBufferCount];
 		}
 	}
-	void SceneRender::BuildDirShadowPass() {
-
-
+	void SceneRender::InitDirShadowPass() {
 		ImageSpecification spec;
 		spec.Format = ImageFormat::DEPTH32F;
 		spec.Usage = ImageUsage::Attachment;
@@ -281,12 +302,9 @@ namespace Hazel {
 			m_DirectionalShadowMapAnimPass[i] = RenderPass::Create(shadowMapRenderPassSpec);
 			m_DirectionalShadowMapAnimPass[i]->SetInput(m_UBSShadow, 0);
 			m_DirectionalShadowMapAnimPass[i]->SetInput(m_SBSBoneTransforms, 1); // TODO:注意绑定点
-			//HZ_CORE_VERIFY(m_DirectionalShadowMapAnimPass[i]->Validate());
-			//m_DirectionalShadowMapAnimPass[i]->Bake();
 		}
-		// m_ShadowPassMaterial = Material::Create(shadowPassShader, "DirShadowPass"); // ？
 	}
-	void SceneRender::BuildGeoPass() {
+	void SceneRender::InitGeoPass() {
 
 		// GeoPass
 		{
@@ -338,7 +356,7 @@ namespace Hazel {
 			m_GeoAnimPass->SetInput(m_SBSBoneTransforms, 1, true);  // 设置binding=1的ubo
 		}
 	}
-	void SceneRender::BuildGridPass() {
+	void SceneRender::InitGridPass() {
 		FramebufferTextureSpecification gridColorOutputSpec(ImageFormat::RGBA32F);
 		FramebufferSpecification gridPassFramebufferSpec;
 		gridPassFramebufferSpec.Attachments = { gridColorOutputSpec };
@@ -399,6 +417,7 @@ namespace Hazel {
 		}
 	}
 	void SceneRender::HandleResizeRuntime() {
+		SetViewprotSize(m_SceneData->camera.GetViewportWidth(), m_SceneData->camera.GetViewportHeight());
 		if (NeedResize) {
 			// 更新FBO尺寸
 			HZ_CORE_WARN("SceneRender::PreRender Resize FBO to {0}x{1}", m_SceneData->camera.GetViewportWidth(), m_SceneData->camera.GetViewportHeight());

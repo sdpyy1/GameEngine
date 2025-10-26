@@ -35,19 +35,42 @@
 namespace Hazel {
 	Scene::Scene()
 	{
+		m_SceneRender = Ref<SceneRender>::Create();
 	}
+	// 打包一帧的场景数据
+	void Scene::PackupSceneInfo(EditorCamera& editorCamera) {
+		m_SceneInfo.camera = editorCamera;
+		auto& light = m_SceneInfo.SceneLightEnvironment;
+		light = LightEnvironment{}; // 重置'
+		// Directional Lights	
+		{
+			auto lights = m_Registry.group<DirectionalLightComponent>(entt::get<TransformComponent>);
+			uint32_t directionalLightIndex = 0;
+			for (auto entity : lights)
+			{
+				auto [transformComponent, lightComponent] = lights.get<TransformComponent, DirectionalLightComponent>(entity);
+				glm::vec3 direction = -glm::normalize(glm::mat3(transformComponent.GetTransform()) * glm::vec3(1.0f));
+				HZ_CORE_ASSERT(directionalLightIndex < LightEnvironment::MaxDirectionalLights);
+				light.DirectionalLights[directionalLightIndex++] =
+				{
+					direction,
+					lightComponent.Radiance,
+					lightComponent.Intensity,
+					lightComponent.ShadowAmount,
+					lightComponent.CastShadows,
+				};
+			}
+		}
+	}
+	void Scene::OnEditorRender(Timestep ts,EditorCamera & editorCamera) {
 
-	void Scene::OnEditorRender(Timestep ts,Ref<SceneRender> sceneRender,EditorCamera & editorCamera) {
-		// 打包一帧的场景数据
-		SceneInfo sceneData;
-		sceneData.camera = editorCamera;
-		
-		sceneRender->SetScene(this);
+		PackupSceneInfo(editorCamera);
+
 		UpdateAnimation(ts); // 动画更新
-		CollectRenderableEntities(sceneRender);
-		sceneRender->PreRender(sceneData);
+		CollectRenderableEntities();
+		m_SceneRender->PreRender(m_SceneInfo);
 
-		sceneRender->EndRender();
+		m_SceneRender->EndRender();
 	};
 
 	void Scene::UpdateAnimation(Timestep ts) {
@@ -87,12 +110,12 @@ namespace Hazel {
 	}
 
 
-	void Scene::OutputRenderRes(Ref<SceneRender> sceneRender)
+	void Scene::OutputViewport()
 	{
-		UI::Image(sceneRender->GetFinalImage(), ImGui::GetContentRegionAvail(), {0, 0}, {1, 1});
+		UI::Image(m_SceneRender->GetFinalImage(), ImGui::GetContentRegionAvail(), {0, 0}, {1, 1});
 	}
 	
-	void Scene::CollectRenderableEntities(Ref<SceneRender> sceneRender)
+	void Scene::CollectRenderableEntities()
 	{
 		// 收集StaticMesh
 		auto allEntityOwnMesh = GetAllEntitiesWith<StaticMeshComponent>();
@@ -103,7 +126,7 @@ namespace Hazel {
 			if (mesh == nullptr) continue;
 			Entity e = Entity(entity, this);
 			glm::mat4 transform = GetWorldSpaceTransformMatrix(e);
-			sceneRender->SubmitStaticMesh(mesh, transform);
+			m_SceneRender->SubmitStaticMesh(mesh, transform);
 		}
 		// 收集SkeletalMesh
 		auto allEntityOwnSubmesh = GetAllEntitiesWith<SubmeshComponent>();
@@ -118,7 +141,7 @@ namespace Hazel {
 				Entity e = Entity(entity, this);
 				glm::mat4 transform = GetWorldSpaceTransformMatrix(e);
 				// 在这里就把骨骼信息转换为了模型空间的变换
-				sceneRender->SubmitMesh(meshSource, meshComponent.SubmeshIndex, transform, GetModelSpaceBoneTransforms(meshComponent.BoneEntityIds, meshSource));
+				m_SceneRender->SubmitDynamicMesh(meshSource, meshComponent.SubmeshIndex, transform, GetModelSpaceBoneTransforms(meshComponent.BoneEntityIds, meshSource));
 			}
 		}
 	}
@@ -480,12 +503,12 @@ namespace Hazel {
 	{
 	}
 
-	//template<>
-	//void Scene::OnComponentAdded<CameraComponent>(Entity entity, CameraComponent& component)
-	//{
-	//	if (m_ViewportWidth > 0 && m_ViewportHeight > 0)
-	//		component.Camera.SetViewportSize(m_ViewportWidth, m_ViewportHeight);
-	//}
+	template<>
+	void Scene::OnComponentAdded<CameraComponent>(Entity entity, CameraComponent& component)
+	{
+		if (m_ViewportWidth > 0 && m_ViewportHeight > 0)
+			component.Camera.SetViewportSize(m_ViewportWidth, m_ViewportHeight);
+	}
 
 	template<>
 	void Scene::OnComponentAdded<ScriptComponent>(Entity entity, ScriptComponent& component)
@@ -541,5 +564,8 @@ namespace Hazel {
 	void Scene::OnComponentAdded<TextComponent>(Entity entity, TextComponent& component)
 	{
 	}
-
+	template<>
+	void Scene::OnComponentAdded<DirectionalLightComponent>(Entity entity, DirectionalLightComponent& component)
+	{
+	}
 }

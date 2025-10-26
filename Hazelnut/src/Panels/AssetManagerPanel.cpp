@@ -244,6 +244,7 @@ namespace Hazel {
 			// TODO:这里添加新组件的添加按钮
 			DisplayAddComponentEntry<StaticMeshComponent>("StaticMesh");
 			DisplayAddComponentEntry<DynamicMeshComponent>("DynamicMesh");
+			DisplayAddComponentEntry<DirectionalLightComponent>("DirctionalLight");
 			ImGui::EndPopup();
 		}
 
@@ -291,7 +292,11 @@ namespace Hazel {
 				{
 				}
 			});
+		DrawComponent<DirectionalLightComponent>("DirectionalLight", entity, [](auto& component)
+			{
+				ImGui::Text("DirectionalLight Add!");
 
+			});
 
 		DrawComponent<DynamicMeshComponent>("Dynamic Mesh", entity, [](auto& component)
 			{

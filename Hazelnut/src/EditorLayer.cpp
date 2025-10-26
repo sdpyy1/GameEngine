@@ -24,22 +24,21 @@ namespace Hazel {
 		m_Scene = Ref<Scene>::Create();
 		m_AssetManagerPanel.SetContext(m_Scene);
 		m_FolderPreviewPanel.SetContext(m_Scene);
-		m_SceneRender = Ref<SceneRender>::Create();
-		m_SelectedEntity = Entity();
+		m_SelectedEntity = {};
 		m_GizmoType = -1;
 	}
 
 	void EditorLayer::OnAttach()
 	{
+		
 	}
 
-	void EditorLayer::OnDetach() {}
+
 
 	void EditorLayer::OnUpdate(Timestep ts)
 	{
-		m_EditorCamera.SetActive(true);
 		m_EditorCamera.OnUpdate(ts, isMouseInViewport);
-		m_Scene->OnEditorRender(ts,m_SceneRender, m_EditorCamera);
+		m_Scene->OnEditorRender(ts, m_EditorCamera);
 	}
 
 	void EditorLayer::OnImGuiRender()
@@ -90,14 +89,14 @@ namespace Hazel {
 		m_ViewportBounds[1] = ImVec2(m_ViewportBounds[0].x + viewportSize.x, m_ViewportBounds[0].y + viewportSize.y);
 		m_EditorCamera.SetViewportSize(viewportSize.x, viewportSize.y);
 		m_Scene->SetViewprotSize(viewportSize.x, viewportSize.y);
-		m_SceneRender->SetViewprotSize(viewportSize.x, viewportSize.y);
+		//m_SceneRender->SetViewprotSize(viewportSize.x, viewportSize.y);
 		Application::SetViewportSize(viewportSize.x, viewportSize.y);
 		
 		ImVec2 mousePos = ImGui::GetIO().MousePos;
 		isMouseInViewport =
 			mousePos.x >= m_ViewportBounds[0].x && mousePos.x <= m_ViewportBounds[1].x &&
 			mousePos.y >= m_ViewportBounds[0].y && mousePos.y <= m_ViewportBounds[1].y;
-		m_Scene->OutputRenderRes(m_SceneRender);
+		m_Scene->OutputViewport();
 		DrawGizmo();
 		ImGui::End();
 	}
@@ -161,4 +160,6 @@ namespace Hazel {
 		ImGui::Text("Some Settings...");
 		ImGui::End();
 	}
+	void EditorLayer::OnDetach() {}
+
 }

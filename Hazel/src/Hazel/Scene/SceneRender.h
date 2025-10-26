@@ -7,11 +7,10 @@ namespace Hazel {
 	public:
 		SceneRender();
 		Ref<Image2D> GetFinalImage() { return m_GridFrameBuffer->GetImage(0); }
-		void SetScene(Scene* scene) { m_scene = scene; }
-		void PreRender(SceneInfo& sceneData);
+		void PreRender(SceneInfo sceneData);
 		void EndRender();
 		void SubmitStaticMesh(Ref<MeshSource> meshSource, const glm::mat4& transform);
-		void SubmitMesh(Ref<MeshSource> meshSource, uint32_t submeshIndex, const glm::mat4& transform, const std::vector<glm::mat4>& boneTransforms);
+		void SubmitDynamicMesh(Ref<MeshSource> meshSource, uint32_t submeshIndex, const glm::mat4& transform, const std::vector<glm::mat4>& boneTransforms);
 		void SetViewprotSize(float width, float height);
 
 	private:
@@ -26,9 +25,9 @@ namespace Hazel {
 		void Draw();
 		void InitBuffers();
 		void UploadCameraData();
-		void BuildDirShadowPass();
-		void BuildGeoPass();
-		void BuildGridPass();
+		void InitDirShadowPass();
+		void InitGeoPass();
+		void InitGridPass();
 		void UpLoadMeshAndBoneTransForm();
 		void UploadCSMShadowData();
 
@@ -41,7 +40,7 @@ namespace Hazel {
 		SceneInfo *m_SceneData = nullptr;
 		uint32_t shadowMapResolution = 4096;
 		uint32_t NumShadowCascades = 4;
-		float ViewportWidth = 1216.0f, ViewportHeight = 849.0f;
+		float m_ViewportWidth = 1216.0f, m_ViewportHeight = 849.0f;
 
 		VertexBufferLayout vertexLayout = {
 			{ ShaderDataType::Float3, "a_Position" },
@@ -105,7 +104,7 @@ namespace Hazel {
 			Ref<MaterialAsset> MaterialAsset;
 			uint32_t InstanceCount = 0;
 		};
-		struct DrawCommand
+		struct DynamicDrawCommand
 		{
 			Ref<MeshSource> MeshSource;
 			uint32_t SubmeshIndex;
@@ -114,7 +113,7 @@ namespace Hazel {
 			uint32_t InstanceOffset = 0;
 			bool IsRigged = false;
 		};
-		std::map<MeshKey, DrawCommand> m_DrawList;
+		std::map<MeshKey, DynamicDrawCommand> m_DynamicDrawList;
 		std::map<MeshKey, StaticDrawCommand> m_StaticMeshDrawList;
 		struct TransformVertexData
 		{
@@ -148,10 +147,9 @@ namespace Hazel {
 		struct UBShadow
 		{
 			glm::mat4 ViewProjection[4];
-		} ShadowData;
+		};
 	private:
 		bool NeedResize = false;
-		Scene* m_scene;
 		// command buffer
 		Ref<RenderCommandBuffer> m_CommandBuffer;
 
@@ -174,6 +172,7 @@ namespace Hazel {
 		std::vector<Ref<RenderPass>> m_DirectionalShadowMapAnimPass; // Per-cascade
 		Ref<Pipeline> m_ShadowPassPipelines[4];
 		Ref<Pipeline> m_ShadowPassPipelinesAnim[4];
+
 		// GeoPass
 		Ref<RenderPass> m_GeoPass;
 		Ref<Pipeline> m_GeoPipeline;

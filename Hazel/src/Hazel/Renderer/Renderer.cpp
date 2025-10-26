@@ -213,13 +213,13 @@ namespace Hazel {
 		return s_RendererAPI->BindVertData(commandBuffer,testVertexBuffer);
 
 	}
-	void Renderer::RenderStaticMeshWithMaterial(Ref<RenderCommandBuffer> commandBuffer,Ref<Pipeline> pipeline, Ref<MeshSource> meshSource, uint32_t submeshIndex, Ref<Material> material, Ref<VertexBuffer> transformBuffer, uint32_t transformOffset, uint32_t instanceCount)
+	void Renderer::RenderStaticMeshWithMaterial(Ref<RenderCommandBuffer> commandBuffer,Ref<Pipeline> pipeline, Ref<MeshSource> meshSource, uint32_t submeshIndex, Ref<Material> material, Ref<VertexBuffer> transformBuffer, uint32_t transformOffset, uint32_t instanceCount, Buffer additionalUniforms)
 	{
-		return s_RendererAPI->RenderStaticMeshWithMaterial(commandBuffer, pipeline,meshSource, submeshIndex, material, transformBuffer, transformOffset, instanceCount);
+		return s_RendererAPI->RenderStaticMeshWithMaterial(commandBuffer, pipeline,meshSource, submeshIndex, material, transformBuffer, transformOffset, instanceCount, additionalUniforms);
 	}
-	void Renderer::RenderSkeletonMeshWithMaterial(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<Pipeline> pipeline, Ref<MeshSource> meshSource, uint32_t submeshIndex, Ref<Material> material, Ref<VertexBuffer> transformBuffer, uint32_t transformOffset, uint32_t boneTransformsOffset, uint32_t instanceCount)
+	void Renderer::RenderSkeletonMeshWithMaterial(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<Pipeline> pipeline, Ref<MeshSource> meshSource, uint32_t submeshIndex, Ref<Material> material, Ref<VertexBuffer> transformBuffer, uint32_t transformOffset, uint32_t boneTransformsOffset, uint32_t instanceCount, Buffer additionalUniforms)
 	{
-		s_RendererAPI->RenderSkeletonMeshWithMaterial(renderCommandBuffer, pipeline, meshSource, submeshIndex, material, transformBuffer, transformOffset, boneTransformsOffset, instanceCount);
+		s_RendererAPI->RenderSkeletonMeshWithMaterial(renderCommandBuffer, pipeline, meshSource, submeshIndex, material, transformBuffer, transformOffset, boneTransformsOffset, instanceCount, additionalUniforms);
 
 	}
 	void Renderer::DrawPrueVertex(Ref<RenderCommandBuffer> commandBuffer, uint32_t count)

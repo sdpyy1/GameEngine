@@ -60,8 +60,6 @@ namespace Hazel {
 		if (isButtonPressed && isMouseInViewport && !m_IsCapturing) {
 			m_IsCapturing = true;
 			m_InitialMousePosition = { Input::GetMouseX(), Input::GetMouseY() };
-
-			// 同时可以重置 delta 相关量，防止跳跃
 			m_YawDelta = 0.0f;
 			m_PitchDelta = 0.0f;
 			m_PositionDelta = glm::vec3(0.0f);
