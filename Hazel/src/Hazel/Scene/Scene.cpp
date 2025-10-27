@@ -41,7 +41,7 @@ namespace Hazel {
 	void Scene::PackupSceneInfo(EditorCamera& editorCamera) {
 		m_SceneInfo.camera = editorCamera;
 		auto& light = m_SceneInfo.SceneLightEnvironment;
-		light = LightEnvironment{}; // ÖØÖÃ'
+		light = LightEnvironment{};
 		// Directional Lights	
 		{
 			auto lights = m_Registry.group<DirectionalLightComponent>(entt::get<TransformComponent>);

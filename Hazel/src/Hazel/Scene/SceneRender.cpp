@@ -4,19 +4,143 @@
 #include "Hazel/Asset/AssetManager.h"
 #include "Entity.h"
 #include <Hazel/Asset/AssetImporter.h>
+#include <glm/gtx/compatibility.hpp>
 #include <Hazel/Asset/Model/Mesh.h>
+#include <glm/gtc/matrix_transform.hpp>
+
 #include <Platform/Vulkan/VulkanRenderCommandBuffer.h>
 namespace Hazel {
 	SceneRender::SceneRender()
 	{
 		Init();
 	}
+	void SceneRender::CalculateCascades(CascadeData* cascades, const EditorCamera& sceneCamera, const glm::vec3& lightDirection) const
+	{
+		//TODO: Reversed Z projection?
+		float CascadeSplitLambda = 0.92f;
+		float CascadeFarPlaneOffset = 50.0f, CascadeNearPlaneOffset = -50.0f;
+		float m_ScaleShadowCascadesToOrigin = 0.0f;
+		float scaleToOrigin = m_ScaleShadowCascadesToOrigin;
 
-	void SceneRender::UploadCSMShadowData() {
-		// TODO：CSM的阴影矩阵更新 这部分还没学
-		for (int i = 0; i < 4; i++)
+		glm::mat4 viewMatrix = sceneCamera.GetViewMatrix();
+		constexpr glm::vec4 origin = glm::vec4(glm::vec3(0.0f), 1.0f);
+		viewMatrix[3] = glm::lerp(viewMatrix[3], origin, scaleToOrigin);
+
+		auto viewProjection = sceneCamera.GetUnReversedProjectionMatrix() * viewMatrix;
+
+		const int SHADOW_MAP_CASCADE_COUNT = 4;
+		float cascadeSplits[SHADOW_MAP_CASCADE_COUNT];
+
+		float nearClip = sceneCamera.GetNearClip();
+		float farClip = sceneCamera.GetFarClip();
+		float clipRange = farClip - nearClip;
+
+		float minZ = nearClip;
+		float maxZ = nearClip + clipRange;
+
+		float range = maxZ - minZ;
+		float ratio = maxZ / minZ;
+
+		// Calculate split depths based on view camera frustum
+		// Based on method presented in https://developer.nvidia.com/gpugems/GPUGems3/gpugems3_ch10.html
+		for (uint32_t i = 0; i < SHADOW_MAP_CASCADE_COUNT; i++)
 		{
-			m_ShadowData->ViewProjection[i] = m_SceneData->camera.GetProjectionMatrix();
+			float p = (i + 1) / static_cast<float>(SHADOW_MAP_CASCADE_COUNT);
+			float log = minZ * std::pow(ratio, p);
+			float uniform = minZ + range * p;
+			float d = CascadeSplitLambda * (log - uniform) + uniform;
+			cascadeSplits[i] = (d - nearClip) / clipRange;
+		}
+
+		cascadeSplits[3] = 0.3f;
+
+		// Calculate orthographic projection matrix for each cascade
+		float lastSplitDist = 0.0;
+		for (uint32_t i = 0; i < SHADOW_MAP_CASCADE_COUNT; i++)
+		{
+			float splitDist = cascadeSplits[i];
+
+			glm::vec3 frustumCorners[8] =
+			{
+				glm::vec3(-1.0f,  1.0f, -1.0f),
+				glm::vec3(1.0f,  1.0f, -1.0f),
+				glm::vec3(1.0f, -1.0f, -1.0f),
+				glm::vec3(-1.0f, -1.0f, -1.0f),
+				glm::vec3(-1.0f,  1.0f,  1.0f),
+				glm::vec3(1.0f,  1.0f,  1.0f),
+				glm::vec3(1.0f, -1.0f,  1.0f),
+				glm::vec3(-1.0f, -1.0f,  1.0f),
+			};
+
+			// Project frustum corners into world space
+			glm::mat4 invCam = glm::inverse(viewProjection);
+			for (uint32_t i = 0; i < 8; i++)
+			{
+				glm::vec4 invCorner = invCam * glm::vec4(frustumCorners[i], 1.0f);
+				frustumCorners[i] = invCorner / invCorner.w;
+			}
+
+			for (uint32_t i = 0; i < 4; i++)
+			{
+				glm::vec3 dist = frustumCorners[i + 4] - frustumCorners[i];
+				frustumCorners[i + 4] = frustumCorners[i] + (dist * splitDist);
+				frustumCorners[i] = frustumCorners[i] + (dist * lastSplitDist);
+			}
+
+			// Get frustum center
+			glm::vec3 frustumCenter = glm::vec3(0.0f);
+			for (uint32_t i = 0; i < 8; i++)
+				frustumCenter += frustumCorners[i];
+
+			frustumCenter /= 8.0f;
+
+			//frustumCenter *= 0.01f;
+
+			float radius = 0.0f;
+			for (uint32_t i = 0; i < 8; i++)
+			{
+				float distance = glm::length(frustumCorners[i] - frustumCenter);
+				radius = glm::max(radius, distance);
+			}
+			radius = std::ceil(radius * 16.0f) / 16.0f;
+
+			glm::vec3 maxExtents = glm::vec3(radius);
+			glm::vec3 minExtents = -maxExtents;
+
+			glm::vec3 lightDir = -lightDirection;
+			glm::mat4 lightViewMatrix = glm::lookAt(frustumCenter - lightDir * -minExtents.z, frustumCenter, glm::vec3(0.0f, 0.0f, 1.0f));
+			glm::mat4 lightOrthoMatrix = glm::ortho(minExtents.x, maxExtents.x, minExtents.y, maxExtents.y, 0.0f + CascadeNearPlaneOffset, maxExtents.z - minExtents.z + CascadeFarPlaneOffset);
+
+			// Offset to texel space to avoid shimmering (from https://stackoverflow.com/questions/33499053/cascaded-shadow-map-shimmering)
+			glm::mat4 shadowMatrix = lightOrthoMatrix * lightViewMatrix;
+			float ShadowMapResolution = (float)m_PreDepthLoadFramebuffer->GetWidth();
+
+			glm::vec4 shadowOrigin = (shadowMatrix * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)) * ShadowMapResolution / 2.0f;
+			glm::vec4 roundedOrigin = glm::round(shadowOrigin);
+			glm::vec4 roundOffset = roundedOrigin - shadowOrigin;
+			roundOffset = roundOffset * 2.0f / ShadowMapResolution;
+			roundOffset.z = 0.0f;
+			roundOffset.w = 0.0f;
+
+			lightOrthoMatrix[3] += roundOffset;
+
+			// Store split distance and matrix in cascade
+			//cascades[i].SplitDepth = (nearClip + splitDist * clipRange) * -1.0f;
+			cascades[i].SplitDepth = (nearClip + splitDist * clipRange);
+			cascades[i].ViewProj = lightOrthoMatrix * lightViewMatrix;
+			cascades[i].View = lightViewMatrix;
+
+			lastSplitDist = cascadeSplits[i];
+		}
+	}
+	void SceneRender::UploadCSMShadowData() {
+		CascadeData cascades[4];
+		//CalculateCascades(cascades, m_SceneData->camera, m_SceneData->SceneLightEnvironment.DirectionalLights[0].Direction);
+		CalculateCascades(cascades, m_SceneData->camera, glm::normalize(glm::vec3(-1.0f)));
+		for (int i = 0; i < NumShadowCascades; i++)
+		{
+			CascadeSplits[i] = cascades[i].SplitDepth;	
+			m_ShadowData->ViewProjection[i] = cascades[i].ViewProj;
 		}
 		m_UBSShadow->Get()->SetData(m_ShadowData, sizeof(UBShadow));
 	}
@@ -70,7 +194,7 @@ namespace Hazel {
 		preDepthFramebufferSpec.DebugName = "PreDepthAnim";
 		m_PreDepthLoadFramebuffer = Framebuffer::Create(preDepthFramebufferSpec);
 		PipelineSpecification pipelineSpec;
-		pipelineSpec.DebugName = preDepthFramebufferSpec.DebugName;
+		pipelineSpec.DebugName = "PreDepth";
 		pipelineSpec.TargetFramebuffer = m_PreDepthClearFramebuffer;
 		pipelineSpec.Shader = Renderer::GetShaderLibrary()->Get("PreDepth");
 		pipelineSpec.Layout = vertexLayout;
@@ -82,7 +206,7 @@ namespace Hazel {
 		pipelineSpec.BoneInfluenceLayout = boneInfluenceLayout;
 		m_PreDepthPipelineAnim = Pipeline::Create(pipelineSpec);
 		RenderPassSpecification preDepthRenderPassSpec;
-		preDepthRenderPassSpec.DebugName = preDepthFramebufferSpec.DebugName;
+		preDepthRenderPassSpec.DebugName = "PreDepth";
 		preDepthRenderPassSpec.Pipeline = m_PreDepthPipeline;
 		m_PreDepthPass = RenderPass::Create(preDepthRenderPassSpec);
 		preDepthRenderPassSpec.DebugName = "PreDepth-Anim";
@@ -129,14 +253,14 @@ namespace Hazel {
 	void SceneRender::PreRender(SceneInfo sceneData)
 	{	
 		m_SceneData = &sceneData;
+		// 处理运行时窗口Resize // TODO:注意如果Resize里有新的，销毁的资源需要在UploadDescriptorRuntime()中重新绑定
+		HandleResizeRuntime();
+		UploadDescriptorRuntime();
 		// 更新各种资源信息
 		UploadCameraData();
 		UpLoadMeshAndBoneTransForm();
 		UploadCSMShadowData();
 
-		// 处理运行时窗口Resize // TODO:注意如果Resize里有新的，销毁的资源需要在UploadDescriptorRuntime()中重新绑定
-		HandleResizeRuntime();
-		UploadDescriptorRuntime();
 	}
 
 	void SceneRender::Draw() {
@@ -333,11 +457,11 @@ namespace Hazel {
 		pipelineSpecAnim.Shader = Renderer::GetShaderLibrary()->Get("DirShadowMapAnim");
 		pipelineSpecAnim.BoneInfluenceLayout = boneInfluenceLayout;
 		RenderPassSpecification shadowMapRenderPassSpec;
-		shadowMapRenderPassSpec.DebugName = shadowMapFramebufferSpec.DebugName;
 		m_DirectionalShadowMapPass.resize(NumShadowCascades);
 		m_DirectionalShadowMapAnimPass.resize(NumShadowCascades);
 		for (uint32_t i = 0; i < NumShadowCascades; i++)
-		{
+		{		shadowMapRenderPassSpec.DebugName = shadowMapFramebufferSpec.DebugName;
+
 			shadowMapFramebufferSpec.ExistingImageLayers.clear();
 			shadowMapFramebufferSpec.ExistingImageLayers.emplace_back(i);
 
@@ -345,6 +469,7 @@ namespace Hazel {
 			pipelineSpec.TargetFramebuffer = Framebuffer::Create(shadowMapFramebufferSpec);
 
 			m_ShadowPassPipelines[i] = Pipeline::Create(pipelineSpec);
+			shadowMapRenderPassSpec.DebugName = "DirShadowPass";
 			shadowMapRenderPassSpec.Pipeline = m_ShadowPassPipelines[i];
 
 			shadowMapFramebufferSpec.ClearDepthOnLoad = false;
@@ -355,7 +480,7 @@ namespace Hazel {
 			m_DirectionalShadowMapPass[i]->SetInput(m_UBSShadow, 0);
 			//HZ_CORE_VERIFY(m_DirectionalShadowMapPass[i]->Validate());
 			//m_DirectionalShadowMapPass[i]->Bake();
-
+			shadowMapRenderPassSpec.DebugName = "DirShadowPassAnim";
 			shadowMapRenderPassSpec.Pipeline = m_ShadowPassPipelinesAnim[i];
 			m_DirectionalShadowMapAnimPass[i] = RenderPass::Create(shadowMapRenderPassSpec);
 			m_DirectionalShadowMapAnimPass[i]->SetInput(m_UBSShadow, 0);

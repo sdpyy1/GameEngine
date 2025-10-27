@@ -62,6 +62,16 @@ namespace Hazel {
 			{ ShaderDataType::Int4,   "a_BoneIDs" },
 			{ ShaderDataType::Float4, "a_BoneWeights" },
 		};
+		struct CascadeData
+		{
+			glm::mat4 ViewProj;
+			glm::mat4 View;
+			float SplitDepth;
+		};
+		glm::vec4 CascadeSplits;
+
+		void CalculateCascades(CascadeData* cascades, const EditorCamera& sceneCamera, const glm::vec3& lightDirection) const;
+
 		struct MeshKey
 		{
 			AssetHandle MeshHandle;

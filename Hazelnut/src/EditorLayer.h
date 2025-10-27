@@ -26,7 +26,7 @@ namespace Hazel {
 		// 各种窗口创建
 		void ViewportGUI();
 		void DrawGizmo();
-		void TestGUI();
+		void SettingGUI();
 	private:
 		Ref<Scene> m_Scene;  // 场景
 		EditorCamera m_EditorCamera; // 摄像机（目前设计摄像机不归场景管理）

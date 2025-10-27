@@ -1,4 +1,4 @@
-#include "EditorLayer.h"
+ï»¿#include "EditorLayer.h"
 #include "Hazel/Scene/SceneSerializer.h"
 #include "Hazel/Utils/PlatformUtils.h"
 #include "Hazel/Math/Math.h"
@@ -43,12 +43,15 @@ namespace Hazel {
 
 	void EditorLayer::OnImGuiRender()
 	{
-		// Dockspace ±³¾°´°¿Ú
+		// ========== Dockspace ä¸»çª—å£ ==========
 		ImGuiIO& io = ImGui::GetIO();
 		ImGuiStyle& style = ImGui::GetStyle();
+
 		ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDocking;
 		window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
 		window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+		window_flags |= ImGuiWindowFlags_MenuBar; // ä¸ºèœå•æ é¢„ç•™ç©ºé—´
+
 		ImGuiViewport* viewport = ImGui::GetMainViewport();
 		ImGui::SetNextWindowPos(viewport->Pos);
 		ImGui::SetNextWindowSize(viewport->Size);
@@ -56,24 +59,94 @@ namespace Hazel {
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-		// ¸²¸ÇGLFW´°¿ÚµÄMain´°¿Ú
+
 		ImGui::Begin("Main Window", nullptr, window_flags);
+
+		// ========== é¡¶éƒ¨èœå•æ  ==========
+		if (ImGui::BeginMenuBar())
+		{
+			// --- File èœå• ---
+			if (ImGui::BeginMenu("File"))
+			{
+				if (ImGui::MenuItem("New Scene", "Ctrl+N"))
+				{
+					m_Scene = Ref<Scene>::Create();
+					m_AssetManagerPanel.SetContext(m_Scene);
+					m_FolderPreviewPanel.SetContext(m_Scene);
+				}
+
+				if (ImGui::MenuItem("Open Scene...", "Ctrl+O"))
+				{
+					std::string filepath = FileDialogs::OpenFile("Hazel Scene (*.hazel)\0*.hazel\0");
+					if (!filepath.empty())
+					{
+						m_Scene = Ref<Scene>::Create();
+						SceneSerializer serializer(m_Scene);
+						serializer.Deserialize(filepath);
+					}
+				}
+
+				if (ImGui::MenuItem("Save Scene", "Ctrl+S"))
+				{
+					std::string path = "assets/scenes/Untitled.hazel";
+					SceneSerializer serializer(m_Scene);
+					serializer.Serialize(path);
+				}
+
+				if (ImGui::MenuItem("Save Scene As...", "Ctrl+Shift+S"))
+				{
+					std::string filepath = FileDialogs::SaveFile("Hazel Scene (*.hazel)\0*.hazel\0");
+					if (!filepath.empty())
+					{
+						SceneSerializer serializer(m_Scene);
+						serializer.Serialize(filepath);
+					}
+				}
+
+				ImGui::Separator();
+				if (ImGui::MenuItem("Exit"))
+					Application::Get().Close();
+
+				ImGui::EndMenu();
+			}
+
+			// --- View èœå• ---
+			if (ImGui::BeginMenu("View"))
+			{
+				ImGui::MenuItem("Folder Preview", nullptr, &m_FolderPreviewPanel.isOpen);
+				ImGui::MenuItem("Asset Manager", nullptr, &m_AssetManagerPanel.isOpen);
+				ImGui::EndMenu();
+			}
+
+			// --- Help èœå• ---
+			if (ImGui::BeginMenu("Help"))
+			{
+				ImGui::Text("Hazel Editor - Custom Build");
+				ImGui::Separator();
+				ImGui::Text("Ctrl+S  Save Scene");
+				ImGui::Text("W/E/R   Gizmo Control");
+				ImGui::Text("Right Click  Free Look");
+				ImGui::EndMenu();
+			}
+
+			ImGui::EndMenuBar();
+		}
+
+		// ========== DockSpace åŒºåŸŸ ==========
 		ImGuiID dockspaceID = ImGui::GetID("MyMainDockspace");
 		ImGui::DockSpace(dockspaceID, ImVec2(0.0f, 0.0f), 0);
-
-		ImGui::End();
+		ImGui::End(); // Main Window
 		ImGui::PopStyleVar(2);
 
-		// ÆäËû´°¿Ú»æÖÆ
+		// ========== å…¶ä»–é¢æ¿ç»˜åˆ¶ ==========
 		ViewportGUI();
-		TestGUI();
-		if (m_FolderPreviewPanel.isOpen) {
-			m_FolderPreviewPanel.OnImGuiRender();
-		}
-		if (m_AssetManagerPanel.isOpen) {
-			m_AssetManagerPanel.OnImGuiRender();
-		}
+		SettingGUI();
 
+		if (m_FolderPreviewPanel.isOpen)
+			m_FolderPreviewPanel.OnImGuiRender();
+
+		if (m_AssetManagerPanel.isOpen)
+			m_AssetManagerPanel.OnImGuiRender();
 	}
 
 	void EditorLayer::OnEvent(Event& e)
@@ -84,7 +157,7 @@ namespace Hazel {
 	{
 		ImGui::Begin("Viewport");
 		m_ViewportBounds[0] = ImGui::GetWindowPos();
-		// ³ÌĞòÖĞViewportSize¶¼À´×ÔÕâÀï
+		// ç¨‹åºä¸­ViewportSizeéƒ½æ¥è‡ªè¿™é‡Œ
 		ImVec2 viewportSize = ImGui::GetContentRegionAvail();
 		m_ViewportBounds[1] = ImVec2(m_ViewportBounds[0].x + viewportSize.x, m_ViewportBounds[0].y + viewportSize.y);
 		m_EditorCamera.SetViewportSize(viewportSize.x, viewportSize.y);
@@ -154,12 +227,13 @@ namespace Hazel {
 		}
 	}
 
-	void EditorLayer::TestGUI()
+	void EditorLayer::SettingGUI()
 	{
 		ImGui::Begin("Setting");
 		ImGui::Text("Some Settings...");
 		ImGui::End();
 	}
+
 	void EditorLayer::OnDetach() {}
 
 }
