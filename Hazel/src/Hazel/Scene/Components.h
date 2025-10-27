@@ -34,10 +34,10 @@ namespace Hazel {
 	{
 		AssetHandle StaticMesh = 0;
 		bool Visible = true;
-		std::filesystem::path path;
+		std::filesystem::path path = "";
 		StaticMeshComponent() = default;
 		StaticMeshComponent(const StaticMeshComponent& other)
-			: StaticMesh(other.StaticMesh), Visible(other.Visible)
+			: StaticMesh(other.StaticMesh), Visible(other.Visible),path(other.path)
 		{
 		}
 		StaticMeshComponent(AssetHandle staticMesh, std::filesystem::path filePath)
@@ -46,11 +46,9 @@ namespace Hazel {
 	};
 	struct DynamicMeshComponent
 	{
-		std::filesystem::path path;
+		std::filesystem::path path = "";
 		AssetHandle meshSource = 0;
-		DynamicMeshComponent() {
-
-		}
+		DynamicMeshComponent() = default;
 		DynamicMeshComponent(AssetHandle handle, std::filesystem::path filePath) {
 			meshSource = handle;
 			path = filePath;

@@ -180,7 +180,7 @@ namespace Hazel {
 	}
 
 	template<typename T, typename UIFunction>
-	static void DrawComponent(const std::string& name, Entity entity, UIFunction uiFunction)
+	void AssetManagerPanel::DrawComponent(const std::string& name, Entity entity, UIFunction uiFunction)
 	{
 		const ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed |
 			ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_AllowItemOverlap |
@@ -214,8 +214,9 @@ namespace Hazel {
 				ImGui::TreePop();
 			}
 
-			if (removeComponent)
-				entity.RemoveComponent<T>();
+			if (removeComponent) {
+				m_Context->DestroyEntity(entity);
+			}
 		}
 	}
 
@@ -254,7 +255,8 @@ namespace Hazel {
 		DrawComponent<TransformComponent>("Transform", entity, [](auto& component)
 			{
 				DrawVec3Control("Translation", component.Translation);
-				glm::vec3 rotation = glm::degrees(component.GetRotationEuler());
+				glm::vec3 rotationEuler = component.GetRotationEuler();
+				glm::vec3 rotation = glm::degrees(rotationEuler);
 				DrawVec3Control("Rotation", rotation);
 				component.SetRotationEuler(glm::radians(rotation));
 				DrawVec3Control("Scale", component.Scale, 1.0f);
@@ -285,6 +287,7 @@ namespace Hazel {
 		DrawComponent<StaticMeshComponent>("Static Mesh", entity, [](auto& component)
 			{
 				ImGui::Text("Asset Handle: %u", component.StaticMesh);
+				ImGui::Text("Asset Path: %s", component.path.c_str());
 
 				ImGui::Checkbox("Visible", &component.Visible);
 

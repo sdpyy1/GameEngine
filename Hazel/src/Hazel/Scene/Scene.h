@@ -96,6 +96,7 @@ namespace Hazel {
 		Entity DuplicateEntity(Entity entity);
 		Entity FindEntityByName(std::string_view name);
 		Entity GetEntityByUUID(UUID uuid);
+		void ClearEntities();
 		template<typename... Components>
 		auto GetAllEntitiesWith()
 		{
@@ -118,7 +119,6 @@ namespace Hazel {
 
 	private:
 		entt::registry m_Registry;
-		b2World* m_PhysicsWorld = nullptr;
 		using EntityMap = std::unordered_map<UUID, Entity>;
 		EntityMap m_EntityIDMap;
 		float m_ViewportWidth = 1216.0f, m_ViewportHeight = 849.0f;

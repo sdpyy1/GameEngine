@@ -16,7 +16,6 @@ namespace Hazel {
 	}
 	void SceneRender::CalculateCascades(CascadeData* cascades, const EditorCamera& sceneCamera, const glm::vec3& lightDirection) const
 	{
-		//TODO: Reversed Z projection?
 		float CascadeSplitLambda = 0.92f;
 		float CascadeFarPlaneOffset = 50.0f, CascadeNearPlaneOffset = -50.0f;
 		float m_ScaleShadowCascadesToOrigin = 0.0f;

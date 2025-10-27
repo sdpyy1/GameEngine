@@ -1,14 +1,15 @@
 #include "hzpch.h"
 #include "FileSystem.h"
 #include "StringUtils.h"
-#include <spdlog/fmt/ostr.h>
-#include <shellapi.h>
+
 #ifdef HZ_PLATFORM_LINUX
 #include <libgen.h>
 #endif
 
 #include <nfd.hpp>
 
+#include <format>
+#include <shellapi.h>
 
 namespace Hazel {
 
@@ -34,7 +35,7 @@ namespace Hazel {
 
 	bool FileSystem::Move(const std::filesystem::path& oldFilepath, const std::filesystem::path& newFilepath)
 	{
-		if (FileSystem::Exists_old(newFilepath))
+		if (FileSystem::Exists(newFilepath))
 			return false;
 
 		std::filesystem::rename(oldFilepath, newFilepath);
@@ -43,7 +44,7 @@ namespace Hazel {
 
 	bool FileSystem::Copy(const std::filesystem::path& oldFilepath, const std::filesystem::path& newFilepath)
 	{
-		if (FileSystem::Exists_old(newFilepath))
+		if (FileSystem::Exists(newFilepath))
 			return false;
 
 		std::filesystem::copy(oldFilepath, newFilepath);
@@ -71,19 +72,19 @@ namespace Hazel {
 		return Rename(oldFilepath, newPath);
 	}
 
-	bool FileSystem::Exists_old(const std::filesystem::path& filepath)
+	bool FileSystem::Exists(const std::filesystem::path& filepath)
 	{
 		return std::filesystem::exists(filepath);
 	}
 
-	bool FileSystem::Exists_old(const std::string& filepath)
+	bool FileSystem::Exists(const std::string& filepath)
 	{
 		return std::filesystem::exists(std::filesystem::path(filepath));
 	}
 
 	bool FileSystem::DeleteFile(const std::filesystem::path& filepath)
 	{
-		if (!FileSystem::Exists_old(filepath))
+		if (!FileSystem::Exists(filepath))
 			return false;
 
 		if (std::filesystem::is_directory(filepath))
@@ -96,24 +97,6 @@ namespace Hazel {
 		return std::filesystem::is_directory(filepath);
 	}
 
-
-	FileStatus FileSystem::TryOpenFile(const std::filesystem::path& filepath)
-	{
-		HANDLE fileHandle = CreateFile(filepath.c_str(), GENERIC_READ, 0, nullptr, OPEN_EXISTING, 0, nullptr);
-		if (fileHandle == INVALID_HANDLE_VALUE)
-		{
-			DWORD errorCode = GetLastError();
-			if (errorCode == ERROR_FILE_NOT_FOUND || errorCode == ERROR_PATH_NOT_FOUND)
-				return FileStatus::Invalid;
-			if (errorCode == ERROR_SHARING_VIOLATION)
-				return FileStatus::Locked;
-
-			return FileStatus::OtherError;
-		}
-
-		CloseHandle(fileHandle);
-		return FileStatus::Success;
-	}
 	FileStatus FileSystem::TryOpenFileAndWait(const std::filesystem::path& filepath, uint64_t waitms)
 	{
 		FileStatus fileStatus = TryOpenFile(filepath);
@@ -135,13 +118,13 @@ namespace Hazel {
 	bool FileSystem::ShowFileInExplorer(const std::filesystem::path& path)
 	{
 		auto absolutePath = std::filesystem::canonical(path);
-		if (!Exists_old(absolutePath))
+		if (!Exists(absolutePath))
 			return false;
 
 #ifdef HZ_PLATFORM_WINDOWS
 		std::string cmd = fmt::format("explorer.exe /select,\"{0}\"", absolutePath.string());
 #elif defined(HZ_PLATFORM_LINUX)
-		std::string cmd = fmt::format("xdg-open \"{0}\"", dirname(absolutePath.string().data()));
+		std::string cmd = std::format("xdg-open \"{0}\"", dirname(absolutePath.string().data()));
 #endif
 		system(cmd.c_str());
 		return true;
@@ -151,7 +134,7 @@ namespace Hazel {
 	{
 #ifdef HZ_PLATFORM_WINDOWS
 		auto absolutePath = std::filesystem::canonical(path);
-		if (!Exists_old(absolutePath))
+		if (!Exists(absolutePath))
 			return false;
 
 		ShellExecute(NULL, L"explore", absolutePath.c_str(), NULL, NULL, SW_SHOWNORMAL);
@@ -164,14 +147,14 @@ namespace Hazel {
 	bool FileSystem::OpenExternally(const std::filesystem::path& path)
 	{
 		auto absolutePath = std::filesystem::canonical(path);
-		if (!Exists_old(absolutePath))
+		if (!Exists(absolutePath))
 			return false;
 
 #ifdef HZ_PLATFORM_WINDOWS
 		ShellExecute(NULL, L"open", absolutePath.c_str(), NULL, NULL, SW_SHOWNORMAL);
 		return true;
 #elif defined(HZ_PLATFORM_LINUX)
-		std::string cmd = fmt::format("xdg-open \"{0}\"", absolutePath.string().data());
+		std::string cmd = std::format("xdg-open \"{0}\"", absolutePath.string().data());
 		system(cmd.c_str());
 		return true;
 #endif
@@ -179,7 +162,7 @@ namespace Hazel {
 
 	std::filesystem::path FileSystem::GetUniqueFileName(const std::filesystem::path& filepath)
 	{
-		if (!FileSystem::Exists_old(filepath))
+		if (!FileSystem::Exists(filepath))
 			return filepath;
 
 		int counter = 0;
@@ -209,7 +192,7 @@ namespace Hazel {
 
 	uint64_t FileSystem::GetLastWriteTime(const std::filesystem::path& filepath)
 	{
-		HZ_CORE_ASSERT(FileSystem::Exists_old(filepath));
+		HZ_CORE_ASSERT(FileSystem::Exists(filepath));
 
 		if (TryOpenFileAndWait(filepath) == FileStatus::Success)
 		{

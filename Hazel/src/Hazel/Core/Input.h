@@ -10,7 +10,7 @@ namespace Hazel {
 	class Input_old
 	{
 	public:
-		static bool IsKeyPressed(KeyCode_old key);
+		static bool IsKeyPressed(KeyCode key);
 		// 新增：鼠标模式枚举
 		enum class CursorMode
 		{

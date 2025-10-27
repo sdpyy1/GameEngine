@@ -8,6 +8,7 @@
 #include "Hazel/Core/Layer.h"
 #include "Hazel/Core/Log.h"
 #include "Hazel/Core/Assert.h"
+#define HZ_VERSION "2024.1.1"
 
 #include "Hazel/Core/Timestep.h"
 
@@ -16,6 +17,7 @@
 #include "Hazel/Core/MouseCodes.h"
 
 #include "Hazel/ImGui/ImGuiLayer.h"
+#include "Hazel/Utils/FileSystem.h"
 
 #include "Hazel/Scene/Scene.h"
 #include "Hazel/Scene/Entity.h"

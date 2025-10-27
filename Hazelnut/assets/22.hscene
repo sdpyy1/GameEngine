@@ -1,0 +1,347 @@
+Scene: Untitled
+Entities:
+  - Entity: 299364961759070731
+    TagComponent:
+      Tag: assets\model\helmet_pbr\DamagedHelmet.gltf
+    Parent: 0
+    Children:
+      []
+    TransformComponent:
+      Translation: [5.44999981, -0.460000008, 3.69291377]
+      Rotation: [0, 0, 0]
+      Scale: [1.8499999, 1.8499999, 1.8499999]
+    StaticMeshComponent:
+      MeshSourcePath: assets\model\helmet_pbr\DamagedHelmet.gltf
+      Visible: true
+  - Entity: 999014193123450187
+    TagComponent:
+      Tag: joint_gripsafety
+    Parent: 12754500788008386945
+    Children:
+      []
+    TransformComponent:
+      Translation: [1.96900185e-09, -0.0247642249, 0.029223511]
+      Rotation: [0.0600440502, 0, 3.14159226]
+      Scale: [1, 0.999999583, 1.00000954]
+  - Entity: 1202826874660422447
+    TagComponent:
+      Tag: joint_hammer
+    Parent: 8976416141152804548
+    Children:
+      []
+    TransformComponent:
+      Translation: [8.30209324e-09, -0.0151678491, 0.036367774]
+      Rotation: [0.0600441433, 4.61143124e-08, 3.1415925]
+      Scale: [1, 0.999999881, 1.00000966]
+  - Entity: 1574931924572352397
+    TagComponent:
+      Tag: joint_slide
+    Parent: 12754500788008386945
+    Children:
+      []
+    TransformComponent:
+      Translation: [2.95529166e-08, 0.10950011, 0.0455999263]
+      Rotation: [0.0600440502, 0, 3.14159226]
+      Scale: [1, 0.999999762, 1.00000966]
+  - Entity: 1747626349430841465
+    TagComponent:
+      Tag: assets\model\m1911\M1911.gltf
+    Parent: 0
+    Children:
+      - Handle: 187959928372142083
+      - Handle: 12754500788008386945
+      - Handle: 9159728699890266181
+      - Handle: 17579434786395841803
+      - Handle: 7143294154010711310
+      - Handle: 10828435890158473487
+      - Handle: 4134424747281098869
+      - Handle: 8976416141152804548
+    TransformComponent:
+      Translation: [4.23462677, 3.53669524, 0.839129925]
+      Rotation: [0, 0, 0]
+      Scale: [48.7425995, 48.7425995, 48.7425995]
+    DynamicMeshComponent:
+      MeshSourcePath: assets\model\m1911\M1911.gltf
+  - Entity: 1879965771004892360
+    TagComponent:
+      Tag: joint_bullet
+    Parent: 10828435890158473487
+    Children:
+      []
+    TransformComponent:
+      Translation: [4.55074201e-10, 0.0279846769, 0.0394512564]
+      Rotation: [0.0600440502, 0, 3.14159226]
+      Scale: [1, 0.999999881, 1.00000954]
+  - Entity: 1923368256568799095
+    TagComponent:
+      Tag: pCylinder5
+    Parent: 12750412679688366151
+    Children:
+      []
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+  - Entity: 2019012804043167772
+    TagComponent:
+      Tag: joint_gripsafety
+    Parent: 10828435890158473487
+    Children:
+      []
+    TransformComponent:
+      Translation: [1.96900185e-09, -0.0247642249, 0.029223511]
+      Rotation: [0.0600440502, 0, 3.14159226]
+      Scale: [1, 0.999999583, 1.00000954]
+  - Entity: 2923044610828925703
+    TagComponent:
+      Tag: joint_bullet
+    Parent: 12754500788008386945
+    Children:
+      []
+    TransformComponent:
+      Translation: [4.55074201e-10, 0.0279846769, 0.0394512564]
+      Rotation: [0.0600440502, 0, 3.14159226]
+      Scale: [1, 0.999999881, 1.00000954]
+  - Entity: 4134424747281098869
+    TagComponent:
+      Tag: pCylinder5
+    Parent: 1747626349430841465
+    Children:
+      []
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, -0, 0]
+      Scale: [1, 1, 1]
+  - Entity: 4338143062292384839
+    TagComponent:
+      Tag: joint_bullet
+    Parent: 17579434786395841803
+    Children:
+      []
+    TransformComponent:
+      Translation: [0.029431669, 0.0312925428, 0.103332914]
+      Rotation: [-0.724216461, -0.000173091888, 3.14113545]
+      Scale: [1, 1, 1]
+  - Entity: 4496307895860454383
+    TagComponent:
+      Tag: joint_hammer
+    Parent: 17579434786395841803
+    Children:
+      []
+    TransformComponent:
+      Translation: [8.30209324e-09, -0.0151678491, 0.036367774]
+      Rotation: [0.0600442886, 0, 3.14159226]
+      Scale: [1, 1, 1]
+  - Entity: 5086295999010294959
+    TagComponent:
+      Tag: joint_CORE
+    Parent: 9768434455595664570
+    Children:
+      - Handle: 7171882799541542269
+      - Handle: 9738219447563349920
+      - Handle: 16842919116466540408
+      - Handle: 9513762869101452498
+      - Handle: 2882380094418597680
+    TransformComponent:
+      Translation: [-2.72307048e-08, 0.00979083404, -0.0994937643]
+      Rotation: [-1.22121942, 3.14119267, -0.000279903412]
+      Scale: [1, 1, 1]
+  - Entity: 5931767102002647415
+    TagComponent:
+      Tag: joint_slide
+    Parent: 8976416141152804548
+    Children:
+      []
+    TransformComponent:
+      Translation: [2.95529166e-08, 0.10950011, 0.0455999263]
+      Rotation: [0.0600440614, 4.61381404e-08, 3.1415925]
+      Scale: [1, 0.999999762, 1.00000966]
+  - Entity: 6987389602688465649
+    TagComponent:
+      Tag: joint_trigger
+    Parent: 8976416141152804548
+    Children:
+      []
+    TransformComponent:
+      Translation: [8.61556959e-09, 0.0435000546, 0.00699998485]
+      Rotation: [0.06004389, 4.7997883e-08, 3.1415925]
+      Scale: [1, 0.99999994, 1.00000966]
+  - Entity: 6995531849907226287
+    TagComponent:
+      Tag: pCylinder5
+    Parent: 9768434455595664570
+    Children:
+      []
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+  - Entity: 7272544461177391605
+    TagComponent:
+      Tag: joint_CORE
+    Parent: 12750412679688366151
+    Children:
+      - Handle: 3207729367574284957
+      - Handle: 123965226224389685
+      - Handle: 10873217425822908458
+      - Handle: 2513271837806914193
+      - Handle: 16287294832255203523
+    TransformComponent:
+      Translation: [-1.19428352e-08, 0.00237072958, -0.0733045712]
+      Rotation: [-1.5107528, -3.14159274, -2.38418579e-07]
+      Scale: [1, 0.999999821, 1.00000286]
+  - Entity: 8323084945411442090
+    TagComponent:
+      Tag: joint_gripsafety
+    Parent: 17579434786395841803
+    Children:
+      []
+    TransformComponent:
+      Translation: [1.96900185e-09, -0.0247642249, 0.029223511]
+      Rotation: [-0.0254774094, 0, 3.14159226]
+      Scale: [1, 1, 1]
+  - Entity: 8976416141152804548
+    TagComponent:
+      Tag: joint_CORE
+    Parent: 1747626349430841465
+    Children:
+      - Handle: 6987389602688465649
+      - Handle: 5931767102002647415
+      - Handle: 1202826874660422447
+      - Handle: 14890238511771936425
+      - Handle: 15326442289087046744
+    TransformComponent:
+      Translation: [-1.19428352e-08, 0.00237072958, -0.0733045712]
+      Rotation: [1.63083994, -9.34104207e-08, 3.1415925]
+      Scale: [1, 0.999999821, 1.00000286]
+  - Entity: 9962498378558171593
+    TagComponent:
+      Tag: joint_slide
+    Parent: 10828435890158473487
+    Children:
+      []
+    TransformComponent:
+      Translation: [2.95529166e-08, 0.10950011, 0.0455999263]
+      Rotation: [0.0600440502, 0, 3.14159226]
+      Scale: [1, 0.999999762, 1.00000966]
+  - Entity: 10610409530766583400
+    TagComponent:
+      Tag: joint_hammer
+    Parent: 12754500788008386945
+    Children:
+      []
+    TransformComponent:
+      Translation: [8.30209324e-09, -0.0151678491, 0.036367774]
+      Rotation: [0.0600440502, 0, 3.14159226]
+      Scale: [1, 0.999999881, 1.00000966]
+  - Entity: 11904685551668014404
+    TagComponent:
+      Tag: joint_slide
+    Parent: 17579434786395841803
+    Children:
+      []
+    TransformComponent:
+      Translation: [2.95528579e-08, 0.101811536, 0.0460620932]
+      Rotation: [0.0600440502, 0, 3.14159226]
+      Scale: [1, 1, 1]
+  - Entity: 12155812840924709353
+    TagComponent:
+      Tag: pCylinder5
+    Parent: 8461327230375738516
+    Children:
+      []
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+  - Entity: 13162360417109843018
+    TagComponent:
+      Tag: DirectionalLight
+    Parent: 0
+    Children:
+      []
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    DirectionalLightComponent:
+      Intensity: 1
+      Radiance: [1, 1, 1]
+      CastShadows: true
+      SoftShadows: true
+      LightSize: 0.5
+      ShadowAmount: 1
+  - Entity: 14890238511771936425
+    TagComponent:
+      Tag: joint_gripsafety
+    Parent: 8976416141152804548
+    Children:
+      []
+    TransformComponent:
+      Translation: [1.96900185e-09, -0.0247642249, 0.029223511]
+      Rotation: [0.0600441359, 4.79779381e-08, 3.1415925]
+      Scale: [1, 0.999999583, 1.00000954]
+  - Entity: 15155302600908726561
+    TagComponent:
+      Tag: joint_trigger
+    Parent: 10828435890158473487
+    Children:
+      []
+    TransformComponent:
+      Translation: [8.61556959e-09, 0.0435000546, 0.00699998485]
+      Rotation: [0.0600438118, 0, 3.14159226]
+      Scale: [1, 0.99999994, 1.00000966]
+  - Entity: 15326442289087046744
+    TagComponent:
+      Tag: joint_bullet
+    Parent: 8976416141152804548
+    Children:
+      []
+    TransformComponent:
+      Translation: [4.55074201e-10, 0.0279846769, 0.0394512564]
+      Rotation: [0.060044039, 4.61308751e-08, 3.1415925]
+      Scale: [1, 0.999999881, 1.00000954]
+  - Entity: 15647011580606107030
+    TagComponent:
+      Tag: joint_CORE
+    Parent: 8461327230375738516
+    Children:
+      - Handle: 10072491156366929363
+      - Handle: 16491125830467787237
+      - Handle: 17041757765850664336
+      - Handle: 5179234232055927319
+      - Handle: 5204230712825185686
+    TransformComponent:
+      Translation: [-1.19428352e-08, 0.00237072958, -0.0733045712]
+      Rotation: [-1.5107528, -3.14159274, -2.38418579e-07]
+      Scale: [1, 0.999999821, 1.00000286]
+  - Entity: 16093182263236591626
+    TagComponent:
+      Tag: joint_trigger
+    Parent: 17579434786395841803
+    Children:
+      []
+    TransformComponent:
+      Translation: [8.61554295e-09, 0.0410826355, 0.00699998252]
+      Rotation: [0.0600438118, 0, 3.14159226]
+      Scale: [1, 1, 1]
+  - Entity: 16751154393882234351
+    TagComponent:
+      Tag: joint_hammer
+    Parent: 10828435890158473487
+    Children:
+      []
+    TransformComponent:
+      Translation: [8.30209324e-09, -0.0151678491, 0.036367774]
+      Rotation: [0.0600440502, 0, 3.14159226]
+      Scale: [1, 0.999999881, 1.00000966]
+  - Entity: 17825700239830955365
+    TagComponent:
+      Tag: joint_trigger
+    Parent: 12754500788008386945
+    Children:
+      []
+    TransformComponent:
+      Translation: [8.61556959e-09, 0.0435000546, 0.00699998485]
+      Rotation: [0.0600438118, 0, 3.14159226]
+      Scale: [1, 0.99999994, 1.00000966]

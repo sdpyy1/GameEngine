@@ -22,6 +22,11 @@ namespace Hazel {
 		void OnUpdate(Timestep ts) override;
 		virtual void OnImGuiRender() override;
 		void OnEvent(Event& e) override;
+		bool OpenScene();
+		bool OpenScene(const std::filesystem::path& filepath);
+		void SaveScene();
+
+		void SaveSceneAs();
 
 		// 各种窗口创建
 		void ViewportGUI();
@@ -42,6 +47,8 @@ namespace Hazel {
 		ImVec2 m_ViewportBounds[2] = { {0,0},{1216,849} };
 		bool isMouseInViewport = false;
 		bool firstRenderGUI = true;
+		std::string m_SceneFilePath;
+
 	};
 
 }

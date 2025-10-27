@@ -77,30 +77,12 @@ namespace Hazel {
 
 				if (ImGui::MenuItem("Open Scene...", "Ctrl+O"))
 				{
-					std::string filepath = FileDialogs::OpenFile("Hazel Scene (*.hazel)\0*.hazel\0");
-					if (!filepath.empty())
-					{
-						m_Scene = Ref<Scene>::Create();
-						SceneSerializer serializer(m_Scene);
-						serializer.Deserialize(filepath);
-					}
+					OpenScene();
 				}
 
 				if (ImGui::MenuItem("Save Scene", "Ctrl+S"))
 				{
-					std::string path = "assets/scenes/Untitled.hazel";
-					SceneSerializer serializer(m_Scene);
-					serializer.Serialize(path);
-				}
-
-				if (ImGui::MenuItem("Save Scene As...", "Ctrl+Shift+S"))
-				{
-					std::string filepath = FileDialogs::SaveFile("Hazel Scene (*.hazel)\0*.hazel\0");
-					if (!filepath.empty())
-					{
-						SceneSerializer serializer(m_Scene);
-						serializer.Serialize(filepath);
-					}
+					SaveScene();
 				}
 
 				ImGui::Separator();
@@ -152,10 +134,72 @@ namespace Hazel {
 	void EditorLayer::OnEvent(Event& e)
 	{
 	}
+	bool EditorLayer::OpenScene()
+	{
+		std::filesystem::path filepath = FileSystem::OpenFileDialog({ { "Hazel Scene", "hscene" } });
+		if (!filepath.empty())
+			return OpenScene(filepath);
 
+		return false;
+	}
+	bool EditorLayer::OpenScene(const std::filesystem::path& filepath)
+	{
+		if (filepath.extension() != ".hscene")
+		{
+			return false;
+		}
+		if (!FileSystem::Exists(filepath))
+		{
+			HZ_CORE_ERROR("Tried loading a non-existing scene: {0}", filepath);
+			return false;
+		}
+
+		if (m_Scene) {
+			m_Scene->ClearEntities();
+			m_AssetManagerPanel.ClearState();
+		}
+		SceneSerializer serializer(m_Scene);
+		serializer.Deserialize(filepath.string());
+		m_SceneFilePath = filepath.string();
+		std::replace(m_SceneFilePath.begin(), m_SceneFilePath.end(), '\\', '/');
+		return true;
+	}
+
+	void EditorLayer::SaveScene()
+	{
+		if (!m_SceneFilePath.empty())
+		{
+			SceneSerializer serializer(m_Scene);
+			serializer.Serialize(m_SceneFilePath);
+		}
+		else
+		{
+			SaveSceneAs();
+		}
+
+	}	
+
+	void EditorLayer::SaveSceneAs()
+	{
+		std::filesystem::path filepath = FileSystem::SaveFileDialog({ { "Hazel Scene (*.hscene)", "hscene" } });
+
+		if (filepath.empty())
+			return;
+
+		if (!filepath.has_extension())
+			filepath += SceneSerializer::DefaultExtension;
+
+		SceneSerializer serializer(m_Scene);
+		serializer.Serialize(filepath.string());
+
+		std::filesystem::path path = filepath;
+		m_SceneFilePath = filepath.string();
+		std::replace(m_SceneFilePath.begin(), m_SceneFilePath.end(), '\\', '/');
+	}
 	void EditorLayer::ViewportGUI()
 	{
 		ImGui::Begin("Viewport");
+		
 		m_ViewportBounds[0] = ImGui::GetWindowPos();
 		// 程序中ViewportSize都来自这里
 		ImVec2 viewportSize = ImGui::GetContentRegionAvail();
@@ -170,7 +214,19 @@ namespace Hazel {
 			mousePos.x >= m_ViewportBounds[0].x && mousePos.x <= m_ViewportBounds[1].x &&
 			mousePos.y >= m_ViewportBounds[0].y && mousePos.y <= m_ViewportBounds[1].y;
 		m_Scene->OutputViewport();
+		if (ImGui::BeginDragDropTarget())
+		{
+			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
+			{
+				// 验证 payload 数据有效性（确保是字符串）
+				IM_ASSERT(payload->DataSize > 0);
+				const char* droppedPath = (const char*)payload->Data;
+				OpenScene(droppedPath);
+			}
+			ImGui::EndDragDropTarget();
+		}
 		DrawGizmo();
+
 		ImGui::End();
 	}
 

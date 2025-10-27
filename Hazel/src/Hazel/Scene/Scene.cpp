@@ -256,7 +256,15 @@ namespace Hazel {
 		m_EntityIDMap.erase(entity.GetUUID());
 		m_Registry.destroy(entity);
 	}
-
+	void Scene::ClearEntities()
+	{
+		m_Registry.each([this](entt::entity entityID) {
+			Entity entity{ entityID, this };
+			DestroyEntity(entity); // 执行自定义清理
+			});
+		m_Registry.clear();
+		m_EntityIDMap.clear();
+	}
 	Entity Scene::DuplicateEntity(Entity entity)
 	{
 		// Copy name because we're going to modify component data structure
@@ -288,11 +296,8 @@ namespace Hazel {
 	Entity Scene::BuildDynamicMeshEntity(Ref<MeshSource> mesh, Entity& root,const std::filesystem::path& path)
 	{
 		AssetHandle handle = mesh->Handle;
-		root.AddComponent<DynamicMeshComponent>(handle,path);
 		root.AddComponent<AnimationComponent>(handle, path);
 		auto com = root.GetComponent<AnimationComponent>();
-		HZ_CORE_INFO("MeshSource Handle: {}", com.meshSource);
-
 		BuildMeshEntityHierarchy(root, mesh,mesh->GetRootNode());
 		BuildBoneEntityIds(root);
 		return root;
@@ -329,7 +334,9 @@ namespace Hazel {
 		for (auto childId : entity.Children())
 		{
 			Entity child = GetEntityByUUID(childId);
-			BuildAnimationBoneEntityIds(child, rootEntity);
+			if (child) {
+				BuildAnimationBoneEntityIds(child, rootEntity);
+			}
 		}
 	}
 	void Scene::BuildMeshBoneEntityIds(Entity entity, Entity rootEntity)
@@ -343,7 +350,10 @@ namespace Hazel {
 		for (auto childId : entity.Children())
 		{
 			Entity child = GetEntityByUUID(childId);
-			BuildMeshBoneEntityIds(child, rootEntity);
+			if (child) {
+				BuildMeshBoneEntityIds(child, rootEntity);
+
+			}
 		}
 
 	}
@@ -478,7 +488,6 @@ namespace Hazel {
 	}
 	Scene::~Scene()
 	{
-		delete m_PhysicsWorld;
 	}
 
   template<typename T>

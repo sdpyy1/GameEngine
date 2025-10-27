@@ -26,6 +26,7 @@ namespace Hazel {
 	{
 	public:
 		using EventCallbackFn = std::function<void(Event&)>;
+		virtual void SetTitle(const std::string& title) = 0;
 
 		virtual ~Window() = default;
 

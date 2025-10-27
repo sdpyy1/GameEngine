@@ -11,6 +11,7 @@ namespace Hazel {
 	public:
 		WindowsWindow(const WindowProps& props);
 		virtual ~WindowsWindow();
+		virtual void SetTitle(const std::string& title) override;
 
 		void OnUpdate() override;
 

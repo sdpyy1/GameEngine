@@ -6,7 +6,7 @@
 
 namespace Hazel {
 
-	bool Input_old::IsKeyPressed(const KeyCode_old key)
+	bool Input_old::IsKeyPressed(const KeyCode key)
 	{
 		auto* window = static_cast<GLFWwindow*>(Application::Get().GetWindow()->GetNativeWindow());
 		auto state = glfwGetKey(window, static_cast<int32_t>(key));

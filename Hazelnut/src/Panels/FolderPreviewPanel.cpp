@@ -1,23 +1,24 @@
-#include "FolderPreviewPanel.h"
-#include "hzpch.h"
+ï»¿#include "hzpch.h"
 #include "FolderPreviewPanel.h"
 
 #include <imgui/imgui.h>
 #include <imgui_internal.h>
 #include <glm/gtc/type_ptr.hpp>
-#include <Platform/Vulkan/VulkanTexture.h>
+#include "Platform/Vulkan/VulkanTexture.h"
 #include "Hazel/Utils/UIUtils.h"
-#include <Hazel/Asset/AssetMetadata.h>
-#include <Hazel/Asset/AssetImporter.h>
+#include "Hazel/Asset/AssetMetadata.h"
+#include "Hazel/Asset/AssetImporter.h"
+#include "Hazel/Renderer/Renderer.h"
+#include "Hazel/Scene/Scene.h"
+#include "Hazel/Scene/Entity.h"
 
 namespace Hazel {
 
 	FolderPreviewPanel::FolderPreviewPanel(const std::filesystem::path& assetsDir)
 		: m_AssetsDir(assetsDir), m_CurrentDir(assetsDir)
 	{
-		// ³õÊ¼»¯ÎÄ¼şÓëÎÄ¼ş¼ĞÍ¼±ê
 		TextureSpecification spec;
-		spec.DebugName = "iconForFile";
+		spec.DebugName = "FolderIcons";
 
 		std::filesystem::path dirIcon = "Resources/Icons/DirectoryIcon.png";
 		std::filesystem::path fileIcon = "Resources/Icons/FileIcon.png";
@@ -25,6 +26,12 @@ namespace Hazel {
 		m_DirectoryIcon = Texture2D::Create(spec, dirIcon);
 		m_FileIcon = Texture2D::Create(spec, fileIcon);
 	}
+
+	void FolderPreviewPanel::SetContext(Ref<Scene>& context)
+	{
+		m_Context = context;
+	}
+
 	void FolderPreviewPanel::OnFileOpen(const std::filesystem::path& path)
 	{
 		std::string ext = path.extension().string();
@@ -36,12 +43,13 @@ namespace Hazel {
 		{
 			Ref<MeshSource> meshSource = AssetManager::GetMesh(path);
 			Entity meshRoot = m_Context->CreateEntity(path.string());
-			if (meshSource->GetAnimationNames().size() == 0) {
-				meshRoot.AddComponent<StaticMeshComponent>(meshSource->Handle,path);
-			}else {
+			if (meshSource->GetAnimationNames().empty())
+				meshRoot.AddComponent<StaticMeshComponent>(meshSource->Handle, path);
+			else
+			{
+				meshRoot.AddComponent<DynamicMeshComponent>(meshSource->Handle, path);
 				m_Context->BuildDynamicMeshEntity(meshSource, meshRoot, path);
 			}
-
 		}
 		else if (ext == ".png" || ext == ".jpg")
 		{
@@ -54,10 +62,6 @@ namespace Hazel {
 		}
 	}
 
-	void FolderPreviewPanel::SetContext(Ref<Scene>& context)
-	{
-		m_Context = context;
-	}
 	void FolderPreviewPanel::OnImGuiRender()
 	{
 		ImGui::Begin("Content Browser");
@@ -65,58 +69,71 @@ namespace Hazel {
 		DrawToolbar();
 		ImGui::Separator();
 
-		float padding = 12.0f;
-		float thumbnailSize = 90.0f;
-		float cellSize = thumbnailSize + padding;
+		const float padding = 12.0f;
+		const float thumbnailSize = 90.0f;
+		const float cellSize = thumbnailSize + padding;
 
-		float panelWidth = ImGui::GetContentRegionAvail().x;
+		const float panelWidth = ImGui::GetContentRegionAvail().x;
 		int columnCount = (int)(panelWidth / cellSize);
 		if (columnCount < 1)
 			columnCount = 1;
 
 		ImGui::Columns(columnCount, 0, false);
 
-		for (auto& entry : std::filesystem::directory_iterator(m_CurrentDir))
+	for (auto& entry : std::filesystem::directory_iterator(m_CurrentDir))
+	{
+		const auto& path = entry.path();
+		std::string name = path.filename().string();
+
+		ImGui::PushID(name.c_str());
+		ImGui::BeginGroup();
+
+		Ref<Texture2D> icon = entry.is_directory() ? m_DirectoryIcon : m_FileIcon;
+
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0,0,0,0));
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3f,0.3f,0.3f,0.35f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.2f,0.5f,0.7f,0.45f));
+
+		// 1. ä¸ºæŒ‰é’®ç”Ÿæˆå”¯ä¸€ IDï¼ˆç¡®ä¿æ¯ä¸ªæŒ‰é’®çš„ ID å”¯ä¸€ï¼Œé¿å…å†²çªï¼‰
+		ImGuiID imageBtnId = ImGui::GetID(("custom_image_btn_" + std::to_string(123123)).c_str());
+
+		// 2. ä½¿ç”¨ ImageButtonEx ç»˜åˆ¶æŒ‰é’®ï¼Œæ˜¾å¼ä¼ å…¥ ID å’Œå…¶ä»–å‚æ•°
+		bool isClicked = ImGui::ImageButtonEx(imageBtnId, UI::GetImageId(icon->GetImage()), { 90.0f, 90.0f }, { 0, 1 }, { 1, 0 }, ImVec2(0, 0), ImVec4(0, 0, 0, 0), ImVec4(255, 255, 255, 255)
+		);
+		ImGui::PopStyleColor(3);
+
+		ImGui::SetItemAllowOverlap();
+
+		// æ‹–æ‹½é€»è¾‘
+		if (ImGui::BeginDragDropSource())
 		{
-			const auto& path = entry.path();
-			std::string name = path.filename().string();
-
-			ImGui::PushID(name.c_str());
-
-			Ref<Texture2D> icon = entry.is_directory() ? m_DirectoryIcon : m_FileIcon;
-
-			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
-			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3f, 0.3f, 0.3f, 0.35f));
-			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.2f, 0.5f, 0.7f, 0.45f));
-
-			ImGui::ImageButton(UI::GetImageId(icon->GetImage()),
-				{ thumbnailSize, thumbnailSize }, { 0, 1 }, { 1, 0 });
-
-			ImGui::PopStyleColor(3);
-
-			// Ë«»÷´ò¿ªÎÄ¼ş¼Ğ / Ô¤ÀÀÎÄ¼ş
-			if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
-			{
-				if (entry.is_directory())
-					m_CurrentDir /= path.filename();
-				else
-					OnFileOpen(path);
-			}
-
-			// ĞüÍ£ÌáÊ¾ÍêÕûÂ·¾¶
-			if (ImGui::IsItemHovered())
-				ImGui::SetTooltip(path.string().c_str());
-
-			// ÎÄ¼şÃûÎÄ±¾
-			ImGui::TextWrapped(name.c_str());
-
-			ImGui::NextColumn();
-			ImGui::PopID();
+			std::string absPath = std::filesystem::absolute(path).string();
+			ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", absPath.c_str(), absPath.size() + 1);
+			ImGui::Text("Dragging: %s", absPath.c_str());
+			ImGui::EndDragDropSource();
 		}
 
+		// åŒå‡»æ‰“å¼€é€»è¾‘
+		if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+		{
+			if (entry.is_directory())
+				m_CurrentDir /= path.filename();
+			else
+				OnFileOpen(path);
+		}
+
+		// æ‚¬åœæç¤º
+		if (ImGui::IsItemHovered())
+			ImGui::SetTooltip("%s", path.string().c_str());
+
+		ImGui::TextWrapped(name.c_str());
+		ImGui::EndGroup();
+		ImGui::NextColumn();
+		ImGui::PopID();
+	}
 		ImGui::Columns(1);
 
-		// ================== Ô¤ÀÀ´°¿Ú ==================
+		// ================== å›¾ç‰‡é¢„è§ˆçª—å£ ==================
 		if (m_ShowPreview)
 		{
 			bool open = m_ShowPreview;
@@ -152,7 +169,7 @@ namespace Hazel {
 			}
 		}
 
-		// ================== ÓÒ¼ü²Ëµ¥ ==================
+		// ================== å³é”®èœå• ==================
 		if (ImGui::BeginPopupContextWindow(0, 1, false))
 		{
 			if (ImGui::MenuItem("New Folder"))
