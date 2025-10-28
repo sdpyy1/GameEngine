@@ -121,8 +121,29 @@ namespace Hazel {
 	{
 		RoughnessTexture = texture;
 		UpdateDescriptorSet(true);
-
 	}
+	void VulkanMaterial::SetEmissionTexture(Ref<Texture2D> texture)
+	{
+		EmissionTexture = texture;
+		UpdateDescriptorSet(true);
+	}
+	void VulkanMaterial::SetAlbedoColor(glm::vec3 color)
+	{
+		m_AlbedoColor = color;
+	}
+	void VulkanMaterial::SetMetalnessColor(float color)
+	{
+		m_MetalnessColor = color;
+	}
+	void VulkanMaterial::SetRoughnessColor(float color)
+	{
+		m_RoughnessColor = color;
+	}
+	void VulkanMaterial::SetEmissionColor(glm::vec3 color)
+	{
+		m_EmissionColor = color;
+	}
+
 	void VulkanMaterial::SetAlbedoTexture(Ref<Texture2D> texture)
 	{
 		AlbedoTexture = texture;

@@ -12,6 +12,12 @@ namespace Hazel {
 		virtual void SetNormalTexture(Ref<Texture2D> texture) override;
 		virtual void SetMetalnessTexture(Ref<Texture2D> texture) override;
 		virtual void SetRoughnessTexture(Ref<Texture2D> texture) override;
+		virtual void SetAlbedoColor(glm::vec3 color) override;
+		virtual void SetMetalnessColor(float color) override;
+		virtual void SetRoughnessColor(float color) override;
+		virtual void SetEmissionColor(glm::vec3 color) override;
+		virtual void SetEmissionTexture(Ref<Texture2D> texture)override;
+
 		const std::vector<VkDescriptorSet>& GetDescriptorSets() const { return m_DescriptorSets; }
 		virtual ~VulkanMaterial() override;
 	private:

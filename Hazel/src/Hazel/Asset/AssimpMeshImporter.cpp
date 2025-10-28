@@ -50,31 +50,6 @@ namespace Hazel {
 			result[0][3] = matrix.d1; result[1][3] = matrix.d2; result[2][3] = matrix.d3; result[3][3] = matrix.d4;
 			return result;
 		}
-
-#if MESH_DEBUG_LOG
-		void PrintNode(aiNode* node, size_t depth)
-		{
-			HZ_MESH_LOG("{0:^{1}}{2} {{", "", depth * 3, node->mName.C_Str());
-			++depth;
-			glm::vec3 translation;
-			glm::quat rotationQuat;
-			glm::vec3 scale;
-			glm::mat4 transform = Mat4FromAIMatrix4x4(node->mTransformation);
-			Math::DecomposeTransform(transform, translation, rotationQuat, scale);
-			glm::vec3 rotation = glm::degrees(glm::eulerAngles(rotationQuat));
-
-			HZ_MESH_LOG("{0:^{1}}translation: ({2:8.4f}, {3:8.4f}, {4:8.4f})", "", depth * 3, translation.x, translation.y, translation.z);
-			HZ_MESH_LOG("{0:^{1}}rotation:    ({2:8.4f}, {3:8.4f}, {4:8.4f})", "", depth * 3, rotation.x, rotation.y, rotation.z);
-			HZ_MESH_LOG("{0:^{1}}scale:       ({2:8.4f}, {3:8.4f}, {4:8.4f})", "", depth * 3, scale.x, scale.y, scale.z);
-			for (uint32_t i = 0; i < node->mNumChildren; ++i)
-			{
-				PrintNode(node->mChildren[i], depth);
-			}
-			--depth;
-			HZ_MESH_LOG("{0:^{1}}}}", "", depth * 3);
-		}
-#endif
-
 	}
 	AssimpMeshImporter::AssimpMeshImporter(const std::filesystem::path& path)
 		: m_Path(path)
@@ -126,16 +101,9 @@ namespace Hazel {
 
 		HZ_CORE_TRACE_TAG("Skeletion","Skeleton {0} found in mesh file '{1}'", meshSource->HasSkeleton() ? "" : "Not found Skeleton", m_Path.string());
 
-		//// Actual load of the animations is deferred until later.
-		//// Because:
-		//// 1. If there is no skin (mesh), then assimp will not have loaded the skeleton, and we cannot
-		////    load the animations until we know what the skeleton is
-		//// 2. Loading the animation requires some extra parameters to control how to import the root motion
-		////    This constructor has no way of knowing what those parameters are.
 		meshSource->m_AnimationNames = AssimpAnimationImporter::GetAnimationNames(scene);
 		meshSource->m_Animations = std::vector<Scope<Animation>>(meshSource->m_AnimationNames.size());
 
-		// If no meshes in the scene, there's nothing more for us to do
 		if (scene->HasMeshes())
 		{
 			uint32_t vertexCount = 0;
@@ -148,7 +116,7 @@ namespace Hazel {
 			HZ_CORE_WARN("模型共 [{}] 个 subMesh", scene->mNumMeshes);
 			for (unsigned m = 0; m < scene->mNumMeshes; m++)
 			{
-				HZ_CORE_INFO("开始加载subMesh{}", m);
+				HZ_CORE_TRACE("开始加载subMesh{}", m);
 				aiMesh* mesh = scene->mMeshes[m];
 
 				if (!mesh->HasPositions())
@@ -217,16 +185,12 @@ namespace Hazel {
 				HZ_CORE_TRACE("加载索引数 = {}", mesh->mNumFaces * 3);
 
 			}
-			HZ_CORE_TRACE("顶点数据加载完成，共 [{0}] 顶点，共[{1}] 索引", vertexCount,indexCount);
-#if MESH_DEBUG_LOG
-			HZ_CORE_INFO_TAG("Mesh", "Traversing nodes for scene '{0}'", m_Path);
-			Utils::PrintNode(scene->mRootNode, 0);
-#endif
+			HZ_CORE_INFO("顶点数据加载完成，共 [{0}] 顶点，共[{1}] 索引", vertexCount,indexCount);
 
-			HZ_CORE_INFO("开始处理SubMesh变换信息");
+			HZ_CORE_TRACE("开始处理SubMesh变换信息");
 			MeshNode& rootNode = meshSource->m_Nodes.emplace_back();
 			TraverseNodes(meshSource, scene->mRootNode, 0);
-			HZ_CORE_INFO("开始计算Mesh的AABB包围盒");
+			HZ_CORE_TRACE("开始计算Mesh的AABB包围盒");
 			for (const auto& submesh : meshSource->m_Submeshes)
 			{
 				AABB transformedSubmeshAABB = submesh.BoundingBox;
@@ -290,19 +254,19 @@ namespace Hazel {
 						{
 							boneInfoIndex = static_cast<uint32_t>(meshSource->m_BoneInfo.size());
 							const auto& boneInfo = meshSource->m_BoneInfo.emplace_back(Utils::Mat4FromAIMatrix4x4(bone->mOffsetMatrix), boneIndex);
-							HZ_CORE_INFO_TAG("Mesh", "BoneInfo for bone '{0}'", bone->mName.C_Str());
+	/*						HZ_CORE_INFO_TAG("Mesh", "BoneInfo for bone '{0}'", bone->mName.C_Str());
 							HZ_CORE_INFO_TAG("Mesh", "  SubMeshIndex = {0}", m);
-							HZ_CORE_INFO_TAG("Mesh", "  BoneIndex = {0}", boneIndex);
+							HZ_CORE_INFO_TAG("Mesh", "  BoneIndex = {0}", boneIndex);*/
 							glm::vec3 translation;
 							glm::quat rotationQuat;
 							glm::vec3 scale;
 							Math::DecomposeTransform(boneInfo.InverseBindPose, translation, rotationQuat, scale);
 							glm::vec3 rotation = glm::degrees(glm::eulerAngles(rotationQuat));
-							HZ_CORE_INFO_TAG("Mesh", "  Inverse Bind Pose = {");
-							HZ_CORE_INFO("    translation: ({0:8.4f}, {1:8.4f}, {2:8.4f})", translation.x, translation.y, translation.z);
-							HZ_CORE_INFO("    rotation:    ({0:8.4f}, {1:8.4f}, {2:8.4f})", rotation.x, rotation.y, rotation.z);
-							HZ_CORE_INFO("    scale:       ({0:8.4f}, {1:8.4f}, {2:8.4f})", scale.x, scale.y, scale.z);
-							HZ_CORE_INFO("  }");
+							//HZ_CORE_INFO_TAG("Mesh", "  Inverse Bind Pose = {");
+							//HZ_CORE_INFO("    translation: ({0:8.4f}, {1:8.4f}, {2:8.4f})", translation.x, translation.y, translation.z);
+							//HZ_CORE_INFO("    rotation:    ({0:8.4f}, {1:8.4f}, {2:8.4f})", rotation.x, rotation.y, rotation.z);
+							//HZ_CORE_INFO("    scale:       ({0:8.4f}, {1:8.4f}, {2:8.4f})", scale.x, scale.y, scale.z);
+							//HZ_CORE_INFO("  }");
 						}
 
 						for (size_t j = 0; j < bone->mNumWeights; j++)
@@ -319,6 +283,7 @@ namespace Hazel {
 			{
 				boneInfluence.NormalizeWeights();
 			}
+			HZ_CORE_TRACE("共[{}]个骨骼", meshSource->m_BoneInfo.size());
 		}
 
 		// Materials
@@ -332,80 +297,22 @@ namespace Hazel {
 			{
 				auto aiMaterial = scene->mMaterials[i];
 				auto aiMaterialName = aiMaterial->GetName();
-				HZ_CORE_INFO("开始处理材质[{}]", aiMaterialName.data);
+				HZ_CORE_TRACE("开始处理材质[{}]", aiMaterialName.data);
 
 				// 创建材质对象，需要一个Shader和名称
 				Ref<Material> material = Material::Create(Renderer::GetShaderLibrary()->Get("gBuffer"), aiMaterialName.data);
 				auto ma = Ref<MaterialAsset>::Create(material);
 
-
-#if DEBUG_PRINT_ALL_PROPS
-				for (uint32_t p = 0; p < aiMaterial->mNumProperties; p++)
-				{
-					auto prop = aiMaterial->mProperties[p];
-
-					HZ_MESH_LOG("Material Property:");
-					HZ_MESH_LOG("  Name = {0}", prop->mKey.data);
-					HZ_MESH_LOG("  Type = {0}", (int)prop->mType);
-					HZ_MESH_LOG("  Size = {0}", prop->mDataLength);
-					float data = *(float*)prop->mData;
-					HZ_MESH_LOG("  Value = {0}", data);
-
-					switch (prop->mSemantic)
-					{
-					case aiTextureType_NONE:
-						HZ_MESH_LOG("  Semantic = aiTextureType_NONE");
-						break;
-					case aiTextureType_DIFFUSE:
-						HZ_MESH_LOG("  Semantic = aiTextureType_DIFFUSE");
-						break;
-					case aiTextureType_SPECULAR:
-						HZ_MESH_LOG("  Semantic = aiTextureType_SPECULAR");
-						break;
-					case aiTextureType_AMBIENT:
-						HZ_MESH_LOG("  Semantic = aiTextureType_AMBIENT");
-						break;
-					case aiTextureType_EMISSIVE:
-						HZ_MESH_LOG("  Semantic = aiTextureType_EMISSIVE");
-						break;
-					case aiTextureType_HEIGHT:
-						HZ_MESH_LOG("  Semantic = aiTextureType_HEIGHT");
-						break;
-					case aiTextureType_NORMALS:
-						HZ_MESH_LOG("  Semantic = aiTextureType_NORMALS");
-						break;
-					case aiTextureType_SHININESS:
-						HZ_MESH_LOG("  Semantic = aiTextureType_SHININESS");
-						break;
-					case aiTextureType_OPACITY:
-						HZ_MESH_LOG("  Semantic = aiTextureType_OPACITY");
-						break;
-					case aiTextureType_DISPLACEMENT:
-						HZ_MESH_LOG("  Semantic = aiTextureType_DISPLACEMENT");
-						break;
-					case aiTextureType_LIGHTMAP:
-						HZ_MESH_LOG("  Semantic = aiTextureType_LIGHTMAP");
-						break;
-					case aiTextureType_REFLECTION:
-						HZ_MESH_LOG("  Semantic = aiTextureType_REFLECTION");
-						break;
-					case aiTextureType_UNKNOWN:
-						HZ_MESH_LOG("  Semantic = aiTextureType_UNKNOWN");
-						break;
-					}
-				}
-#endif
-
 				aiString aiTexPath;
 				// 材质某个属性是固定值
 				glm::vec3 albedoColor(0.8f);
-				float emission = 0.0f;
+				glm::vec3 emission(0.0f);
 				aiColor3D aiColor, aiEmission;
 				if (aiMaterial->Get(AI_MATKEY_COLOR_DIFFUSE, aiColor) == AI_SUCCESS)
 					albedoColor = { aiColor.r, aiColor.g, aiColor.b };
 
 				if (aiMaterial->Get(AI_MATKEY_COLOR_EMISSIVE, aiEmission) == AI_SUCCESS)
-					emission = aiEmission.r;
+					emission = { aiEmission.r, aiEmission.g ,aiEmission.b };
 
 				ma->SetAlbedoColor(albedoColor);
 				ma->SetEmission(emission);
@@ -470,6 +377,39 @@ namespace Hazel {
 					ma->SetAlbedoColor(glm::vec3(1.0f));
 				}
 
+
+
+				// EMISSION map
+				bool hasEmissiveMap = aiMaterial->GetTexture(aiTextureType_EMISSIVE, 0, &aiTexPath) == AI_SUCCESS;
+				if (hasEmissiveMap) {
+					AssetHandle textureHandle = 0;
+					TextureSpecification spec;
+					spec.DebugName = aiTexPath.C_Str();
+					spec.Format = ImageFormat::SRGBA;
+					if (auto aiTexEmbedded = scene->GetEmbeddedTexture(aiTexPath.C_Str()))
+					{
+						spec.Format = ImageFormat::RGBA;
+						spec.Width = aiTexEmbedded->mWidth;
+						spec.Height = aiTexEmbedded->mHeight;
+						textureHandle = AssetManager::AddMemoryOnlyAsset(Texture2D::Create(spec, Buffer(aiTexEmbedded->pcData, 1)));
+					}
+					else
+					{
+						// TODO: Temp - this should be handled by Hazel's filesystem
+						auto parentPath = m_Path.parent_path();
+						auto texturePath = parentPath / aiTexPath.C_Str();
+						if (!std::filesystem::exists(texturePath))
+						{
+							HZ_CORE_INFO("    Emissive map path = {0} --> NOT FOUND", texturePath);
+							texturePath = parentPath / texturePath.filename();
+						}
+						HZ_CORE_INFO("加载 Emissive 贴图 path = {0}{1}", texturePath, std::filesystem::exists(texturePath) ? "" : " --> NOT FOUND");
+						textureHandle = AssetManager::AddMemoryOnlyAsset(Texture2D::Create(spec, texturePath));
+					}
+					ma->SetEmissiveMap(textureHandle);
+
+				}
+
 				// Normal maps
 				bool hasNormalMap = aiMaterial->GetTexture(aiTextureType_NORMALS, 0, &aiTexPath) == AI_SUCCESS;
 				if (hasNormalMap)
@@ -500,7 +440,6 @@ namespace Hazel {
 					}
 
 					ma->SetNormalMap(textureHandle);
-					// TODO(Yan): this needs to be false if it didn't work?
 					ma->SetUseNormalMap(true);
 
 				}
@@ -574,163 +513,6 @@ namespace Hazel {
 					ma->SetRoughness(1.0f);
 				}
 
-#if 0
-				// Metalness map (or is it??)
-				if (aiMaterial->Get("$raw.ReflectionFactor|file", aiPTI_String, 0, aiTexPath) == AI_SUCCESS)
-				{
-					// TODO: Temp - this should be handled by Hazel's filesystem
-					auto parentPath = m_Path.parent_path();
-					auto texturePath = parentPath / aiTexPath.C_Str();
-					if (!std::filesystem::exists(texturePath))
-					{
-						HZ_MESH_LOG("    Metalness map path = {0} --> NOT FOUND", texturePath);
-						texturePath = parentPath / texturePath.filename();
-					}
-					HZ_MESH_LOG("    Metalness map path = {0}{1}", texturePath, std::filesystem::exists(texturePath) ? "" : " --> NOT FOUND");
-					auto texture = Texture2D::Create(texturePath);
-					if (texture->Loaded())
-					{
-						mi->Set("u_MetalnessTexture", texture);
-						mi->Set("u_MetalnessTexToggle", 1.0f);
-					}
-					else
-					{
-						HZ_CORE_ERROR_TAG("Mesh", "Could not load texture: {0}", texturePath);
-					}
-				}
-				else
-				{
-					HZ_MESH_LOG("    No metalness texture");
-					mi->Set("u_Metalness", metalness);
-				}
-#endif
-
-#if 0
-				bool metalnessTextureFound = false;
-				for (uint32_t p = 0; p < aiMaterial->mNumProperties; p++)
-				{
-					auto prop = aiMaterial->mProperties[p];
-
-#if DEBUG_PRINT_ALL_PROPS
-					HZ_MESH_LOG("Material Property:");
-					HZ_MESH_LOG("  Name = {0}", prop->mKey.data);
-					// HZ_MESH_LOG("  Type = {0}", prop->mType);
-					// HZ_MESH_LOG("  Size = {0}", prop->mDataLength);
-					float data = *(float*)prop->mData;
-					HZ_MESH_LOG("  Value = {0}", data);
-
-					switch (prop->mSemantic)
-					{
-					case aiTextureType_NONE:
-						HZ_MESH_LOG("  Semantic = aiTextureType_NONE");
-						break;
-					case aiTextureType_DIFFUSE:
-						HZ_MESH_LOG("  Semantic = aiTextureType_DIFFUSE");
-						break;
-					case aiTextureType_SPECULAR:
-						HZ_MESH_LOG("  Semantic = aiTextureType_SPECULAR");
-						break;
-					case aiTextureType_AMBIENT:
-						HZ_MESH_LOG("  Semantic = aiTextureType_AMBIENT");
-						break;
-					case aiTextureType_EMISSIVE:
-						HZ_MESH_LOG("  Semantic = aiTextureType_EMISSIVE");
-						break;
-					case aiTextureType_HEIGHT:
-						HZ_MESH_LOG("  Semantic = aiTextureType_HEIGHT");
-						break;
-					case aiTextureType_NORMALS:
-						HZ_MESH_LOG("  Semantic = aiTextureType_NORMALS");
-						break;
-					case aiTextureType_SHININESS:
-						HZ_MESH_LOG("  Semantic = aiTextureType_SHININESS");
-						break;
-					case aiTextureType_OPACITY:
-						HZ_MESH_LOG("  Semantic = aiTextureType_OPACITY");
-						break;
-					case aiTextureType_DISPLACEMENT:
-						HZ_MESH_LOG("  Semantic = aiTextureType_DISPLACEMENT");
-						break;
-					case aiTextureType_LIGHTMAP:
-						HZ_MESH_LOG("  Semantic = aiTextureType_LIGHTMAP");
-						break;
-					case aiTextureType_REFLECTION:
-						HZ_MESH_LOG("  Semantic = aiTextureType_REFLECTION");
-						break;
-					case aiTextureType_UNKNOWN:
-						HZ_MESH_LOG("  Semantic = aiTextureType_UNKNOWN");
-						break;
-					}
-#endif
-
-					if (prop->mType == aiPTI_String)
-					{
-						uint32_t strLength = *(uint32_t*)prop->mData;
-						std::string str(prop->mData + 4, strLength);
-
-						std::string key = prop->mKey.data;
-						if (key == "$raw.ReflectionFactor|file")
-						{
-							AssetHandle textureHandle = 0;
-							TextureSpecification spec;
-							spec.DebugName = str;
-							if (auto aiTexEmbedded = scene->GetEmbeddedTexture(str.data()))
-							{
-								spec.Format = ImageFormat::RGB;
-								spec.Width = aiTexEmbedded->mWidth;
-								spec.Height = aiTexEmbedded->mHeight;
-								textureHandle = AssetManager::CreateMemoryOnlyRendererAsset<Texture2D>(spec, Buffer(aiTexEmbedded->pcData, 1));
-							}
-							else
-							{
-								// TODO: Temp - this should be handled by Hazel's filesystem
-								auto parentPath = m_Path.parent_path();
-								auto texturePath = parentPath / aiTexPath.C_Str();
-								if (!std::filesystem::exists(texturePath))
-								{
-									HZ_MESH_LOG("    Metalness map path = {0} --> NOT FOUND", texturePath);
-									texturePath = parentPath / texturePath.filename();
-								}
-								HZ_MESH_LOG("    Metalness map path = {0}{1}", texturePath, std::filesystem::exists(texturePath) ? "" : " --> NOT FOUND");
-								textureHandle = AssetManager::CreateMemoryOnlyRendererAsset<Texture2D>(spec, texturePath);
-							}
-
-							Ref<Texture2D> texture = AssetManager::GetAsset<Texture2D>(textureHandle);
-							if (texture && texture->Loaded())
-							{
-								metalnessTextureFound = true;
-								mi->Set("u_MetalnessTexture", texture);
-								mi->Set("u_MaterialUniforms.Metalness", 1.0f);
-							}
-							else
-							{
-								HZ_CORE_ERROR_TAG("Mesh", "    Could not load texture: {0}", str);
-							}
-							break;
-						}
-					}
-				}
-
-				// no metalness texture found, use roughness if there was one (the shaders read roughness from the texture's G channel, and metalness from B)
-				if (hasRoughnessMap)
-				{
-					Ref<Texture2D> texture = AssetManager::GetAsset<Texture2D>(roughnessTextureHandle);
-					if (texture && texture->Loaded())
-					{
-						mi->Set("u_MetalnessTexture", texture);
-						mi->Set("u_MaterialUniforms.Metalness", 1.0f);
-					}
-				}
-				fallback = !hasRoughnessMap;
-				if (fallback)
-				{
-					HZ_MESH_LOG("    No metalness map");
-					mi->Set("u_MetalnessTexture", whiteTexture);
-					mi->Set("u_MaterialUniforms.Metalness", metalness);
-
-				}
-#endif
-
 				// Metalness map
 				bool hasMetalnessMap = aiMaterial->GetTexture(AI_MATKEY_METALLIC_TEXTURE, &aiTexPath) == AI_SUCCESS;
 				AssetHandle metalnessTextureHandle = 0;
@@ -747,7 +529,6 @@ namespace Hazel {
 					}
 					else
 					{
-						// TODO: Temp - this should be handled by Hazel's filesystem
 						auto parentPath = m_Path.parent_path();
 						auto texturePath = parentPath / aiTexPath.C_Str();
 						if (!std::filesystem::exists(texturePath))
@@ -796,7 +577,6 @@ namespace Hazel {
 
 		if (meshSource->m_Indices.size())
 			HZ_CORE_INFO("模型共{}索引", meshSource->m_Indices.size()*3);
-
 			meshSource->m_IndexBuffer = IndexBuffer::Create(meshSource->m_Indices.data(), (uint32_t)(meshSource->m_Indices.size() * sizeof(Index)));
 
 		return meshSource;

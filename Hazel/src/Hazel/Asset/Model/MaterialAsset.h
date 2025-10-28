@@ -3,7 +3,6 @@
 #include <Hazel/Asset/Model/Material.h>
 
 namespace Hazel {
-	// 存储着各个贴图的UUID
 	class MaterialAsset : public Asset
 	{
 	public:
@@ -11,6 +10,7 @@ namespace Hazel {
 		explicit MaterialAsset(Ref<Material> material);
 		void SetDefaults();
 		void SetNormalMap(AssetHandle handle);
+		void SetEmissiveMap(AssetHandle handle);
 		void SetUseNormalMap(bool value);
 		void SetAlbedoMap(AssetHandle handle);
 		void SetRoughnessMap(AssetHandle handle);
@@ -18,9 +18,10 @@ namespace Hazel {
 		void SetAlbedoColor(const glm::vec3& color);
 		void SetMetalness(float value);
 		void SetRoughness(float value);
-		void SetEmission(float value);
+		void SetEmission(const glm::vec3& value);
 		void ClearAlbedoMap();
 		void ClearNormalMap();
+		void ClearEmssiveMap();
 		void ClearMetalnessMap();
 		void ClearRoughnessMap();
 		Ref<Material> GetMaterial() { return m_Material; }
@@ -33,6 +34,7 @@ namespace Hazel {
 			AssetHandle NormalMap = 0;
 			AssetHandle MetalnessMap = 0;
 			AssetHandle RoughnessMap = 0;
+			AssetHandle EmissiveMap = 0;
 		} m_Maps;
 
 		bool m_Transparent = false;

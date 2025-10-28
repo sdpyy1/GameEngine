@@ -27,22 +27,16 @@ namespace Hazel{
 	{
 		if (m_Transparent)
 		{
-			// Set defaults
 			SetAlbedoColor(glm::vec3(0.8f));
-
-			// Maps
 			ClearAlbedoMap();
 		}
 		else
 		{
-			// Set defaults
 			SetAlbedoColor(glm::vec3(0.8f));
-			SetEmission(0.0f);
+			SetEmission({0,0,0});
 			SetUseNormalMap(false);
 			SetMetalness(0.0f);
 			SetRoughness(0.4f);
-
-			// Maps
 			ClearAlbedoMap();
 			ClearNormalMap();
 			ClearMetalnessMap();
@@ -64,9 +58,24 @@ namespace Hazel{
 			ClearNormalMap();
 		}
 	}
+	void MaterialAsset::SetEmissiveMap(AssetHandle handle)
+	{
+		m_Maps.EmissiveMap = handle;
+
+		if (handle)
+		{
+			Ref<Texture2D> texture = AssetManager::GetAsset<Texture2D>(handle);
+			m_Material->SetEmissionTexture(texture);
+			AssetManager::RegisterDependency(handle, Handle);
+		}
+		else
+		{
+			ClearEmssiveMap();
+		}
+	}
 	void MaterialAsset::SetUseNormalMap(bool value)
 	{
-		//m_Material->Set(s_UseNormalMapUniform, value);
+		m_Material->SetUseNormalTexture(value);
 	}
 	void MaterialAsset::SetAlbedoMap(AssetHandle handle)
 	{
@@ -115,40 +124,41 @@ namespace Hazel{
 	}
 	void MaterialAsset::SetAlbedoColor(const glm::vec3& color)
 	{
-		//m_Material->Set(s_AlbedoColorUniform, color);
-
+		m_Material->SetAlbedoColor(color);
 	}
 	void MaterialAsset::SetMetalness(float value)
 	{
-		//m_Material->Set(s_MetalnessUniform, value);
+		m_Material->SetMetalnessColor(value);
 	}
 	void MaterialAsset::SetRoughness(float value)
 	{
-		//m_Material->Set(s_RoughnessUniform, value);
+		m_Material->SetRoughnessColor(value);
 	}
-	void MaterialAsset::SetEmission(float value)
+	void MaterialAsset::SetEmission(const glm::vec3& value)
 	{
-		//m_Material->Set(s_EmissionUniform, value);
+		m_Material->SetEmissionColor(value);
+
 	}
 	void MaterialAsset::ClearAlbedoMap()
 	{
-		//m_Material->Set(s_AlbedoMapUniform, Renderer::GetWhiteTexture());
-
+		m_Material->SetAlbedoTexture(Renderer::GetWhiteTexture());
 	}
 	void MaterialAsset::ClearNormalMap()
 	{
-		//m_Material->Set(s_NormalMapUniform, Renderer::GetWhiteTexture());
-
+		m_Material->SetNormalTexture(Renderer::GetWhiteTexture());
+	}
+	void MaterialAsset::ClearEmssiveMap()
+	{
+		m_Material->SetEmissionTexture(Renderer::GetWhiteTexture()); // TODO: should be black texture
 	}
 	void MaterialAsset::ClearMetalnessMap()
 	{
-		//m_Material->Set(s_MetalnessMapUniform, Renderer::GetWhiteTexture());
+		m_Material->SetMetalnessTexture(Renderer::GetWhiteTexture());
 
 	}
 	void MaterialAsset::ClearRoughnessMap()
 	{
-		//m_Material->Set(s_RoughnessMapUniform, Renderer::GetWhiteTexture());
-
+		m_Material->SetRoughnessTexture(Renderer::GetWhiteTexture());
 	}
 }
 

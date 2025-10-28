@@ -70,7 +70,7 @@ void main() {
         normalize(fragWorldBinormal),
         normalize(fragWorldNormal)
     );
-    vec3 tangentNormal = normalMap * 2.0 - 1.0; // ���뷨��
+    vec3 tangentNormal = normalMap * 2.0 - 1.0;
     vec3 worldNormal = normalize(TBN * tangentNormal);
 
     gPosition = vec4(fragWorldPos,1);
