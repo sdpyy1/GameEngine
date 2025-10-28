@@ -16,11 +16,11 @@ namespace Hazel {
 		EditorLayer();
 		virtual ~EditorLayer() = default;
 
-		virtual void OnAttach() override;
-		virtual void OnDetach() override;
+		void OnAttach() override;
+		void OnDetach() override;
 
 		void OnUpdate(Timestep ts) override;
-		virtual void OnImGuiRender() override;
+		void OnImGuiRender() override;
 		void OnEvent(Event& e) override;
 		bool OpenScene();
 		bool OpenScene(const std::filesystem::path& filepath);
@@ -35,7 +35,7 @@ namespace Hazel {
 	private:
 		Ref<Scene> m_Scene;  // 场景
 		EditorCamera m_EditorCamera; // 摄像机（目前设计摄像机不归场景管理）
-		// Gizmo
+		// Gizmo's
 		int m_GizmoType = -1;
 		Entity m_HoveredEntity;
 		Entity m_SelectedEntity;

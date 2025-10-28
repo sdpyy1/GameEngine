@@ -78,7 +78,7 @@ namespace Hazel {
 		if (columnCount < 1)
 			columnCount = 1;
 
-		ImGui::Columns(columnCount, 0, false);
+		ImGui::Columns(columnCount, nullptr, false);
 
 	for (auto& entry : std::filesystem::directory_iterator(m_CurrentDir))
 	{

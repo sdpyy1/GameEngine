@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="VcsDirectoryMappings">
+    <mapping directory="" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Hazel/vendor/Box2D" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Hazel/vendor/GLFW" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Hazel/vendor/ImGuizmo" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Hazel/vendor/glm" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Hazel/vendor/imgui" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Hazel/vendor/msdf-atlas-gen" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Hazel/vendor/msdf-atlas-gen/msdfgen" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Hazel/vendor/msdf-atlas-gen/msdfgen/freetype" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Hazel/vendor/msdf-atlas-gen/msdfgen/freetype/subprojects/dlg" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Hazel/vendor/spdlog" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Hazel/vendor/yaml-cpp" vcs="Git" />
+  </component>
+</project>

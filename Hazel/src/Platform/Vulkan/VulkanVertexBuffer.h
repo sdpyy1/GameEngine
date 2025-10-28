@@ -1,7 +1,7 @@
 #pragma once
 #include "Hazel/Renderer/VertexBuffer.h"
 
-#include "Hazel/Core/Buffer1.h"
+#include "Hazel/Core/Buffer.h"
 
 #include "VulkanAllocator.h"
 

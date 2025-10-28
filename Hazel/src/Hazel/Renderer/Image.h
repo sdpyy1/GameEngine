@@ -1,6 +1,6 @@
 #pragma once
 #include "RendererResource.h"
-#include <Hazel/Core/Buffer1.h>
+#include <Hazel/Core/Buffer.h>
 #include <glm/gtc/integer.hpp>
 namespace Hazel {
 

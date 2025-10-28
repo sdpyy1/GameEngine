@@ -3,10 +3,7 @@
 
 #include "Entity.h"
 #include "Components.h"
-#include "Hazel/Scripting/ScriptEngine.h"
 #include "Hazel/Core/UUID.h"
-
-#include "Hazel/Project/Project.h"
 
 #include <fstream>
 

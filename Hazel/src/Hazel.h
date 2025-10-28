@@ -1,14 +1,14 @@
 #pragma once
 
 // For use by Hazel applications
+#define HZ_VERSION "2025.10.28"
 
 #include "Hazel/Core/Base.h"
-
 #include "Hazel/Core/Application.h"
 #include "Hazel/Core/Layer.h"
 #include "Hazel/Core/Log.h"
 #include "Hazel/Core/Assert.h"
-#define HZ_VERSION "2024.1.1"
+
 
 #include "Hazel/Core/Timestep.h"
 
@@ -23,8 +23,6 @@
 #include "Hazel/Scene/Entity.h"
 #include "Hazel/Scene/ScriptableEntity.h"
 #include "Hazel/Scene/Components.h"
-
-#include "Hazel/Project/Project.h"
 
 // ---Renderer------------------------
 #include "Hazel/Renderer/Renderer.h"

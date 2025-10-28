@@ -2,7 +2,6 @@
 #include "Hazel/Scene/SceneSerializer.h"
 #include "Hazel/Utils/PlatformUtils.h"
 #include "Hazel/Math/Math.h"
-#include "Hazel/Scripting/ScriptEngine.h"
 #include "Hazel/Renderer/Font.h"
 
 #include <imgui/imgui.h>
@@ -233,7 +232,7 @@ namespace Hazel {
 	void EditorLayer::DrawGizmo()
 	{
 		m_SelectedEntity = m_AssetManagerPanel.GetSelectedEntity();
-		bool rightMouseDown = ImGui::IsMouseDown(Mouse::ButtonRight);
+		bool rightMouseDown = ImGui::IsMouseDown((int)Button::Right);
 		if (rightMouseDown) {
 			m_GizmoType = -1;
 		}

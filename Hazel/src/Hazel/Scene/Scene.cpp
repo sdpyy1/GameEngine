@@ -4,21 +4,13 @@
 #include "Hazel/Core/Application.h"
 #include "Components.h"
 #include "ScriptableEntity.h"
-#include "Hazel/Scripting/ScriptEngine.h"
 #include "Hazel/Physics/Physics2D.h"
 #include "Hazel/Renderer/Renderer.h"
 #define GLM_FORCE_DEPTH_ZERO_TO_FE 
 #include <glm/glm.hpp>
 
-#include "Entity.h"
 #include "Hazel/Utils/UIUtils.h"
 
-// Box2D
-#include "box2d/b2_world.h"
-#include "box2d/b2_body.h"
-#include "box2d/b2_fixture.h"
-#include "box2d/b2_polygon_shape.h"
-#include "box2d/b2_circle_shape.h"
 #include <Platform/Vulkan/VulkanShader.h>
 #include <Platform/Vulkan/VulkanVertexBuffer.h>
 #include <Platform/Vulkan/VulkanIndexBuffer.h>

@@ -12,7 +12,7 @@ namespace Hazel {
 
 		void SetContext(Ref<Scene>& scene);
 		void ClearState() { m_SelectionContext = {}; m_RenameEntity = {}; }
-		virtual void OnImGuiRender() override;
+		void OnImGuiRender() override;
 
 		void SetSelectedEntity(Entity entity);
 		Entity GetSelectedEntity() { return m_SelectionContext; }

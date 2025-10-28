@@ -1,7 +1,5 @@
 #include "AssetManagerPanel.h"
 #include "Hazel/Scene/Components.h"
-#include "Hazel/Scripting/ScriptEngine.h"
-#include "Hazel/UI/UI.h"
 
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>

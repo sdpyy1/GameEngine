@@ -4,7 +4,6 @@
 #include "Hazel/Core/Log.h"
 
 #include "Hazel/Renderer/Renderer.h"
-#include "Hazel/Scripting/ScriptEngine.h"
 #include <Platform/Vulkan/VulkanContext.h>
 
 #include "Hazel/Core/Input.h"

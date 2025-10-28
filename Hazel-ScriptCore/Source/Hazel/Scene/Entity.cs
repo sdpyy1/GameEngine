@@ -1,11 +1,10 @@
 using System;
-using System.Runtime.CompilerServices;
 
 namespace Hazel
 {
 	public class Entity
 	{
-		protected Entity() { ID = 0; } 
+		protected Entity() { ID = 0; }
 
 		internal Entity(ulong id)
 		{
@@ -41,7 +40,7 @@ namespace Hazel
 			T component = new T() { Entity = this };
 			return component;
 		}
-		
+
 		public Entity FindEntityByName(string name)
 		{
 			ulong entityID = InternalCalls.Entity_FindEntityByName(name);
