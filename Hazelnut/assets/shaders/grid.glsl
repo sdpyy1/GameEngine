@@ -96,7 +96,9 @@ vec4 grid(vec3 fragPos3D)
 float computeDepth(vec3 pos) 
 {
     vec4 posH = cameraData.proj * cameraData.view * vec4(pos, 1.0);
-    return posH.z / posH.w;	
+    float deviceZ = posH.z / posH.w;
+    // 将设备空间深度值钳制在 [0.0, 1.0] 范围内
+    return clamp(deviceZ, 0.0, 1.0);
 }
 // Vulkan linearize z.
 // NOTE: viewspace z range is [-zFar, -zNear], linear z is viewspace z mul -1 result on vulkan.
@@ -106,7 +108,7 @@ float computeDepth(vec3 pos)
 //       linearZ = zNear * zFar / (zNear + deviceZ * (zFar - zNear));
 float linearizeDepth(float z, float n, float f)
 {
-    return (n * f) / (f - z * (f - n));
+    return (n * f) / (f - z * (n - f));
 }
 
 vec4 getColor(vec3 fragPos3D, float t)
@@ -119,10 +121,8 @@ vec4 getColor(vec3 fragPos3D, float t)
     float sceneZ = texture(inDepth,uv).r;
 
     float linearDepth = linearizeDepth(deviceZ,cameraData.Near,cameraData.Far);
-	if(linearDepth < 0.0){ // 这里不判断会有问题
-		linearDepth = 0.0;
-	}
-    float fading = exp2(-linearDepth * 0.05); // 让远处更淡
+
+    float fading = exp2(-linearDepth * 0.05);
 
     vec4 result = grid(fragPos3D) * float(t > 0);
     result.a = (deviceZ < sceneZ) ? result.a : 0.0;
