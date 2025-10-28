@@ -66,6 +66,10 @@ namespace Hazel {
 				const auto& boneTransformsData = m_MeshBoneTransformsMap.at(meshKey);
 				Renderer::RenderSkeletonMeshWithMaterial(m_CommandBuffer, m_GeoAnimPipeline, drawCommand.MeshSource, drawCommand.SubmeshIndex, drawCommand.MaterialAsset->GetMaterial(), m_SubmeshTransformBuffers[frameIndex].Buffer, transformData.TransformOffset, boneTransformsData.BoneTransformsBaseIndex, drawCommand.InstanceCount);
 			}
+			else {
+				Renderer::RenderSkeletonMeshWithMaterial(m_CommandBuffer, m_GeoAnimPipeline, drawCommand.MeshSource, drawCommand.SubmeshIndex, drawCommand.MaterialAsset->GetMaterial(), m_SubmeshTransformBuffers[frameIndex].Buffer, transformData.TransformOffset, 0, drawCommand.InstanceCount);
+
+			}
 		}
 		Renderer::EndRenderPass(m_CommandBuffer);
 	}
@@ -106,6 +110,7 @@ namespace Hazel {
 			cascadeSplits[i] = (d - nearClip) / clipRange;
 		}
 
+		cascadeSplits[3] = 0.3f;
 
 		// Calculate orthographic projection matrix for each cascade
 		float lastSplitDist = 0.0;
@@ -231,6 +236,9 @@ namespace Hazel {
 					const auto& boneTransformsData = m_MeshBoneTransformsMap.at(mk);
 					Renderer::RenderSkeletonMeshWithMaterial(m_CommandBuffer, m_ShadowPassPipelinesAnim[i], dc.MeshSource, dc.SubmeshIndex, nullptr, m_SubmeshTransformBuffers[frameIndex].Buffer, transformData.TransformOffset, boneTransformsData.BoneTransformsBaseIndex, dc.InstanceCount, cascade);
 				}
+				else {
+					Renderer::RenderSkeletonMeshWithMaterial(m_CommandBuffer, m_ShadowPassPipelinesAnim[i], dc.MeshSource, dc.SubmeshIndex, nullptr, m_SubmeshTransformBuffers[frameIndex].Buffer, transformData.TransformOffset, 0, dc.InstanceCount, cascade);
+				}
 			}
 			Renderer::EndRenderPass(m_CommandBuffer);
 		}
@@ -287,6 +295,9 @@ namespace Hazel {
 			{
 				const auto& boneTransformsData = m_MeshBoneTransformsMap.at(mk);
 				Renderer::RenderSkeletonMeshWithMaterial(m_CommandBuffer, m_PreDepthPipelineAnim, dc.MeshSource, dc.SubmeshIndex, nullptr, m_SubmeshTransformBuffers[frameIndex].Buffer, transformData.TransformOffset, boneTransformsData.BoneTransformsBaseIndex, dc.InstanceCount);
+			}
+			else {
+				Renderer::RenderSkeletonMeshWithMaterial(m_CommandBuffer, m_PreDepthPipelineAnim, dc.MeshSource, dc.SubmeshIndex, nullptr, m_SubmeshTransformBuffers[frameIndex].Buffer, transformData.TransformOffset, 0, dc.InstanceCount);
 			}
 		}
 		Renderer::EndRenderPass(m_CommandBuffer);
