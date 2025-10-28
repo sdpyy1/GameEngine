@@ -10,7 +10,7 @@ namespace Hazel {
 	{
 	public:
 		AssetHandle Handle = 0;
-		uint16_t Flags = (uint16_t)AssetFlag::None; // 正常、缺失、无效
+		uint16_t Flags = (uint16_t)AssetFlag::None; 
 
 		virtual ~Asset() {}
 

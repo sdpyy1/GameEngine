@@ -16,7 +16,7 @@ namespace Hazel {
 	class MeshSourceSerializer : public AssetSerializer
 	{
 	public:
-		virtual void Serialize(const AssetMetadata& metadata, const Ref<Asset>& asset) const override {}
+		virtual void Serialize(const AssetMetadata& metadata, const Ref<Asset>& asset) const override { HZ_CORE_INFO("目前还不支持序列化Mesh"); }
 		virtual bool TryLoadData(const AssetMetadata& metadata, Ref<Asset>& asset) const override;
 	};
 }

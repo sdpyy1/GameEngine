@@ -29,7 +29,7 @@ vec3 deprojectNDC2World(vec2 pos, float z)
 }
 void main()
 {
-	// 插值后获得每个像素的近远平面上的位置
+	// 插值后获得每个像素的近远平面上的位置,从近平面点向远平面点发射射线，意思就是说从摄像机视角下向所有像素发射一根射线，判断射线与y=0这个平面的交点，交点位于整数坐标就绘制网格
     nearPoint = deprojectNDC2World(kNdcPoints[gl_VertexIndex].xy, 0.0);
     farPoint  = deprojectNDC2World(kNdcPoints[gl_VertexIndex].xy, 1.0);
 
@@ -51,40 +51,43 @@ bool onRange(float val, float minVal, float maxVal)
 
 vec4 grid(vec3 fragPos3D) 
 {
-    // 两层网格：大格+小格
-    float gray0 = 0.3; // 大格
+    float gray0 = 0.30;
     float scale0 = 1.0;
 
-    float gray1 = 0.6; // 小格
+    float gray1 = 0.60;
     float scale1 = 0.1;
 
-    // 大格
     vec2 coord0 = fragPos3D.xz * scale0; 
+    vec2 derivative0 = fwidth(coord0);
     vec2 grid0 = abs(fract(coord0 - 0.5) - 0.5) / fwidth(coord0 * 2.0);
     float line0 = min(grid0.x, grid0.y);
     vec4 color = vec4(gray0, gray0, gray0, 1.0 - min(line0, 1.0));
 
-    // 小格
     vec2 coord1 = fragPos3D.xz * scale1; 
     vec2 grid1 = abs(fract(coord1 - 0.5) - 0.5) / fwidth(coord1 * 2.0);
     float line1 = min(grid1.x, grid1.y);
     float a1 = 1.0 - min(line1, 1.0);
-    if(a1 > 0.0)
+    if(a1 > 0.0f)
+    {
         color = mix(color, vec4(gray1, gray1, gray1, a1), a1);
+    }
 
-    // 中心轴高亮（X/Z=0线）
     vec2 coord = fragPos3D.xz;
-    bool xDraw = onRange(coord.x, -0.5, 0.5);
-    bool zDraw = onRange(coord.y, -0.5, 0.5);
-    if(xDraw || zDraw)
+    bool xDraw = onRange(coord.x, -0.5f, 0.5f);
+    bool yDraw = onRange(coord.y, -0.5f, 0.5f);
+    if(xDraw || yDraw)
     {
         vec2 grid = abs(fract(coord - 0.5) - 0.5) / fwidth(coord * 2.0);
         vec2 a = vec2(1.0) - min(grid, vec2(1.0));
 
         if(xDraw)
-            color.xyz = mix(color.xyz, vec3(1.0, 0.12, 0.18), a.x);
-        if(zDraw)
-            color.xyz = mix(color.xyz, vec3(0.1, 0.3, 1.0), a.y);
+        {
+            color.xyz = mix(color.xyz, vec3(1.0f, 0.12f, 0.18f), a.x);
+        }
+        if(yDraw)
+        {
+            color.xyz = mix(color.xyz, vec3(0.1f, 0.3f, 1.0f), a.y);
+        }
     }
 
     return color;
@@ -95,6 +98,12 @@ float computeDepth(vec3 pos)
     vec4 posH = cameraData.proj * cameraData.view * vec4(pos, 1.0);
     return posH.z / posH.w;	
 }
+// Vulkan linearize z.
+// NOTE: viewspace z range is [-zFar, -zNear], linear z is viewspace z mul -1 result on vulkan.
+// if no exist reverse z:
+//       linearZ = zNear * zFar / (zFar +  deviceZ * (zNear - zFar));
+//  when reverse z enable, then the function is:
+//       linearZ = zNear * zFar / (zNear + deviceZ * (zFar - zNear));
 float linearizeDepth(float z, float n, float f)
 {
     return (n * f) / (f - z * (f - n));
@@ -110,6 +119,9 @@ vec4 getColor(vec3 fragPos3D, float t)
     float sceneZ = texture(inDepth,uv).r;
 
     float linearDepth = linearizeDepth(deviceZ,cameraData.Near,cameraData.Far);
+	if(linearDepth < 0.0){ // 这里不判断会有问题
+		linearDepth = 0.0;
+	}
     float fading = exp2(-linearDepth * 0.05); // 让远处更淡
 
     vec4 result = grid(fragPos3D) * float(t > 0);
@@ -121,7 +133,6 @@ vec4 getColor(vec3 fragPos3D, float t)
 
 void main()
 {
-	// 计算每个像素看向y=0平面时，所表示的空间坐标，fragPos就是y=0这个平面上的一个点
     float t = -nearPoint.y / (farPoint.y - nearPoint.y);
     vec3 fragPos3D = nearPoint + t * (farPoint - nearPoint);
     outColor = getColor(fragPos3D, t);
