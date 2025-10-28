@@ -98,7 +98,7 @@ namespace Hazel {
 			s_Data->m_ShaderLibrary->LoadCommonShader("gBufferAnim", gbufferShaderSpec);
 		}
 
-		// ShadowPass
+		// DirShadowPass
 		{
 			Shader::ShaderSpecification shadowShaderSpec;
 			shadowShaderSpec.bindings.push_back(cameraDataBinding);
@@ -112,7 +112,22 @@ namespace Hazel {
 			shadowShaderSpec.pushConstantRanges[0].size = 8;
 			s_Data->m_ShaderLibrary->LoadCommonShader("DirShadowMapAnim", shadowShaderSpec);
 		}
+		// SpotShadowPass
+		{
+            Shader::ShaderSpecification shadowShaderSpec;
+			shadowShaderSpec.bindings.push_back(cameraDataBinding); // 并不是摄像机数据是光照矩阵
+			Shader::PushConstantRange PushRange;
+			PushRange.shaderStage = VK_SHADER_STAGE_VERTEX_BIT;
+			PushRange.offset = 0;
+			PushRange.offset = 0;
+			PushRange.size = 4;
+			shadowShaderSpec.pushConstantRanges = { PushRange };
+			s_Data->m_ShaderLibrary->LoadCommonShader("SpotShadowMap", shadowShaderSpec);
+			shadowShaderSpec.bindings.push_back(boneTrasnfromBinding);
+			shadowShaderSpec.pushConstantRanges[0].size = 8;
+			s_Data->m_ShaderLibrary->LoadCommonShader("SpotShadowMapAnim", shadowShaderSpec);
 
+		}
 
 		// GridPass
 		{

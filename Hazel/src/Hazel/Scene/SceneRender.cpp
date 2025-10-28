@@ -14,18 +14,75 @@ namespace Hazel {
 	{
 		Init();
 	}
+	void SceneRender::InitSpotShadowPass() // TODO：这里和别的Pass不一样
+	{
+		FramebufferSpecification framebufferSpec;
+		framebufferSpec.Width = shadowMapResolution;
+		framebufferSpec.Height = shadowMapResolution;
+		framebufferSpec.Attachments = { ImageFormat::DEPTH32F };
+		framebufferSpec.DepthClearValue = 1.0f;
+		framebufferSpec.NoResize = true;
+		framebufferSpec.DebugName = "SpotShadowMap";
+
+		auto shadowPassShader = Renderer::GetShaderLibrary()->Get("SpotShadowMap");
+		auto shadowPassShaderAnim = Renderer::GetShaderLibrary()->Get("SpotShadowMapAnim");
+
+		PipelineSpecification pipelineSpec;
+		pipelineSpec.DebugName = "SpotShadowPass";
+		pipelineSpec.Shader = shadowPassShader;
+		pipelineSpec.TargetFramebuffer = Framebuffer::Create(framebufferSpec);
+		pipelineSpec.DepthOperator = DepthCompareOperator::LessOrEqual;
+		pipelineSpec.Layout = vertexLayout;
+		pipelineSpec.InstanceLayout = instanceLayout;
+		PipelineSpecification pipelineSpecAnim = pipelineSpec;
+		pipelineSpecAnim.DebugName = "SpotShadowPassAnim";
+		pipelineSpecAnim.Shader = shadowPassShaderAnim;
+		pipelineSpecAnim.BoneInfluenceLayout = boneInfluenceLayout;
+
+		m_SpotShadowPassPipeline = Pipeline::Create(pipelineSpec);
+		m_SpotShadowPassAnimPipeline = Pipeline::Create(pipelineSpecAnim);
+
+		RenderPassSpecification spotShadowPassSpec;
+		spotShadowPassSpec.DebugName = "SpotShadowMap";
+		spotShadowPassSpec.Pipeline = m_SpotShadowPassPipeline;
+		m_SpotShadowPass = RenderPass::Create(spotShadowPassSpec);
+		spotShadowPassSpec.DebugName = "SpotShadowMapAnim";
+		spotShadowPassSpec.Pipeline = m_SpotShadowPassAnimPipeline;
+		m_SpotShadowAnimPass = RenderPass::Create(spotShadowPassSpec);
+		m_SpotShadowPass->SetInput(m_UBSSpotShadowData,0);
+		m_SpotShadowAnimPass->SetInput(m_UBSSpotShadowData,0);
+		m_SpotShadowAnimPass->SetInput(m_SBSBoneTransforms, 1, true);
+	}
+
+	void SceneRender::UploadSpotShadowData()
+	{
+		const std::vector<SpotLight>& spotLightsVec = m_SceneData->SceneLightEnvironment.SpotLights;
+		// TODO:待完成
+	}
+
+	void SceneRender::SpotShadowPass()
+	{
+		//throw std::logic_error("The method or operation is not implemented.");
+	}
 
 	void SceneRender::Init()
 	{
 		m_CommandBuffer = RenderCommandBuffer::Create("PassCommandBuffer");
 		InitBuffers();
 		InitDirShadowPass();
+		InitSpotShadowPass();
 		InitPreDepthPass();
 		InitGeoPass();
 		InitGridPass();
 	}
 
-
+	void SceneRender::Draw() {
+		ShadowPass();
+		SpotShadowPass();
+		PreDepthPass();
+		GeoPass();
+		GridPass();
+	}
 	void SceneRender::PreRender(SceneInfo sceneData)
 	{	
 		m_SceneData = &sceneData;
@@ -36,15 +93,11 @@ namespace Hazel {
 		UploadCameraData();
 		UpLoadMeshAndBoneTransForm();
 		UploadCSMShadowData();
+		UploadSpotShadowData();
 
 	}
 
-	void SceneRender::Draw() {
-		ShadowPass();
-		PreDepthPass();
-		GeoPass();
-		GridPass();
-	}
+
 	void SceneRender::GeoPass()
 	{
 		uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
@@ -417,7 +470,7 @@ namespace Hazel {
 		m_UBSCameraData = UniformBufferSet::Create(sizeof(CameraData), "CameraData");
 		m_ShadowData = new UBShadow();
 		m_UBSShadow = UniformBufferSet::Create(sizeof(UBShadow), "Shadow");
-
+		m_UBSSpotShadowData = UniformBufferSet::Create(sizeof(UBSpotShadowData),"SportShadowData");
 		// 用一个很大的顶点缓冲区来存储所有的变换矩阵
 		const size_t TransformBufferCount = 10 * 1024; // 10240 transforms
 		m_SubmeshTransformBuffers.resize(framesInFlight);
@@ -635,4 +688,7 @@ namespace Hazel {
 		Renderer::BeginRenderPass(m_CommandBuffer, renderPass, explicitClear);
 		Renderer::EndRenderPass(m_CommandBuffer);
 	}
+
+
+
 }

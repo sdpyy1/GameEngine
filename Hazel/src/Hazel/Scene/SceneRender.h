@@ -165,7 +165,10 @@ namespace Hazel {
 		bool NeedResize = false;
 		// command buffer
 		Ref<RenderCommandBuffer> m_CommandBuffer;
-
+		struct UBSpotShadowData
+		{
+			glm::mat4 ShadowMatrices[1000]{};
+		} SpotShadowDataUB;
 		// uniform buffer
 		struct CameraData {
 			glm::mat4 view;
@@ -175,16 +178,31 @@ namespace Hazel {
 			float Near;
 			float Far;
 		};
+		struct UBSpotLights
+		{
+			uint32_t Count{ 0 };
+			glm::vec3 Padding{};
+			SpotLight SpotLights[1000]{};
+		} SpotLightUB;
 		CameraData* m_CameraData = nullptr;
 		Ref<UniformBufferSet> m_UBSCameraData;
 		UBShadow* m_ShadowData = nullptr;
 		Ref<UniformBufferSet> m_UBSShadow;
+		Ref<UniformBufferSet> m_UBSSpotShadowData;
+		UBSpotLights* spotLightData = nullptr;
 
 		// shadowPass
 		std::vector<Ref<RenderPass>> m_DirectionalShadowMapPass; // Per-cascade
 		std::vector<Ref<RenderPass>> m_DirectionalShadowMapAnimPass; // Per-cascade
 		Ref<Pipeline> m_ShadowPassPipelines[4];
 		Ref<Pipeline> m_ShadowPassPipelinesAnim[4];
+
+		Ref<Pipeline> m_SpotShadowPassPipeline;
+		Ref<Pipeline> m_SpotShadowPassAnimPipeline;
+		Ref<RenderPass> m_SpotShadowPass;
+		Ref<RenderPass> m_SpotShadowAnimPass;
+
+
 		//PreDepthPass
 		Ref<Pipeline> m_PreDepthPipeline;
 		Ref<Pipeline> m_PreDepthPipelineAnim;
@@ -203,6 +221,9 @@ namespace Hazel {
 		Ref<Pipeline> m_GridPipeline;
 		Ref<Framebuffer> m_GridFrameBuffer;
 
+		void InitSpotShadowPass();
+		void UploadSpotShadowData();
+		void SpotShadowPass();
 	};
 
 }

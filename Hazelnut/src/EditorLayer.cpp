@@ -18,7 +18,7 @@
 namespace Hazel {
 
 	EditorLayer::EditorLayer()
-		: Layer("EditorLayer"), m_EditorCamera(45.0f, 1280.0f, 720.0f, 0.1f, 1000.0f), m_FolderPreviewPanel("assets")
+		: Layer("EditorLayer"), m_EditorCamera(45.0f, 1280.0f, 720.0f, 0.1f, 100.0f), m_FolderPreviewPanel("assets")
 	{
 		m_Scene = Ref<Scene>::Create();
 		m_AssetManagerPanel.SetContext(m_Scene);

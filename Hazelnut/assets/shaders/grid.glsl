@@ -108,7 +108,7 @@ float computeDepth(vec3 pos)
 //       linearZ = zNear * zFar / (zNear + deviceZ * (zFar - zNear));
 float linearizeDepth(float z, float n, float f)
 {
-    return (n * f) / (f - z * (n - f));
+    return (n * f) / (f + z * (n - f));
 }
 
 vec4 getColor(vec3 fragPos3D, float t)
