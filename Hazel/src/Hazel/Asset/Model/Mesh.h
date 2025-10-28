@@ -138,7 +138,7 @@ namespace Hazel {
 		std::vector<AssetHandle> m_Materials;
 		const MeshNode& GetRootNode() const { return m_Nodes[0]; }
 		const std::vector<MeshNode>& GetNodes() const { return m_Nodes; }
-
+		std::vector<BoneInfo>& GetBoneInfo()  { return m_BoneInfo; }
 	private:
 		std::vector<Submesh> m_Submeshes;
 		std::vector<Vertex> m_Vertices;

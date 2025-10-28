@@ -109,8 +109,7 @@ namespace Hazel {
 			shadowShaderSpec.pushConstantRanges = { casPushRange };
 			s_Data->m_ShaderLibrary->LoadCommonShader("DirShadowMap", shadowShaderSpec);
 			shadowShaderSpec.bindings.push_back(boneTrasnfromBinding);
-			casPushRange.size = 8;
-			shadowShaderSpec.pushConstantRanges = { casPushRange };
+			shadowShaderSpec.pushConstantRanges[0].size = 8;
 			s_Data->m_ShaderLibrary->LoadCommonShader("DirShadowMapAnim", shadowShaderSpec);
 		}
 
@@ -144,8 +143,6 @@ namespace Hazel {
 			preDepthShaderSpec.pushConstantRanges.push_back(BoneInfluencePushRange);
 			s_Data->m_ShaderLibrary->LoadCommonShader("PreDepthAnim", preDepthShaderSpec);
 		}
-
-
 
 		// 加载纹理
 		uint32_t whiteTextureData = 0xffffffff;

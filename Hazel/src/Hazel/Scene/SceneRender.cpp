@@ -14,6 +14,61 @@ namespace Hazel {
 	{
 		Init();
 	}
+
+	void SceneRender::Init()
+	{
+		m_CommandBuffer = RenderCommandBuffer::Create("PassCommandBuffer");
+		InitBuffers();
+		InitDirShadowPass();
+		InitPreDepthPass();
+		InitGeoPass();
+		InitGridPass();
+	}
+
+
+	void SceneRender::PreRender(SceneInfo sceneData)
+	{	
+		m_SceneData = &sceneData;
+		// 处理运行时窗口Resize // TODO:注意如果Resize里有新的，销毁的资源需要在UploadDescriptorRuntime()中重新绑定
+		HandleResizeRuntime();
+		UploadDescriptorRuntime();
+		// 更新各种资源信息
+		UploadCameraData();
+		UpLoadMeshAndBoneTransForm();
+		UploadCSMShadowData();
+
+	}
+
+	void SceneRender::Draw() {
+		ShadowPass();
+		PreDepthPass();
+		GeoPass();
+		GridPass();
+	}
+	void SceneRender::GeoPass()
+	{
+		uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
+		// 静态网格
+		Renderer::BeginRenderPass(m_CommandBuffer, m_GeoPass, false);
+		for (auto& [meshKey, drawCommand] : m_StaticMeshDrawList)
+		{
+			const auto& transformData = m_MeshTransformMap.at(meshKey); 
+			Renderer::RenderStaticMeshWithMaterial(m_CommandBuffer, m_GeoPipeline,drawCommand.MeshSource, drawCommand.SubmeshIndex, drawCommand.MaterialAsset->GetMaterial(), m_SubmeshTransformBuffers[frameIndex].Buffer, transformData.TransformOffset, drawCommand.InstanceCount);
+		}
+		Renderer::EndRenderPass(m_CommandBuffer);
+
+		// 动态网格
+		Renderer::BeginRenderPass(m_CommandBuffer, m_GeoAnimPass, false);
+		for (auto& [meshKey, drawCommand] : m_DynamicDrawList)
+		{
+			const auto& transformData = m_MeshTransformMap.at(meshKey);
+			if (drawCommand.IsRigged) {
+				const auto& boneTransformsData = m_MeshBoneTransformsMap.at(meshKey);
+				Renderer::RenderSkeletonMeshWithMaterial(m_CommandBuffer, m_GeoAnimPipeline, drawCommand.MeshSource, drawCommand.SubmeshIndex, drawCommand.MaterialAsset->GetMaterial(), m_SubmeshTransformBuffers[frameIndex].Buffer, transformData.TransformOffset, boneTransformsData.BoneTransformsBaseIndex, drawCommand.InstanceCount);
+			}
+		}
+		Renderer::EndRenderPass(m_CommandBuffer);
+	}
 	void SceneRender::CalculateCascades(CascadeData* cascades, const EditorCamera& sceneCamera, const glm::vec3& lightDirection) const
 	{
 		float CascadeSplitLambda = 0.92f;
@@ -51,7 +106,6 @@ namespace Hazel {
 			cascadeSplits[i] = (d - nearClip) / clipRange;
 		}
 
-		cascadeSplits[3] = 0.3f;
 
 		// Calculate orthographic projection matrix for each cascade
 		float lastSplitDist = 0.0;
@@ -133,12 +187,12 @@ namespace Hazel {
 		}
 	}
 	void SceneRender::UploadCSMShadowData() {
+		if (m_SceneData->SceneLightEnvironment.DirectionalLights[0].Intensity == 0) return;
 		CascadeData cascades[4];
-		//CalculateCascades(cascades, m_SceneData->camera, m_SceneData->SceneLightEnvironment.DirectionalLights[0].Direction);
-		CalculateCascades(cascades, m_SceneData->camera, glm::normalize(glm::vec3(-1.0f)));
+		CalculateCascades(cascades, m_SceneData->camera, m_SceneData->SceneLightEnvironment.DirectionalLights[0].Direction);
 		for (int i = 0; i < NumShadowCascades; i++)
 		{
-			CascadeSplits[i] = cascades[i].SplitDepth;	
+			CascadeSplits[i] = cascades[i].SplitDepth;
 			m_ShadowData->ViewProjection[i] = cascades[i].ViewProj;
 		}
 		m_UBSShadow->Get()->SetData(m_ShadowData, sizeof(UBShadow));
@@ -148,8 +202,6 @@ namespace Hazel {
 		auto& directionalLights = m_SceneData->SceneLightEnvironment.DirectionalLights;
 		if (directionalLights[0].Intensity == 0.0f || !directionalLights[0].CastShadows)
 		{
-			//for (uint32_t i = 0; i < NumShadowCascades; i++)
-				//ClearPass(m_DirectionalShadowMapPass[i]);
 			return;
 		}
 		for (uint32_t i = 0; i < NumShadowCascades; i++)
@@ -160,7 +212,6 @@ namespace Hazel {
 			const Buffer cascade(&i, sizeof(uint32_t));
 			for (auto& [mk, dc] : m_StaticMeshDrawList)
 			{
-				HZ_CORE_VERIFY(m_MeshTransformMap.find(mk) != m_MeshTransformMap.end());
 				const auto& transformData = m_MeshTransformMap.at(mk);
 				Renderer::RenderStaticMeshWithMaterial(m_CommandBuffer, m_ShadowPassPipelines[i], dc.MeshSource, dc.SubmeshIndex, nullptr, m_SubmeshTransformBuffers[frameIndex].Buffer, transformData.TransformOffset, dc.InstanceCount, cascade);
 			}
@@ -174,9 +225,12 @@ namespace Hazel {
 			const Buffer cascade(&i, sizeof(uint32_t));
 			for (auto& [mk, dc] : m_DynamicDrawList)
 			{
-				HZ_CORE_VERIFY(m_MeshTransformMap.find(mk) != m_MeshTransformMap.end());
 				const auto& transformData = m_MeshTransformMap.at(mk);
-				Renderer::RenderSkeletonMeshWithMaterial(m_CommandBuffer, m_ShadowPassPipelinesAnim[i], dc.MeshSource, dc.SubmeshIndex, nullptr, m_SubmeshTransformBuffers[frameIndex].Buffer, transformData.TransformOffset, 0, dc.InstanceCount, cascade);
+				if (dc.IsRigged)
+				{
+					const auto& boneTransformsData = m_MeshBoneTransformsMap.at(mk);
+					Renderer::RenderSkeletonMeshWithMaterial(m_CommandBuffer, m_ShadowPassPipelinesAnim[i], dc.MeshSource, dc.SubmeshIndex, nullptr, m_SubmeshTransformBuffers[frameIndex].Buffer, transformData.TransformOffset, boneTransformsData.BoneTransformsBaseIndex, dc.InstanceCount, cascade);
+				}
 			}
 			Renderer::EndRenderPass(m_CommandBuffer);
 		}
@@ -185,7 +239,7 @@ namespace Hazel {
 	void SceneRender::InitPreDepthPass() {
 		FramebufferSpecification preDepthFramebufferSpec;
 		preDepthFramebufferSpec.DebugName = "PreDepth";
-		preDepthFramebufferSpec.Attachments = {ImageFormat::Depth };
+		preDepthFramebufferSpec.Attachments = { ImageFormat::Depth };
 		preDepthFramebufferSpec.DepthClearValue = 1.0f;
 		m_PreDepthClearFramebuffer = Framebuffer::Create(preDepthFramebufferSpec);
 		preDepthFramebufferSpec.ClearDepthOnLoad = false;
@@ -212,9 +266,9 @@ namespace Hazel {
 		preDepthRenderPassSpec.Pipeline = m_PreDepthPipelineAnim;
 		m_PreDepthAnimPass = RenderPass::Create(preDepthRenderPassSpec);
 
-		m_PreDepthPass->SetInput(m_UBSCameraData,0);
+		m_PreDepthPass->SetInput(m_UBSCameraData, 0);
 		m_PreDepthAnimPass->SetInput(m_UBSCameraData, 0);
-		m_PreDepthAnimPass->SetInput(m_SBSBoneTransforms, 1,true);
+		m_PreDepthAnimPass->SetInput(m_SBSBoneTransforms, 1, true);
 	}
 	void SceneRender::PreDepthPass() {
 		uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
@@ -222,8 +276,8 @@ namespace Hazel {
 		for (auto& [mk, dc] : m_StaticMeshDrawList)
 		{
 			const auto& transformData = m_MeshTransformMap.at(mk);
-			Renderer::RenderStaticMeshWithMaterial(m_CommandBuffer, m_PreDepthPipeline,dc.MeshSource, dc.SubmeshIndex, nullptr, m_SubmeshTransformBuffers[frameIndex].Buffer, transformData.TransformOffset, dc.InstanceCount);
-		}		
+			Renderer::RenderStaticMeshWithMaterial(m_CommandBuffer, m_PreDepthPipeline, dc.MeshSource, dc.SubmeshIndex, nullptr, m_SubmeshTransformBuffers[frameIndex].Buffer, transformData.TransformOffset, dc.InstanceCount);
+		}
 		Renderer::EndRenderPass(m_CommandBuffer);
 		Renderer::BeginRenderPass(m_CommandBuffer, m_PreDepthAnimPass);
 		for (auto& [mk, dc] : m_DynamicDrawList)
@@ -232,63 +286,11 @@ namespace Hazel {
 			if (dc.IsRigged)
 			{
 				const auto& boneTransformsData = m_MeshBoneTransformsMap.at(mk);
-				Renderer::RenderSkeletonMeshWithMaterial(m_CommandBuffer, m_PreDepthPipelineAnim, dc.MeshSource, dc.SubmeshIndex, nullptr,m_SubmeshTransformBuffers[frameIndex].Buffer,transformData.TransformOffset, boneTransformsData.BoneTransformsBaseIndex, dc.InstanceCount);
+				Renderer::RenderSkeletonMeshWithMaterial(m_CommandBuffer, m_PreDepthPipelineAnim, dc.MeshSource, dc.SubmeshIndex, nullptr, m_SubmeshTransformBuffers[frameIndex].Buffer, transformData.TransformOffset, boneTransformsData.BoneTransformsBaseIndex, dc.InstanceCount);
 			}
 		}
 		Renderer::EndRenderPass(m_CommandBuffer);
 
-	}
-	void SceneRender::Init()
-	{
-		m_CommandBuffer = RenderCommandBuffer::Create("PassCommandBuffer");
-		InitBuffers();
-		InitDirShadowPass();
-		InitPreDepthPass();
-		InitGeoPass();
-		InitGridPass();
-	}
-
-
-	void SceneRender::PreRender(SceneInfo sceneData)
-	{	
-		m_SceneData = &sceneData;
-		// 处理运行时窗口Resize // TODO:注意如果Resize里有新的，销毁的资源需要在UploadDescriptorRuntime()中重新绑定
-		HandleResizeRuntime();
-		UploadDescriptorRuntime();
-		// 更新各种资源信息
-		UploadCameraData();
-		UpLoadMeshAndBoneTransForm();
-		UploadCSMShadowData();
-
-	}
-
-	void SceneRender::Draw() {
-		ShadowPass();
-		PreDepthPass();
-		GeoPass();
-		GridPass();
-	}
-	void SceneRender::GeoPass()
-	{
-		uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
-		// 静态网格
-		Renderer::BeginRenderPass(m_CommandBuffer, m_GeoPass, false);
-		for (auto& [meshKey, drawCommand] : m_StaticMeshDrawList)
-		{
-			const auto& transformData = m_MeshTransformMap.at(meshKey); 
-			Renderer::RenderStaticMeshWithMaterial(m_CommandBuffer, m_GeoPipeline,drawCommand.MeshSource, drawCommand.SubmeshIndex, drawCommand.MaterialAsset->GetMaterial(), m_SubmeshTransformBuffers[frameIndex].Buffer, transformData.TransformOffset, drawCommand.InstanceCount);
-		}
-		Renderer::EndRenderPass(m_CommandBuffer);
-
-		// 动态网格
-		Renderer::BeginRenderPass(m_CommandBuffer, m_GeoAnimPass, false);
-		for (auto& [meshKey, drawCommand] : m_DynamicDrawList)
-		{
-			const auto& transformData = m_MeshTransformMap.at(meshKey);
-			const auto& boneTransformsData = m_MeshBoneTransformsMap.at(meshKey);
-			Renderer::RenderSkeletonMeshWithMaterial(m_CommandBuffer, m_GeoAnimPipeline, drawCommand.MeshSource, drawCommand.SubmeshIndex, drawCommand.MaterialAsset->GetMaterial(), m_SubmeshTransformBuffers[frameIndex].Buffer, transformData.TransformOffset, boneTransformsData.BoneTransformsBaseIndex, drawCommand.InstanceCount);
-		}
-		Renderer::EndRenderPass(m_CommandBuffer);
 	}
 	void SceneRender::GridPass()
 	{

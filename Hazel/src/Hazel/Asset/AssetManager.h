@@ -30,7 +30,7 @@ namespace Hazel {
 				AssetImporter::TryLoadData(metadata, meshAsset);
 			}
 			MesheSourceCacheMap[path] = meshAsset;
-			m_MemoryAssets	[meshAsset->Handle] = meshAsset;
+			m_MemoryAssets[meshAsset->Handle] = meshAsset;
 			return meshAsset;
 		}
 		static void RegisterDependency(AssetHandle handle, AssetHandle dependency) { 

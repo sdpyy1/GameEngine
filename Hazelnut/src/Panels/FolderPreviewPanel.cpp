@@ -43,7 +43,7 @@ namespace Hazel {
 		{
 			Ref<MeshSource> meshSource = AssetManager::GetMesh(path);
 			Entity meshRoot = m_Context->CreateEntity(path.string());
-			if (meshSource->GetAnimationNames().empty())
+			if (meshSource->GetAnimationNames().empty() || meshSource->GetBoneInfo().size() == 0) // 目前还不支持没有骨骼的动画，所以也作为静态
 				meshRoot.AddComponent<StaticMeshComponent>(meshSource->Handle, path);
 			else
 			{

@@ -1,0 +1,15 @@
+Scene: Untitled
+Entities:
+  - Entity: 16326214428705355593
+    TagComponent:
+      Tag: assets\model\Sponza\glTF\Sponza.gltf
+    Parent: 0
+    Children:
+      []
+    TransformComponent:
+      Translation: [0, 1.10000002, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    StaticMeshComponent:
+      MeshSourcePath: assets\model\Sponza\glTF\Sponza.gltf
+      Visible: true
