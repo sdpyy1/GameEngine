@@ -1,6 +1,7 @@
 #pragma once
 #include "Scene.h"
 #include "Hazel/Asset/Model/Mesh.h"
+#include <Hazel/Renderer/ComputePass.h>
 namespace Hazel {
 	class SceneRender : public RefCounted
 	{
@@ -20,6 +21,7 @@ namespace Hazel {
 		void GeoPass();
 		// Grid
 		void GridPass();
+		void CreateHZBPassMaterials();
 	private:
 		void Init();
 		void Draw();
@@ -28,7 +30,7 @@ namespace Hazel {
 		void InitDirShadowPass();
 		void InitGeoPass();
 		void InitGridPass();
-		void UpLoadMeshAndBoneTransForm();
+		void UploadMeshAndBoneTransForm();
 		void UploadCSMShadowData();
 		void InitPreDepthPass();
 
@@ -38,7 +40,9 @@ namespace Hazel {
 		void UploadDescriptorRuntime();
 
 		void ClearPass(Ref<RenderPass> renderPass, bool explicitClear = false);
-
+		void InitSpotShadowPass();
+		void UploadSpotShadowData();
+		void SpotShadowPass();
 	private:
 		SceneInfo *m_SceneData = nullptr;
 		uint32_t shadowMapResolution = 4096;
@@ -156,6 +160,7 @@ namespace Hazel {
 		std::map<MeshKey, BoneTransformsMapData> m_MeshBoneTransformsMap;
 		BoneTransforms* m_BoneTransformsData = nullptr;
 		Ref<StorageBufferSet> m_SBSBoneTransforms;
+		std::vector<Ref<Material>> m_HZBMaterials; // per-mip
 
 		struct UBShadow
 		{
@@ -190,6 +195,12 @@ namespace Hazel {
 		Ref<UniformBufferSet> m_UBSShadow;
 		Ref<UniformBufferSet> m_UBSSpotShadowData;
 		UBSpotLights* spotLightData = nullptr;
+		// Hierarchical Depth
+		struct HierarchicalDepthTexture
+		{
+			Ref<Texture2D> Texture;
+			std::vector<Ref<ImageView>> ImageViews; // per-mip
+		} m_HierarchicalDepthTexture;
 
 		// shadowPass
 		std::vector<Ref<RenderPass>> m_DirectionalShadowMapPass; // Per-cascade
@@ -221,9 +232,13 @@ namespace Hazel {
 		Ref<Pipeline> m_GridPipeline;
 		Ref<Framebuffer> m_GridFrameBuffer;
 
-		void InitSpotShadowPass();
-		void UploadSpotShadowData();
-		void SpotShadowPass();
+		// HierarchicalDepthPass
+		Ref<ComputePass> m_HierarchicalDepthPass;
+
+
+		void InitHZBPass();
+		void HZBComputePass();
+		void HandleHZBTexture();
 	};
 
 }

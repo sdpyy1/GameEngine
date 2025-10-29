@@ -25,6 +25,16 @@ namespace Hazel {
 	}
 
 
+	VulkanShader::VulkanShader(const std::string& name, const std::string& computeFilePath, ShaderSpecification spec)
+	{
+		m_Name = name;
+		m_Spec = spec;
+		m_PushConstantRanges = spec.pushConstantRanges;
+		m_ComputePath = computeFilePath;
+		m_IsCompute = true;
+		Reload();
+	}
+
 	void VulkanShader::Reload()
 	{
 		Renderer::Submit([instance = Ref(this)]() mutable{
@@ -37,25 +47,42 @@ namespace Hazel {
 	void VulkanShader::RT_Reload()
 	{
 		// TODO: 先实现最简单的Shader载入功能
-		auto vertCode = readFile(m_VertFilePath);
-		VkShaderModuleCreateInfo vertCreateInfo{};
-		vertCreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-		vertCreateInfo.codeSize = vertCode.size();
-		vertCreateInfo.pCode = reinterpret_cast<const uint32_t*>(vertCode.data());
-		if (vkCreateShaderModule(VulkanContext::GetCurrentDevice()->GetVulkanDevice(), &vertCreateInfo, nullptr, &m_VertShaderModule) != VK_SUCCESS) {
-			throw std::runtime_error("failed to create shader module!");
+		if (m_IsCompute) {
+			auto computCode = readFile(m_ComputePath);
+			VkShaderModuleCreateInfo computCreateInfo{};
+			computCreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+			computCreateInfo.codeSize = computCode.size();
+			computCreateInfo.pCode = reinterpret_cast<const uint32_t*>(computCode.data());
+			if (vkCreateShaderModule(VulkanContext::GetCurrentDevice()->GetVulkanDevice(), &computCreateInfo, nullptr, &m_ComputeShaderModule) != VK_SUCCESS) {
+				throw std::runtime_error("failed to create shader module!");
+			}
 		}
-		auto fragCode = readFile(m_FragFilePath);
-		VkShaderModuleCreateInfo fragCreateInfo{};
-		fragCreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-		fragCreateInfo.codeSize = fragCode.size();
-		fragCreateInfo.pCode = reinterpret_cast<const uint32_t*>(fragCode.data());
-		if (vkCreateShaderModule(VulkanContext::GetCurrentDevice()->GetVulkanDevice(), &fragCreateInfo, nullptr, &m_FragShaderModule) != VK_SUCCESS) {
-			throw std::runtime_error("failed to create shader module!");
+		else {
+			auto vertCode = readFile(m_VertFilePath);
+			VkShaderModuleCreateInfo vertCreateInfo{};
+			vertCreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+			vertCreateInfo.codeSize = vertCode.size();
+			vertCreateInfo.pCode = reinterpret_cast<const uint32_t*>(vertCode.data());
+			if (vkCreateShaderModule(VulkanContext::GetCurrentDevice()->GetVulkanDevice(), &vertCreateInfo, nullptr, &m_VertShaderModule) != VK_SUCCESS) {
+				throw std::runtime_error("failed to create shader module!");
+			}
+			auto fragCode = readFile(m_FragFilePath);
+			VkShaderModuleCreateInfo fragCreateInfo{};
+			fragCreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+			fragCreateInfo.codeSize = fragCode.size();
+			fragCreateInfo.pCode = reinterpret_cast<const uint32_t*>(fragCode.data());
+			if (vkCreateShaderModule(VulkanContext::GetCurrentDevice()->GetVulkanDevice(), &fragCreateInfo, nullptr, &m_FragShaderModule) != VK_SUCCESS) {
+				throw std::runtime_error("failed to create shader module!");
+			}
 		}
-		createDescriptorSetLayout();
-		createDescriptorPool(100);
-		createDescriptorSet();
+		if (!m_Spec.bindings.empty()) {
+			createDescriptorSetLayout();
+			createDescriptorPool(100);
+			createDescriptorSet();
+		}
+		else {
+			HZ_CORE_WARN("RT: Shader Has No Descriptor :{0}", m_Name);
+		}
 	}
 
 	void VulkanShader::createDescriptorSetLayout() {

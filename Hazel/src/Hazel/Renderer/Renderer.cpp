@@ -159,6 +159,42 @@ namespace Hazel {
 			s_Data->m_ShaderLibrary->LoadCommonShader("PreDepthAnim", preDepthShaderSpec);
 		}
 
+		// HZBPass
+		{
+			Shader::ShaderSpecification hzbShaderSpec;
+
+			// 描述符绑定：对应Shader中的资源绑定
+			// Binding 0: o_HZB[4] - 输出的4个存储图像数组
+			Shader::DescriptorBinding binding0;
+			binding0.binding = 0;
+			binding0.type = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+			binding0.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+			binding0.count = 4; // 数组长度为4，对应MAX_MIP_BATCH_SIZE
+			binding0.set = 0;
+			hzbShaderSpec.bindings.push_back(binding0);
+
+			// Binding 1: u_InputDepth - 输入的深度纹理采样器
+			Shader::DescriptorBinding binding1;
+			binding1.binding = 1;
+			binding1.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+			binding1.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+			binding1.count = 1; // 单个采样器
+			binding1.set = 0;
+			hzbShaderSpec.bindings.push_back(binding1);
+
+			// Push常量范围：对应Shader中的push_constant
+			Shader::PushConstantRange pushConstant;
+			pushConstant.shaderStage = VK_SHADER_STAGE_COMPUTE_BIT;
+			pushConstant.offset = 0;
+			// 计算PushConstant总大小（按4字节对齐）
+			// 结构成员：vec2(8) + vec2(8) + vec2(8) + int(4) + bool(1) = 29字节 → 补齐至32字节
+			pushConstant.size = 32;
+			hzbShaderSpec.pushConstantRanges.push_back(pushConstant);
+			s_Data->m_ShaderLibrary->LoadCommonShader("HZB", hzbShaderSpec,true);
+		}
+
+
+
 		// 加载纹理
 		uint32_t whiteTextureData = 0xffffffff;
 		TextureSpecification spec;
@@ -289,4 +325,23 @@ namespace Hazel {
 	{
 		return s_Config;
 	}
+
+	void Renderer::BeginComputePass(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<ComputePass> computePass)
+	{
+		HZ_CORE_ASSERT(computePass, "ComputePass cannot be null!");
+
+		s_RendererAPI->BeginComputePass(renderCommandBuffer, computePass);
+	}
+
+	void Renderer::EndComputePass(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<ComputePass> computePass)
+	{
+		s_RendererAPI->EndComputePass(renderCommandBuffer, computePass);
+
+	}
+
+	void Renderer::DispatchCompute(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<ComputePass> computePass, Ref<Material> material, const glm::uvec3& workGroups, Buffer constants)
+	{
+		s_RendererAPI->DispatchCompute(renderCommandBuffer, computePass, material, workGroups, constants);
+	}
+
 }

@@ -4,6 +4,7 @@
 :: 生成的 spv 文件放到 spv 文件夹中
 :: 需要安装 VulkanSDK 并配置正确路径
 :: ==============================================
+setlocal enabledelayedexpansion
 
 set GLSLC="D:\context\VulkanSDK\1.3.243.0\Bin\glslc.exe"
 
@@ -16,10 +17,18 @@ echo [Shader Compilation Started]
 echo ==============================================
 
 for %%f in (*.glsl) do (
-    echo Compiling %%f ...
-    %GLSLC% -fshader-stage=vert %%f -DVERTEX_SHADER -o spv/%%~nfVert.spv
-    %GLSLC% -fshader-stage=frag %%f -DFRAGMENT_SHADER -o spv/%%~nfFrag.spv
+
+    echo %%f | findstr /i "\.comp\." >nul
+    if !errorlevel! equ 0 (
+        echo Compiling compute shader: %%f ...
+        %GLSLC% -fshader-stage=comp %%f -DCOMPUTE_SHADER -o spv/%%~nf.spv
+    ) else (
+        echo Compiling vertex/fragment shader: %%f ...
+        %GLSLC% -fshader-stage=vert %%f -DVERTEX_SHADER -o spv/%%~nfVert.spv
+        %GLSLC% -fshader-stage=frag %%f -DFRAGMENT_SHADER -o spv/%%~nfFrag.spv
+    )
 )
+endlocal
 
 echo ==============================================
 echo [All shaders compiled successfully!]

@@ -7,62 +7,70 @@
 #include <glm/gtx/compatibility.hpp>
 #include <Hazel/Asset/Model/Mesh.h>
 #include <glm/gtc/matrix_transform.hpp>
-
+#include <Hazel/Math/Math.h>
 #include <Platform/Vulkan/VulkanRenderCommandBuffer.h>
 namespace Hazel {
 	SceneRender::SceneRender()
 	{
 		Init();
 	}
-	void SceneRender::InitSpotShadowPass() // TODO：这里和别的Pass不一样
+	void SceneRender::InitHZBPass()
 	{
-		FramebufferSpecification framebufferSpec;
-		framebufferSpec.Width = shadowMapResolution;
-		framebufferSpec.Height = shadowMapResolution;
-		framebufferSpec.Attachments = { ImageFormat::DEPTH32F };
-		framebufferSpec.DepthClearValue = 1.0f;
-		framebufferSpec.NoResize = true;
-		framebufferSpec.DebugName = "SpotShadowMap";
-
-		auto shadowPassShader = Renderer::GetShaderLibrary()->Get("SpotShadowMap");
-		auto shadowPassShaderAnim = Renderer::GetShaderLibrary()->Get("SpotShadowMapAnim");
-
-		PipelineSpecification pipelineSpec;
-		pipelineSpec.DebugName = "SpotShadowPass";
-		pipelineSpec.Shader = shadowPassShader;
-		pipelineSpec.TargetFramebuffer = Framebuffer::Create(framebufferSpec);
-		pipelineSpec.DepthOperator = DepthCompareOperator::LessOrEqual;
-		pipelineSpec.Layout = vertexLayout;
-		pipelineSpec.InstanceLayout = instanceLayout;
-		PipelineSpecification pipelineSpecAnim = pipelineSpec;
-		pipelineSpecAnim.DebugName = "SpotShadowPassAnim";
-		pipelineSpecAnim.Shader = shadowPassShaderAnim;
-		pipelineSpecAnim.BoneInfluenceLayout = boneInfluenceLayout;
-
-		m_SpotShadowPassPipeline = Pipeline::Create(pipelineSpec);
-		m_SpotShadowPassAnimPipeline = Pipeline::Create(pipelineSpecAnim);
-
-		RenderPassSpecification spotShadowPassSpec;
-		spotShadowPassSpec.DebugName = "SpotShadowMap";
-		spotShadowPassSpec.Pipeline = m_SpotShadowPassPipeline;
-		m_SpotShadowPass = RenderPass::Create(spotShadowPassSpec);
-		spotShadowPassSpec.DebugName = "SpotShadowMapAnim";
-		spotShadowPassSpec.Pipeline = m_SpotShadowPassAnimPipeline;
-		m_SpotShadowAnimPass = RenderPass::Create(spotShadowPassSpec);
-		m_SpotShadowPass->SetInput(m_UBSSpotShadowData,0);
-		m_SpotShadowAnimPass->SetInput(m_UBSSpotShadowData,0);
-		m_SpotShadowAnimPass->SetInput(m_SBSBoneTransforms, 1, true);
+		TextureSpecification spec;
+		spec.Format = ImageFormat::RED32F;
+		spec.Width = 1;
+		spec.Height = 1;
+		spec.SamplerWrap = TextureWrap::Clamp;
+		spec.SamplerFilter = TextureFilter::Nearest;
+		spec.DebugName = "HierarchicalZ";
+		m_HierarchicalDepthTexture.Texture = Texture2D::Create(spec); // 创建了一张纹理
+		Ref<Shader> shader = Renderer::GetShaderLibrary()->Get("HZB");
+		ComputePassSpecification hdPassSpec;
+		hdPassSpec.DebugName = "HierarchicalDepth";
+		hdPassSpec.Pipeline = PipelineCompute::Create(shader);
+		m_HierarchicalDepthPass = ComputePass::Create(hdPassSpec);
 	}
-
-	void SceneRender::UploadSpotShadowData()
+	void SceneRender::HZBComputePass()
 	{
-		const std::vector<SpotLight>& spotLightsVec = m_SceneData->SceneLightEnvironment.SpotLights;
-		// TODO:待完成
-	}
+		constexpr uint32_t maxMipBatchSize = 4;
+		const uint32_t hzbMipCount = m_HierarchicalDepthTexture.Texture->GetMipLevelCount();
+		Renderer::BeginComputePass(m_CommandBuffer, m_HierarchicalDepthPass);
+		auto ReduceHZB = [commandBuffer = m_CommandBuffer, hierarchicalDepthPass = m_HierarchicalDepthPass, hierarchicalDepthTexture = m_HierarchicalDepthTexture.Texture, hzbMaterials = m_HZBMaterials]
+		(const uint32_t startDestMip, const uint32_t parentMip, const glm::vec2& DispatchThreadIdToBufferUV, const glm::vec2& InputViewportMaxBound, const bool isFirstPass)
+			{
+				struct HierarchicalZComputePushConstants
+				{
+					glm::vec2 DispatchThreadIdToBufferUV;
+					glm::vec2 InputViewportMaxBound;
+					glm::vec2 InvSize;
+					int FirstLod;
+					bool IsFirstPass;
+					char Padding[3]{ 0, 0, 0 };
+				} hierarchicalZComputePushConstants;
 
-	void SceneRender::SpotShadowPass()
-	{
-		//throw std::logic_error("The method or operation is not implemented.");
+				hierarchicalZComputePushConstants.IsFirstPass = isFirstPass;
+				hierarchicalZComputePushConstants.FirstLod = (int)startDestMip;
+				hierarchicalZComputePushConstants.DispatchThreadIdToBufferUV = DispatchThreadIdToBufferUV;
+				hierarchicalZComputePushConstants.InputViewportMaxBound = InputViewportMaxBound;
+
+				const glm::ivec2 srcSize(Math::DivideAndRoundUp(hierarchicalDepthTexture->GetSize(), 1u << parentMip));
+				const glm::ivec2 dstSize(Math::DivideAndRoundUp(hierarchicalDepthTexture->GetSize(), 1u << startDestMip));
+				hierarchicalZComputePushConstants.InvSize = glm::vec2{ 1.0f / (float)srcSize.x, 1.0f / (float)srcSize.y };
+
+				glm::uvec3 workGroups(Math::DivideAndRoundUp(dstSize.x, 8), Math::DivideAndRoundUp(dstSize.y, 8), 1);
+				Renderer::DispatchCompute(commandBuffer, hierarchicalDepthPass, hzbMaterials[startDestMip / 4], workGroups, Buffer(&hierarchicalZComputePushConstants, sizeof(hierarchicalZComputePushConstants)));
+			};
+		// Reduce first 4 mips
+		glm::ivec2 srcSize = m_PreDepthPass->GetDepthOutput()->GetSize();
+		ReduceHZB(0, 0, { 1.0f / glm::vec2{ srcSize } }, { (glm::vec2{ srcSize } - 0.5f) / glm::vec2{ srcSize } }, true);
+
+		// Reduce the next mips
+		for (uint32_t startDestMip = maxMipBatchSize; startDestMip < hzbMipCount; startDestMip += maxMipBatchSize)
+		{
+			srcSize = Math::DivideAndRoundUp(m_HierarchicalDepthTexture.Texture->GetSize(), 1u << uint32_t(startDestMip - 1));
+			ReduceHZB(startDestMip, startDestMip - 1, { 2.0f / glm::vec2{ srcSize } }, glm::vec2{ 1.0f }, false);
+		}		
+		Renderer::EndComputePass(m_CommandBuffer, m_HierarchicalDepthPass);
 	}
 
 	void SceneRender::Init()
@@ -72,6 +80,7 @@ namespace Hazel {
 		InitDirShadowPass();
 		InitSpotShadowPass();
 		InitPreDepthPass();
+		InitHZBPass();
 		InitGeoPass();
 		InitGridPass();
 	}
@@ -80,23 +89,34 @@ namespace Hazel {
 		ShadowPass();
 		SpotShadowPass();
 		PreDepthPass();
+		HZBComputePass();
 		GeoPass();
 		GridPass();
 	}
 	void SceneRender::PreRender(SceneInfo sceneData)
 	{	
 		m_SceneData = &sceneData;
-		// 处理运行时窗口Resize // TODO:注意如果Resize里有新的，销毁的资源需要在UploadDescriptorRuntime()中重新绑定
+		// 注意如果Resize里有图片被当作了资源描述符资源，销毁的资源需要在UploadDescriptorRuntime()中重新绑定（会自动判断是否需要更新）
 		HandleResizeRuntime();
 		UploadDescriptorRuntime();
 		// 更新各种资源信息
-		UploadCameraData();
-		UpLoadMeshAndBoneTransForm();
-		UploadCSMShadowData();
-		UploadSpotShadowData();
-
+		UploadCameraData(); // 摄像机数据
+		UploadMeshAndBoneTransForm(); // 模型变换和骨骼变换矩阵
+		UploadCSMShadowData(); // 级联阴影数据
+		UploadSpotShadowData(); // 聚光阴影 TODO：待完成
+		HandleHZBTexture();
 	}
-
+	void SceneRender::EndRender()
+	{
+		m_CommandBuffer->Begin();
+		Draw(); // 执行渲染命令
+		m_CommandBuffer->End();
+		m_CommandBuffer->Submit();
+		m_DynamicDrawList.clear();
+		m_StaticMeshDrawList.clear();
+		m_MeshTransformMap.clear();
+		m_MeshBoneTransformsMap.clear();
+	}
 
 	void SceneRender::GeoPass()
 	{
@@ -244,6 +264,56 @@ namespace Hazel {
 			lastSplitDist = cascadeSplits[i];
 		}
 	}
+	void SceneRender::InitSpotShadowPass() // TODO：这里和别的Pass不一样
+	{
+		FramebufferSpecification framebufferSpec;
+		framebufferSpec.Width = shadowMapResolution;
+		framebufferSpec.Height = shadowMapResolution;
+		framebufferSpec.Attachments = { ImageFormat::DEPTH32F };
+		framebufferSpec.DepthClearValue = 1.0f;
+		framebufferSpec.NoResize = true;
+		framebufferSpec.DebugName = "SpotShadowMap";
+
+		auto shadowPassShader = Renderer::GetShaderLibrary()->Get("SpotShadowMap");
+		auto shadowPassShaderAnim = Renderer::GetShaderLibrary()->Get("SpotShadowMapAnim");
+
+		PipelineSpecification pipelineSpec;
+		pipelineSpec.DebugName = "SpotShadowPass";
+		pipelineSpec.Shader = shadowPassShader;
+		pipelineSpec.TargetFramebuffer = Framebuffer::Create(framebufferSpec);
+		pipelineSpec.DepthOperator = DepthCompareOperator::LessOrEqual;
+		pipelineSpec.Layout = vertexLayout;
+		pipelineSpec.InstanceLayout = instanceLayout;
+		PipelineSpecification pipelineSpecAnim = pipelineSpec;
+		pipelineSpecAnim.DebugName = "SpotShadowPassAnim";
+		pipelineSpecAnim.Shader = shadowPassShaderAnim;
+		pipelineSpecAnim.BoneInfluenceLayout = boneInfluenceLayout;
+
+		m_SpotShadowPassPipeline = Pipeline::Create(pipelineSpec);
+		m_SpotShadowPassAnimPipeline = Pipeline::Create(pipelineSpecAnim);
+
+		RenderPassSpecification spotShadowPassSpec;
+		spotShadowPassSpec.DebugName = "SpotShadowMap";
+		spotShadowPassSpec.Pipeline = m_SpotShadowPassPipeline;
+		m_SpotShadowPass = RenderPass::Create(spotShadowPassSpec);
+		spotShadowPassSpec.DebugName = "SpotShadowMapAnim";
+		spotShadowPassSpec.Pipeline = m_SpotShadowPassAnimPipeline;
+		m_SpotShadowAnimPass = RenderPass::Create(spotShadowPassSpec);
+		m_SpotShadowPass->SetInput(m_UBSSpotShadowData, 0);
+		m_SpotShadowAnimPass->SetInput(m_UBSSpotShadowData, 0);
+		m_SpotShadowAnimPass->SetInput(m_SBSBoneTransforms, 1, true);
+	}
+
+	void SceneRender::UploadSpotShadowData()
+	{
+		const std::vector<SpotLight>& spotLightsVec = m_SceneData->SceneLightEnvironment.SpotLights;
+		// TODO:待完成
+	}
+
+	void SceneRender::SpotShadowPass()
+	{
+		//throw std::logic_error("The method or operation is not implemented.");
+	}
 	void SceneRender::UploadCSMShadowData() {
 		if (m_SceneData->SceneLightEnvironment.DirectionalLights[0].Intensity == 0) return;
 		CascadeData cascades[4];
@@ -362,17 +432,7 @@ namespace Hazel {
 		Renderer::DrawPrueVertex(m_CommandBuffer,6);
 		Renderer::EndRenderPass(m_CommandBuffer);
 	}
-	void SceneRender::EndRender()
-	{
-		m_CommandBuffer->Begin();
-		Draw(); // 执行渲染命令
-		m_CommandBuffer->End();
-		m_CommandBuffer->Submit();
-		m_DynamicDrawList.clear();
-		m_StaticMeshDrawList.clear();
-		m_MeshTransformMap.clear();
-		m_MeshBoneTransformsMap.clear();
-	}
+	
 	void SceneRender::UploadCameraData()
 	{
 		m_CameraData->view = m_SceneData->camera.GetViewMatrix();
@@ -628,7 +688,7 @@ namespace Hazel {
 		m_GridPass->SetInput(m_UBSCameraData, 0);  // 设置binding=0的ubo
 		m_GridPass->SetInput(m_GeoAnimPass->GetDepthOutput(), 1, true);
 	}
-	void SceneRender::UpLoadMeshAndBoneTransForm() {
+	void SceneRender::UploadMeshAndBoneTransForm() {
 		// 收集所有参与渲染的Mesh的变换矩阵存储在m_SubmeshTransformBuffers
 		{
 			uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
@@ -689,6 +749,58 @@ namespace Hazel {
 		Renderer::EndRenderPass(m_CommandBuffer);
 	}
 
+	void SceneRender::HandleHZBTexture()
+	{
+		glm::vec2 viewportSize = { m_SceneData->camera.GetViewportWidth(), m_SceneData->camera.GetViewportHeight() };
+		//HZB size must be power of 2's
+		const glm::uvec2 numMips = glm::ceil(glm::log2(viewportSize));
+		// m_SSROptions.NumDepthMips = glm::max(numMips.x, numMips.y); 
+		const glm::uvec2 hzbSize = BIT(numMips);
+		m_HierarchicalDepthTexture.Texture->Resize(hzbSize.x, hzbSize.y);
+		const glm::vec2 hzbUVFactor = { (glm::vec2)viewportSize / (glm::vec2)hzbSize };
+		// m_SSROptions.HZBUvFactor = hzbUVFactor;
 
+		ImageViewSpecification imageViewSpec;
+		uint32_t mipCount = m_HierarchicalDepthTexture.Texture->GetMipLevelCount();
+		m_HierarchicalDepthTexture.ImageViews.resize(mipCount);
+		for (uint32_t mip = 0; mip < mipCount; mip++)
+		{
+			imageViewSpec.DebugName = fmt::format("HierarchicalDepthTexture-{}", mip);
+			imageViewSpec.Image = m_HierarchicalDepthTexture.Texture->GetImage();
+			imageViewSpec.Mip = mip;
+			m_HierarchicalDepthTexture.ImageViews[mip] = ImageView::Create(imageViewSpec);
+		}
+		CreateHZBPassMaterials();
+
+	}
+
+	void SceneRender::CreateHZBPassMaterials()
+	{
+		constexpr uint32_t maxMipBatchSize = 4;
+		const uint32_t hzbMipCount = m_HierarchicalDepthTexture.Texture->GetMipLevelCount();
+		Ref<Shader> hzbShader = Renderer::GetShaderLibrary()->Get("HZB");
+		uint32_t materialIndex = 0;
+		m_HZBMaterials.resize(Math::DivideAndRoundUp(hzbMipCount, 4u));
+		for (uint32_t startDestMip = 0; startDestMip < hzbMipCount; startDestMip += maxMipBatchSize) {
+			Ref<Material> material = Material::Create(hzbShader);
+			m_HZBMaterials[materialIndex++] = material;
+			if (startDestMip == 0)
+				material->SetAlbedoTexture(m_PreDepthPass->GetDepthOutput());
+			else
+				material->SetAlbedoTexture(m_HierarchicalDepthTexture.Texture);
+			const uint32_t endDestMip = glm::min(startDestMip + maxMipBatchSize, hzbMipCount);
+			uint32_t destMip;
+			for (destMip = startDestMip; destMip < endDestMip; ++destMip)
+			{
+				uint32_t index = destMip - startDestMip;
+				// material->Set("o_HZB", m_HierarchicalDepthTexture.ImageViews[destMip], index);
+			}
+			destMip -= startDestMip;
+			for (; destMip < maxMipBatchSize; ++destMip)
+			{
+				// material->Set("o_HZB", m_HierarchicalDepthTexture.ImageViews[hzbMipCount - 1], destMip); // could be white texture?
+			}
+		}
+	}
 
 }

@@ -16,6 +16,8 @@
 #include <glm/gtc/type_ptr.hpp>
 #include "VulkanRenderPass.h"
 #include "VulkanMaterial.h"
+#include "VulkanComputePass.h"
+#include "VulkanComputePipeline.h"
 
 namespace Hazel {
 	struct VulkanRendererData
@@ -507,6 +509,72 @@ namespace Hazel {
 				pushConstantBuffer.Release();
 			});
 	}
+
+	void VulkanRenderer::BeginComputePass(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<ComputePass> computePass)
+	{
+		Renderer::Submit([renderCommandBuffer, computePass]() mutable {
+			Ref<VulkanComputePass> vulkanComputePass = computePass.As<VulkanComputePass>();
+			Ref<VulkanComputePipeline> pipeline = computePass->GetSpecification().Pipeline.As<VulkanComputePipeline>();
+			const uint32_t frameIndex = Renderer::RT_GetCurrentFrameIndex();
+			VkCommandBuffer commandBuffer = renderCommandBuffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frameIndex);
+			VkDebugUtilsLabelEXT debugLabel{};
+			debugLabel.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT;
+			memcpy(&debugLabel.color, glm::value_ptr(vulkanComputePass->GetSpecification().MarkerColor), sizeof(float) * 4);
+			debugLabel.pLabelName = vulkanComputePass->GetSpecification().DebugName.c_str();
+			fpCmdBeginDebugUtilsLabelEXT(commandBuffer, &debugLabel);
+			pipeline->RT_Begin(renderCommandBuffer); // bind pipeline
+			if (vulkanComputePass->HasDescriptorSets())
+			{
+				const auto& descriptorSets = vulkanComputePass->GetDescriptorSets(frameIndex);
+				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->GetLayout(), 0,1, &descriptorSets, 0, nullptr);
+			}
+		});
+	}
+
+	void VulkanRenderer::EndComputePass(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<ComputePass> computePass)
+	{
+		Renderer::Submit([renderCommandBuffer, computePass]() mutable
+			{
+				Ref<VulkanComputePass> vulkanComputePass = computePass.As<VulkanComputePass>();
+				Ref<VulkanComputePipeline> pipeline = computePass->GetSpecification().Pipeline.As<VulkanComputePipeline>();
+				pipeline->End();
+				fpCmdEndDebugUtilsLabelEXT(renderCommandBuffer.As<VulkanRenderCommandBuffer>()->GetActiveCommandBuffer());
+			});
+	}
+
+	void VulkanRenderer::DispatchCompute(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<ComputePass> computePass, Ref<Material> material, const glm::uvec3& workGroups, Buffer constants)
+	{
+		Buffer constantsBuffer;
+		if (constants)
+			constantsBuffer = Buffer::Copy(constants);
+
+		Renderer::Submit([renderCommandBuffer, computePass, material, workGroups, constantsBuffer]() mutable
+			{
+				Ref<VulkanComputePass> vulkanComputePass = computePass.As<VulkanComputePass>();
+				Ref<VulkanComputePipeline> pipeline = computePass->GetSpecification().Pipeline.As<VulkanComputePipeline>();
+
+				const uint32_t frameIndex = Renderer::RT_GetCurrentFrameIndex();
+				VkCommandBuffer commandBuffer = renderCommandBuffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frameIndex);
+
+				// Bind material descriptor set if exists
+				if (material)
+				{
+					Ref<VulkanMaterial> vulkanMaterial = material.As<VulkanMaterial>();
+					VkDescriptorSet descriptorSet = vulkanMaterial->GetDescriptorSets()[frameIndex];
+					if (descriptorSet)
+						vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+				}
+
+				if (constantsBuffer)
+				{
+					pipeline->SetPushConstants(constantsBuffer);
+					constantsBuffer.Release();
+				}
+
+				pipeline->Dispatch(workGroups);
+			});
+	}
+
 	namespace Utils {
 
 		void InsertImageMemoryBarrier(

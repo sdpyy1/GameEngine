@@ -227,6 +227,6 @@ namespace Hazel {
 	public:
 		virtual ~ImageView() = default;
 
-		static Ref<ImageView> Create_old(const ImageViewSpecification& specification);
+		static Ref<ImageView> Create(const ImageViewSpecification& specification);
 	};
 }

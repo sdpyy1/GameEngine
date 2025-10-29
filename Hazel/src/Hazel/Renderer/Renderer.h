@@ -10,6 +10,7 @@
 #include "RenderCommandQueue.h"
 #include "RendererCapabilities.h"
 #include "IndexBuffer.h"
+#include "ComputePass.h"
 
 namespace Hazel {
 	class ShaderLibrary;
@@ -25,6 +26,11 @@ namespace Hazel {
 
 		static void BeginRenderPass(Ref<RenderCommandBuffer> commandBuffer,Ref<RenderPass> renderPass,bool explicitClear = false);
 		static void EndRenderPass(Ref<RenderCommandBuffer> commandBuffer);
+		
+		static void BeginComputePass(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<ComputePass> computePass);
+		static void EndComputePass(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<ComputePass> computePass);
+		static void DispatchCompute(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<ComputePass> computePass, Ref<Material> material, const glm::uvec3& workGroups, Buffer constants = Buffer());
+
 		static void SwapQueues(); // ΩªªªBuffer√¸¡Óª∫≥Â
 		static void BindVertData(Ref<RenderCommandBuffer> commandBuffer, Ref<VertexBuffer> testVertexBuffer);
 		static void RenderStaticMeshWithMaterial(Ref<RenderCommandBuffer> commandBuffer, Ref<Pipeline> pipeline, Ref<MeshSource> meshSource,uint32_t submeshIndex,Ref<Material> material, Ref<VertexBuffer> transformBuffer, uint32_t transformOffset, uint32_t instanceCount, Buffer additionalUniforms = Buffer());

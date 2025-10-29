@@ -16,4 +16,15 @@ namespace Hazel {
 		return nullptr;
 	}
 
+	Hazel::Ref<Hazel::ImageView> ImageView::Create(const ImageViewSpecification& specification)
+	{
+		switch (RendererAPI::Current())
+		{
+		case RendererAPI::Type::None: return nullptr;
+		case RendererAPI::Type::Vulkan: return Ref<VulkanImageView>::Create(specification);
+		}
+		HZ_CORE_ASSERT(false, "Unknown RendererAPI");
+		return nullptr;
+	}
+
 }

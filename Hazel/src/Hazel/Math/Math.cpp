@@ -5,6 +5,17 @@
 #include <glm/gtx/matrix_decompose.hpp>
 
 namespace Hazel::Math {
+	template<typename T, std::enable_if_t<std::is_integral_v<T>, bool> = true>
+	inline static T DivideAndRoundUp(T dividend, T divisor)
+	{
+		return (dividend + divisor - 1) / divisor;
+	}
+	// Only integers are allowed
+	template<typename T, typename DivisorT, std::enable_if_t<std::is_same_v<T, glm::uvec2>&& std::is_integral_v<DivisorT>, bool> = true>
+	inline static T DivideAndRoundUp(T dividend, DivisorT divisor)
+	{
+		return { DivideAndRoundUp(dividend.x, divisor), DivideAndRoundUp(dividend.y, divisor) };
+	}
 	glm::vec3 Scale(const glm::vec3& v, float desiredLength)
 	{
 		float mag = glm::length(v);
