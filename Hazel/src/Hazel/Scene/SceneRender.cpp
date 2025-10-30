@@ -23,7 +23,18 @@ namespace Hazel {
 		spec.SamplerWrap = TextureWrap::Clamp;
 		spec.SamplerFilter = TextureFilter::Nearest;
 		spec.DebugName = "HierarchicalZ";
-		m_HierarchicalDepthTexture.Texture = Texture2D::Create(spec); // 创建了一张纹理
+		spec.Storage = true;
+		m_HierarchicalDepthTexture.Texture = Texture2D::Create(spec); // 创建了一张纹理用于存储最终的HZB
+		uint32_t mipCount = m_HierarchicalDepthTexture.Texture->GetMipLevelCount();
+		m_HierarchicalDepthTexture.ImageViews.resize(m_HierarchicalDepthTexture.Texture->GetMipLevelCount());
+		ImageViewSpecification imageViewSpec;
+		for (uint32_t mip = 0; mip < mipCount; mip++)
+		{
+			imageViewSpec.DebugName = fmt::format("HierarchicalDepthTexture-{}", mip);
+			imageViewSpec.Image = m_HierarchicalDepthTexture.Texture->GetImage();
+			imageViewSpec.Mip = mip;
+			m_HierarchicalDepthTexture.ImageViews[mip] = ImageView::Create(imageViewSpec);
+		}
 		Ref<Shader> shader = Renderer::GetShaderLibrary()->Get("HZB");
 		ComputePassSpecification hdPassSpec;
 		hdPassSpec.DebugName = "HierarchicalDepth";
@@ -32,44 +43,22 @@ namespace Hazel {
 	}
 	void SceneRender::HZBComputePass()
 	{
-		constexpr uint32_t maxMipBatchSize = 4;
-		const uint32_t hzbMipCount = m_HierarchicalDepthTexture.Texture->GetMipLevelCount();
+		uint32_t inputWidth = m_PreDepthLoadFramebuffer->GetDepthImage()->GetWidth();
+		uint32_t inputHeight = m_PreDepthLoadFramebuffer->GetDepthImage()->GetHeight();
+		uint32_t outputWidth = std::max(1u, inputWidth / 2);  // 减半，最小1
+		uint32_t outputHeight = std::max(1u, inputHeight / 2);
+		// 工作组内部尺寸（需与Shader中的local_size一致）
+		const uint32_t localSize = 8;
+
+		// 计算工作组数量（向上取整）
+		uint32_t groupCountX = (outputWidth + localSize - 1) / localSize;
+		uint32_t groupCountY = (outputHeight + localSize - 1) / localSize;
 		Renderer::BeginComputePass(m_CommandBuffer, m_HierarchicalDepthPass);
-		auto ReduceHZB = [commandBuffer = m_CommandBuffer, hierarchicalDepthPass = m_HierarchicalDepthPass, hierarchicalDepthTexture = m_HierarchicalDepthTexture.Texture, hzbMaterials = m_HZBMaterials]
-		(const uint32_t startDestMip, const uint32_t parentMip, const glm::vec2& DispatchThreadIdToBufferUV, const glm::vec2& InputViewportMaxBound, const bool isFirstPass)
-			{
-				struct HierarchicalZComputePushConstants
-				{
-					glm::vec2 DispatchThreadIdToBufferUV;
-					glm::vec2 InputViewportMaxBound;
-					glm::vec2 InvSize;
-					int FirstLod;
-					bool IsFirstPass;
-					char Padding[3]{ 0, 0, 0 };
-				} hierarchicalZComputePushConstants;
+		m_HierarchicalDepthPass->SetInput(m_PreDepthLoadFramebuffer->GetDepthImage(), 0); // 输入深度纹理
+		m_HierarchicalDepthPass->SetInput(m_HierarchicalDepthTexture.ImageViews[1], 1); // 输出HierarchicalDepth的某一层
 
-				hierarchicalZComputePushConstants.IsFirstPass = isFirstPass;
-				hierarchicalZComputePushConstants.FirstLod = (int)startDestMip;
-				hierarchicalZComputePushConstants.DispatchThreadIdToBufferUV = DispatchThreadIdToBufferUV;
-				hierarchicalZComputePushConstants.InputViewportMaxBound = InputViewportMaxBound;
-
-				const glm::ivec2 srcSize(Math::DivideAndRoundUp(hierarchicalDepthTexture->GetSize(), 1u << parentMip));
-				const glm::ivec2 dstSize(Math::DivideAndRoundUp(hierarchicalDepthTexture->GetSize(), 1u << startDestMip));
-				hierarchicalZComputePushConstants.InvSize = glm::vec2{ 1.0f / (float)srcSize.x, 1.0f / (float)srcSize.y };
-
-				glm::uvec3 workGroups(Math::DivideAndRoundUp(dstSize.x, 8), Math::DivideAndRoundUp(dstSize.y, 8), 1);
-				Renderer::DispatchCompute(commandBuffer, hierarchicalDepthPass, hzbMaterials[startDestMip / 4], workGroups, Buffer(&hierarchicalZComputePushConstants, sizeof(hierarchicalZComputePushConstants)));
-			};
-		// Reduce first 4 mips
-		glm::ivec2 srcSize = m_PreDepthPass->GetDepthOutput()->GetSize();
-		ReduceHZB(0, 0, { 1.0f / glm::vec2{ srcSize } }, { (glm::vec2{ srcSize } - 0.5f) / glm::vec2{ srcSize } }, true);
-
-		// Reduce the next mips
-		for (uint32_t startDestMip = maxMipBatchSize; startDestMip < hzbMipCount; startDestMip += maxMipBatchSize)
-		{
-			srcSize = Math::DivideAndRoundUp(m_HierarchicalDepthTexture.Texture->GetSize(), 1u << uint32_t(startDestMip - 1));
-			ReduceHZB(startDestMip, startDestMip - 1, { 2.0f / glm::vec2{ srcSize } }, glm::vec2{ 1.0f }, false);
-		}		
+		Renderer::DispatchCompute(m_CommandBuffer, m_HierarchicalDepthPass, nullptr, glm::uvec3(groupCountX, groupCountY, 1));
+		//m_HierarchicalDepthPass->SetInput(m_HierarchicalDepthTexture.ImageViews[2], 1);
 		Renderer::EndComputePass(m_CommandBuffer, m_HierarchicalDepthPass);
 	}
 
@@ -104,7 +93,6 @@ namespace Hazel {
 		UploadMeshAndBoneTransForm(); // 模型变换和骨骼变换矩阵
 		UploadCSMShadowData(); // 级联阴影数据
 		UploadSpotShadowData(); // 聚光阴影 TODO：待完成
-		HandleHZBTexture();
 	}
 	void SceneRender::EndRender()
 	{
@@ -603,8 +591,7 @@ namespace Hazel {
 
 			m_DirectionalShadowMapPass[i] = RenderPass::Create(shadowMapRenderPassSpec);
 			m_DirectionalShadowMapPass[i]->SetInput(m_UBSShadow, 0);
-			//HZ_CORE_VERIFY(m_DirectionalShadowMapPass[i]->Validate());
-			//m_DirectionalShadowMapPass[i]->Bake();
+
 			shadowMapRenderPassSpec.DebugName = "DirShadowPassAnim";
 			shadowMapRenderPassSpec.Pipeline = m_ShadowPassPipelinesAnim[i];
 			m_DirectionalShadowMapAnimPass[i] = RenderPass::Create(shadowMapRenderPassSpec);
@@ -737,6 +724,7 @@ namespace Hazel {
 			m_GeoFrameBuffer->Resize(m_SceneData->camera.GetViewportWidth(), m_SceneData->camera.GetViewportHeight());
 			m_GeoAnimFrameBuffer->Resize(m_SceneData->camera.GetViewportWidth(), m_SceneData->camera.GetViewportHeight()); // ReSize会重新获取引用的图片，之前的FBO的图片必须立刻创建好
 			m_GridFrameBuffer->Resize(m_SceneData->camera.GetViewportWidth(), m_SceneData->camera.GetViewportHeight());
+			HandleHZBResize();
 			NeedResize = false;
 		}
 	}
@@ -749,20 +737,12 @@ namespace Hazel {
 		Renderer::EndRenderPass(m_CommandBuffer);
 	}
 
-	void SceneRender::HandleHZBTexture()
+	void SceneRender::HandleHZBResize()
 	{
-		glm::vec2 viewportSize = { m_SceneData->camera.GetViewportWidth(), m_SceneData->camera.GetViewportHeight() };
-		//HZB size must be power of 2's
-		const glm::uvec2 numMips = glm::ceil(glm::log2(viewportSize));
-		// m_SSROptions.NumDepthMips = glm::max(numMips.x, numMips.y); 
-		const glm::uvec2 hzbSize = BIT(numMips);
-		m_HierarchicalDepthTexture.Texture->Resize(hzbSize.x, hzbSize.y);
-		const glm::vec2 hzbUVFactor = { (glm::vec2)viewportSize / (glm::vec2)hzbSize };
-		// m_SSROptions.HZBUvFactor = hzbUVFactor;
-
-		ImageViewSpecification imageViewSpec;
+		m_HierarchicalDepthTexture.Texture->Resize(m_SceneData->camera.GetViewportWidth(), m_SceneData->camera.GetViewportHeight());
 		uint32_t mipCount = m_HierarchicalDepthTexture.Texture->GetMipLevelCount();
-		m_HierarchicalDepthTexture.ImageViews.resize(mipCount);
+		m_HierarchicalDepthTexture.ImageViews.resize(m_HierarchicalDepthTexture.Texture->GetMipLevelCount());
+		ImageViewSpecification imageViewSpec;
 		for (uint32_t mip = 0; mip < mipCount; mip++)
 		{
 			imageViewSpec.DebugName = fmt::format("HierarchicalDepthTexture-{}", mip);
@@ -770,37 +750,5 @@ namespace Hazel {
 			imageViewSpec.Mip = mip;
 			m_HierarchicalDepthTexture.ImageViews[mip] = ImageView::Create(imageViewSpec);
 		}
-		CreateHZBPassMaterials();
-
 	}
-
-	void SceneRender::CreateHZBPassMaterials()
-	{
-		constexpr uint32_t maxMipBatchSize = 4;
-		const uint32_t hzbMipCount = m_HierarchicalDepthTexture.Texture->GetMipLevelCount();
-		Ref<Shader> hzbShader = Renderer::GetShaderLibrary()->Get("HZB");
-		uint32_t materialIndex = 0;
-		m_HZBMaterials.resize(Math::DivideAndRoundUp(hzbMipCount, 4u));
-		for (uint32_t startDestMip = 0; startDestMip < hzbMipCount; startDestMip += maxMipBatchSize) {
-			Ref<Material> material = Material::Create(hzbShader);
-			m_HZBMaterials[materialIndex++] = material;
-			if (startDestMip == 0)
-				material->SetAlbedoTexture(m_PreDepthPass->GetDepthOutput());
-			else
-				material->SetAlbedoTexture(m_HierarchicalDepthTexture.Texture);
-			const uint32_t endDestMip = glm::min(startDestMip + maxMipBatchSize, hzbMipCount);
-			uint32_t destMip;
-			for (destMip = startDestMip; destMip < endDestMip; ++destMip)
-			{
-				uint32_t index = destMip - startDestMip;
-				// material->Set("o_HZB", m_HierarchicalDepthTexture.ImageViews[destMip], index);
-			}
-			destMip -= startDestMip;
-			for (; destMip < maxMipBatchSize; ++destMip)
-			{
-				// material->Set("o_HZB", m_HierarchicalDepthTexture.ImageViews[hzbMipCount - 1], destMip); // could be white texture?
-			}
-		}
-	}
-
 }

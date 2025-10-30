@@ -21,7 +21,6 @@ namespace Hazel {
 		void GeoPass();
 		// Grid
 		void GridPass();
-		void CreateHZBPassMaterials();
 	private:
 		void Init();
 		void Draw();
@@ -238,7 +237,7 @@ namespace Hazel {
 
 		void InitHZBPass();
 		void HZBComputePass();
-		void HandleHZBTexture();
+		void HandleHZBResize();
 	};
 
 }

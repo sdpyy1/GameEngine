@@ -14,6 +14,9 @@ namespace Hazel
 		Ref<Image2D> GetDepthOutput() override;
 		Ref<PipelineCompute> GetPipeline() const override;
 		bool HasDescriptorSets() const override;
+		virtual void SetInput(Ref<Image2D> texture, uint32_t Binding) override;
+		virtual void SetInput(Ref<ImageView> imageView,uint32_t Binding) override;
+
 		const VkDescriptorSet& GetDescriptorSets(uint32_t frameIndex) const;
 	private:
 		ComputePassSpecification m_Specification;

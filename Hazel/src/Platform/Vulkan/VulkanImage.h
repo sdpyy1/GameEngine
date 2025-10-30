@@ -106,7 +106,7 @@ namespace Hazel {
 		void RT_Invalidate();
 
 		VkImageView GetImageView() const { return m_ImageView; }
-
+		Ref<Image> GetImage() const { return m_Specification.Image; }
 		virtual ResourceDescriptorInfo GetDescriptorInfo() const override { return (ResourceDescriptorInfo)&m_DescriptorImageInfo; }
 		const VkDescriptorImageInfo& GetDescriptorInfoVulkan() const { return *(VkDescriptorImageInfo*)GetDescriptorInfo(); }
 	private:

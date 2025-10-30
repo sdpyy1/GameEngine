@@ -523,11 +523,6 @@ namespace Hazel {
 			debugLabel.pLabelName = vulkanComputePass->GetSpecification().DebugName.c_str();
 			fpCmdBeginDebugUtilsLabelEXT(commandBuffer, &debugLabel);
 			pipeline->RT_Begin(renderCommandBuffer); // bind pipeline
-			if (vulkanComputePass->HasDescriptorSets())
-			{
-				const auto& descriptorSets = vulkanComputePass->GetDescriptorSets(frameIndex);
-				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->GetLayout(), 0,1, &descriptorSets, 0, nullptr);
-			}
 		});
 	}
 
@@ -557,13 +552,10 @@ namespace Hazel {
 				VkCommandBuffer commandBuffer = renderCommandBuffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frameIndex);
 
 				// Bind material descriptor set if exists
-				if (material)
-				{
-					Ref<VulkanMaterial> vulkanMaterial = material.As<VulkanMaterial>();
-					VkDescriptorSet descriptorSet = vulkanMaterial->GetDescriptorSets()[frameIndex];
-					if (descriptorSet)
-						vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
-				}
+				VkDescriptorSet descriptorSet = computePass->GetSpecification().Pipeline.As<VulkanComputePipeline>()->GetShader().As<VulkanShader>()->GetDescriptorSet()[frameIndex];
+				if (descriptorSet)
+					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+
 
 				if (constantsBuffer)
 				{
