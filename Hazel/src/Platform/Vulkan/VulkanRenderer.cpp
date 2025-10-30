@@ -552,9 +552,9 @@ namespace Hazel {
 				VkCommandBuffer commandBuffer = renderCommandBuffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frameIndex);
 
 				// Bind material descriptor set if exists
-				VkDescriptorSet descriptorSet = computePass->GetSpecification().Pipeline.As<VulkanComputePipeline>()->GetShader().As<VulkanShader>()->GetDescriptorSet()[frameIndex];
-				if (descriptorSet)
-					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+				auto descriptorSet = computePass->GetSpecification().Pipeline.As<VulkanComputePipeline>()->GetShader().As<VulkanShader>()->GetDescriptorSet();
+				if (!descriptorSet.empty())
+					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->GetLayout(), 0, 1, &descriptorSet[frameIndex], 0, nullptr);
 
 
 				if (constantsBuffer)

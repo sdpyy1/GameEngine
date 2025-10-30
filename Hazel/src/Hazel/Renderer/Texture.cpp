@@ -70,12 +70,12 @@ namespace Hazel {
 		return nullptr;
 	}
 
-	Ref<TextureCube> TextureCube::Create_old(const TextureSpecification& specification, Buffer imageData)
+	Ref<TextureCube> TextureCube::Create(const TextureSpecification& specification, Buffer imageData)
 	{
 		switch (RendererAPI::Current())
 		{
 		case RendererAPI::Type::None: return nullptr;
-		//case RendererAPI::APIType::Vulkan: return Ref<VulkanTextureCube>::Create(specification, imageData);
+		case RendererAPI::Type::Vulkan: return Ref<VulkanTextureCube>::Create(specification, imageData);
 		}
 		HZ_CORE_ASSERT(false, "Unknown RendererAPI");
 		return nullptr;

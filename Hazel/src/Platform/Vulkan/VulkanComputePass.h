@@ -16,6 +16,7 @@ namespace Hazel
 		virtual void SetInput(Ref<Image2D> texture, uint32_t Binding) override;
 		virtual void SetInput(Ref<ImageView> imageView,uint32_t Binding, int index) override;
 		virtual void SetInput(Ref<Texture2D> texture, uint32_t Binding) override;
+		virtual void SetInput(Ref<TextureCube> texture, uint32_t Binding) override;
 	private:
 		ComputePassSpecification m_Specification;
 	};

@@ -77,7 +77,7 @@ namespace Hazel {
 	class TextureCube : public Texture
 	{
 	public:
-		static Ref<TextureCube> Create_old(const TextureSpecification& specification, Buffer imageData = Buffer());
+		static Ref<TextureCube> Create(const TextureSpecification& specification, Buffer imageData = Buffer());
 
 		virtual TextureType GetType() const override { return TextureType::TextureCube; }
 

@@ -22,6 +22,7 @@ namespace Hazel
 		virtual void SetInput(Ref<Image2D> image, uint32_t Binding) = 0;
 		virtual void SetInput(Ref<ImageView> imageView, uint32_t Binding,int index) = 0;
 		virtual void SetInput(Ref<Texture2D> texture, uint32_t Binding) = 0;
+		virtual void SetInput(Ref<TextureCube> texture, uint32_t Binding) = 0;
 
 		static Ref<ComputePass> Create(const ComputePassSpecification& spec);
 

@@ -12,6 +12,8 @@ namespace Hazel {
 	struct RendererData
 	{
 		Ref<ShaderLibrary> m_ShaderLibrary;
+		Ref<TextureCube> BlackCubeTexture;
+
 	};
 
 	static RendererConfig s_Config;
@@ -126,7 +128,6 @@ namespace Hazel {
 			shadowShaderSpec.bindings.push_back(boneTrasnfromBinding);
 			shadowShaderSpec.pushConstantRanges[0].size = 8;
 			s_Data->m_ShaderLibrary->LoadCommonShader("SpotShadowMapAnim", shadowShaderSpec);
-
 		}
 
 		// GridPass
@@ -184,7 +185,25 @@ namespace Hazel {
 			s_Data->m_ShaderLibrary->LoadCommonShader("HZB", hzbShaderSpec,true);
 		}
 
-
+		// EquirectangularToCubeMap
+		{
+			Shader::ShaderSpecification EquirectangularToCubeMapShaderSpec;
+			Shader::DescriptorBinding binding0;
+			binding0.binding = 0;
+			binding0.type = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+			binding0.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+			binding0.count = 1;
+			binding0.set = 0;
+            EquirectangularToCubeMapShaderSpec.bindings.push_back(binding0);
+			Shader::DescriptorBinding outputCubeBinding;
+			outputCubeBinding.binding = 1;                     
+			outputCubeBinding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+			outputCubeBinding.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT; 
+			outputCubeBinding.count = 1;   
+			outputCubeBinding.set = 0;   
+			EquirectangularToCubeMapShaderSpec.bindings.push_back(outputCubeBinding);
+			s_Data->m_ShaderLibrary->LoadCommonShader("EquirectangularToCubeMap", EquirectangularToCubeMapShaderSpec, true);
+		}
 
 		// 加载纹理
 		uint32_t whiteTextureData = 0xffffffff;
@@ -193,6 +212,14 @@ namespace Hazel {
 		spec.Width = 1;
 		spec.Height = 1;
 		WhiteTexture = Texture2D::Create(spec, Buffer(&whiteTextureData, sizeof(uint32_t)));
+
+
+		constexpr uint32_t blackTextureData = 0xff000000;
+
+		constexpr uint32_t blackCubeTextureData[6] = { 0xff000000, 0xff000000, 0xff000000, 0xff000000, 0xff000000, 0xff000000 };
+		s_Data->BlackCubeTexture = TextureCube::Create(spec, Buffer(&blackTextureData, sizeof(blackCubeTextureData)));
+
+
 		// 为并发帧创建了描述符池、提前准备了全屏顶点数据存入了GPU
 		s_RendererAPI->Init();
 
@@ -201,7 +228,10 @@ namespace Hazel {
 	{
 		s_RendererAPI->BeginFrame();
 	}
-
+	Ref<TextureCube> Renderer::GetBlackCubeTexture()
+	{
+		return s_Data->BlackCubeTexture;
+	}
 	void Renderer::EndFrame()
 	{
 		s_RendererAPI->EndFrame();

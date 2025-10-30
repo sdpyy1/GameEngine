@@ -234,10 +234,15 @@ namespace Hazel {
 		// HierarchicalDepthPass
 		Ref<ComputePass> m_HierarchicalDepthPass;
 
-
+		// ‘§º∆À„Pass
+		Ref<ComputePass> m_EquirectangularPass;
+		Ref<TextureCube> m_EnvCubeMap;
+		Ref<Texture2D> m_EnvEquirect;
 		void InitHZBPass();
 		void HZBComputePass();
 		void HandleHZBResize();
+		void preComputeEnv();
+		void InitEnvNeed();
 	};
 
 }

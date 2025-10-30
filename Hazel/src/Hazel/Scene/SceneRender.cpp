@@ -14,58 +14,47 @@ namespace Hazel {
 	{
 		Init();
 	}
-	void SceneRender::InitHZBPass()
+	void SceneRender::InitEnvNeed()
 	{
-		TextureSpecification spec;
-		spec.Format = ImageFormat::RED32F;
-		spec.Width = 1;
-		spec.Height = 1;
-		spec.SamplerWrap = TextureWrap::Clamp;
-		spec.SamplerFilter = TextureFilter::Nearest;
-		spec.DebugName = "HierarchicalZ";
-		spec.Storage = true;
-		m_HierarchicalDepthTexture.Texture = Texture2D::Create(spec); // 创建了一张纹理用于存储最终的HZB
-		uint32_t mipCount = m_HierarchicalDepthTexture.Texture->GetMipLevelCount();
-		m_HierarchicalDepthTexture.ImageViews.resize(m_HierarchicalDepthTexture.Texture->GetMipLevelCount());
-		ImageViewSpecification imageViewSpec;
-		for (uint32_t mip = 0; mip < mipCount; mip++)
-		{
-			imageViewSpec.DebugName = fmt::format("HierarchicalDepthTexture-{}", mip);
-			imageViewSpec.Image = m_HierarchicalDepthTexture.Texture->GetImage();
-			imageViewSpec.Mip = mip;
-			m_HierarchicalDepthTexture.ImageViews[mip] = ImageView::Create(imageViewSpec);
-		}
-		Ref<Shader> shader = Renderer::GetShaderLibrary()->Get("HZB");
-		ComputePassSpecification hdPassSpec;
-		hdPassSpec.DebugName = "HierarchicalDepth";
-		hdPassSpec.Pipeline = PipelineCompute::Create(shader);
-		m_HierarchicalDepthPass = ComputePass::Create(hdPassSpec);
+		const uint32_t cubemapSize = Renderer::GetConfig().EnvironmentMapResolution;
+		const uint32_t irradianceMapSize = 32;
+		m_EnvEquirect = Texture2D::Create(TextureSpecification(), std::filesystem::path("assets/HDR/1.hdr"));
+		HZ_CORE_ASSERT(m_EnvEquirect->GetFormat() == ImageFormat::RGBA32F, "Texture is not HDR!");
+		TextureSpecification cubemapSpec;
+		cubemapSpec.Format = ImageFormat::RGBA16F;
+		cubemapSpec.Width = cubemapSize;
+		cubemapSpec.Height = cubemapSize;
+		cubemapSpec.Storage = true;
+		m_EnvCubeMap = TextureCube::Create(cubemapSpec);
+		
+		Ref<Shader> equirectangularConversionShader = Renderer::GetShaderLibrary()->Get("EquirectangularToCubeMap");
+		ComputePassSpecification equirectangularSpec;
+		equirectangularSpec.DebugName = "EquirectangularToCubeMap";
+		equirectangularSpec.Pipeline = PipelineCompute::Create(equirectangularConversionShader);
+		m_EquirectangularPass = ComputePass::Create(equirectangularSpec);
+
+
 	}
-	void SceneRender::HZBComputePass()
+	void SceneRender::preComputeEnv()
 	{
-		uint32_t inputWidth = m_PreDepthLoadFramebuffer->GetDepthImage()->GetWidth();
-		uint32_t inputHeight = m_PreDepthLoadFramebuffer->GetDepthImage()->GetHeight();
+		InitEnvNeed();
+		m_CommandBuffer->Begin();
+		const uint32_t cubemapSize = Renderer::GetConfig().EnvironmentMapResolution;
 
-		// 工作组数量（按第0级尺寸）
-		const uint32_t localSize = 8;
-		uint32_t groupCountX = (inputWidth + localSize - 1) / localSize;
-		uint32_t groupCountY = (inputHeight + localSize - 1) / localSize;
+		// HDR转CubemapPass
+		Renderer::BeginComputePass(m_CommandBuffer, m_EquirectangularPass);
+		m_EquirectangularPass->SetInput(m_EnvEquirect, 1);
+		m_EquirectangularPass->SetInput(m_EnvCubeMap, 0);
+		Renderer::DispatchCompute(m_CommandBuffer, m_EquirectangularPass, nullptr, glm::ivec3(cubemapSize / 32, cubemapSize / 32, 6));
+		Renderer::EndComputePass(m_CommandBuffer, m_EquirectangularPass);
 
-		// 绑定资源：输入深度图（采样器）+ HZB数组（存储图像）
-		Renderer::BeginComputePass(m_CommandBuffer, m_HierarchicalDepthPass);
-		m_HierarchicalDepthPass->SetInput(m_PreDepthLoadFramebuffer->GetDepthImage(), 0); 
-		uint32_t mipLevels = 0;
-		for (mipLevels = 0; mipLevels < m_HierarchicalDepthTexture.ImageViews.size();mipLevels++) {
 
-			m_HierarchicalDepthPass->SetInput(m_HierarchicalDepthTexture.ImageViews[mipLevels], 1, mipLevels);
-		}
 
-		const Buffer mip(&mipLevels, sizeof(uint32_t));
 
-		Renderer::DispatchCompute(m_CommandBuffer, m_HierarchicalDepthPass, nullptr, glm::uvec3(groupCountX, groupCountY, 1), mip);
-		Renderer::EndComputePass(m_CommandBuffer, m_HierarchicalDepthPass);
+
+		m_CommandBuffer->End();
+		m_CommandBuffer->Submit();
 	}
-
 	void SceneRender::Init()
 	{
 		m_CommandBuffer = RenderCommandBuffer::Create("PassCommandBuffer");
@@ -76,6 +65,8 @@ namespace Hazel {
 		InitHZBPass();
 		InitGeoPass();
 		InitGridPass();
+
+		preComputeEnv();
 	}
 
 	void SceneRender::Draw() {
@@ -755,4 +746,59 @@ namespace Hazel {
 			m_HierarchicalDepthTexture.ImageViews[mip] = ImageView::Create(imageViewSpec);
 		}
 	}
+	void SceneRender::InitHZBPass()
+	{
+		TextureSpecification spec;
+		spec.Format = ImageFormat::RED32F;
+		spec.Width = 1;
+		spec.Height = 1;
+		spec.SamplerWrap = TextureWrap::Clamp;
+		spec.SamplerFilter = TextureFilter::Nearest;
+		spec.DebugName = "HierarchicalZ";
+		spec.Storage = true;
+		m_HierarchicalDepthTexture.Texture = Texture2D::Create(spec); // 创建了一张纹理用于存储最终的HZB
+		uint32_t mipCount = m_HierarchicalDepthTexture.Texture->GetMipLevelCount();
+		m_HierarchicalDepthTexture.ImageViews.resize(m_HierarchicalDepthTexture.Texture->GetMipLevelCount());
+		ImageViewSpecification imageViewSpec;
+		for (uint32_t mip = 0; mip < mipCount; mip++)
+		{
+			imageViewSpec.DebugName = fmt::format("HierarchicalDepthTexture-{}", mip);
+			imageViewSpec.Image = m_HierarchicalDepthTexture.Texture->GetImage();
+			imageViewSpec.Mip = mip;
+			m_HierarchicalDepthTexture.ImageViews[mip] = ImageView::Create(imageViewSpec);
+		}
+		Ref<Shader> shader = Renderer::GetShaderLibrary()->Get("HZB");
+		ComputePassSpecification hdPassSpec;
+		hdPassSpec.DebugName = "HierarchicalDepth";
+		hdPassSpec.Pipeline = PipelineCompute::Create(shader);
+		m_HierarchicalDepthPass = ComputePass::Create(hdPassSpec);
+	}
+	void SceneRender::HZBComputePass()
+	{
+		uint32_t inputWidth = m_PreDepthLoadFramebuffer->GetDepthImage()->GetWidth();
+		uint32_t inputHeight = m_PreDepthLoadFramebuffer->GetDepthImage()->GetHeight();
+
+		// 工作组数量（按第0级尺寸）
+		const uint32_t localSize = 8;
+		uint32_t groupCountX = (inputWidth + localSize - 1) / localSize;
+		uint32_t groupCountY = (inputHeight + localSize - 1) / localSize;
+
+		// 绑定资源：输入深度图（采样器）+ HZB数组（存储图像）
+		Renderer::BeginComputePass(m_CommandBuffer, m_HierarchicalDepthPass);
+		m_HierarchicalDepthPass->SetInput(m_PreDepthLoadFramebuffer->GetDepthImage(), 0);
+		uint32_t mipLevels = 0;
+		for (mipLevels = 0; mipLevels < m_HierarchicalDepthTexture.ImageViews.size(); mipLevels++) {
+
+			m_HierarchicalDepthPass->SetInput(m_HierarchicalDepthTexture.ImageViews[mipLevels], 1, mipLevels);
+		}
+
+		const Buffer mip(&mipLevels, sizeof(uint32_t));
+
+		Renderer::DispatchCompute(m_CommandBuffer, m_HierarchicalDepthPass, nullptr, glm::uvec3(groupCountX, groupCountY, 1), mip);
+		Renderer::EndComputePass(m_CommandBuffer, m_HierarchicalDepthPass);
+	}
+
+
+
+
 }

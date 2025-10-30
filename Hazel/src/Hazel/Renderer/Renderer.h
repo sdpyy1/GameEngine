@@ -98,7 +98,7 @@ namespace Hazel {
 
 
 		static Ref<Texture2D> GetWhiteTexture();
-
+		static Ref<TextureCube> GetBlackCubeTexture();
 
 	private:
 		static Ref<Texture2D> WhiteTexture;
