@@ -29,6 +29,7 @@ namespace Hazel {
 
 	private:
 		VkFormat FindDepthFormat() const;
+		const VkPhysicalDeviceVulkan12Features& GetVulkan12Features() const;
 	private:
 		VkPhysicalDeviceProperties m_Properties;
 		VkPhysicalDevice m_PhysicalDevice = VK_NULL_HANDLE;
@@ -39,7 +40,7 @@ namespace Hazel {
 		std::vector<VkDeviceQueueCreateInfo> m_QueueCreateInfos;
 		QueueFamilyIndices m_QueueFamilyIndices;
 		VkFormat m_DepthFormat = VK_FORMAT_UNDEFINED;
-
+		VkPhysicalDeviceVulkan12Features m_Vulkan12Features;
 		friend class VulkanDevice;
 
 	};

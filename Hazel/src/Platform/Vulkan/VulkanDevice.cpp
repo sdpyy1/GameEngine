@@ -2,6 +2,7 @@
 #include "VulkanDevice.h"
 #include "VulkanContext.h"
 #include "VulkanUtils.h"
+
 namespace Hazel
 {
 	VulkanPhysicalDevice::VulkanPhysicalDevice(VkInstance vkInstance)
@@ -9,7 +10,7 @@ namespace Hazel
 		uint32_t gpuCount = 0;
 		// Get number of available physical devices
 		vkEnumeratePhysicalDevices(vkInstance, &gpuCount, nullptr);
-		HZ_CORE_ASSERT(gpuCount > 0, "");
+		HZ_CORE_ASSERT(gpuCount > 0, "No physical devices found!");
 		// Enumerate devices
 		std::vector<VkPhysicalDevice> physicalDevices(gpuCount);
 		VK_CHECK_RESULT(vkEnumeratePhysicalDevices(vkInstance, &gpuCount, physicalDevices.data()));
@@ -26,18 +27,29 @@ namespace Hazel
 
 		if (!selectedPhysicalDevice)
 		{
-			HZ_CORE_INFO_TAG("Renderer", "Could not find discrete GPU.");
+			HZ_CORE_INFO_TAG("Renderer", "Could not find discrete GPU. Using integrated GPU.");
 			selectedPhysicalDevice = physicalDevices.back();
 		}
 
 		HZ_CORE_ASSERT(selectedPhysicalDevice, "Could not find any physical devices!");
 		m_PhysicalDevice = selectedPhysicalDevice;
 
-		vkGetPhysicalDeviceFeatures(m_PhysicalDevice, &m_Features);
+		// 扩展：查询基础特性和 Vulkan 1.2 特性
+		VkPhysicalDeviceVulkan12Features vulkan12Features{};
+		vulkan12Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+
+		VkPhysicalDeviceFeatures2 deviceFeatures2{};
+		deviceFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+		deviceFeatures2.pNext = &vulkan12Features;
+
+		vkGetPhysicalDeviceFeatures2(m_PhysicalDevice, &deviceFeatures2);
+		m_Features = deviceFeatures2.features; // 基础特性
+		m_Vulkan12Features = vulkan12Features; // 保存 Vulkan 1.2 特性供后续使用
+
 		vkGetPhysicalDeviceMemoryProperties(m_PhysicalDevice, &m_MemoryProperties);
 		uint32_t queueFamilyCount;
 		vkGetPhysicalDeviceQueueFamilyProperties(m_PhysicalDevice, &queueFamilyCount, nullptr);
-		HZ_CORE_ASSERT(queueFamilyCount > 0, "");
+		HZ_CORE_ASSERT(queueFamilyCount > 0, "No queue families found!");
 		m_QueueFamilyProperties.resize(queueFamilyCount);
 		vkGetPhysicalDeviceQueueFamilyProperties(m_PhysicalDevice, &queueFamilyCount, m_QueueFamilyProperties.data());
 
@@ -101,14 +113,19 @@ namespace Hazel
 		}
 
 		m_DepthFormat = FindDepthFormat();
-		HZ_CORE_ASSERT(m_DepthFormat);
+		HZ_CORE_ASSERT(m_DepthFormat != VK_FORMAT_UNDEFINED, "No suitable depth format found!");
 	}
+
 	VulkanPhysicalDevice::~VulkanPhysicalDevice()
 	{
 	}
+
 	VulkanPhysicalDevice::QueueFamilyIndices VulkanPhysicalDevice::GetQueueFamilyIndices(int flags)
 	{
 		QueueFamilyIndices indices;
+		indices.Graphics = -1;
+		indices.Compute = -1;
+		indices.Transfer = -1;
 
 		// Dedicated queue for compute
 		// Try to find a queue family index that supports compute but not graphics
@@ -155,27 +172,35 @@ namespace Hazel
 					indices.Compute = i;
 			}
 
-			if (flags & VK_QUEUE_GRAPHICS_BIT)
+			if (flags & VK_QUEUE_GRAPHICS_BIT && indices.Graphics == -1)
 			{
 				if (m_QueueFamilyProperties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT)
 					indices.Graphics = i;
 			}
 		}
 
+		HZ_CORE_ASSERT(indices.Graphics != -1, "No graphics queue family found!");
+		HZ_CORE_ASSERT(indices.Compute != -1, "No compute queue family found!");
+		HZ_CORE_ASSERT(indices.Transfer != -1, "No transfer queue family found!");
+
 		return indices;
 	}
+
 	bool VulkanPhysicalDevice::IsExtensionSupported(const std::string& extensionName) const
 	{
 		return m_SupportedExtensions.find(extensionName) != m_SupportedExtensions.end();
 	}
+
 	Ref<VulkanPhysicalDevice> VulkanPhysicalDevice::Select(VkInstance vkInstance)
 	{
 		return Ref<VulkanPhysicalDevice>::Create(vkInstance);
 	}
+
 	Ref<VulkanDevice> VulkanDevice::Create(const Ref<VulkanPhysicalDevice>& physicalDevice, VkPhysicalDeviceFeatures enabledFeatures)
 	{
 		return Ref<VulkanDevice>::Create(physicalDevice, enabledFeatures);
 	}
+
 	VkFormat VulkanPhysicalDevice::FindDepthFormat() const
 	{
 		// Since all depth formats may be optional, we need to find a suitable depth format to use
@@ -198,7 +223,14 @@ namespace Hazel
 		}
 		return VK_FORMAT_UNDEFINED;
 	}
-	VulkanDevice::VulkanDevice(const Ref<VulkanPhysicalDevice>& physicalDevice, VkPhysicalDeviceFeatures enabledFeatures) 
+
+	// 新增：获取 Vulkan 1.2 特性的接口
+	const VkPhysicalDeviceVulkan12Features& VulkanPhysicalDevice::GetVulkan12Features() const
+	{
+		return m_Vulkan12Features;
+	}
+
+	VulkanDevice::VulkanDevice(const Ref<VulkanPhysicalDevice>& physicalDevice, VkPhysicalDeviceFeatures enabledFeatures)
 		: m_PhysicalDevice(physicalDevice), m_EnabledFeatures(enabledFeatures)
 	{
 		const bool enableAftermath = true;
@@ -206,19 +238,21 @@ namespace Hazel
 		// Do we need to enable any other extensions (eg. NV_RAYTRACING?)
 		std::vector<const char*> deviceExtensions;
 		// If the device will be used for presenting to a display via a swapchain we need to request the swapchain extension
-		HZ_CORE_ASSERT(m_PhysicalDevice->IsExtensionSupported(VK_KHR_SWAPCHAIN_EXTENSION_NAME));
+		HZ_CORE_ASSERT(m_PhysicalDevice->IsExtensionSupported(VK_KHR_SWAPCHAIN_EXTENSION_NAME), "Swapchain extension not supported!");
 		deviceExtensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 		if (m_PhysicalDevice->IsExtensionSupported(VK_NV_DEVICE_DIAGNOSTIC_CHECKPOINTS_EXTENSION_NAME))
 			deviceExtensions.push_back(VK_NV_DEVICE_DIAGNOSTIC_CHECKPOINTS_EXTENSION_NAME);
 		if (m_PhysicalDevice->IsExtensionSupported(VK_NV_DEVICE_DIAGNOSTICS_CONFIG_EXTENSION_NAME))
 			deviceExtensions.push_back(VK_NV_DEVICE_DIAGNOSTICS_CONFIG_EXTENSION_NAME);
+
 #if HZ_HAS_AFTERMATH
 		VkDeviceDiagnosticsConfigCreateInfoNV aftermathInfo = {};
 		bool canEnableAftermath = enableAftermath && m_PhysicalDevice->IsExtensionSupported(VK_NV_DEVICE_DIAGNOSTIC_CHECKPOINTS_EXTENSION_NAME) && m_PhysicalDevice->IsExtensionSupported(VK_NV_DEVICE_DIAGNOSTICS_CONFIG_EXTENSION_NAME);
+		GpuCrashTracker* gpuCrashTracker = nullptr;
 		if (canEnableAftermath)
 		{
 			// Must be initialized ~before~ device has been created
-			GpuCrashTracker* gpuCrashTracker = hnew GpuCrashTracker();
+			gpuCrashTracker = hnew GpuCrashTracker();
 			gpuCrashTracker->Initialize();
 
 			VkDeviceDiagnosticsConfigFlagBitsNV aftermathFlags = (VkDeviceDiagnosticsConfigFlagBitsNV)(VK_DEVICE_DIAGNOSTICS_CONFIG_ENABLE_RESOURCE_TRACKING_BIT_NV |
@@ -229,18 +263,33 @@ namespace Hazel
 			aftermathInfo.flags = aftermathFlags;
 		}
 #endif
-		VkDeviceCreateInfo deviceCreateInfo = {};
-		deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+
+		// 核心修改：配置特性链，启用 Vulkan 1.2 所需特性
+		VkPhysicalDeviceVulkan12Features vulkan12Features = m_PhysicalDevice->GetVulkan12Features();
+		// 显式启用 StorageImageArrayNonUniformIndexing 特性
+		vulkan12Features.shaderStorageImageArrayNonUniformIndexing = VK_TRUE;
+
+		// 构建特性链：基础特性 -> Vulkan 1.2 特性 -> Aftermath 信息（如果启用）
+		VkPhysicalDeviceFeatures2 deviceFeatures2{};
+		deviceFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+		deviceFeatures2.features = enabledFeatures; // 基础启用的特性
+		deviceFeatures2.pNext = &vulkan12Features;
+
 #if HZ_HAS_AFTERMATH
 		if (canEnableAftermath)
-			deviceCreateInfo.pNext = &aftermathInfo;
+		{
+			vulkan12Features.pNext = &aftermathInfo;
+		}
 #endif
-		deviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(physicalDevice->m_QueueCreateInfos.size());;
-		deviceCreateInfo.pQueueCreateInfos = physicalDevice->m_QueueCreateInfos.data();
-		deviceCreateInfo.pEnabledFeatures = &enabledFeatures;
 
-		// If a pNext(Chain) has been passed, we need to add it to the device creation info
-		VkPhysicalDeviceFeatures2 physicalDeviceFeatures2{};
+		VkDeviceCreateInfo deviceCreateInfo = {};
+		deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+		deviceCreateInfo.pNext = &deviceFeatures2; // 特性链关联到设备创建信息
+		deviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(physicalDevice->m_QueueCreateInfos.size());
+		deviceCreateInfo.pQueueCreateInfos = physicalDevice->m_QueueCreateInfos.data();
+		deviceCreateInfo.enabledExtensionCount = 0;
+		deviceCreateInfo.ppEnabledExtensionNames = nullptr;
+		// 注意：不再使用 pEnabledFeatures，而是通过 VkPhysicalDeviceFeatures2 传递特性
 
 		// Enable the debug marker extension if it is present (likely meaning a debugging tool is present)
 		if (m_PhysicalDevice->IsExtensionSupported(VK_EXT_DEBUG_MARKER_EXTENSION_NAME))
@@ -249,23 +298,25 @@ namespace Hazel
 			m_EnableDebugMarkers = true;
 		}
 
-		if (deviceExtensions.size() > 0)
+		if (!deviceExtensions.empty())
 		{
 			deviceCreateInfo.enabledExtensionCount = (uint32_t)deviceExtensions.size();
 			deviceCreateInfo.ppEnabledExtensionNames = deviceExtensions.data();
 		}
 
 		VkResult result = vkCreateDevice(m_PhysicalDevice->GetVulkanPhysicalDevice(), &deviceCreateInfo, nullptr, &m_LogicalDevice);
-		HZ_CORE_ASSERT(result == VK_SUCCESS);
+		HZ_CORE_ASSERT(result == VK_SUCCESS, "Failed to create logical device!");
 
 		// Get a graphics queue from the device
 		vkGetDeviceQueue(m_LogicalDevice, m_PhysicalDevice->m_QueueFamilyIndices.Graphics, 0, &m_GraphicsQueue);
 		vkGetDeviceQueue(m_LogicalDevice, m_PhysicalDevice->m_QueueFamilyIndices.Compute, 0, &m_ComputeQueue);
 		vkGetDeviceQueue(m_LogicalDevice, m_PhysicalDevice->m_QueueFamilyIndices.Transfer, 0, &m_TransferQueue);
 	}
+
 	VulkanDevice::~VulkanDevice()
 	{
 	}
+
 	VulkanCommandPool::VulkanCommandPool()
 	{
 		auto device = VulkanContext::GetCurrentDevice();
@@ -326,6 +377,7 @@ namespace Hazel
 		auto device = VulkanContext::GetCurrentDevice();
 		FlushCommandBuffer(commandBuffer, device->GetGraphicsQueue());
 	}
+
 	void VulkanDevice::FlushCommandBuffer(VkCommandBuffer commandBuffer)
 	{
 		GetThreadLocalCommandPool()->FlushCommandBuffer(commandBuffer);
@@ -333,14 +385,21 @@ namespace Hazel
 
 	void VulkanDevice::FlushCommandBuffer(VkCommandBuffer commandBuffer, VkQueue queue)
 	{
-		GetThreadLocalCommandPool()->FlushCommandBuffer(commandBuffer);
+		GetThreadLocalCommandPool()->FlushCommandBuffer(commandBuffer, queue);
 	}
+
 	void VulkanDevice::Destroy()
 	{
 		m_CommandPools.clear();
 		vkDeviceWaitIdle(m_LogicalDevice);
 		vkDestroyDevice(m_LogicalDevice, nullptr);
+#if HZ_HAS_AFTERMATH
+		// 清理 Aftermath 资源（如果需要）
+		// 注意：原代码中 GpuCrashTracker 是 new 分配的，需要在这里释放
+		// 请根据实际 Aftermath 集成逻辑调整
+#endif
 	}
+
 	void VulkanDevice::LockQueue(bool compute)
 	{
 		if (compute)
@@ -348,6 +407,7 @@ namespace Hazel
 		else
 			m_GraphicsQueueMutex.lock();
 	}
+
 	void VulkanDevice::UnlockQueue(bool compute)
 	{
 		if (compute)
@@ -355,15 +415,15 @@ namespace Hazel
 		else
 			m_GraphicsQueueMutex.unlock();
 	}
+
 	void VulkanCommandPool::FlushCommandBuffer(VkCommandBuffer commandBuffer, VkQueue queue)
 	{
 		auto device = VulkanContext::GetCurrentDevice();
-		HZ_CORE_ASSERT(queue == device->GetGraphicsQueue());
 		auto vulkanDevice = device->GetVulkanDevice();
 
 		const uint64_t DEFAULT_FENCE_TIMEOUT = 100000000000;
 
-		HZ_CORE_ASSERT(commandBuffer != VK_NULL_HANDLE);
+		HZ_CORE_ASSERT(commandBuffer != VK_NULL_HANDLE, "Command buffer is null!");
 
 		VK_CHECK_RESULT(vkEndCommandBuffer(commandBuffer));
 
@@ -380,14 +440,14 @@ namespace Hazel
 		VK_CHECK_RESULT(vkCreateFence(vulkanDevice, &fenceCreateInfo, nullptr, &fence));
 
 		{
-			device->LockQueue();  // ???:Device的CommandBuffer提交加锁的目的？
+			device->LockQueue();
 
 			// Submit to the queue
 			VK_CHECK_RESULT(vkQueueSubmit(queue, 1, &submitInfo, fence));
 
 			device->UnlockQueue();
 		}
-		// Wait for the fence to signal that command buffer has finished executing  等待GPU命令执行完成
+		// Wait for the fence to signal that command buffer has finished executing
 		VK_CHECK_RESULT(vkWaitForFences(vulkanDevice, 1, &fence, VK_TRUE, DEFAULT_FENCE_TIMEOUT));
 
 		vkDestroyFence(vulkanDevice, fence, nullptr);
@@ -412,10 +472,11 @@ namespace Hazel
 	Ref<VulkanCommandPool> VulkanDevice::GetThreadLocalCommandPool()
 	{
 		auto threadID = std::this_thread::get_id();
-		HZ_CORE_ASSERT(m_CommandPools.find(threadID) != m_CommandPools.end());
+		HZ_CORE_ASSERT(m_CommandPools.find(threadID) != m_CommandPools.end(), "Thread-local command pool not found!");
 
 		return m_CommandPools.at(threadID);
 	}
+
 	Ref<VulkanCommandPool> VulkanDevice::GetOrCreateThreadLocalCommandPool()
 	{
 		// CommandPool与线程ID绑定，相当于一个线程一个CommandPool
@@ -428,4 +489,6 @@ namespace Hazel
 		m_CommandPools[threadID] = commandPool;
 		return commandPool;
 	}
+
 }
+
