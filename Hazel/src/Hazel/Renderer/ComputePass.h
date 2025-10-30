@@ -1,6 +1,6 @@
 #pragma once
 #include "PipelineCompute.h"
-
+#include "Texture.h"
 namespace Hazel
 {
 	struct ComputePassSpecification
@@ -20,9 +20,8 @@ namespace Hazel
 		virtual Ref<Image2D> GetDepthOutput() = 0;
 		virtual Ref<PipelineCompute> GetPipeline() const = 0;
 		virtual void SetInput(Ref<Image2D> image, uint32_t Binding) = 0;
-		virtual void SetInput(Ref<ImageView> imageView, uint32_t Binding) = 0;
-
-		virtual bool HasDescriptorSets() const = 0;
+		virtual void SetInput(Ref<ImageView> imageView, uint32_t Binding,int index) = 0;
+		virtual void SetInput(Ref<Texture2D> texture, uint32_t Binding) = 0;
 
 		static Ref<ComputePass> Create(const ComputePassSpecification& spec);
 

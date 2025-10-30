@@ -2,6 +2,7 @@
 #include "VulkanShader.h"
 #include "Hazel/Asset/Model/Material.h"
 namespace Hazel {
+	// 关于材质的资源描述符全部放在Set=1
 	class VulkanMaterial : public Material
 	{
 	public:

@@ -45,20 +45,24 @@ namespace Hazel {
 	{
 		uint32_t inputWidth = m_PreDepthLoadFramebuffer->GetDepthImage()->GetWidth();
 		uint32_t inputHeight = m_PreDepthLoadFramebuffer->GetDepthImage()->GetHeight();
-		uint32_t outputWidth = std::max(1u, inputWidth / 2);  // 减半，最小1
-		uint32_t outputHeight = std::max(1u, inputHeight / 2);
-		// 工作组内部尺寸（需与Shader中的local_size一致）
+
+		// 工作组数量（按第0级尺寸）
 		const uint32_t localSize = 8;
+		uint32_t groupCountX = (inputWidth + localSize - 1) / localSize;
+		uint32_t groupCountY = (inputHeight + localSize - 1) / localSize;
 
-		// 计算工作组数量（向上取整）
-		uint32_t groupCountX = (outputWidth + localSize - 1) / localSize;
-		uint32_t groupCountY = (outputHeight + localSize - 1) / localSize;
+		// 绑定资源：输入深度图（采样器）+ HZB数组（存储图像）
 		Renderer::BeginComputePass(m_CommandBuffer, m_HierarchicalDepthPass);
-		m_HierarchicalDepthPass->SetInput(m_PreDepthLoadFramebuffer->GetDepthImage(), 0); // 输入深度纹理
-		m_HierarchicalDepthPass->SetInput(m_HierarchicalDepthTexture.ImageViews[1], 1); // 输出HierarchicalDepth的某一层
+		m_HierarchicalDepthPass->SetInput(m_PreDepthLoadFramebuffer->GetDepthImage(), 0); 
+		uint32_t mipLevels = 0;
+		for (mipLevels = 0; mipLevels < m_HierarchicalDepthTexture.ImageViews.size();mipLevels++) {
 
-		Renderer::DispatchCompute(m_CommandBuffer, m_HierarchicalDepthPass, nullptr, glm::uvec3(groupCountX, groupCountY, 1));
-		//m_HierarchicalDepthPass->SetInput(m_HierarchicalDepthTexture.ImageViews[2], 1);
+			m_HierarchicalDepthPass->SetInput(m_HierarchicalDepthTexture.ImageViews[mipLevels], 1, mipLevels);
+		}
+
+		const Buffer mip(&mipLevels, sizeof(uint32_t));
+
+		Renderer::DispatchCompute(m_CommandBuffer, m_HierarchicalDepthPass, nullptr, glm::uvec3(groupCountX, groupCountY, 1), mip);
 		Renderer::EndComputePass(m_CommandBuffer, m_HierarchicalDepthPass);
 	}
 

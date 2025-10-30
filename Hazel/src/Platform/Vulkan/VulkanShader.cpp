@@ -77,7 +77,7 @@ namespace Hazel {
 		}
 		if (!m_Spec.bindings.empty()) {
 			createDescriptorSetLayout();
-			createDescriptorPool(100);
+			createDescriptorPool({{0,100},{1,100}});
 			createDescriptorSet();
 		}
 		else {
@@ -130,77 +130,46 @@ namespace Hazel {
 			}
 		}
 	}
-	void VulkanShader::createDescriptorPool(uint32_t maxMaterials)
-	{
+	void VulkanShader::createDescriptorPool(const std::unordered_map<uint32_t, uint32_t>& setMaxCounts) {
 		VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-
-		// Step1: 按 Set 聚合 binding 数量
-		std::unordered_map<VkDescriptorType, uint32_t> typeCountMap;
-		for (const auto& binding : m_Spec.bindings)
-		{
-			uint32_t multiplier = 1;
-			if (binding.set == 0)
-				multiplier = Renderer::GetConfig().FramesInFlight;          // Set=0 每帧独立
-			else if (binding.set == 1)
-				multiplier = maxMaterials;            // Set=1 材质数量上限
-			else
-				multiplier = 1;                       // 其他 Set，可按需调整
-
-			typeCountMap[binding.type] += binding.count * multiplier;
+		std::unordered_map<VkDescriptorType, uint32_t> typeCountMap; 
+		std::unordered_set<uint32_t> uniqueSets; 
+		for (const auto& binding : m_Spec.bindings) 
+		{ 
+			uniqueSets.insert(binding.set); 
+			uint32_t multiplier = setMaxCounts.at(binding.set); 
+			typeCountMap[binding.type] += binding.count * multiplier; 
 		}
-
-		// Step2: 转换为 VkDescriptorPoolSize 数组
-		std::vector<VkDescriptorPoolSize> poolSizes;
-		poolSizes.reserve(typeCountMap.size());
-		for (const auto& kv : typeCountMap)
-		{
-			VkDescriptorPoolSize poolSize{};
+		std::vector<VkDescriptorPoolSize> poolSizes; 
+		for (const auto& kv : typeCountMap) 
+		{ 
+			VkDescriptorPoolSize poolSize{}; 
 			poolSize.type = kv.first;
 			poolSize.descriptorCount = kv.second;
 			poolSizes.push_back(poolSize);
 		}
-
-		// Step3: 计算 maxSets
-		uint32_t numSets = 0;
-		std::unordered_set<uint32_t> uniqueSets;
-		for (const auto& b : m_Spec.bindings)
-			uniqueSets.insert(b.set);
-
-		for (uint32_t set : uniqueSets)
+		uint32_t numSets = 0; 
+		for (uint32_t set : uniqueSets) 
 		{
-			if (set == 0)
-				numSets += Renderer::GetConfig().FramesInFlight;
-			else if (set == 1)
-				numSets += maxMaterials;
-			else
-				numSets += 1;  // 其他 Set 按需
+			numSets += setMaxCounts.at(set); 
 		}
-
-		VkDescriptorPoolCreateInfo poolInfo{};
-		poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-		poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
-		poolInfo.pPoolSizes = poolSizes.data();
-		poolInfo.maxSets = numSets;
+		VkDescriptorPoolCreateInfo poolInfo{}; 
+		poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO; 
+		poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size()); 
+		poolInfo.pPoolSizes = poolSizes.data(); poolInfo.maxSets = numSets; 
 		poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-
-		VkResult createPoolResult = vkCreateDescriptorPool(device, &poolInfo, nullptr, &m_DescriptorPool);
-		assert(createPoolResult == VK_SUCCESS && "创建 Shader 专用 DescriptorPool 失败！");
+		vkCreateDescriptorPool(device, &poolInfo, nullptr, &m_DescriptorPool);
 	}
 
 	void VulkanShader::createDescriptorSet()
 	{
 		VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-		// 获取并发帧数量
 		uint32_t framesInFlight = Renderer::GetConfig().FramesInFlight;
-		// 目前只使用Set=0，但为每个并发帧创建独立的描述符集
 		uint32_t maxSets = framesInFlight;
-		// 统计每种描述符类型的总需求（按并发帧数量计算）
 		std::unordered_map<VkDescriptorType, uint32_t> typeCountMap;
 		for (const auto& binding : m_Spec.bindings) {
-			// 每个绑定的总数量 = 单个集的数量 × 并发帧数量
 			typeCountMap[binding.type] += binding.count * maxSets;
 		}
-		// 转换为VkDescriptorPoolSize数组
 		std::vector<VkDescriptorPoolSize> poolSizes;
 		poolSizes.reserve(typeCountMap.size());
 		for (std::unordered_map<VkDescriptorType, uint32_t>::const_iterator it = typeCountMap.begin();
@@ -211,19 +180,43 @@ namespace Hazel {
 			poolSize.descriptorCount = it->second;
 			poolSizes.push_back(poolSize);
 		}
-		// 为每个并发帧分配独立的描述符集（Set=0）
-		m_DescriptorSets.resize(maxSets);  // 初始化向量容量
-		std::vector<VkDescriptorSetLayout> layouts(maxSets, m_DescriptorSetLayouts[0]);  // 为Set=0提前创建好一个Set，用于提前绑定
+		m_DescriptorSets.resize(maxSets);
+		std::vector<VkDescriptorSetLayout> layouts(maxSets, m_DescriptorSetLayouts[0]); 
 		VkDescriptorSetAllocateInfo allocInfo{};
 		allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 		allocInfo.descriptorPool = m_DescriptorPool;
-		allocInfo.descriptorSetCount = maxSets;  // 一次分配所有并发帧的描述符集
-		allocInfo.pSetLayouts = layouts.data();  // 所有集都使用Set=0的布局
+		allocInfo.descriptorSetCount = maxSets; 
+		allocInfo.pSetLayouts = layouts.data();
 
 		VkResult allocateResult = vkAllocateDescriptorSets(
 			device, &allocInfo, m_DescriptorSets.data());
 		assert(allocateResult == VK_SUCCESS && "分配描述符集失败！");
 	}
+
+	std::vector<VkDescriptorSet> VulkanShader::createDescriptorSet(uint32_t targetSet)
+	{
+		VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+		uint32_t framesInFlight = Renderer::GetConfig().FramesInFlight;
+		std::vector<VkDescriptorSet> descriptorSets(framesInFlight);
+
+		if (targetSet >= m_DescriptorSetLayouts.size())
+			return {};
+
+		std::vector<VkDescriptorSetLayout> layouts(framesInFlight, m_DescriptorSetLayouts[targetSet]);
+
+		VkDescriptorSetAllocateInfo allocInfo{};
+		allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+		allocInfo.descriptorPool = m_DescriptorPool;
+		allocInfo.descriptorSetCount = framesInFlight;
+		allocInfo.pSetLayouts = layouts.data();
+
+		VkResult result = vkAllocateDescriptorSets(device, &allocInfo, descriptorSets.data());
+		assert(result == VK_SUCCESS && "分配描述符集失败");
+
+		return descriptorSets;
+	}
+
+
 	void VulkanShader::Release() {
 		VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 		if (m_DescriptorPool != VK_NULL_HANDLE) {

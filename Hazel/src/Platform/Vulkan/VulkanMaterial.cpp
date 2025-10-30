@@ -14,25 +14,7 @@ namespace Hazel {
 	void VulkanMaterial::CreateDescriptorSet()
 	{
 		Renderer::Submit([this] {
-			VkDevice device = m_Device;
-			VkDescriptorPool pool = m_Shader->GetDescriptorPool();       // Shader 专属 Pool
-			VkDescriptorSetLayout layout = m_Shader->GetDescriptorSetLayout()[1]; // Set=1 材质布局
-
-			uint32_t framesInFlight = Renderer::GetConfig().FramesInFlight;
-
-			// 每帧分配独立 DescriptorSet
-			m_DescriptorSets.resize(framesInFlight);
-
-			std::vector<VkDescriptorSetLayout> layouts(framesInFlight, layout);
-
-			VkDescriptorSetAllocateInfo allocInfo{};
-			allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-			allocInfo.descriptorPool = pool;
-			allocInfo.descriptorSetCount = framesInFlight;
-			allocInfo.pSetLayouts = layouts.data();
-
-			VkResult result = vkAllocateDescriptorSets(device, &allocInfo, m_DescriptorSets.data());
-			assert(result == VK_SUCCESS && "Failed to allocate material DescriptorSets!");
+			m_DescriptorSets = m_Shader->createDescriptorSet(1);
 		});
 	}
 	void VulkanMaterial::UpdateDescriptorSet(bool bInit)

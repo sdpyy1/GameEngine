@@ -196,7 +196,15 @@ namespace Hazel {
 
 		inline uint32_t CalculateMipCount(uint32_t width, uint32_t height)
 		{
-			return (uint32_t)glm::floor(glm::log2(glm::min(width, height))) + 1;
+			if (width == 0 || height == 0) return 1; // 异常尺寸兜底
+
+			uint32_t mipCount = 1; // 至少包含第0级（原始尺寸）
+			uint32_t currentMin = glm::min(width, height);
+			while (currentMin > 1) { // 直到最小边≤1，停止计算
+				currentMin = (currentMin + 1) / 2; // 向上取整缩小（避免奇数尺寸卡住）
+				mipCount++;
+			}
+			return mipCount;
 		}
 
 		inline uint32_t GetImageMemorySize(ImageFormat format, uint32_t width, uint32_t height)

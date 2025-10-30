@@ -173,9 +173,14 @@ namespace Hazel {
 			binding1.binding = 1;
 			binding1.type = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
 			binding1.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
-			binding1.count = 1;
+			binding1.count = 11;
 			binding1.set = 0;
 			hzbShaderSpec.bindings.push_back(binding1);
+			Shader::PushConstantRange PushRange;
+			PushRange.shaderStage = VK_SHADER_STAGE_COMPUTE_BIT;
+            PushRange.offset = 0;
+            PushRange.size = 4;
+            hzbShaderSpec.pushConstantRanges = { PushRange };
 			s_Data->m_ShaderLibrary->LoadCommonShader("HZB", hzbShaderSpec,true);
 		}
 
