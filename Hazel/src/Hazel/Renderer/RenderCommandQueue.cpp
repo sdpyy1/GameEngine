@@ -6,7 +6,6 @@
 #define HZ_RENDER_TRACE(...) HZ_CORE_TRACE(__VA_ARGS__)
 
 namespace Hazel {
-
 	RenderCommandQueue::RenderCommandQueue()
 	{
 		m_CommandBuffer = new uint8_t[10 * 1024 * 1024]; // 10mb buffer
@@ -56,9 +55,7 @@ namespace Hazel {
 			}
 		}
 
-
 		m_CommandBufferPtr = m_CommandBuffer;
 		m_CommandCount = 0;
 	}
-
 }

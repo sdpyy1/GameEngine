@@ -10,7 +10,6 @@
 #include <yaml-cpp/yaml.h>
 
 namespace YAML {
-
 	template<>
 	struct convert<glm::vec2>
 	{
@@ -102,11 +101,9 @@ namespace YAML {
 			return true;
 		}
 	};
-
 }
 
 namespace Hazel {
-
 #define WRITE_SCRIPT_FIELD(FieldType, Type)           \
 			case ScriptFieldType::FieldType:          \
 				out << scriptField.GetValue<Type>();  \
@@ -145,9 +142,9 @@ namespace Hazel {
 	{
 		switch (bodyType)
 		{
-			case Rigidbody2DComponent::BodyType::Static:    return "Static";
-			case Rigidbody2DComponent::BodyType::Dynamic:   return "Dynamic";
-			case Rigidbody2DComponent::BodyType::Kinematic: return "Kinematic";
+		case Rigidbody2DComponent::BodyType::Static:    return "Static";
+		case Rigidbody2DComponent::BodyType::Dynamic:   return "Dynamic";
+		case Rigidbody2DComponent::BodyType::Kinematic: return "Kinematic";
 		}
 
 		HZ_CORE_ASSERT(false, "Unknown body type");
@@ -159,13 +156,13 @@ namespace Hazel {
 		if (bodyTypeString == "Static")    return Rigidbody2DComponent::BodyType::Static;
 		if (bodyTypeString == "Dynamic")   return Rigidbody2DComponent::BodyType::Dynamic;
 		if (bodyTypeString == "Kinematic") return Rigidbody2DComponent::BodyType::Kinematic;
-	
+
 		HZ_CORE_ASSERT(false, "Unknown body type");
 		return Rigidbody2DComponent::BodyType::Static;
 	}
 
 	SceneSerializer::SceneSerializer(const Ref<Scene>& scene)
-	: m_Scene(scene)
+		: m_Scene(scene)
 	{
 	}
 
@@ -275,7 +272,6 @@ namespace Hazel {
 		fout << out.c_str();
 	}
 
-	
 	bool SceneSerializer::Deserialize(const std::string& filepath)
 	{
 		YAML::Node data;
@@ -343,7 +339,7 @@ namespace Hazel {
 					com.Visible = staticMeshComponent["Visible"].as<bool>();
 				}
 				auto dynamicMeshComponent = entity["DynamicMeshComponent"];
-				if(dynamicMeshComponent) {
+				if (dynamicMeshComponent) {
 					Ref<Asset> meshSource = AssetManager::GetMesh(dynamicMeshComponent["MeshSourcePath"].as<std::string>());
 					deserializedEntity.AddComponent<DynamicMeshComponent>(meshSource->Handle, dynamicMeshComponent["MeshSourcePath"].as<std::string>());
 					m_Scene->BuildDynamicMeshEntity(meshSource, deserializedEntity, dynamicMeshComponent["MeshSourcePath"].as<std::string>());
@@ -363,5 +359,4 @@ namespace Hazel {
 
 		return true;
 	}
-
 }

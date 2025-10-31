@@ -14,7 +14,7 @@ namespace Hazel {
 		file.read(buffer.data(), fileSize);
 		return buffer;
 	}
-	VulkanShader::VulkanShader(const std::string& name, const std::string& vertFilePath, const std::string& fragFilePath,ShaderSpecification spec)
+	VulkanShader::VulkanShader(const std::string& name, const std::string& vertFilePath, const std::string& fragFilePath, ShaderSpecification spec)
 	{
 		m_Name = name;
 		m_VertFilePath = vertFilePath;
@@ -23,7 +23,6 @@ namespace Hazel {
 		m_PushConstantRanges = spec.pushConstantRanges;
 		Reload();
 	}
-
 
 	VulkanShader::VulkanShader(const std::string& name, const std::string& computeFilePath, ShaderSpecification spec)
 	{
@@ -37,13 +36,12 @@ namespace Hazel {
 
 	void VulkanShader::Reload()
 	{
-		Renderer::Submit([instance = Ref(this)]() mutable{
+		Renderer::Submit([instance = Ref(this)]() mutable {
 			HZ_CORE_INFO("RT: Create Shader :{0}", instance->m_Name);
 			instance->RT_Reload();
-		});
+			});
 	}
 
-	
 	void VulkanShader::RT_Reload()
 	{
 		// TODO: 先实现最简单的Shader载入功能
@@ -77,7 +75,7 @@ namespace Hazel {
 		}
 		if (!m_Spec.bindings.empty()) {
 			createDescriptorSetLayout();
-			createDescriptorPool({{0,100},{1,100}});
+			createDescriptorPool({ {0,100},{1,100} });
 			createDescriptorSet();
 		}
 		else {
@@ -132,31 +130,31 @@ namespace Hazel {
 	}
 	void VulkanShader::createDescriptorPool(const std::unordered_map<uint32_t, uint32_t>& setMaxCounts) {
 		VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-		std::unordered_map<VkDescriptorType, uint32_t> typeCountMap; 
-		std::unordered_set<uint32_t> uniqueSets; 
-		for (const auto& binding : m_Spec.bindings) 
-		{ 
-			uniqueSets.insert(binding.set); 
-			uint32_t multiplier = setMaxCounts.at(binding.set); 
-			typeCountMap[binding.type] += binding.count * multiplier; 
+		std::unordered_map<VkDescriptorType, uint32_t> typeCountMap;
+		std::unordered_set<uint32_t> uniqueSets;
+		for (const auto& binding : m_Spec.bindings)
+		{
+			uniqueSets.insert(binding.set);
+			uint32_t multiplier = setMaxCounts.at(binding.set);
+			typeCountMap[binding.type] += binding.count * multiplier;
 		}
-		std::vector<VkDescriptorPoolSize> poolSizes; 
-		for (const auto& kv : typeCountMap) 
-		{ 
-			VkDescriptorPoolSize poolSize{}; 
+		std::vector<VkDescriptorPoolSize> poolSizes;
+		for (const auto& kv : typeCountMap)
+		{
+			VkDescriptorPoolSize poolSize{};
 			poolSize.type = kv.first;
 			poolSize.descriptorCount = kv.second;
 			poolSizes.push_back(poolSize);
 		}
-		uint32_t numSets = 0; 
-		for (uint32_t set : uniqueSets) 
+		uint32_t numSets = 0;
+		for (uint32_t set : uniqueSets)
 		{
-			numSets += setMaxCounts.at(set); 
+			numSets += setMaxCounts.at(set);
 		}
-		VkDescriptorPoolCreateInfo poolInfo{}; 
-		poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO; 
-		poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size()); 
-		poolInfo.pPoolSizes = poolSizes.data(); poolInfo.maxSets = numSets; 
+		VkDescriptorPoolCreateInfo poolInfo{};
+		poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+		poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
+		poolInfo.pPoolSizes = poolSizes.data(); poolInfo.maxSets = numSets;
 		poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
 		vkCreateDescriptorPool(device, &poolInfo, nullptr, &m_DescriptorPool);
 	}
@@ -181,11 +179,11 @@ namespace Hazel {
 			poolSizes.push_back(poolSize);
 		}
 		m_DescriptorSets.resize(maxSets);
-		std::vector<VkDescriptorSetLayout> layouts(maxSets, m_DescriptorSetLayouts[0]); 
+		std::vector<VkDescriptorSetLayout> layouts(maxSets, m_DescriptorSetLayouts[0]);
 		VkDescriptorSetAllocateInfo allocInfo{};
 		allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 		allocInfo.descriptorPool = m_DescriptorPool;
-		allocInfo.descriptorSetCount = maxSets; 
+		allocInfo.descriptorSetCount = maxSets;
 		allocInfo.pSetLayouts = layouts.data();
 
 		VkResult allocateResult = vkAllocateDescriptorSets(
@@ -216,12 +214,11 @@ namespace Hazel {
 		return descriptorSets;
 	}
 
-
 	void VulkanShader::Release() {
 		VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 		if (m_DescriptorPool != VK_NULL_HANDLE) {
 			vkDestroyDescriptorPool(device, m_DescriptorPool, nullptr);
-			m_DescriptorPool = VK_NULL_HANDLE; 
+			m_DescriptorPool = VK_NULL_HANDLE;
 		}
 		for (auto m_DescriptorSetLayout : m_DescriptorSetLayouts) {
 			if (m_DescriptorSetLayout != VK_NULL_HANDLE) {

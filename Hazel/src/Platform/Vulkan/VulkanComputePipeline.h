@@ -3,9 +3,9 @@
 #include "Hazel/Renderer/PipelineCompute.h"
 namespace Hazel
 {
-	class VulkanComputePipeline : public PipelineCompute 
+	class VulkanComputePipeline : public PipelineCompute
 	{
-    public:
+	public:
 		VulkanComputePipeline(Ref<Shader> computeShader);
 		void RT_CreatePipeline();
 		void RT_Begin(Ref<RenderCommandBuffer> renderCommandBuffer = nullptr) override;
@@ -18,7 +18,6 @@ namespace Hazel
 		void End() override;
 		VkPipelineLayout GetLayout() const { return m_ComputePipelineLayout; }
 		void SetPushConstants(Buffer constants) const;
-
 	private:
 		Ref<VulkanShader> m_Shader;
 		VkPipelineLayout m_ComputePipelineLayout = nullptr;
@@ -26,7 +25,5 @@ namespace Hazel
 		VkPipeline m_ComputePipeline = nullptr;
 		VkCommandBuffer m_ActiveComputeCommandBuffer = nullptr;
 		bool m_UsingGraphicsQueue = false;
-
 	};
-
 }

@@ -1,7 +1,6 @@
 #pragma once
 #include <atomic>
 namespace Hazel {
-
 	class RefCounted
 	{
 	public:
@@ -234,6 +233,4 @@ namespace Hazel {
 	private:
 		T* m_Instance = nullptr;
 	};
-
 }
-

@@ -2,7 +2,6 @@
 #include <stdint.h>
 
 namespace Hazel {
-
 	// VulkanµÄVMA»áÓÃ
 	struct GPUMemoryStats
 	{
@@ -16,5 +15,4 @@ namespace Hazel {
 		uint64_t ImageAllocationSize = 0;
 		uint64_t ImageAllocationCount = 0;
 	};
-
 }

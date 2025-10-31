@@ -7,7 +7,6 @@
 #include <utility>
 
 namespace Hazel {
-
 	VulkanRenderCommandBuffer::VulkanRenderCommandBuffer(uint32_t commandBufferCount, std::string debugName)
 		: m_DebugName(std::move(debugName))
 	{
@@ -156,7 +155,6 @@ namespace Hazel {
 	{
 		m_TimestampNextAvailableQuery = 2;
 
-
 		Ref<VulkanRenderCommandBuffer> instance = this;
 		Renderer::Submit([instance]() mutable
 			{
@@ -278,5 +276,4 @@ namespace Hazel {
 				vkCmdWriteTimestamp(commandBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, instance->m_TimestampQueryPools[commandBufferIndex], queryID + 1);
 			});
 	}
-
 }

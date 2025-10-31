@@ -31,5 +31,4 @@ namespace Hazel {
 		glm::vec3& m_EmissionColor = glm::vec3{ 0,0,0 };
 		bool bUseNormalTexture = false;
 	};
-
 }

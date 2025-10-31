@@ -16,7 +16,6 @@
 #include <random>
 
 namespace Hazel {
-
 	EditorLayer::EditorLayer()
 		: Layer("EditorLayer"), m_EditorCamera(45.0f, 1280.0f, 720.0f, 0.1f, 100.0f), m_FolderPreviewPanel("assets")
 	{
@@ -29,10 +28,7 @@ namespace Hazel {
 
 	void EditorLayer::OnAttach()
 	{
-		
 	}
-
-
 
 	void EditorLayer::OnUpdate(Timestep ts)
 	{
@@ -175,8 +171,7 @@ namespace Hazel {
 		{
 			SaveSceneAs();
 		}
-
-	}	
+	}
 
 	void EditorLayer::SaveSceneAs()
 	{
@@ -198,7 +193,7 @@ namespace Hazel {
 	void EditorLayer::ViewportGUI()
 	{
 		ImGui::Begin("Viewport");
-		
+
 		m_ViewportBounds[0] = ImGui::GetWindowPos();
 		// 程序中ViewportSize都来自这里
 		ImVec2 viewportSize = ImGui::GetContentRegionAvail();
@@ -207,7 +202,7 @@ namespace Hazel {
 		m_Scene->SetViewprotSize(viewportSize.x, viewportSize.y);
 		//m_SceneRender->SetViewprotSize(viewportSize.x, viewportSize.y);
 		Application::SetViewportSize(viewportSize.x, viewportSize.y);
-		
+
 		ImVec2 mousePos = ImGui::GetIO().MousePos;
 		isMouseInViewport =
 			mousePos.x >= m_ViewportBounds[0].x && mousePos.x <= m_ViewportBounds[1].x &&
@@ -236,7 +231,7 @@ namespace Hazel {
 		if (rightMouseDown) {
 			m_GizmoType = -1;
 		}
-		else if(!ImGuizmo::IsUsing()) {
+		else if (!ImGuizmo::IsUsing()) {
 			if (Input::IsKeyDown(Key::W)) m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
 			if (Input::IsKeyDown(Key::E)) m_GizmoType = ImGuizmo::OPERATION::ROTATE;
 			if (Input::IsKeyDown(Key::R)) m_GizmoType = ImGuizmo::OPERATION::SCALE;
@@ -248,7 +243,7 @@ namespace Hazel {
 		if (!isMouseInViewport)
 			return;
 		ImGuizmo::SetOrthographic(false);
-		ImGuizmo::SetDrawlist(); 
+		ImGuizmo::SetDrawlist();
 		float x = m_ViewportBounds[0].x;
 		float y = m_ViewportBounds[0].y;
 		float width = m_ViewportBounds[1].x - m_ViewportBounds[0].x;
@@ -290,5 +285,4 @@ namespace Hazel {
 	}
 
 	void EditorLayer::OnDetach() {}
-
 }

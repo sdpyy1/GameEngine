@@ -9,11 +9,10 @@
 #include "Hazel/Asset/TextureImporter.h"
 #include "VulkanUtils.h"
 #include <format>
+#include "VulkanRenderCommandBuffer.h"
 
 namespace Hazel {
-
 	namespace Utils {
-
 		static VkSamplerAddressMode VulkanSamplerWrap(TextureWrap wrap)
 		{
 			switch (wrap)
@@ -65,7 +64,6 @@ namespace Hazel {
 
 			return result;
 		}
-
 	}
 
 	//////////////////////////////////////////////////////////////////////////////////
@@ -376,7 +374,7 @@ namespace Hazel {
 		imageMemoryBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 		imageMemoryBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 
-		// Insert a memory dependency at the proper pipeline stages that will execute the image layout transition 
+		// Insert a memory dependency at the proper pipeline stages that will execute the image layout transition
 		// Source pipeline stage is host write/read execution (VK_PIPELINE_STAGE_HOST_BIT)
 		// Destination pipeline stage is copy command execution (VK_PIPELINE_STAGE_TRANSFER_BIT)
 		vkCmdPipelineBarrier(
@@ -414,7 +412,7 @@ namespace Hazel {
 		imageMemoryBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 		imageMemoryBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-		// Insert a memory dependency at the proper pipeline stages that will execute the image layout transition 
+		// Insert a memory dependency at the proper pipeline stages that will execute the image layout transition
 		// Source pipeline stage stage is copy command exection (VK_PIPELINE_STAGE_TRANSFER_BIT)
 		// Destination pipeline stage fragment shader access (VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT)
 		vkCmdPipelineBarrier(
@@ -444,7 +442,6 @@ namespace Hazel {
 				VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
 				subresourceRange);
 		}
-
 
 		device->FlushCommandBuffer(copyCmd);
 
@@ -808,7 +805,7 @@ namespace Hazel {
 			imageMemoryBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 			imageMemoryBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 
-			// Insert a memory dependency at the proper pipeline stages that will execute the image layout transition 
+			// Insert a memory dependency at the proper pipeline stages that will execute the image layout transition
 			// Source pipeline stage is host write/read execution (VK_PIPELINE_STAGE_HOST_BIT)
 			// Destination pipeline stage is copy command execution (VK_PIPELINE_STAGE_TRANSFER_BIT)
 			vkCmdPipelineBarrier(
@@ -1061,7 +1058,105 @@ namespace Hazel {
 		m_MipsGenerated = true;
 
 		m_DescriptorImageInfo.imageLayout = readonly ? VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_GENERAL;
+	}
 
+	void VulkanTextureCube::GenerateMips(Ref<RenderCommandBuffer> renderCommandBuffer, bool readonly)
+	{
+		auto device = VulkanContext::GetCurrentDevice();
+		auto vulkanDevice = device->GetVulkanDevice();
+
+		VkCommandBuffer blitCmd = renderCommandBuffer.As<VulkanRenderCommandBuffer>()->GetActiveCommandBuffer();
+		uint32_t mipLevels = GetMipLevelCount();
+		for (uint32_t face = 0; face < 6; face++)
+		{
+			VkImageSubresourceRange mipSubRange = {};
+			mipSubRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+			mipSubRange.baseMipLevel = 0;
+			mipSubRange.baseArrayLayer = face;
+			mipSubRange.levelCount = 1;
+			mipSubRange.layerCount = 1;
+
+			// Prepare current mip level as image blit destination
+			Utils::InsertImageMemoryBarrier(blitCmd, m_Image,
+				0, VK_ACCESS_TRANSFER_WRITE_BIT,
+				VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+				VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+				mipSubRange);
+		}
+
+		for (uint32_t i = 1; i < mipLevels; i++)
+		{
+			for (uint32_t face = 0; face < 6; face++)
+			{
+				VkImageBlit imageBlit{};
+
+				// Source
+				imageBlit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+				imageBlit.srcSubresource.layerCount = 1;
+				imageBlit.srcSubresource.mipLevel = i - 1;
+				imageBlit.srcSubresource.baseArrayLayer = face;
+				imageBlit.srcOffsets[1].x = int32_t(m_Specification.Width >> (i - 1));
+				imageBlit.srcOffsets[1].y = int32_t(m_Specification.Height >> (i - 1));
+				imageBlit.srcOffsets[1].z = 1;
+
+				// Destination
+				imageBlit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+				imageBlit.dstSubresource.layerCount = 1;
+				imageBlit.dstSubresource.mipLevel = i;
+				imageBlit.dstSubresource.baseArrayLayer = face;
+				imageBlit.dstOffsets[1].x = int32_t(m_Specification.Width >> i);
+				imageBlit.dstOffsets[1].y = int32_t(m_Specification.Height >> i);
+				imageBlit.dstOffsets[1].z = 1;
+
+				VkImageSubresourceRange mipSubRange = {};
+				mipSubRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+				mipSubRange.baseMipLevel = i;
+				mipSubRange.baseArrayLayer = face;
+				mipSubRange.levelCount = 1;
+				mipSubRange.layerCount = 1;
+
+				// Prepare current mip level as image blit destination
+				Utils::InsertImageMemoryBarrier(blitCmd, m_Image,
+					0, VK_ACCESS_TRANSFER_WRITE_BIT,
+					VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+					VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+					mipSubRange);
+
+				// Blit from previous level
+				vkCmdBlitImage(
+					blitCmd,
+					m_Image,
+					VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+					m_Image,
+					VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+					1,
+					&imageBlit,
+					VK_FILTER_LINEAR);
+
+				// Prepare current mip level as image blit source for next level
+				Utils::InsertImageMemoryBarrier(blitCmd, m_Image,
+					VK_ACCESS_TRANSFER_WRITE_BIT, VK_ACCESS_TRANSFER_READ_BIT,
+					VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+					VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+					mipSubRange);
+			}
+		}
+
+		// After the loop, all mip layers are in TRANSFER_SRC layout, so transition all to SHADER_READ
+		VkImageSubresourceRange subresourceRange = {};
+		subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		subresourceRange.layerCount = 6;
+		subresourceRange.levelCount = mipLevels;
+
+		Utils::InsertImageMemoryBarrier(blitCmd, m_Image,
+			VK_ACCESS_TRANSFER_READ_BIT, VK_ACCESS_SHADER_READ_BIT,
+			VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, readonly ? VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_GENERAL,
+			VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+			subresourceRange);
+
+		m_MipsGenerated = true;
+
+		m_DescriptorImageInfo.imageLayout = readonly ? VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_GENERAL;
 	}
 
 #if 0
@@ -1104,7 +1199,7 @@ namespace Hazel {
 		imageMemoryBarrier.oldLayout = m_DescriptorImageInfo.imageLayout;
 		imageMemoryBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
 
-		// Insert a memory dependency at the proper pipeline stages that will execute the image layout transition 
+		// Insert a memory dependency at the proper pipeline stages that will execute the image layout transition
 		// Source pipeline stage is host write/read exection (VK_PIPELINE_STAGE_HOST_BIT)
 		// Destination pipeline stage is copy command exection (VK_PIPELINE_STAGE_TRANSFER_BIT)
 		vkCmdPipelineBarrier(
@@ -1293,7 +1388,7 @@ namespace Hazel {
 			imageMemoryBarrier.oldLayout = m_DescriptorImageInfo.imageLayout;
 			imageMemoryBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 
-			// Insert a memory dependency at the proper pipeline stages that will execute the image layout transition 
+			// Insert a memory dependency at the proper pipeline stages that will execute the image layout transition
 			// Source pipeline stage is host write/read exection (VK_PIPELINE_STAGE_HOST_BIT)
 			// Destination pipeline stage is copy command exection (VK_PIPELINE_STAGE_TRANSFER_BIT)
 			vkCmdPipelineBarrier(
@@ -1339,5 +1434,4 @@ namespace Hazel {
 
 		allocator.DestroyBuffer(stagingBuffer, stagingBufferAllocation);
 	}
-
 }

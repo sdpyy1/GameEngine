@@ -7,7 +7,6 @@
 #include "VulkanImage.h"
 
 namespace Hazel {
-
 	class VulkanFramebuffer : public Framebuffer
 	{
 	public:
@@ -56,5 +55,4 @@ namespace Hazel {
 
 		std::vector<std::function<void(Ref<Framebuffer>)>> m_ResizeCallbacks;
 	};
-
 }

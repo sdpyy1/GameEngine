@@ -15,11 +15,11 @@ namespace Hazel {
 	{
 		Renderer::Submit([this] {
 			m_DescriptorSets = m_Shader->createDescriptorSet(1);
-		});
+			});
 	}
 	void VulkanMaterial::UpdateDescriptorSet(bool bInit)
 	{
-		Renderer::Submit([this,bInit] {
+		Renderer::Submit([this, bInit] {
 			// 选择贴图（用户设置或默认）
 			auto albedo = AlbedoTexture ? AlbedoTexture : Renderer::GetWhiteTexture();
 			auto normal = NormalTexture ? NormalTexture : Renderer::GetWhiteTexture();
@@ -86,7 +86,7 @@ namespace Hazel {
 					0, nullptr
 				);
 			}
-		});
+			});
 	}
 
 	void VulkanMaterial::SetNormalTexture(Ref<Texture2D> texture)

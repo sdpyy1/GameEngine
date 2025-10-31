@@ -76,17 +76,17 @@ namespace Hazel {
 		EditorCamera camera;
 		LightEnvironment SceneLightEnvironment;
 	};
-	class Scene: public RefCounted
+	class Scene : public RefCounted
 	{
 	public:
 		Scene();
 		void PackupSceneInfo(EditorCamera& editorCamera);
 		~Scene();
-		
-		void OnEditorRender(Timestep ts,EditorCamera& editorCamera);
+
+		void OnEditorRender(Timestep ts, EditorCamera& editorCamera);
 		void UpdateAnimation(Timestep ts);
 		void OutputViewport();
-		void SetViewprotSize(float width, float height) {  m_ViewportWidth = width; m_ViewportHeight = height;}
+		void SetViewprotSize(float width, float height) { m_ViewportWidth = width; m_ViewportHeight = height; }
 	public:
 		void CollectRenderableEntities();
 		Entity CreateEntity(const std::string& name = std::string());
@@ -103,7 +103,7 @@ namespace Hazel {
 			return m_Registry.view<Components...>();
 		}
 		entt::registry& GetRegistry() { return m_Registry; }
-		Entity BuildDynamicMeshEntity(Ref<MeshSource> mesh,Entity& root,const std::filesystem::path& path);
+		Entity BuildDynamicMeshEntity(Ref<MeshSource> mesh, Entity& root, const std::filesystem::path& path);
 
 	private:
 		void BuildMeshBoneEntityIds(Entity entity, Entity rootEntity);
@@ -128,5 +128,4 @@ namespace Hazel {
 		SceneInfo m_SceneInfo;
 		Ref<SceneRender> m_SceneRender = nullptr;
 	};
-
 }

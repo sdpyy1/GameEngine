@@ -11,7 +11,6 @@
 #include "StorageBuffer.h"
 
 namespace Hazel {
-
 	struct RenderPassSpecification
 	{
 		Ref<Pipeline> Pipeline;  // ???: 为什么要把RenderPass和Pipeline绑定起来（解答：这个render Pass不是Vulkan概念，这里的Pass封装了Pass需要的所有东西）
@@ -35,5 +34,4 @@ namespace Hazel {
 
 		static Ref<RenderPass> Create(const RenderPassSpecification& spec);
 	};
-
 }

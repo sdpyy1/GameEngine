@@ -24,16 +24,17 @@ namespace Hazel {
 		static void Shutdown();
 		static Ref<ShaderLibrary> GetShaderLibrary();
 
-		static void BeginRenderPass(Ref<RenderCommandBuffer> commandBuffer,Ref<RenderPass> renderPass,bool explicitClear = false);
+		static void BeginRenderPass(Ref<RenderCommandBuffer> commandBuffer, Ref<RenderPass> renderPass, bool explicitClear = false);
 		static void EndRenderPass(Ref<RenderCommandBuffer> commandBuffer);
-		
+
 		static void BeginComputePass(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<ComputePass> computePass);
 		static void EndComputePass(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<ComputePass> computePass);
 		static void DispatchCompute(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<ComputePass> computePass, Ref<Material> material, const glm::uvec3& workGroups, Buffer constants = Buffer());
+		static void DispatchCompute(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<ComputePass> computePass, Ref<Material> material, const glm::uvec3& workGroups, uint32_t descrptorSetIndex, Buffer constants = Buffer());
 
 		static void SwapQueues(); // ΩªªªBuffer√¸¡Óª∫≥Â
 		static void BindVertData(Ref<RenderCommandBuffer> commandBuffer, Ref<VertexBuffer> testVertexBuffer);
-		static void RenderStaticMeshWithMaterial(Ref<RenderCommandBuffer> commandBuffer, Ref<Pipeline> pipeline, Ref<MeshSource> meshSource,uint32_t submeshIndex,Ref<Material> material, Ref<VertexBuffer> transformBuffer, uint32_t transformOffset, uint32_t instanceCount, Buffer additionalUniforms = Buffer());
+		static void RenderStaticMeshWithMaterial(Ref<RenderCommandBuffer> commandBuffer, Ref<Pipeline> pipeline, Ref<MeshSource> meshSource, uint32_t submeshIndex, Ref<Material> material, Ref<VertexBuffer> transformBuffer, uint32_t transformOffset, uint32_t instanceCount, Buffer additionalUniforms = Buffer());
 		static void RenderSkeletonMeshWithMaterial(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<Pipeline> pipeline, Ref<MeshSource> meshSource, uint32_t submeshIndex, Ref<Material> material, Ref<VertexBuffer> transformBuffer, uint32_t transformOffset, uint32_t boneTransformsOffset, uint32_t instanceCount, Buffer additionalUniforms = Buffer());
 		static void DrawPrueVertex(Ref<RenderCommandBuffer> commandBuffer, uint32_t count);
 		static RendererAPI::Type Current() { return RendererAPI::Current(); }
@@ -58,7 +59,7 @@ namespace Hazel {
 				// static_assert(std::is_trivially_destructible_v<FuncT>, "FuncT must be trivially destructible");
 				pFunc->~FuncT();
 				};
-			auto storageBuffer = GetRenderCommandQueue().Allocate(renderCmd, sizeof(func)); 
+			auto storageBuffer = GetRenderCommandQueue().Allocate(renderCmd, sizeof(func));
 			new (storageBuffer) FuncT(std::forward<FuncT>(func));// ª∫¥Ê√¸¡Ó
 		}
 		template<typename FuncT>
@@ -95,13 +96,12 @@ namespace Hazel {
 		static RendererCapabilities& GetCapabilities();
 		static uint32_t GetCurrentFrameIndex();
 		static uint32_t RT_GetCurrentFrameIndex();
-
+		static Ref<Texture2D> GetBRDFLutTexture();
 
 		static Ref<Texture2D> GetWhiteTexture();
 		static Ref<TextureCube> GetBlackCubeTexture();
 
 	private:
 		static Ref<Texture2D> WhiteTexture;
-
 	};
 }

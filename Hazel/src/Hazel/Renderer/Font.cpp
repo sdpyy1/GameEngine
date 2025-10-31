@@ -9,7 +9,6 @@
 #include "MSDFData.h"
 
 namespace Hazel {
-
 	template<typename T, typename S, int N, msdf_atlas::GeneratorFunction<S, N> GenFunc>
 	static Ref<Texture2D> CreateAndCacheAtlas(const std::string& fontName, float fontSize, const std::vector<msdf_atlas::GlyphGeometry>& glyphs,
 		const msdf_atlas::FontGeometry& fontGeometry, uint32_t width, uint32_t height)
@@ -41,10 +40,10 @@ namespace Hazel {
 	{
 		msdfgen::FreetypeHandle* ft = msdfgen::initializeFreetype();
 		HZ_CORE_ASSERT(ft);
-		
+
 		std::string fileString = filepath.string();
 
-		// TODO(Yan): msdfgen::loadFontData loads from memory buffer which we'll need 
+		// TODO(Yan): msdfgen::loadFontData loads from memory buffer which we'll need
 		msdfgen::FontHandle* font = msdfgen::loadFont(ft, fileString.c_str());
 		if (!font)
 		{
@@ -69,12 +68,11 @@ namespace Hazel {
 			for (uint32_t c = range.Begin; c <= range.End; c++)
 				charset.add(c);
 		}
-		
+
 		double fontScale = 1.0;
 		m_Data->FontGeometry = msdf_atlas::FontGeometry(&m_Data->Glyphs);
 		int glyphsLoaded = m_Data->FontGeometry.loadCharset(font, fontScale, charset);
 		HZ_CORE_INFO("Loaded {} glyphs from font (out of {})", glyphsLoaded, charset.size());
-
 
 		double emSize = 40.0;
 
@@ -116,9 +114,7 @@ namespace Hazel {
 			}
 		}
 
-
 		m_AtlasTexture = CreateAndCacheAtlas<uint8_t, float, 3, msdf_atlas::msdfGenerator>("Test", (float)emSize, m_Data->Glyphs, m_Data->FontGeometry, width, height);
-
 
 #if 0
 		msdfgen::Shape shape;
@@ -144,7 +140,6 @@ namespace Hazel {
 		delete m_Data;
 	}
 
-
 	Ref<Font> Font::GetDefault()
 	{
 		static Ref<Font> DefaultFont;
@@ -153,5 +148,4 @@ namespace Hazel {
 
 		return DefaultFont;
 	}
-
 }

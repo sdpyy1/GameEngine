@@ -8,9 +8,7 @@
 #include "VulkanRenderer.h"
 #include "Hazel/Renderer/Renderer.h"
 
-
 namespace Hazel {
-
 	static std::map<VkImage, WeakRef<VulkanImage2D>> s_ImageReferences;   // Weak 不会增加对象的引用计数
 
 	// 创建时只会保存规格，没有实际创建
@@ -64,7 +62,6 @@ namespace Hazel {
 			m_Info.Sampler = nullptr;
 		m_PerLayerImageViews.clear();
 		m_PerMipImageViews.clear();
-
 	}
 
 	int VulkanImage2D::GetClosestMipLevel(uint32_t width, uint32_t height) const
@@ -112,7 +109,7 @@ namespace Hazel {
 		{
 			usage |= VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 		}
-		
+
 		// 指定图片是操作 颜色 还是 深度、模板
 		// 是深度还是颜色操作
 		VkImageAspectFlags aspectMask = Utils::IsDepthFormat(m_Specification.Format) ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
@@ -350,7 +347,6 @@ namespace Hazel {
 			VK_CHECK_RESULT(vkCreateImageView(device, &imageViewCreateInfo, nullptr, &m_PerLayerImageViews[layer]));
 			VKUtils::SetDebugUtilsObjectName(device, VK_OBJECT_TYPE_IMAGE_VIEW, fmt::format("{} image view layer: {}", m_Specification.DebugName, layer), m_PerLayerImageViews[layer]);
 		}
-
 	}
 
 	void VulkanImage2D::UpdateDescriptor()
@@ -433,7 +429,7 @@ namespace Hazel {
 			imageMemoryBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 			imageMemoryBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 
-			// Insert a memory dependency at the proper pipeline stages that will execute the image layout transition 
+			// Insert a memory dependency at the proper pipeline stages that will execute the image layout transition
 			// Source pipeline stage is host write/read exection (VK_PIPELINE_STAGE_HOST_BIT)
 			// Destination pipeline stage is copy command exection (VK_PIPELINE_STAGE_TRANSFER_BIT)
 			vkCmdPipelineBarrier(
@@ -471,7 +467,7 @@ namespace Hazel {
 			imageMemoryBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 			imageMemoryBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-			// Insert a memory dependency at the proper pipeline stages that will execute the image layout transition 
+			// Insert a memory dependency at the proper pipeline stages that will execute the image layout transition
 			// Source pipeline stage stage is copy command exection (VK_PIPELINE_STAGE_TRANSFER_BIT)
 			// Destination pipeline stage fragment shader access (VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT)
 			vkCmdPipelineBarrier(
@@ -491,7 +487,6 @@ namespace Hazel {
 				VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
 				subresourceRange);
 
-
 			device->FlushCommandBuffer(copyCmd);
 
 			// Clean up staging resources
@@ -500,7 +495,6 @@ namespace Hazel {
 			UpdateDescriptor();
 		}
 	}
-
 
 	void VulkanImage2D::CopyToHostBuffer(Buffer& buffer) const
 	{
@@ -588,7 +582,6 @@ namespace Hazel {
 		allocator.DestroyBuffer(stagingBuffer, stagingBufferAllocation);
 	}
 
-
 	VulkanImageView::VulkanImageView(const ImageViewSpecification& specification)
 		: m_Specification(specification)
 	{
@@ -616,7 +609,6 @@ namespace Hazel {
 				instance->RT_Invalidate();
 			});
 	}
-
 
 	void VulkanImageView::RT_Invalidate()
 	{
@@ -650,5 +642,4 @@ namespace Hazel {
 		m_DescriptorImageInfo = vulkanImage->GetDescriptorInfoVulkan();
 		m_DescriptorImageInfo.imageView = m_ImageView;
 	}
-
 }

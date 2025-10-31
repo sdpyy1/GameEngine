@@ -3,7 +3,6 @@
 #include <Hazel/Core/Buffer.h>
 #include <glm/gtc/integer.hpp>
 namespace Hazel {
-
 	enum class ImageFormat
 	{
 		None = 0,
@@ -143,7 +142,6 @@ namespace Hazel {
 		virtual bool IsValid() const = 0;
 	};
 	namespace Utils {
-
 		inline uint32_t GetImageFormatBPP(ImageFormat format)
 		{
 			switch (format)
@@ -219,7 +217,6 @@ namespace Hazel {
 
 			return false;
 		}
-
 	}
 
 	struct ImageViewSpecification

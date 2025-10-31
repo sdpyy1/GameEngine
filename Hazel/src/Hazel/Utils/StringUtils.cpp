@@ -11,25 +11,23 @@
 #include <regex>
 
 namespace Hazel::Utils {
-
 	namespace String {
-
 		bool EqualsIgnoreCase(const std::string_view a, const std::string_view b)
 		{
 			if (a.size() != b.size())
 				return false;
 
 			return std::equal(a.begin(), a.end(), b.begin(), b.end(),
-							  [](const char a, const char b)
-			{
-				return std::tolower(a) == std::tolower(b);
-			});
+				[](const char a, const char b)
+				{
+					return std::tolower(a) == std::tolower(b);
+				});
 		}
 
 		std::string& ToLower(std::string& string)
 		{
 			std::transform(string.begin(), string.end(), string.begin(),
-						   [](const unsigned char c) { return std::tolower(c); });
+				[](const unsigned char c) { return std::tolower(c); });
 			return string;
 		}
 
@@ -96,13 +94,12 @@ namespace Hazel::Utils {
 
 		int32_t CompareCase(std::string_view a, std::string_view b)
 		{
-		#ifdef HZ_PLATFORM_WINDOWS
+#ifdef HZ_PLATFORM_WINDOWS
 			return _stricmp(a.data(), b.data());
-		#else
+#else
 			return strcasecmp(a.data(), b.data());
-		#endif
+#endif
 		}
-
 	}
 
 	std::string_view GetFilename(const std::string_view filepath)
@@ -139,7 +136,6 @@ namespace Hazel::Utils {
 
 	std::vector<std::string> SplitStringAndKeepDelims(std::string str)
 	{
-
 		const static std::regex re(R"((^\W|^\w+)|(\w+)|[:()])", std::regex_constants::optimize);
 
 		std::regex_iterator<std::string::iterator> rit(str.begin(), str.end(), re);
@@ -223,7 +219,7 @@ namespace Hazel::Utils {
 		constexpr uint64_t MB = 1024 * 1024;
 		constexpr uint64_t KB = 1024;
 
-		char buffer[32 + 1] {};
+		char buffer[32 + 1]{};
 
 		if (bytes >= GB)
 			snprintf(buffer, 32, "%.2f GB", (float)bytes / (float)GB);
@@ -303,5 +299,4 @@ namespace Hazel::Utils {
 		in.close();
 		return result;
 	}
-
 }

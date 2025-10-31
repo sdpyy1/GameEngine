@@ -489,6 +489,4 @@ namespace Hazel
 		m_CommandPools[threadID] = commandPool;
 		return commandPool;
 	}
-
 }
-

@@ -9,7 +9,6 @@
 #include "Hazel/Core/Log.h"
 #include "Hazel/Core/Assert.h"
 
-
 #include "Hazel/Core/Timestep.h"
 
 #include "Hazel/Core/Input.h"

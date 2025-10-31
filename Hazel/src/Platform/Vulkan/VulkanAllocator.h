@@ -8,7 +8,6 @@
 #include "Hazel/Renderer/GPUStats.h"
 
 namespace Hazel {
-
 	class VulkanAllocator
 	{
 	public:
@@ -46,6 +45,4 @@ namespace Hazel {
 	private:
 		std::string m_Tag;
 	};
-
-
 }

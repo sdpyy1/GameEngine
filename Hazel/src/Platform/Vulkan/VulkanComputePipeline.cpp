@@ -11,7 +11,7 @@ namespace Hazel {
 
 	VulkanComputePipeline::VulkanComputePipeline(Ref<Shader> computeShader)
 	{
-        m_Shader = computeShader.As<VulkanShader>();
+		m_Shader = computeShader.As<VulkanShader>();
 		Ref<VulkanComputePipeline> instance = this;
 		Renderer::Submit([instance]() mutable
 			{
@@ -51,7 +51,7 @@ namespace Hazel {
 		VkShaderModule computeShaderModule = m_Shader->GetComputeShaderModule();
 		VkPipelineShaderStageCreateInfo computeShaderStageInfo{};
 		computeShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-		computeShaderStageInfo.stage = VK_SHADER_STAGE_COMPUTE_BIT; 
+		computeShaderStageInfo.stage = VK_SHADER_STAGE_COMPUTE_BIT;
 		computeShaderStageInfo.module = computeShaderModule;
 		computeShaderStageInfo.pName = "main";
 		computePipelineCreateInfo.stage = computeShaderStageInfo;
@@ -92,7 +92,6 @@ namespace Hazel {
 	void VulkanComputePipeline::ImageMemoryBarrier(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<Image2D> image, ResourceAccessFlags fromAccess, ResourceAccessFlags toAccess)
 	{
 		ImageMemoryBarrier(renderCommandBuffer, image, PipelineStage::ComputeShader, fromAccess, PipelineStage::ComputeShader, toAccess);
-
 	}
 
 	void VulkanComputePipeline::ImageMemoryBarrier(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<Image2D> image, PipelineStage fromStage, ResourceAccessFlags fromAccess, PipelineStage toStage, ResourceAccessFlags toAccess)
@@ -183,8 +182,5 @@ namespace Hazel {
 	void VulkanComputePipeline::SetPushConstants(Buffer constants) const
 	{
 		vkCmdPushConstants(m_ActiveComputeCommandBuffer, m_ComputePipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, constants.Size, constants.Data);
-
 	}
-
 }
-

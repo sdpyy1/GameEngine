@@ -5,12 +5,18 @@
 #include "Hazel/Renderer/Renderer.h"
 #include "VulkanContext.h"
 #include "VulkanTexture.h"
+#include "VulkanComputePipeline.h"
 namespace Hazel
 {
 	VulkanComputePass::VulkanComputePass(const ComputePassSpecification& spec) : m_Specification(spec)
 	{
 		HZ_CORE_VERIFY(spec.Pipeline);
-
+		if (spec.moreDescriptors != 0) {
+			moreDescriptorSets.resize(spec.moreDescriptors);
+			for (int i = 0; i < spec.moreDescriptors; i++) {
+				moreDescriptorSets[i] = spec.Pipeline.As<VulkanComputePipeline>()->GetShader().As<VulkanShader>()->createDescriptorSet(0);
+			}
+		}
 	}
 
 	Ref<Image2D> VulkanComputePass::GetOutput(uint32_t index)
@@ -23,7 +29,7 @@ namespace Hazel
 	{
 		HZ_CORE_VERIFY(false, "Not implemented");
 		return nullptr;
-	}	
+	}
 	Ref<PipelineCompute> VulkanComputePass::GetPipeline() const
 	{
 		return m_Specification.Pipeline;
@@ -31,9 +37,9 @@ namespace Hazel
 
 	VulkanComputePass::~VulkanComputePass()
 	{
-
 	}
-	void VulkanComputePass::SetInput(Ref<TextureCube> texture, uint32_t Binding)
+
+	void VulkanComputePass::SetInput(Ref<TextureCube> texture, uint32_t Binding, InputType type)
 	{
 		Renderer::Submit([=]() {
 			//HZ_CORE_TRACE("RT: VulkanRenderPass [{0}]::SetInput texture Binding {1}", m_Specification.DebugName, Binding);
@@ -41,23 +47,23 @@ namespace Hazel
 			auto vulkanTexture = texture.As<VulkanTextureCube>();
 
 			VkDescriptorImageInfo imageInfo{};
-			imageInfo.sampler = VK_NULL_HANDLE;
+			imageInfo.sampler = type == InputType::sampler ? vulkanTexture->GetDescriptorInfoVulkan().sampler : VK_NULL_HANDLE;
 			imageInfo.imageView = vulkanTexture->GetDescriptorInfoVulkan().imageView;
-			imageInfo.imageLayout = vulkanTexture->GetDescriptorInfoVulkan().imageLayout;
+			imageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 
 			std::array<VkWriteDescriptorSet, 1> descriptorWrites{};
 			descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 			descriptorWrites[0].dstSet = GetSpecification().Pipeline->GetShader().As<VulkanShader>()->GetDescriptorSet()[Renderer::RT_GetCurrentFrameIndex()];
 			descriptorWrites[0].dstBinding = Binding;
 			descriptorWrites[0].dstArrayElement = 0;
-			descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+			descriptorWrites[0].descriptorType = type == InputType::sampler ? VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER : VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
 			descriptorWrites[0].descriptorCount = 1;
 			descriptorWrites[0].pImageInfo = &imageInfo;
 
 			vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
-
 			});
 	}
+
 	void VulkanComputePass::SetInput(Ref<Image2D> texture, uint32_t Binding)
 	{
 		Renderer::Submit([=]() {
@@ -80,7 +86,30 @@ namespace Hazel
 			descriptorWrites[0].pImageInfo = &imageInfo;
 
 			vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+			});
+	}
+	void VulkanComputePass::SetInput(Ref<Image2D> texture, uint32_t Binding, uint32_t descriptorSetIndex)
+	{
+		Renderer::Submit([=]() {
+			//HZ_CORE_TRACE("RT: VulkanRenderPass [{0}]::SetInput texture Binding {1}", m_Specification.DebugName, Binding);
+			VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+			auto vulkanTexture = texture.As<VulkanImage2D>();
 
+			VkDescriptorImageInfo imageInfo{};
+			imageInfo.sampler = vulkanTexture->GetDescriptorInfoVulkan().sampler;
+			imageInfo.imageView = vulkanTexture->GetDescriptorInfoVulkan().imageView;
+			imageInfo.imageLayout = vulkanTexture->GetDescriptorInfoVulkan().imageLayout;
+
+			std::array<VkWriteDescriptorSet, 1> descriptorWrites{};
+			descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			descriptorWrites[0].dstSet = moreDescriptorSets[descriptorSetIndex][0];
+			descriptorWrites[0].dstBinding = Binding;
+			descriptorWrites[0].dstArrayElement = 0;
+			descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+			descriptorWrites[0].descriptorCount = 1;
+			descriptorWrites[0].pImageInfo = &imageInfo;
+
+			vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
 			});
 	}
 	void VulkanComputePass::SetInput(Ref<Texture2D> texture, uint32_t Binding)
@@ -105,10 +134,10 @@ namespace Hazel
 			descriptorWrites[0].pImageInfo = &imageInfo;
 
 			vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
-
 			});
 	}
-	void VulkanComputePass::SetInput(Ref<ImageView> imageView, uint32_t Binding, int index)
+
+	void VulkanComputePass::SetInputOneLayer(Ref<ImageView> imageView, uint32_t Binding, int index)
 	{
 		Renderer::Submit([=]() {
 			//HZ_CORE_TRACE("RT: VulkanRenderPass [{0}]::SetInput imageView[{2}] Binding {1}", m_Specification.DebugName, Binding, arrayIndex);
@@ -126,6 +155,54 @@ namespace Hazel
 			descriptorWrites[0].dstBinding = Binding;
 			descriptorWrites[0].dstArrayElement = index;
 			descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+			descriptorWrites[0].descriptorCount = 1;
+			descriptorWrites[0].pImageInfo = &imageInfo;
+
+			vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+			});
+	}
+	void VulkanComputePass::SetInput(Ref<TextureCube> texture, uint32_t Binding, InputType type, uint32_t levelIndex, uint32_t descriptorIndex) {
+		Renderer::Submit([=]() {
+			//HZ_CORE_TRACE("RT: VulkanRenderPass [{0}]::SetInput texture Binding {1}", m_Specification.DebugName, Binding);
+			VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+			auto vulkanTexture = texture.As<VulkanTextureCube>();
+
+			VkDescriptorImageInfo imageInfo{};
+			imageInfo.sampler = type == InputType::sampler ? vulkanTexture->GetDescriptorInfoVulkan().sampler : VK_NULL_HANDLE;
+			imageInfo.imageView = vulkanTexture->CreateImageViewSingleMip(levelIndex);
+			imageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+
+			std::array<VkWriteDescriptorSet, 1> descriptorWrites{};
+			descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			descriptorWrites[0].dstSet = moreDescriptorSets[descriptorIndex][0];
+			descriptorWrites[0].dstBinding = Binding;
+			descriptorWrites[0].dstArrayElement = 0;
+			descriptorWrites[0].descriptorType = type == InputType::sampler ? VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER : VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+			descriptorWrites[0].descriptorCount = 1;
+			descriptorWrites[0].pImageInfo = &imageInfo;
+
+			vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+			});
+	}
+
+	void VulkanComputePass::SetInput(Ref<TextureCube> texture, uint32_t Binding, InputType type, uint32_t descriptorIndex)
+	{
+		Renderer::Submit([=]() {
+
+			//HZ_CORE_TRACE("RT: VulkanRenderPass [{0}]::SetInput texture Binding {1}", m_Specification.DebugName, Binding);
+			VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+			auto vulkanTexture = texture.As<VulkanTextureCube>();
+			VkDescriptorImageInfo imageInfo{};
+			imageInfo.sampler = type == InputType::sampler ? vulkanTexture->GetDescriptorInfoVulkan().sampler : VK_NULL_HANDLE;
+			imageInfo.imageView = vulkanTexture->GetDescriptorInfoVulkan().imageView;
+			imageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+
+			std::array<VkWriteDescriptorSet, 1> descriptorWrites{};
+			descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			descriptorWrites[0].dstSet = moreDescriptorSets[descriptorIndex][0];
+			descriptorWrites[0].dstBinding = Binding;
+			descriptorWrites[0].dstArrayElement = 0;
+			descriptorWrites[0].descriptorType = type == InputType::sampler ? VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER : VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
 			descriptorWrites[0].descriptorCount = 1;
 			descriptorWrites[0].pImageInfo = &imageInfo;
 

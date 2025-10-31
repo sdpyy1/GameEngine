@@ -43,7 +43,7 @@ namespace Hazel {
 		void UploadSpotShadowData();
 		void SpotShadowPass();
 	private:
-		SceneInfo *m_SceneData = nullptr;
+		SceneInfo* m_SceneData = nullptr;
 		uint32_t shadowMapResolution = 4096;
 		uint32_t NumShadowCascades = 4;
 		float m_ViewportWidth = 1216.0f, m_ViewportHeight = 849.0f;
@@ -108,7 +108,6 @@ namespace Hazel {
 					return false;
 
 				return IsSelected < other.IsSelected;
-
 			}
 		};
 		void CopyToBoneTransformStorage(const MeshKey& meshKey, const Ref<MeshSource>& meshSource, const std::vector<glm::mat4>& boneTransforms);
@@ -149,13 +148,12 @@ namespace Hazel {
 		};
 		std::map<MeshKey, TransformMapData> m_MeshTransformMap;  // 每个MeshKey对应多个实例的变换矩阵
 
-
 		using BoneTransforms = std::array<glm::mat4, 100>; // Note: 100 == MAX_BONES from the shaders
 		struct BoneTransformsMapData
 		{
 			std::vector<BoneTransforms> BoneTransformsData;
 			uint32_t BoneTransformsBaseIndex = 0;
-		};	
+		};
 		std::map<MeshKey, BoneTransformsMapData> m_MeshBoneTransformsMap;
 		BoneTransforms* m_BoneTransformsData = nullptr;
 		Ref<StorageBufferSet> m_SBSBoneTransforms;
@@ -212,7 +210,6 @@ namespace Hazel {
 		Ref<RenderPass> m_SpotShadowPass;
 		Ref<RenderPass> m_SpotShadowAnimPass;
 
-
 		//PreDepthPass
 		Ref<Pipeline> m_PreDepthPipeline;
 		Ref<Pipeline> m_PreDepthPipelineAnim;
@@ -237,12 +234,16 @@ namespace Hazel {
 		// 预计算Pass
 		Ref<ComputePass> m_EquirectangularPass;
 		Ref<TextureCube> m_EnvCubeMap;
+		Ref<TextureCube> m_EnvPreFilterMap;
+		Ref<TextureCube> m_EnvIrradianceMap;
 		Ref<Texture2D> m_EnvEquirect;
+		Ref<Texture2D> m_EnvLut;
+		Ref<ComputePass> m_EnvironmentIrradiancePass;
+		Ref<ComputePass> m_EnvironmentPreFilterPass;
 		void InitHZBPass();
 		void HZBComputePass();
 		void HandleHZBResize();
 		void preComputeEnv();
 		void InitEnvNeed();
 	};
-
 }

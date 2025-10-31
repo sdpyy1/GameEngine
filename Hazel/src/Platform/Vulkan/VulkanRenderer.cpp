@@ -50,7 +50,6 @@ namespace Hazel {
 	static VulkanRendererData* s_Data = nullptr;
 
 	namespace Utils {
-
 		static const char* VulkanVendorIDToString(uint32_t vendorID)
 		{
 			switch (vendorID)
@@ -62,7 +61,6 @@ namespace Hazel {
 			}
 			return "Unknown";
 		}
-
 	}
 	VkDescriptorSet VulkanRenderer::RT_AllocateDescriptorSet(VkDescriptorSetAllocateInfo& allocInfo)
 	{
@@ -149,10 +147,9 @@ namespace Hazel {
 		data[3].Position = glm::vec3(x, y + height, 0.0f);
 		data[3].TexCoord = glm::vec2(0, 1);
 
-		s_Data->QuadVertexBuffer = VertexBuffer::Create(data, 4 * sizeof(QuadVertex),"QuadVertexBuffer");
+		s_Data->QuadVertexBuffer = VertexBuffer::Create(data, 4 * sizeof(QuadVertex), "QuadVertexBuffer");
 		uint32_t indices[6] = { 0, 1, 2, 2, 3, 0, };
 		s_Data->QuadIndexBuffer = IndexBuffer::Create(indices, 6 * sizeof(uint32_t));
-
 	}
 	void VulkanRenderer::Shutdown()
 	{
@@ -177,7 +174,6 @@ namespace Hazel {
 		delete s_Data;
 	}
 
-
 	RendererCapabilities& VulkanRenderer::GetCapabilities()
 	{
 		return s_Data->RenderCaps;
@@ -192,7 +188,7 @@ namespace Hazel {
 				swapChain.BeginFrame();
 				VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 				uint32_t bufferIndex = swapChain.GetCurrentBufferIndex();
-				// 
+				//
 				vkResetDescriptorPool(device, s_Data->DescriptorPools[bufferIndex], 0);
 				memset(s_Data->DescriptorPoolAllocationCount.data(), 0, s_Data->DescriptorPoolAllocationCount.size() * sizeof(uint32_t));
 
@@ -200,15 +196,13 @@ namespace Hazel {
 			});
 	}
 	void VulkanRenderer::BindVertData(Ref<RenderCommandBuffer> commandBuffer, Ref<VertexBuffer> testVertexBuffer) {
-		
-		Renderer::Submit([commandBuffer,testVertexBuffer] {
+		Renderer::Submit([commandBuffer, testVertexBuffer] {
 			uint32_t frameIndex = Renderer::RT_GetCurrentFrameIndex();
 			VkCommandBuffer vkCommandBuffer = commandBuffer.As<VulkanRenderCommandBuffer>()->GetActiveCommandBuffer();
 			VkDeviceSize offsets[] = { 0 };
 			VkBuffer vertexBuffers[] = { testVertexBuffer.As<VulkanVertexBuffer>()->GetVulkanBuffer() };
 			vkCmdBindVertexBuffers(vkCommandBuffer, 0, 1, vertexBuffers, offsets);
 			});
-
 	}
 	void VulkanRenderer::DrawPrueVertex(Ref<RenderCommandBuffer> commandBuffer, uint32_t count)
 	{
@@ -216,9 +210,7 @@ namespace Hazel {
 			uint32_t frameIndex = Renderer::RT_GetCurrentFrameIndex();
 			VkCommandBuffer vkCommandBuffer = commandBuffer.As<VulkanRenderCommandBuffer>()->GetActiveCommandBuffer();
 			vkCmdDraw(vkCommandBuffer, count, 1, 0, 0);
-
-		});
-
+			});
 	}
 	void VulkanRenderer::EndFrame()
 	{
@@ -226,7 +218,7 @@ namespace Hazel {
 			Ref<WindowsWindow> m_Window = Application::Get().GetWindow();
 			// 提交命令缓冲区、呈现图片
 			m_Window->SwapBuffers();
-		});
+			});
 #if 0
 
 		Renderer::Submit([]()
@@ -345,7 +337,6 @@ namespace Hazel {
 					}
 
 					vkCmdClearAttachments(commandBuffer, totalAttachmentCount, attachments.data(), totalAttachmentCount, clearRects.data());
-
 				}
 
 				// Update dynamic viewport state
@@ -373,8 +364,7 @@ namespace Hazel {
 				Ref<VulkanRenderPass> vulkanRenderPass = renderPass.As<VulkanRenderPass>();
 				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderPass->GetPipeline().As<VulkanPipeline>()->GetVulkanPipelineLayout(), 0, 1, &renderPass->GetPipeline()->GetShader().As<VulkanShader>()->GetDescriptorSet()[frameIndex], 0, nullptr);
 			});
-	
-	}	
+	}
 	void VulkanRenderer::EndRenderPass(Ref<RenderCommandBuffer> renderCommandBuffer)
 	{
 		Renderer::Submit([renderCommandBuffer]()
@@ -396,7 +386,7 @@ namespace Hazel {
 			if (additionalUniforms.Size)
 				pushConstantBuffer.Write(additionalUniforms.Data, additionalUniforms.Size);
 		}
-		Renderer::Submit([renderCommandBuffer, pipeline, meshSource, submeshIndex, material, pushConstantBuffer,transformBuffer, transformOffset, instanceCount]() mutable {
+		Renderer::Submit([renderCommandBuffer, pipeline, meshSource, submeshIndex, material, pushConstantBuffer, transformBuffer, transformOffset, instanceCount]() mutable {
 			uint32_t frameIndex = Renderer::RT_GetCurrentFrameIndex();
 			VkCommandBuffer commandBuffer = renderCommandBuffer.As<VulkanRenderCommandBuffer>()->GetActiveCommandBuffer();
 			Ref<VulkanVertexBuffer> meshVertBuffer = meshSource->GetVertexBuffer().As<VulkanVertexBuffer>();
@@ -432,7 +422,6 @@ namespace Hazel {
 				vkCmdPushConstants(commandBuffer, layout, VK_SHADER_STAGE_VERTEX_BIT, pushConstantOffset, pushConstantBuffer.Size, pushConstantBuffer.Data);
 			}
 
-
 			vkCmdDrawIndexed(commandBuffer, submesh.IndexCount/*索引数量*/, instanceCount/*实例数量*/, submesh.BaseIndex/*索引缓冲区的偏移*/, submesh.BaseVertex/*顶点偏移*/, 0/*实例化ID开始的编号*/);
 			});
 	}
@@ -453,7 +442,6 @@ namespace Hazel {
 			if (isRigged)
 				pushConstantBuffer.Write(&boneTransformsOffset, sizeof(uint32_t), additionalUniforms.Size);
 		}
-
 
 		Renderer::Submit([renderCommandBuffer, pipeline, meshSource, submeshIndex, material, transformBuffer, transformOffset, instanceCount, pushConstantBuffer]() mutable
 			{
@@ -523,7 +511,7 @@ namespace Hazel {
 			debugLabel.pLabelName = vulkanComputePass->GetSpecification().DebugName.c_str();
 			fpCmdBeginDebugUtilsLabelEXT(commandBuffer, &debugLabel);
 			pipeline->RT_Begin(renderCommandBuffer); // bind pipeline
-		});
+			});
 	}
 
 	void VulkanRenderer::EndComputePass(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<ComputePass> computePass)
@@ -556,6 +544,34 @@ namespace Hazel {
 				if (!descriptorSet.empty())
 					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->GetLayout(), 0, 1, &descriptorSet[frameIndex], 0, nullptr);
 
+				if (constantsBuffer)
+				{
+					pipeline->SetPushConstants(constantsBuffer);
+					constantsBuffer.Release();
+				}
+
+				pipeline->Dispatch(workGroups);
+			});
+	}
+
+	void VulkanRenderer::DispatchCompute(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<ComputePass> computePass, Ref<Material> material, const glm::uvec3& workGroups, uint32_t descriptorIndex, Buffer constants)
+	{
+		Buffer constantsBuffer;
+		if (constants)
+			constantsBuffer = Buffer::Copy(constants);
+
+		Renderer::Submit([renderCommandBuffer, computePass, material, workGroups, constantsBuffer, descriptorIndex]() mutable
+			{
+				Ref<VulkanComputePass> vulkanComputePass = computePass.As<VulkanComputePass>();
+				Ref<VulkanComputePipeline> pipeline = computePass->GetSpecification().Pipeline.As<VulkanComputePipeline>();
+
+				const uint32_t frameIndex = Renderer::RT_GetCurrentFrameIndex();
+				VkCommandBuffer commandBuffer = renderCommandBuffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frameIndex);
+
+				// Bind material descriptor set if exists
+				auto descriptorSet = vulkanComputePass->GetMoreDescriptorSet(descriptorIndex);
+				if (descriptorSet)
+					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
 
 				if (constantsBuffer)
 				{
@@ -568,7 +584,6 @@ namespace Hazel {
 	}
 
 	namespace Utils {
-
 		void InsertImageMemoryBarrier(
 			VkCommandBuffer cmdbuffer,
 			VkImage image,
@@ -743,7 +758,5 @@ namespace Hazel {
 			subresourceRange.layerCount = 1;
 			SetImageLayout(cmdbuffer, image, oldImageLayout, newImageLayout, subresourceRange, srcStageMask, dstStageMask);
 		}
-
 	}
-
 }

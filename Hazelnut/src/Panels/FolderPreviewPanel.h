@@ -9,7 +9,6 @@
 #include <Hazel.h>
 
 namespace Hazel {
-
 	class FolderPreviewPanel : public EditorPanel
 	{
 	public:
@@ -33,5 +32,4 @@ namespace Hazel {
 		bool m_ShowPreview = false;
 		std::filesystem::path m_PreviewPath;
 	};
-
 }

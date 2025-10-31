@@ -6,7 +6,7 @@
 #include "ScriptableEntity.h"
 #include "Hazel/Physics/Physics2D.h"
 #include "Hazel/Renderer/Renderer.h"
-#define GLM_FORCE_DEPTH_ZERO_TO_FE 
+#define GLM_FORCE_DEPTH_ZERO_TO_FE
 #include <glm/glm.hpp>
 
 #include "Hazel/Utils/UIUtils.h"
@@ -34,7 +34,7 @@ namespace Hazel {
 		m_SceneInfo.camera = editorCamera;
 		auto& light = m_SceneInfo.SceneLightEnvironment;
 		light = LightEnvironment{};
-		// Directional Lights	
+		// Directional Lights
 		{
 			auto lights = m_Registry.group<DirectionalLightComponent>(entt::get<TransformComponent>);
 			uint32_t directionalLightIndex = 0;
@@ -54,8 +54,7 @@ namespace Hazel {
 			}
 		}
 	}
-	void Scene::OnEditorRender(Timestep ts,EditorCamera & editorCamera) {
-
+	void Scene::OnEditorRender(Timestep ts, EditorCamera& editorCamera) {
 		PackupSceneInfo(editorCamera);
 
 		UpdateAnimation(ts); // 动画更新
@@ -91,7 +90,7 @@ namespace Hazel {
 					if (!boneEntity.HasComponent<TransformComponent>())
 						continue;
 					auto& boneTransform = boneEntity.GetComponent<TransformComponent>();
-					const auto& sampled = animComp.CurrentPose.BoneTransforms[i == 0?0:i+1];  // ？？？ 这应该和设计有关系
+					const auto& sampled = animComp.CurrentPose.BoneTransforms[i == 0 ? 0 : i + 1];  // ？？？ 这应该和设计有关系
 
 					boneTransform.Translation = sampled.Translation;
 					boneTransform.SetRotation(sampled.Rotation);
@@ -101,12 +100,11 @@ namespace Hazel {
 		}
 	}
 
-
 	void Scene::OutputViewport()
 	{
-		UI::Image(m_SceneRender->GetFinalImage(), ImGui::GetContentRegionAvail(), {0, 0}, {1, 1});
+		UI::Image(m_SceneRender->GetFinalImage(), ImGui::GetContentRegionAvail(), { 0, 0 }, { 1, 1 });
 	}
-	
+
 	void Scene::CollectRenderableEntities()
 	{
 		// 收集StaticMesh
@@ -172,16 +170,16 @@ namespace Hazel {
 	static void CopyComponent(entt::registry& dst, entt::registry& src, const std::unordered_map<UUID, entt::entity>& enttMap)
 	{
 		([&]()
-		{
-			auto view = src.view<Component>();
-			for (auto srcEntity : view)
 			{
-				entt::entity dstEntity = enttMap.at(src.get<IDComponent>(srcEntity).ID);
+				auto view = src.view<Component>();
+				for (auto srcEntity : view)
+				{
+					entt::entity dstEntity = enttMap.at(src.get<IDComponent>(srcEntity).ID);
 
-				auto& srcComponent = src.get<Component>(srcEntity);
-				dst.emplace_or_replace<Component>(dstEntity, srcComponent);
-			}
-		}(), ...);
+					auto& srcComponent = src.get<Component>(srcEntity);
+					dst.emplace_or_replace<Component>(dstEntity, srcComponent);
+				}
+			}(), ...);
 	}
 
 	template<typename... Component>
@@ -194,10 +192,10 @@ namespace Hazel {
 	static void CopyComponentIfExists(Entity dst, Entity src)
 	{
 		([&]()
-		{
-			if (src.HasComponent<Component>())
-				dst.AddOrReplaceComponent<Component>(src.GetComponent<Component>());
-		}(), ...);
+			{
+				if (src.HasComponent<Component>())
+					dst.AddOrReplaceComponent<Component>(src.GetComponent<Component>());
+			}(), ...);
 	}
 
 	template<typename... Component>
@@ -206,13 +204,11 @@ namespace Hazel {
 		CopyComponentIfExists<Component...>(dst, src);
 	}
 
-
 	Entity Scene::CreateEntity(const std::string& name)
 	{
 		return CreateChildEntity({}, name);
-
 	}
-	
+
 	Entity Scene::CreateChildEntity(Entity parent, const std::string& name)
 	{
 		auto entity = Entity{ m_Registry.create(), this };
@@ -285,17 +281,16 @@ namespace Hazel {
 		return Entity{};
 	}
 
-	Entity Scene::BuildDynamicMeshEntity(Ref<MeshSource> mesh, Entity& root,const std::filesystem::path& path)
+	Entity Scene::BuildDynamicMeshEntity(Ref<MeshSource> mesh, Entity& root, const std::filesystem::path& path)
 	{
 		AssetHandle handle = mesh->Handle;
 		root.AddComponent<AnimationComponent>(handle, path);
 		auto com = root.GetComponent<AnimationComponent>();
-		BuildMeshEntityHierarchy(root, mesh,mesh->GetRootNode());
+		BuildMeshEntityHierarchy(root, mesh, mesh->GetRootNode());
 		BuildBoneEntityIds(root);
 		return root;
 	}
 
-	
 	void Scene::BuildBoneEntityIds(Entity entity)
 	{
 		// 给这个Entity所有包含SubMesh组件的子Entity设置SubMesh组件的骨骼信息
@@ -319,8 +314,8 @@ namespace Hazel {
 	}
 	void Scene::BuildAnimationBoneEntityIds(Entity entity, Entity rootEntity)
 	{
-		if(entity.HasComponent<AnimationComponent>()){
-			auto &anim = entity.GetComponent<AnimationComponent>();
+		if (entity.HasComponent<AnimationComponent>()) {
+			auto& anim = entity.GetComponent<AnimationComponent>();
 			anim.BoneEntityIds = FindBoneEntityIds(entity, rootEntity, AssetManager::GetAsset<MeshSource>(anim.meshSource)->GetSkeleton());
 		}
 		for (auto childId : entity.Children())
@@ -344,10 +339,8 @@ namespace Hazel {
 			Entity child = GetEntityByUUID(childId);
 			if (child) {
 				BuildMeshBoneEntityIds(child, rootEntity);
-
 			}
 		}
-
 	}
 	std::vector<UUID> Scene::FindBoneEntityIds(Entity entity, Entity rootEntity, const Skeleton* skeleton)
 	{
@@ -404,7 +397,7 @@ namespace Hazel {
 		}
 		return {};
 	}
-	void Scene::BuildMeshEntityHierarchy(Entity parent, Ref<MeshSource> meshSource,const MeshNode& node)
+	void Scene::BuildMeshEntityHierarchy(Entity parent, Ref<MeshSource> meshSource, const MeshNode& node)
 	{
 		const auto& nodes = meshSource->GetNodes();
 
@@ -482,7 +475,7 @@ namespace Hazel {
 	{
 	}
 
-  template<typename T>
+	template<typename T>
 	void Scene::OnComponentAdded(Entity entity, T& component)
 	{
 		static_assert(sizeof(T) == 0);

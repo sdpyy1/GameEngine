@@ -9,7 +9,6 @@
 #include "Hazel/Renderer/Renderer.h"
 
 namespace Hazel {
-
 	namespace Utils {
 		static VkPrimitiveTopology GetVulkanTopology(PrimitiveTopology topology)
 		{
@@ -68,7 +67,7 @@ namespace Hazel {
 		HZ_CORE_ASSERT(spec.Shader);
 		HZ_CORE_ASSERT(spec.TargetFramebuffer);
 		Invalidate();
-		//Renderer::RegisterShaderDependency(spec.Shader, this);  
+		//Renderer::RegisterShaderDependency(spec.Shader, this);
 	}
 
 	VulkanPipeline::~VulkanPipeline()
@@ -81,7 +80,7 @@ namespace Hazel {
 			});
 	}
 
-	void VulkanPipeline::Invalidate(){
+	void VulkanPipeline::Invalidate() {
 		Ref<VulkanPipeline> instance = this;
 		Renderer::Submit([instance]() mutable
 			{
@@ -355,5 +354,4 @@ namespace Hazel {
 	{
 		return m_Specification.Topology == PrimitiveTopology::Lines || m_Specification.Topology == PrimitiveTopology::LineStrip || m_Specification.Wireframe;
 	}
-
 }

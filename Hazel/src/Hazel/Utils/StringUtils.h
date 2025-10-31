@@ -3,7 +3,6 @@
 #include <filesystem>
 
 namespace Hazel::Utils {
-
 	namespace String
 	{
 		bool EqualsIgnoreCase(const std::string_view a, const std::string_view b);
@@ -173,5 +172,4 @@ namespace Hazel::Utils {
 
 		return name;
 	}
-
 }

@@ -1,13 +1,11 @@
 #include "hzpch.h"
 #include "RenderCommandBuffer.h"
 
-
 #include "Hazel/Renderer/RendererAPI.h"
 #include <Platform/Vulkan/VulkanRenderCommandBuffer.h>
 
 namespace Hazel {
-
-	Ref<RenderCommandBuffer> RenderCommandBuffer::Create(const std::string& debugName,uint32_t count)
+	Ref<RenderCommandBuffer> RenderCommandBuffer::Create(const std::string& debugName, uint32_t count)
 	{
 		switch (RendererAPI::Current())
 		{
@@ -28,5 +26,4 @@ namespace Hazel {
 		HZ_CORE_ASSERT(false, "Unknown RendererAPI");
 		return nullptr;
 	}
-
 }

@@ -18,7 +18,6 @@
 #include <filesystem>
 
 namespace Hazel {
-
 	enum class FileStatus
 	{
 		Success = 0, Invalid, Locked, OtherError

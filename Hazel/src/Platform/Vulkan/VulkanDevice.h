@@ -42,7 +42,6 @@ namespace Hazel {
 		VkFormat m_DepthFormat = VK_FORMAT_UNDEFINED;
 		VkPhysicalDeviceVulkan12Features m_Vulkan12Features;
 		friend class VulkanDevice;
-
 	};
 
 	//  每个CommandPool都有图像和计算两个Pool
@@ -62,7 +61,6 @@ namespace Hazel {
 		VkCommandPool m_GraphicsCommandPool, m_ComputeCommandPool;
 	};
 	class VulkanDevice : public RefCounted {
-
 	public:
 		VulkanDevice(const Ref<VulkanPhysicalDevice>& physicalDevice, VkPhysicalDeviceFeatures enabledFeatures);
 		~VulkanDevice();
@@ -98,4 +96,3 @@ namespace Hazel {
 		std::mutex m_GraphicsQueueMutex, m_ComputeQueueMutex;
 	};
 }
-

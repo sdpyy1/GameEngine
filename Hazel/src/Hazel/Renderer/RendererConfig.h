@@ -12,6 +12,6 @@ namespace Hazel {
 		// Tiering settings
 		uint32_t EnvironmentMapResolution = 1024;
 		uint32_t IrradianceMapComputeSamples = 512;
+		uint32_t IrradianceMapSize = 32;
 	};
-
 }

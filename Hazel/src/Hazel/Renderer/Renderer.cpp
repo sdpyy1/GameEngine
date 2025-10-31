@@ -13,6 +13,7 @@ namespace Hazel {
 	{
 		Ref<ShaderLibrary> m_ShaderLibrary;
 		Ref<TextureCube> BlackCubeTexture;
+		Ref<Texture2D> BRDFLutTexture;
 
 	};
 
@@ -23,6 +24,11 @@ namespace Hazel {
 	static std::atomic<uint32_t> s_RenderCommandQueueSubmissionIndex = 0;
 	static RenderCommandQueue s_ResourceFreeQueue[3];
 	static RendererAPI* s_RendererAPI = nullptr;
+
+	RendererConfig& Renderer::GetConfig()
+	{
+		return s_Config;
+	}
 
 	// 在这里完成初始资源的加载
 	void Renderer::Init()
@@ -43,7 +49,7 @@ namespace Hazel {
 
 		// Shader缓存，需要传给Shader资源描述符信息，Shader会创建好资源描述符Set
 		Shader::DescriptorBinding cameraDataBinding;
-		cameraDataBinding.binding = 0;               
+		cameraDataBinding.binding = 0;
 		cameraDataBinding.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 		cameraDataBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 		cameraDataBinding.count = 1;
@@ -72,7 +78,7 @@ namespace Hazel {
 			gbufferShaderSpec.bindings.push_back(albedoBinding);
 			// 3. Normal 贴图
 			Shader::DescriptorBinding normalBinding;
-			normalBinding.binding = 1; 
+			normalBinding.binding = 1;
 			normalBinding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 			normalBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 			normalBinding.count = 1;
@@ -116,7 +122,7 @@ namespace Hazel {
 		}
 		// SpotShadowPass
 		{
-            Shader::ShaderSpecification shadowShaderSpec;
+			Shader::ShaderSpecification shadowShaderSpec;
 			shadowShaderSpec.bindings.push_back(cameraDataBinding); // 并不是摄像机数据是光照矩阵
 			Shader::PushConstantRange PushRange;
 			PushRange.shaderStage = VK_SHADER_STAGE_VERTEX_BIT;
@@ -140,7 +146,7 @@ namespace Hazel {
 			griduboBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 			griduboBinding.count = 1;
 			griduboBinding.set = 0;
-			depthBinding.binding = 1;           
+			depthBinding.binding = 1;
 			depthBinding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 			depthBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 			depthBinding.count = 1;
@@ -165,8 +171,8 @@ namespace Hazel {
 			Shader::ShaderSpecification hzbShaderSpec;
 			Shader::DescriptorBinding binding0;
 			binding0.binding = 0;
-            binding0.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            binding0.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+			binding0.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+			binding0.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
 			binding0.count = 1;
 			binding0.set = 0;
 			hzbShaderSpec.bindings.push_back(binding0);
@@ -179,10 +185,10 @@ namespace Hazel {
 			hzbShaderSpec.bindings.push_back(binding1);
 			Shader::PushConstantRange PushRange;
 			PushRange.shaderStage = VK_SHADER_STAGE_COMPUTE_BIT;
-            PushRange.offset = 0;
-            PushRange.size = 4;
-            hzbShaderSpec.pushConstantRanges = { PushRange };
-			s_Data->m_ShaderLibrary->LoadCommonShader("HZB", hzbShaderSpec,true);
+			PushRange.offset = 0;
+			PushRange.size = 4;
+			hzbShaderSpec.pushConstantRanges = { PushRange };
+			s_Data->m_ShaderLibrary->LoadCommonShader("HZB", hzbShaderSpec, true);
 		}
 
 		// EquirectangularToCubeMap
@@ -194,17 +200,65 @@ namespace Hazel {
 			binding0.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
 			binding0.count = 1;
 			binding0.set = 0;
-            EquirectangularToCubeMapShaderSpec.bindings.push_back(binding0);
+			EquirectangularToCubeMapShaderSpec.bindings.push_back(binding0);
 			Shader::DescriptorBinding outputCubeBinding;
-			outputCubeBinding.binding = 1;                     
+			outputCubeBinding.binding = 1;
 			outputCubeBinding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-			outputCubeBinding.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT; 
-			outputCubeBinding.count = 1;   
-			outputCubeBinding.set = 0;   
+			outputCubeBinding.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+			outputCubeBinding.count = 1;
+			outputCubeBinding.set = 0;
 			EquirectangularToCubeMapShaderSpec.bindings.push_back(outputCubeBinding);
 			s_Data->m_ShaderLibrary->LoadCommonShader("EquirectangularToCubeMap", EquirectangularToCubeMapShaderSpec, true);
 		}
+		// IrradianceMap
+		{
+			Shader::ShaderSpecification IrradianceMapShaderSpec;
+			Shader::DescriptorBinding binding0;
+			binding0.binding = 0;
+			binding0.type = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+			binding0.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+			binding0.count = 1;
+			binding0.set = 0;
+			IrradianceMapShaderSpec.bindings.push_back(binding0);
+			Shader::DescriptorBinding outputCubeBinding;
+			outputCubeBinding.binding = 1;
+			outputCubeBinding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+			outputCubeBinding.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+			outputCubeBinding.count = 1;
+			outputCubeBinding.set = 0;
+			IrradianceMapShaderSpec.bindings.push_back(outputCubeBinding);
+			Shader::PushConstantRange PushRange;
+			PushRange.shaderStage = VK_SHADER_STAGE_COMPUTE_BIT;
+			PushRange.offset = 0;
+			PushRange.size = 4;
+			IrradianceMapShaderSpec.pushConstantRanges = { PushRange };
+			s_Data->m_ShaderLibrary->LoadCommonShader("EnvironmentIrradiance", IrradianceMapShaderSpec, true);
+		}
 
+		// PrefilterMap
+		{
+            Shader::ShaderSpecification PrefilterMapShaderSpec;
+            Shader::DescriptorBinding binding0;
+            binding0.binding = 0;
+            binding0.type = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+            binding0.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+            binding0.count = 1;
+            binding0.set = 0;
+            PrefilterMapShaderSpec.bindings.push_back(binding0);
+            Shader::DescriptorBinding binding1;
+            binding1.binding = 1;
+            binding1.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            binding1.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+            binding1.count = 1;
+            binding1.set = 0;
+            PrefilterMapShaderSpec.bindings.push_back(binding1);
+            Shader::PushConstantRange PushRange;
+            PushRange.shaderStage = VK_SHADER_STAGE_COMPUTE_BIT;
+            PushRange.offset = 0;
+            PushRange.size = 4;
+            PrefilterMapShaderSpec.pushConstantRanges = { PushRange };
+            s_Data->m_ShaderLibrary->LoadCommonShader("EnvironmentMipFilter", PrefilterMapShaderSpec, true);
+		}
 		// 加载纹理
 		uint32_t whiteTextureData = 0xffffffff;
 		TextureSpecification spec;
@@ -213,32 +267,24 @@ namespace Hazel {
 		spec.Height = 1;
 		WhiteTexture = Texture2D::Create(spec, Buffer(&whiteTextureData, sizeof(uint32_t)));
 
-
 		constexpr uint32_t blackTextureData = 0xff000000;
 
 		constexpr uint32_t blackCubeTextureData[6] = { 0xff000000, 0xff000000, 0xff000000, 0xff000000, 0xff000000, 0xff000000 };
 		s_Data->BlackCubeTexture = TextureCube::Create(spec, Buffer(&blackTextureData, sizeof(blackCubeTextureData)));
-
-
+		{
+			TextureSpecification spec;
+			spec.SamplerWrap = TextureWrap::Clamp;
+			s_Data->BRDFLutTexture = Texture2D::Create(spec, std::filesystem::path("assets/textures/BRDF_LUT.png"));
+		}
 		// 为并发帧创建了描述符池、提前准备了全屏顶点数据存入了GPU
 		s_RendererAPI->Init();
-
 	}
-	void Renderer::BeginFrame()
-	{
-		s_RendererAPI->BeginFrame();
-	}
-	Ref<TextureCube> Renderer::GetBlackCubeTexture()
-	{
-		return s_Data->BlackCubeTexture;
-	}
-	void Renderer::EndFrame()
-	{
-		s_RendererAPI->EndFrame();
-	}
-
 	void Renderer::Shutdown()
 	{
+	}
+	Ref<Texture2D> Renderer::GetBRDFLutTexture()
+	{
+		return s_Data->BRDFLutTexture;
 	}
 
 	Ref<ShaderLibrary> Renderer::GetShaderLibrary()
@@ -246,23 +292,36 @@ namespace Hazel {
 		return s_Data->m_ShaderLibrary;
 	}
 
-
-	RendererCapabilities& Renderer::GetCapabilities()
-	{
-		return s_RendererAPI->GetCapabilities();
-	}
-
-
-
 	void Renderer::BeginRenderPass(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<RenderPass> renderPass, bool explicitClear)
 	{
-		return s_RendererAPI->BeginRenderPass(renderCommandBuffer,renderPass,explicitClear);
+		return s_RendererAPI->BeginRenderPass(renderCommandBuffer, renderPass, explicitClear);
 	}
 
 	void Renderer::EndRenderPass(Ref<RenderCommandBuffer> renderCommandBuffer)
 	{
 		return s_RendererAPI->EndRenderPass(renderCommandBuffer);
+	}
 
+	void Renderer::BeginComputePass(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<ComputePass> computePass)
+	{
+		HZ_CORE_ASSERT(computePass, "ComputePass cannot be null!");
+
+		s_RendererAPI->BeginComputePass(renderCommandBuffer, computePass);
+	}
+
+	void Renderer::EndComputePass(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<ComputePass> computePass)
+	{
+		s_RendererAPI->EndComputePass(renderCommandBuffer, computePass);
+	}
+
+	void Renderer::DispatchCompute(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<ComputePass> computePass, Ref<Material> material, const glm::uvec3& workGroups, Buffer constants)
+	{
+		s_RendererAPI->DispatchCompute(renderCommandBuffer, computePass, material, workGroups, constants);
+	}
+
+	void Renderer::DispatchCompute(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<ComputePass> computePass, Ref<Material> material, const glm::uvec3& workGroups, uint32_t descrptorSetIndex, Buffer constants)
+	{
+		s_RendererAPI->DispatchCompute(renderCommandBuffer, computePass, material, workGroups, descrptorSetIndex, constants);
 	}
 
 	void Renderer::SwapQueues()
@@ -270,44 +329,24 @@ namespace Hazel {
 		s_RenderCommandQueueSubmissionIndex = (s_RenderCommandQueueSubmissionIndex + 1) % s_RenderCommandQueueCount;
 	}
 	//void Renderer::DrawStaticMesh(Ref<RenderCommandBuffer> commandBuffer, Ref<VertexBuffer> vertexBuffer, Ref<MeshSource> meshSource, uint32_t subMeshIndex) {
-
 	//}
 
-	void Renderer::BindVertData(Ref<RenderCommandBuffer> commandBuffer,Ref<VertexBuffer> testVertexBuffer)
+	void Renderer::BindVertData(Ref<RenderCommandBuffer> commandBuffer, Ref<VertexBuffer> testVertexBuffer)
 	{
-		return s_RendererAPI->BindVertData(commandBuffer,testVertexBuffer);
-
+		return s_RendererAPI->BindVertData(commandBuffer, testVertexBuffer);
 	}
-	void Renderer::RenderStaticMeshWithMaterial(Ref<RenderCommandBuffer> commandBuffer,Ref<Pipeline> pipeline, Ref<MeshSource> meshSource, uint32_t submeshIndex, Ref<Material> material, Ref<VertexBuffer> transformBuffer, uint32_t transformOffset, uint32_t instanceCount, Buffer additionalUniforms)
+	void Renderer::RenderStaticMeshWithMaterial(Ref<RenderCommandBuffer> commandBuffer, Ref<Pipeline> pipeline, Ref<MeshSource> meshSource, uint32_t submeshIndex, Ref<Material> material, Ref<VertexBuffer> transformBuffer, uint32_t transformOffset, uint32_t instanceCount, Buffer additionalUniforms)
 	{
-		return s_RendererAPI->RenderStaticMeshWithMaterial(commandBuffer, pipeline,meshSource, submeshIndex, material, transformBuffer, transformOffset, instanceCount, additionalUniforms);
+		return s_RendererAPI->RenderStaticMeshWithMaterial(commandBuffer, pipeline, meshSource, submeshIndex, material, transformBuffer, transformOffset, instanceCount, additionalUniforms);
 	}
 	void Renderer::RenderSkeletonMeshWithMaterial(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<Pipeline> pipeline, Ref<MeshSource> meshSource, uint32_t submeshIndex, Ref<Material> material, Ref<VertexBuffer> transformBuffer, uint32_t transformOffset, uint32_t boneTransformsOffset, uint32_t instanceCount, Buffer additionalUniforms)
 	{
 		s_RendererAPI->RenderSkeletonMeshWithMaterial(renderCommandBuffer, pipeline, meshSource, submeshIndex, material, transformBuffer, transformOffset, boneTransformsOffset, instanceCount, additionalUniforms);
-
 	}
 	void Renderer::DrawPrueVertex(Ref<RenderCommandBuffer> commandBuffer, uint32_t count)
 	{
 		return s_RendererAPI->DrawPrueVertex(commandBuffer, count);
-
 	}
-	uint32_t Renderer::RT_GetCurrentFrameIndex()
-	{
-		// Swapchain owns the Render Thread frame index
-		return Application::Get().GetWindow()->GetSwapChain().GetCurrentBufferIndex();
-	}
-
-	Ref<Texture2D> Renderer::GetWhiteTexture()
-	{
-		return WhiteTexture;
-	}
-
-	uint32_t Renderer::GetCurrentFrameIndex()
-	{
-		return Application::Get().GetCurrentFrameIndex();
-	}
-
 	void Renderer::RenderThreadFunc(RenderThread* renderThread)
 	{
 		while (renderThread->IsRunning())
@@ -317,7 +356,7 @@ namespace Hazel {
 	}
 	void Renderer::WaitAndRender(RenderThread* renderThread)
 	{
-		// Wait for kick, then set render thread to busy  
+		// Wait for kick, then set render thread to busy
 		{
 			HZ_PROFILE_SCOPE("Wait");
 			// 渲染线程循环等待Kick信号，收到信号后，设置为Busy信号并开始工作
@@ -334,6 +373,15 @@ namespace Hazel {
 		return (s_RenderCommandQueueSubmissionIndex + 1) % s_RenderCommandQueueCount;
 	}
 
+	void Renderer::BeginFrame()
+	{
+		s_RendererAPI->BeginFrame();
+	}
+	void Renderer::EndFrame()
+	{
+		s_RendererAPI->EndFrame();
+	}
+
 	RenderCommandQueue& Renderer::GetRenderCommandQueue()
 	{
 		return *s_CommandQueue[s_RenderCommandQueueSubmissionIndex];
@@ -342,27 +390,29 @@ namespace Hazel {
 	{
 		return s_ResourceFreeQueue[index];
 	}
-	RendererConfig& Renderer::GetConfig()
+	RendererCapabilities& Renderer::GetCapabilities()
 	{
-		return s_Config;
+		return s_RendererAPI->GetCapabilities();
 	}
 
-	void Renderer::BeginComputePass(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<ComputePass> computePass)
+	uint32_t Renderer::GetCurrentFrameIndex()
 	{
-		HZ_CORE_ASSERT(computePass, "ComputePass cannot be null!");
-
-		s_RendererAPI->BeginComputePass(renderCommandBuffer, computePass);
+		return Application::Get().GetCurrentFrameIndex();
 	}
 
-	void Renderer::EndComputePass(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<ComputePass> computePass)
+	uint32_t Renderer::RT_GetCurrentFrameIndex()
 	{
-		s_RendererAPI->EndComputePass(renderCommandBuffer, computePass);
-
+		// Swapchain owns the Render Thread frame index
+		return Application::Get().GetWindow()->GetSwapChain().GetCurrentBufferIndex();
 	}
 
-	void Renderer::DispatchCompute(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<ComputePass> computePass, Ref<Material> material, const glm::uvec3& workGroups, Buffer constants)
+	Ref<Texture2D> Renderer::GetWhiteTexture()
 	{
-		s_RendererAPI->DispatchCompute(renderCommandBuffer, computePass, material, workGroups, constants);
+		return WhiteTexture;
 	}
 
+	Ref<TextureCube> Renderer::GetBlackCubeTexture()
+	{
+		return s_Data->BlackCubeTexture;
+	}
 }

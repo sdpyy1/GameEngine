@@ -7,7 +7,6 @@
 #include <map>
 
 namespace Hazel {
-
 	class VulkanPipeline : public Pipeline
 	{
 	public:
@@ -30,5 +29,4 @@ namespace Hazel {
 		VkPipelineLayout m_PipelineLayout = nullptr;
 		VkPipeline m_VulkanPipeline = nullptr;
 	};
-
 }

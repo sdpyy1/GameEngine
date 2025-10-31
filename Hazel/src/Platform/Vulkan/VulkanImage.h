@@ -6,7 +6,6 @@
 #include <map>
 
 namespace Hazel {
-
 	struct VulkanImageInfo
 	{
 		VkImage Image = nullptr;
@@ -116,7 +115,6 @@ namespace Hazel {
 		VkDescriptorImageInfo m_DescriptorImageInfo = {};
 	};
 	namespace Utils {
-
 		inline VkFormat VulkanImageFormat(ImageFormat format)
 		{
 			switch (format)
@@ -141,7 +139,5 @@ namespace Hazel {
 			HZ_CORE_ASSERT(false);
 			return VK_FORMAT_UNDEFINED;
 		}
-
 	}
-
 }

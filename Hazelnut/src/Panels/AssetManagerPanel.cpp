@@ -13,7 +13,6 @@
 #endif
 
 namespace Hazel {
-
 	AssetManagerPanel::AssetManagerPanel()
 	{
 	}
@@ -296,7 +295,6 @@ namespace Hazel {
 		DrawComponent<DirectionalLightComponent>("DirectionalLight", entity, [](auto& component)
 			{
 				ImGui::Text("DirectionalLight Add!");
-
 			});
 
 		DrawComponent<DynamicMeshComponent>("Dynamic Mesh", entity, [](auto& component)
@@ -307,7 +305,6 @@ namespace Hazel {
 				{
 				}
 			});
-
 
 		DrawComponent<AnimationComponent>("Animation", entity, [](auto& component)
 			{
@@ -351,7 +348,6 @@ namespace Hazel {
 					ImGui::Text("Invalid MeshSource asset");
 				}
 			});
-
 	}
 	template<typename T>
 	void AssetManagerPanel::DisplayAddComponentEntry(const std::string& entryName)
@@ -365,5 +361,4 @@ namespace Hazel {
 			}
 		}
 	}
-
 } // namespace Hazel

@@ -10,7 +10,7 @@ namespace Hazel {
 		switch (RendererAPI::Current())
 		{
 		case RendererAPI::Type::None: return nullptr;
-			case RendererAPI::Type::Vulkan: return Ref<VulkanTexture2D>::Create(specification);
+		case RendererAPI::Type::Vulkan: return Ref<VulkanTexture2D>::Create(specification);
 		}
 		HZ_CORE_ASSERT(false, "Unknown RendererAPI");
 		return nullptr;
@@ -21,7 +21,7 @@ namespace Hazel {
 		switch (RendererAPI::Current())
 		{
 		case RendererAPI::Type::None: return nullptr;
-			case RendererAPI::Type::Vulkan: return Ref<VulkanTexture2D>::Create(specification, filepath);
+		case RendererAPI::Type::Vulkan: return Ref<VulkanTexture2D>::Create(specification, filepath);
 		}
 		HZ_CORE_ASSERT(false, "Unknown RendererAPI");
 		return nullptr;
@@ -31,8 +31,8 @@ namespace Hazel {
 	{
 		switch (RendererAPI::Current())
 		{
-			case RendererAPI::Type::None: return nullptr;
-			case RendererAPI::Type::Vulkan: return Ref<VulkanTexture2D>::Create(specification, imageData);
+		case RendererAPI::Type::None: return nullptr;
+		case RendererAPI::Type::Vulkan: return Ref<VulkanTexture2D>::Create(specification, imageData);
 		}
 		HZ_CORE_ASSERT(false, "Unknown RendererAPI");
 		return nullptr;
@@ -42,7 +42,7 @@ namespace Hazel {
 		switch (RendererAPI::Current())
 		{
 		case RendererAPI::Type::None: return nullptr;
-		//case RendererAPI::APIType::Vulkan: return Ref<VulkanTexture2D>::Create(specification);
+			//case RendererAPI::APIType::Vulkan: return Ref<VulkanTexture2D>::Create(specification);
 		}
 		HZ_CORE_ASSERT(false, "Unknown RendererAPI");
 		return nullptr;
@@ -53,7 +53,7 @@ namespace Hazel {
 		switch (RendererAPI::Current())
 		{
 		case RendererAPI::Type::None: return nullptr;
-		//case RendererAPI::APIType::Vulkan: return Ref<VulkanTexture2D>::Create(specification, filepath);
+			//case RendererAPI::APIType::Vulkan: return Ref<VulkanTexture2D>::Create(specification, filepath);
 		}
 		HZ_CORE_ASSERT(false, "Unknown RendererAPI");
 		return nullptr;
@@ -64,7 +64,7 @@ namespace Hazel {
 		switch (RendererAPI::Current())
 		{
 		case RendererAPI::Type::None: return nullptr;
-		//case RendererAPI::APIType::Vulkan: return CreateRef<Texture>();
+			//case RendererAPI::APIType::Vulkan: return CreateRef<Texture>();
 		}
 		HZ_CORE_ASSERT(false, "Unknown RendererAPI");
 		return nullptr;
@@ -80,5 +80,4 @@ namespace Hazel {
 		HZ_CORE_ASSERT(false, "Unknown RendererAPI");
 		return nullptr;
 	}
-
 }

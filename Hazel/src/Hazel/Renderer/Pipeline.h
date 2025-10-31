@@ -8,7 +8,6 @@
 #include "Hazel/Renderer/Framebuffer.h"
 
 namespace Hazel {
-
 	enum class PrimitiveTopology
 	{
 		None = 0,
@@ -126,5 +125,4 @@ namespace Hazel {
 
 		static Ref<Pipeline> Create(const PipelineSpecification& spec);
 	};
-
 }

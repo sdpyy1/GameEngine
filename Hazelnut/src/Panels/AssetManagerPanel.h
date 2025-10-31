@@ -4,7 +4,6 @@
 #include "Hazel/Scene/Scene.h"
 
 namespace Hazel {
-
 	class AssetManagerPanel : public EditorPanel
 	{
 	public:
@@ -31,5 +30,4 @@ namespace Hazel {
 		template<typename T>
 		void DisplayAddComponentEntry(const std::string& entryName);
 	};
-
 }

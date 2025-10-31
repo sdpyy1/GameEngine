@@ -3,10 +3,5 @@
 
 #include "Hazel/Renderer/Renderer.h"
 
-
 namespace Hazel {
-
-
-
-
 }

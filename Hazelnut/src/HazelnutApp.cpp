@@ -4,7 +4,6 @@
 #include "EditorLayer.h"
 
 namespace Hazel {
-
 	class Hazelnut : public Application
 	{
 	public:
@@ -23,5 +22,4 @@ namespace Hazel {
 
 		return new Hazelnut(spec);
 	}
-
 }

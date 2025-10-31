@@ -81,7 +81,8 @@ namespace Hazel {
 
 		VkImageView CreateImageViewSingleMip(uint32_t mip);
 
-		void GenerateMips(bool readonly = false);
+		virtual void GenerateMips(bool readonly = false) override;
+		virtual void GenerateMips(Ref<RenderCommandBuffer> renderCommandBuffer, bool readonly = false) override;
 
 		void CopyToHostBuffer(Buffer& buffer);
 		void CopyFromBuffer(const Buffer& buffer, uint32_t mips);
@@ -98,8 +99,4 @@ namespace Hazel {
 		VkImage m_Image{ nullptr };
 		VkDescriptorImageInfo m_DescriptorImageInfo = {};
 	};
-
-
-
 }
-

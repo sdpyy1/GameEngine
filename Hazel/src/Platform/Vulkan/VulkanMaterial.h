@@ -28,4 +28,3 @@ namespace Hazel {
 		std::vector<VkDescriptorSet> m_DescriptorSets;
 	};
 }
-

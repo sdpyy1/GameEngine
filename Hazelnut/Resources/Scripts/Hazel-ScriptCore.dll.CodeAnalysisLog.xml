@@ -1,0 +1,693 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml-stylesheet type="text/xsl" href="d:\microsoft visual studio\2022\community\team tools\static analysis tools\fxcop\Xml\CodeAnalysisReport.xsl"?>
+<FxCopReport Version="17.0">
+ <Targets>
+  <Target Name="D:\AAA_GameEngine\Hazelnut\Resources\Scripts\Hazel-ScriptCore.dll">
+   <Modules>
+    <Module Name="hazel-scriptcore.dll">
+     <Messages>
+      <Message TypeName="AssembliesShouldHaveValidStrongNames" Category="Microsoft.Design" CheckId="CA2210" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="NonBreaking">
+       <Issue Name="NoStrongName" Certainty="95" Level="CriticalError">用强名称密钥对 'Hazel-ScriptCore.dll' 进行签名。</Issue>
+      </Message>
+      <Message TypeName="MarkAssembliesWithAssemblyVersion" Category="Microsoft.Design" CheckId="CA1016" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="NonBreaking">
+       <Issue Certainty="95" Level="Error">向 'Hazel-ScriptCore.dll' 中添加 AssemblyVersion 特性。</Issue>
+      </Message>
+      <Message TypeName="MarkAssembliesWithClsCompliant" Category="Microsoft.Design" CheckId="CA1014" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="NonBreaking">
+       <Issue Certainty="95" Level="Error">使用 CLSCompliant(true)来标记 'Hazel-ScriptCore.dll'，因为它公开外部可见的类型。</Issue>
+      </Message>
+      <Message TypeName="MarkAssembliesWithComVisible" Category="Microsoft.Design" CheckId="CA1017" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="NonBreaking">
+       <Issue Name="NoAttribute" Certainty="95" Level="CriticalError">因为 'Hazel-ScriptCore.dll' 公开外部可见的类型，请在程序集级别使用 ComVisible(false)来标记它，然后使用 ComVisible(true)来标记该程序集内应当向 COM 客户端公开的所有类型。</Issue>
+      </Message>
+     </Messages>
+     <Namespaces>
+      <Namespace Name="Hazel">
+       <Types>
+        <Type Name="Entity" Kind="Class" Accessibility="Public" ExternallyVisible="True">
+         <Members>
+          <Member Name="#FindEntityByName(System.String)" Kind="Method" Static="False" Accessibility="Public" ExternallyVisible="True">
+           <Messages>
+            <Message TypeName="MarkMembersAsStatic" Category="Microsoft.Performance" CheckId="CA1822" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="DependsOnFix">
+             <Issue Certainty="95" Level="Warning">从未使用 'Entity.FindEntityByName(string)' 的“this”参数(Visual Basic 中为“Me”)。根据需要，将成员标记为 static (Visual Basic 中为“Shared”)，或者在方法主体或至少一个属性访问器中使用“this”/“Me”。</Issue>
+            </Message>
+           </Messages>
+          </Member>
+          <Member Name="#HasComponent`1()" Kind="Method" Static="False" Accessibility="Public" ExternallyVisible="True">
+           <Messages>
+            <Message TypeName="GenericMethodsShouldProvideTypeParameter" Category="Microsoft.Design" CheckId="CA1004" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Certainty="75" Level="Warning">考虑使用 'Entity.HasComponent&lt;T&gt;()' 在任何对它的调用中都不需要显式类型参数 'T' 的设计。</Issue>
+            </Message>
+           </Messages>
+          </Member>
+          <Member Name="#ID" Kind="Field" Static="False" Accessibility="Public" ExternallyVisible="True">
+           <Messages>
+            <Message TypeName="DoNotDeclareVisibleInstanceFields" Category="Microsoft.Design" CheckId="CA1051" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Certainty="90" Level="Error">由于字段 'Entity.ID' 在其声明类型的外部可见，因此，请将它的可访问性改为私有，并添加一个与该字段当前的可访问性相同的属性以提供对该属性的访问。</Issue>
+            </Message>
+           </Messages>
+          </Member>
+         </Members>
+        </Type>
+        <Type Name="Input" Kind="Class" Accessibility="Public" ExternallyVisible="True">
+         <Messages>
+          <Message TypeName="StaticHolderTypesShouldNotHaveConstructors" Category="Microsoft.Design" CheckId="CA1053" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+           <Issue Certainty="90" Level="Error">由于类型 'Input' 仅包含“static”(在 Visual Basic 中为“Shared”)成员，因此添加默认私有构造函数可阻止编译器添加默认公共构造函数。</Issue>
+          </Message>
+         </Messages>
+        </Type>
+        <Type Name="KeyCode" Kind="Enum" Accessibility="Public" ExternallyVisible="True">
+         <Messages>
+          <Message TypeName="EnumsShouldHaveZeroValue" Category="Microsoft.Design" CheckId="CA1008" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="NonBreaking">
+           <Issue Name="NotFlagsNoZeroValue" Certainty="95" Level="CriticalError">将一个值为零且建议名称为“None”的成员添加到 'KeyCode' 中。</Issue>
+          </Message>
+         </Messages>
+         <Members>
+          <Member Name="#A" Kind="Field" Static="True" Accessibility="Public" ExternallyVisible="True">
+           <Messages>
+            <Message Id="A" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Name="MemberMoreMeaningfulName" Certainty="75" Level="CriticalWarning">考虑将成员名称 'KeyCode.A' 改为一个更能体现其意义的名称。</Issue>
+            </Message>
+           </Messages>
+          </Member>
+          <Member Name="#B" Kind="Field" Static="True" Accessibility="Public" ExternallyVisible="True">
+           <Messages>
+            <Message Id="B" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Name="MemberMoreMeaningfulName" Certainty="75" Level="CriticalWarning">考虑将成员名称 'KeyCode.B' 改为一个更能体现其意义的名称。</Issue>
+            </Message>
+           </Messages>
+          </Member>
+          <Member Name="#C" Kind="Field" Static="True" Accessibility="Public" ExternallyVisible="True">
+           <Messages>
+            <Message Id="C" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Name="MemberMoreMeaningfulName" Certainty="75" Level="CriticalWarning">考虑将成员名称 'KeyCode.C' 改为一个更能体现其意义的名称。</Issue>
+            </Message>
+           </Messages>
+          </Member>
+          <Member Name="#D" Kind="Field" Static="True" Accessibility="Public" ExternallyVisible="True">
+           <Messages>
+            <Message Id="D" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Name="MemberMoreMeaningfulName" Certainty="75" Level="CriticalWarning">考虑将成员名称 'KeyCode.D' 改为一个更能体现其意义的名称。</Issue>
+            </Message>
+           </Messages>
+          </Member>
+          <Member Name="#E" Kind="Field" Static="True" Accessibility="Public" ExternallyVisible="True">
+           <Messages>
+            <Message Id="E" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Name="MemberMoreMeaningfulName" Certainty="75" Level="CriticalWarning">考虑将成员名称 'KeyCode.E' 改为一个更能体现其意义的名称。</Issue>
+            </Message>
+           </Messages>
+          </Member>
+          <Member Name="#F" Kind="Field" Static="True" Accessibility="Public" ExternallyVisible="True">
+           <Messages>
+            <Message Id="F" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Name="MemberMoreMeaningfulName" Certainty="75" Level="CriticalWarning">考虑将成员名称 'KeyCode.F' 改为一个更能体现其意义的名称。</Issue>
+            </Message>
+           </Messages>
+          </Member>
+          <Member Name="#G" Kind="Field" Static="True" Accessibility="Public" ExternallyVisible="True">
+           <Messages>
+            <Message Id="G" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Name="MemberMoreMeaningfulName" Certainty="75" Level="CriticalWarning">考虑将成员名称 'KeyCode.G' 改为一个更能体现其意义的名称。</Issue>
+            </Message>
+           </Messages>
+          </Member>
+          <Member Name="#H" Kind="Field" Static="True" Accessibility="Public" ExternallyVisible="True">
+           <Messages>
+            <Message Id="H" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Name="MemberMoreMeaningfulName" Certainty="75" Level="CriticalWarning">考虑将成员名称 'KeyCode.H' 改为一个更能体现其意义的名称。</Issue>
+            </Message>
+           </Messages>
+          </Member>
+          <Member Name="#I" Kind="Field" Static="True" Accessibility="Public" ExternallyVisible="True">
+           <Messages>
+            <Message Id="I" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Name="MemberMoreMeaningfulName" Certainty="75" Level="CriticalWarning">考虑将成员名称 'KeyCode.I' 改为一个更能体现其意义的名称。</Issue>
+            </Message>
+           </Messages>
+          </Member>
+          <Member Name="#J" Kind="Field" Static="True" Accessibility="Public" ExternallyVisible="True">
+           <Messages>
+            <Message Id="J" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Name="MemberMoreMeaningfulName" Certainty="75" Level="CriticalWarning">考虑将成员名称 'KeyCode.J' 改为一个更能体现其意义的名称。</Issue>
+            </Message>
+           </Messages>
+          </Member>
+          <Member Name="#K" Kind="Field" Static="True" Accessibility="Public" ExternallyVisible="True">
+           <Messages>
+            <Message Id="K" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Name="MemberMoreMeaningfulName" Certainty="75" Level="CriticalWarning">考虑将成员名称 'KeyCode.K' 改为一个更能体现其意义的名称。</Issue>
+            </Message>
+           </Messages>
+          </Member>
+          <Member Name="#L" Kind="Field" Static="True" Accessibility="Public" ExternallyVisible="True">
+           <Messages>
+            <Message Id="L" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Name="MemberMoreMeaningfulName" Certainty="75" Level="CriticalWarning">考虑将成员名称 'KeyCode.L' 改为一个更能体现其意义的名称。</Issue>
+            </Message>
+           </Messages>
+          </Member>
+          <Member Name="#M" Kind="Field" Static="True" Accessibility="Public" ExternallyVisible="True">
+           <Messages>
+            <Message Id="M" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Name="MemberMoreMeaningfulName" Certainty="75" Level="CriticalWarning">考虑将成员名称 'KeyCode.M' 改为一个更能体现其意义的名称。</Issue>
+            </Message>
+           </Messages>
+          </Member>
+          <Member Name="#N" Kind="Field" Static="True" Accessibility="Public" ExternallyVisible="True">
+           <Messages>
+            <Message Id="N" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Name="MemberMoreMeaningfulName" Certainty="75" Level="CriticalWarning">考虑将成员名称 'KeyCode.N' 改为一个更能体现其意义的名称。</Issue>
+            </Message>
+           </Messages>
+          </Member>
+          <Member Name="#O" Kind="Field" Static="True" Accessibility="Public" ExternallyVisible="True">
+           <Messages>
+            <Message Id="O" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Name="MemberMoreMeaningfulName" Certainty="75" Level="CriticalWarning">考虑将成员名称 'KeyCode.O' 改为一个更能体现其意义的名称。</Issue>
+            </Message>
+           </Messages>
+          </Member>
+          <Member Name="#P" Kind="Field" Static="True" Accessibility="Public" ExternallyVisible="True">
+           <Messages>
+            <Message Id="P" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Name="MemberMoreMeaningfulName" Certainty="75" Level="CriticalWarning">考虑将成员名称 'KeyCode.P' 改为一个更能体现其意义的名称。</Issue>
+            </Message>
+           </Messages>
+          </Member>
+          <Member Name="#Q" Kind="Field" Static="True" Accessibility="Public" ExternallyVisible="True">
+           <Messages>
+            <Message Id="Q" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Name="MemberMoreMeaningfulName" Certainty="75" Level="CriticalWarning">考虑将成员名称 'KeyCode.Q' 改为一个更能体现其意义的名称。</Issue>
+            </Message>
+           </Messages>
+          </Member>
+          <Member Name="#R" Kind="Field" Static="True" Accessibility="Public" ExternallyVisible="True">
+           <Messages>
+            <Message Id="R" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Name="MemberMoreMeaningfulName" Certainty="75" Level="CriticalWarning">考虑将成员名称 'KeyCode.R' 改为一个更能体现其意义的名称。</Issue>
+            </Message>
+           </Messages>
+          </Member>
+          <Member Name="#S" Kind="Field" Static="True" Accessibility="Public" ExternallyVisible="True">
+           <Messages>
+            <Message Id="S" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Name="MemberMoreMeaningfulName" Certainty="75" Level="CriticalWarning">考虑将成员名称 'KeyCode.S' 改为一个更能体现其意义的名称。</Issue>
+            </Message>
+           </Messages>
+          </Member>
+          <Member Name="#T" Kind="Field" Static="True" Accessibility="Public" ExternallyVisible="True">
+           <Messages>
+            <Message Id="T" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Name="MemberMoreMeaningfulName" Certainty="75" Level="CriticalWarning">考虑将成员名称 'KeyCode.T' 改为一个更能体现其意义的名称。</Issue>
+            </Message>
+           </Messages>
+          </Member>
+          <Member Name="#U" Kind="Field" Static="True" Accessibility="Public" ExternallyVisible="True">
+           <Messages>
+            <Message Id="U" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Name="MemberMoreMeaningfulName" Certainty="75" Level="CriticalWarning">考虑将成员名称 'KeyCode.U' 改为一个更能体现其意义的名称。</Issue>
+            </Message>
+           </Messages>
+          </Member>
+          <Member Name="#V" Kind="Field" Static="True" Accessibility="Public" ExternallyVisible="True">
+           <Messages>
+            <Message Id="V" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Name="MemberMoreMeaningfulName" Certainty="75" Level="CriticalWarning">考虑将成员名称 'KeyCode.V' 改为一个更能体现其意义的名称。</Issue>
+            </Message>
+           </Messages>
+          </Member>
+          <Member Name="#W" Kind="Field" Static="True" Accessibility="Public" ExternallyVisible="True">
+           <Messages>
+            <Message Id="W" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Name="MemberMoreMeaningfulName" Certainty="75" Level="CriticalWarning">考虑将成员名称 'KeyCode.W' 改为一个更能体现其意义的名称。</Issue>
+            </Message>
+           </Messages>
+          </Member>
+          <Member Name="#X" Kind="Field" Static="True" Accessibility="Public" ExternallyVisible="True">
+           <Messages>
+            <Message Id="X" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Name="MemberMoreMeaningfulName" Certainty="75" Level="CriticalWarning">考虑将成员名称 'KeyCode.X' 改为一个更能体现其意义的名称。</Issue>
+            </Message>
+           </Messages>
+          </Member>
+          <Member Name="#Y" Kind="Field" Static="True" Accessibility="Public" ExternallyVisible="True">
+           <Messages>
+            <Message Id="Y" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Name="MemberMoreMeaningfulName" Certainty="75" Level="CriticalWarning">考虑将成员名称 'KeyCode.Y' 改为一个更能体现其意义的名称。</Issue>
+            </Message>
+           </Messages>
+          </Member>
+          <Member Name="#Z" Kind="Field" Static="True" Accessibility="Public" ExternallyVisible="True">
+           <Messages>
+            <Message Id="Z" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Name="MemberMoreMeaningfulName" Certainty="75" Level="CriticalWarning">考虑将成员名称 'KeyCode.Z' 改为一个更能体现其意义的名称。</Issue>
+            </Message>
+           </Messages>
+          </Member>
+         </Members>
+        </Type>
+        <Type Name="Rigidbody2DComponent" Kind="Class" Accessibility="Public" ExternallyVisible="True">
+         <Members>
+          <Member Name="#Type" Kind="Property" Static="False" Accessibility="Public" ExternallyVisible="True">
+           <Messages>
+            <Message TypeName="PropertyNamesShouldNotMatchGetMethods" Category="Microsoft.Naming" CheckId="CA1721" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Name="BaseType" Certainty="95" Level="Error">由于存在继承方法 'object.GetType()'，属性名 'Rigidbody2DComponent.Type' 会造成混淆。请重命名或移除该属性。</Issue>
+            </Message>
+           </Messages>
+          </Member>
+         </Members>
+        </Type>
+        <Type Name="Vector2" Kind="Struct" Accessibility="Public" ExternallyVisible="True">
+         <Messages>
+          <Message TypeName="OverrideEqualsAndOperatorEqualsOnValueTypes" Category="Microsoft.Performance" CheckId="CA1815" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="NonBreaking">
+           <Issue Name="Equals" Certainty="75" Level="Warning">'Vector2' 应重写 Equals。</Issue>
+           <Issue Name="op_Equality" Certainty="75" Level="Warning">'Vector2' 应重写相等(==)和不等(!=)运算符。</Issue>
+          </Message>
+         </Messages>
+         <Members>
+          <Member Name="#.ctor(System.Single,System.Single)" Kind="Method" Static="False" Accessibility="Public" ExternallyVisible="True">
+           <Messages>
+            <Message Id="x" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Name="MemberParameterMoreMeaningfulName" Certainty="75" Level="CriticalWarning">在方法 'Vector2.Vector2(float, float)' 中，考虑将参数名称 'x' 改为一个更能体现其意义的名称。</Issue>
+            </Message>
+            <Message Id="y" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Name="MemberParameterMoreMeaningfulName" Certainty="75" Level="CriticalWarning">在方法 'Vector2.Vector2(float, float)' 中，考虑将参数名称 'y' 改为一个更能体现其意义的名称。</Issue>
+            </Message>
+           </Messages>
+          </Member>
+          <Member Name="#op_Addition(Hazel.Vector2,Hazel.Vector2)" Kind="Method" Static="True" Accessibility="Public" ExternallyVisible="True">
+           <Messages>
+            <Message Id="a" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Name="MemberParameterMoreMeaningfulName" Certainty="75" Level="CriticalWarning">在方法 'Vector2.operator +(Vector2, Vector2)' 中，考虑将参数名称 'a' 改为一个更能体现其意义的名称。</Issue>
+            </Message>
+            <Message Id="b" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Name="MemberParameterMoreMeaningfulName" Certainty="75" Level="CriticalWarning">在方法 'Vector2.operator +(Vector2, Vector2)' 中，考虑将参数名称 'b' 改为一个更能体现其意义的名称。</Issue>
+            </Message>
+            <Message TypeName="OperatorOverloadsHaveNamedAlternates" Category="Microsoft.Usage" CheckId="CA2225" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="NonBreaking">
+             <Issue Certainty="50" Level="Error">提供名为“Add”的方法作为运算符 'Vector2.operator +(Vector2, Vector2)' 的友好备用项。</Issue>
+            </Message>
+            <Message TypeName="OverloadOperatorEqualsOnOverloadingAddAndSubtract" Category="Microsoft.Design" CheckId="CA1013" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="NonBreaking">
+             <Issue Certainty="75" Level="Error">考虑为与 'Vector2.operator +(Vector2, Vector2)' 采用相同参数的 'Vector2' 添加一个相等运算符重载。</Issue>
+            </Message>
+           </Messages>
+          </Member>
+          <Member Name="#op_Multiply(Hazel.Vector2,System.Single)" Kind="Method" Static="True" Accessibility="Public" ExternallyVisible="True">
+           <Messages>
+            <Message TypeName="OperatorOverloadsHaveNamedAlternates" Category="Microsoft.Usage" CheckId="CA2225" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="NonBreaking">
+             <Issue Certainty="50" Level="Error">提供名为“Multiply”的方法作为运算符 'Vector2.operator *(Vector2, float)' 的友好备用项。</Issue>
+            </Message>
+           </Messages>
+          </Member>
+          <Member Name="#X" Kind="Field" Static="False" Accessibility="Public" ExternallyVisible="True">
+           <Messages>
+            <Message TypeName="DoNotDeclareVisibleInstanceFields" Category="Microsoft.Design" CheckId="CA1051" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Certainty="90" Level="Error">由于字段 'Vector2.X' 在其声明类型的外部可见，因此，请将它的可访问性改为私有，并添加一个与该字段当前的可访问性相同的属性以提供对该属性的访问。</Issue>
+            </Message>
+            <Message Id="X" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Name="MemberMoreMeaningfulName" Certainty="75" Level="CriticalWarning">考虑将成员名称 'Vector2.X' 改为一个更能体现其意义的名称。</Issue>
+            </Message>
+           </Messages>
+          </Member>
+          <Member Name="#Y" Kind="Field" Static="False" Accessibility="Public" ExternallyVisible="True">
+           <Messages>
+            <Message TypeName="DoNotDeclareVisibleInstanceFields" Category="Microsoft.Design" CheckId="CA1051" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Certainty="90" Level="Error">由于字段 'Vector2.Y' 在其声明类型的外部可见，因此，请将它的可访问性改为私有，并添加一个与该字段当前的可访问性相同的属性以提供对该属性的访问。</Issue>
+            </Message>
+            <Message Id="Y" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Name="MemberMoreMeaningfulName" Certainty="75" Level="CriticalWarning">考虑将成员名称 'Vector2.Y' 改为一个更能体现其意义的名称。</Issue>
+            </Message>
+           </Messages>
+          </Member>
+         </Members>
+        </Type>
+        <Type Name="Vector3" Kind="Struct" Accessibility="Public" ExternallyVisible="True">
+         <Messages>
+          <Message TypeName="OverrideEqualsAndOperatorEqualsOnValueTypes" Category="Microsoft.Performance" CheckId="CA1815" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="NonBreaking">
+           <Issue Name="Equals" Certainty="75" Level="Warning">'Vector3' 应重写 Equals。</Issue>
+           <Issue Name="op_Equality" Certainty="75" Level="Warning">'Vector3' 应重写相等(==)和不等(!=)运算符。</Issue>
+          </Message>
+         </Messages>
+         <Members>
+          <Member Name="#.ctor(Hazel.Vector2,System.Single)" Kind="Method" Static="False" Accessibility="Public" ExternallyVisible="True">
+           <Messages>
+            <Message Id="z" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Name="MemberParameterMoreMeaningfulName" Certainty="75" Level="CriticalWarning">在方法 'Vector3.Vector3(Vector2, float)' 中，考虑将参数名称 'z' 改为一个更能体现其意义的名称。</Issue>
+            </Message>
+           </Messages>
+          </Member>
+          <Member Name="#.ctor(System.Single,System.Single,System.Single)" Kind="Method" Static="False" Accessibility="Public" ExternallyVisible="True">
+           <Messages>
+            <Message Id="x" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Name="MemberParameterMoreMeaningfulName" Certainty="75" Level="CriticalWarning">在方法 'Vector3.Vector3(float, float, float)' 中，考虑将参数名称 'x' 改为一个更能体现其意义的名称。</Issue>
+            </Message>
+            <Message Id="y" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Name="MemberParameterMoreMeaningfulName" Certainty="75" Level="CriticalWarning">在方法 'Vector3.Vector3(float, float, float)' 中，考虑将参数名称 'y' 改为一个更能体现其意义的名称。</Issue>
+            </Message>
+            <Message Id="z" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Name="MemberParameterMoreMeaningfulName" Certainty="75" Level="CriticalWarning">在方法 'Vector3.Vector3(float, float, float)' 中，考虑将参数名称 'z' 改为一个更能体现其意义的名称。</Issue>
+            </Message>
+           </Messages>
+          </Member>
+          <Member Name="#op_Addition(Hazel.Vector3,Hazel.Vector3)" Kind="Method" Static="True" Accessibility="Public" ExternallyVisible="True">
+           <Messages>
+            <Message Id="a" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Name="MemberParameterMoreMeaningfulName" Certainty="75" Level="CriticalWarning">在方法 'Vector3.operator +(Vector3, Vector3)' 中，考虑将参数名称 'a' 改为一个更能体现其意义的名称。</Issue>
+            </Message>
+            <Message Id="b" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Name="MemberParameterMoreMeaningfulName" Certainty="75" Level="CriticalWarning">在方法 'Vector3.operator +(Vector3, Vector3)' 中，考虑将参数名称 'b' 改为一个更能体现其意义的名称。</Issue>
+            </Message>
+            <Message TypeName="OperatorOverloadsHaveNamedAlternates" Category="Microsoft.Usage" CheckId="CA2225" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="NonBreaking">
+             <Issue Certainty="50" Level="Error">提供名为“Add”的方法作为运算符 'Vector3.operator +(Vector3, Vector3)' 的友好备用项。</Issue>
+            </Message>
+            <Message TypeName="OverloadOperatorEqualsOnOverloadingAddAndSubtract" Category="Microsoft.Design" CheckId="CA1013" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="NonBreaking">
+             <Issue Certainty="75" Level="Error">考虑为与 'Vector3.operator +(Vector3, Vector3)' 采用相同参数的 'Vector3' 添加一个相等运算符重载。</Issue>
+            </Message>
+           </Messages>
+          </Member>
+          <Member Name="#op_Multiply(Hazel.Vector3,System.Single)" Kind="Method" Static="True" Accessibility="Public" ExternallyVisible="True">
+           <Messages>
+            <Message TypeName="OperatorOverloadsHaveNamedAlternates" Category="Microsoft.Usage" CheckId="CA2225" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="NonBreaking">
+             <Issue Certainty="50" Level="Error">提供名为“Multiply”的方法作为运算符 'Vector3.operator *(Vector3, float)' 的友好备用项。</Issue>
+            </Message>
+           </Messages>
+          </Member>
+          <Member Name="#X" Kind="Field" Static="False" Accessibility="Public" ExternallyVisible="True">
+           <Messages>
+            <Message TypeName="DoNotDeclareVisibleInstanceFields" Category="Microsoft.Design" CheckId="CA1051" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Certainty="90" Level="Error">由于字段 'Vector3.X' 在其声明类型的外部可见，因此，请将它的可访问性改为私有，并添加一个与该字段当前的可访问性相同的属性以提供对该属性的访问。</Issue>
+            </Message>
+            <Message Id="X" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Name="MemberMoreMeaningfulName" Certainty="75" Level="CriticalWarning">考虑将成员名称 'Vector3.X' 改为一个更能体现其意义的名称。</Issue>
+            </Message>
+           </Messages>
+          </Member>
+          <Member Name="#Y" Kind="Field" Static="False" Accessibility="Public" ExternallyVisible="True">
+           <Messages>
+            <Message TypeName="DoNotDeclareVisibleInstanceFields" Category="Microsoft.Design" CheckId="CA1051" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Certainty="90" Level="Error">由于字段 'Vector3.Y' 在其声明类型的外部可见，因此，请将它的可访问性改为私有，并添加一个与该字段当前的可访问性相同的属性以提供对该属性的访问。</Issue>
+            </Message>
+            <Message Id="Y" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Name="MemberMoreMeaningfulName" Certainty="75" Level="CriticalWarning">考虑将成员名称 'Vector3.Y' 改为一个更能体现其意义的名称。</Issue>
+            </Message>
+           </Messages>
+          </Member>
+          <Member Name="#Z" Kind="Field" Static="False" Accessibility="Public" ExternallyVisible="True">
+           <Messages>
+            <Message TypeName="DoNotDeclareVisibleInstanceFields" Category="Microsoft.Design" CheckId="CA1051" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Certainty="90" Level="Error">由于字段 'Vector3.Z' 在其声明类型的外部可见，因此，请将它的可访问性改为私有，并添加一个与该字段当前的可访问性相同的属性以提供对该属性的访问。</Issue>
+            </Message>
+            <Message Id="Z" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Name="MemberMoreMeaningfulName" Certainty="75" Level="CriticalWarning">考虑将成员名称 'Vector3.Z' 改为一个更能体现其意义的名称。</Issue>
+            </Message>
+           </Messages>
+          </Member>
+         </Members>
+        </Type>
+        <Type Name="Vector4" Kind="Struct" Accessibility="Public" ExternallyVisible="True">
+         <Messages>
+          <Message TypeName="OverrideEqualsAndOperatorEqualsOnValueTypes" Category="Microsoft.Performance" CheckId="CA1815" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="NonBreaking">
+           <Issue Name="Equals" Certainty="75" Level="Warning">'Vector4' 应重写 Equals。</Issue>
+           <Issue Name="op_Equality" Certainty="75" Level="Warning">'Vector4' 应重写相等(==)和不等(!=)运算符。</Issue>
+          </Message>
+         </Messages>
+         <Members>
+          <Member Name="#.ctor(Hazel.Vector3,System.Single)" Kind="Method" Static="False" Accessibility="Public" ExternallyVisible="True">
+           <Messages>
+            <Message Id="w" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Name="MemberParameterMoreMeaningfulName" Certainty="75" Level="CriticalWarning">在方法 'Vector4.Vector4(Vector3, float)' 中，考虑将参数名称 'w' 改为一个更能体现其意义的名称。</Issue>
+            </Message>
+           </Messages>
+          </Member>
+          <Member Name="#.ctor(System.Single,System.Single,System.Single,System.Single)" Kind="Method" Static="False" Accessibility="Public" ExternallyVisible="True">
+           <Messages>
+            <Message Id="w" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Name="MemberParameterMoreMeaningfulName" Certainty="75" Level="CriticalWarning">在方法 'Vector4.Vector4(float, float, float, float)' 中，考虑将参数名称 'w' 改为一个更能体现其意义的名称。</Issue>
+            </Message>
+            <Message Id="x" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Name="MemberParameterMoreMeaningfulName" Certainty="75" Level="CriticalWarning">在方法 'Vector4.Vector4(float, float, float, float)' 中，考虑将参数名称 'x' 改为一个更能体现其意义的名称。</Issue>
+            </Message>
+            <Message Id="y" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Name="MemberParameterMoreMeaningfulName" Certainty="75" Level="CriticalWarning">在方法 'Vector4.Vector4(float, float, float, float)' 中，考虑将参数名称 'y' 改为一个更能体现其意义的名称。</Issue>
+            </Message>
+            <Message Id="z" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Name="MemberParameterMoreMeaningfulName" Certainty="75" Level="CriticalWarning">在方法 'Vector4.Vector4(float, float, float, float)' 中，考虑将参数名称 'z' 改为一个更能体现其意义的名称。</Issue>
+            </Message>
+           </Messages>
+          </Member>
+          <Member Name="#op_Addition(Hazel.Vector4,Hazel.Vector4)" Kind="Method" Static="True" Accessibility="Public" ExternallyVisible="True">
+           <Messages>
+            <Message Id="a" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Name="MemberParameterMoreMeaningfulName" Certainty="75" Level="CriticalWarning">在方法 'Vector4.operator +(Vector4, Vector4)' 中，考虑将参数名称 'a' 改为一个更能体现其意义的名称。</Issue>
+            </Message>
+            <Message Id="b" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Name="MemberParameterMoreMeaningfulName" Certainty="75" Level="CriticalWarning">在方法 'Vector4.operator +(Vector4, Vector4)' 中，考虑将参数名称 'b' 改为一个更能体现其意义的名称。</Issue>
+            </Message>
+            <Message TypeName="OperatorOverloadsHaveNamedAlternates" Category="Microsoft.Usage" CheckId="CA2225" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="NonBreaking">
+             <Issue Certainty="50" Level="Error">提供名为“Add”的方法作为运算符 'Vector4.operator +(Vector4, Vector4)' 的友好备用项。</Issue>
+            </Message>
+            <Message TypeName="OverloadOperatorEqualsOnOverloadingAddAndSubtract" Category="Microsoft.Design" CheckId="CA1013" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="NonBreaking">
+             <Issue Certainty="75" Level="Error">考虑为与 'Vector4.operator +(Vector4, Vector4)' 采用相同参数的 'Vector4' 添加一个相等运算符重载。</Issue>
+            </Message>
+           </Messages>
+          </Member>
+          <Member Name="#op_Multiply(Hazel.Vector4,System.Single)" Kind="Method" Static="True" Accessibility="Public" ExternallyVisible="True">
+           <Messages>
+            <Message TypeName="OperatorOverloadsHaveNamedAlternates" Category="Microsoft.Usage" CheckId="CA2225" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="NonBreaking">
+             <Issue Certainty="50" Level="Error">提供名为“Multiply”的方法作为运算符 'Vector4.operator *(Vector4, float)' 的友好备用项。</Issue>
+            </Message>
+           </Messages>
+          </Member>
+          <Member Name="#W" Kind="Field" Static="False" Accessibility="Public" ExternallyVisible="True">
+           <Messages>
+            <Message TypeName="DoNotDeclareVisibleInstanceFields" Category="Microsoft.Design" CheckId="CA1051" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Certainty="90" Level="Error">由于字段 'Vector4.W' 在其声明类型的外部可见，因此，请将它的可访问性改为私有，并添加一个与该字段当前的可访问性相同的属性以提供对该属性的访问。</Issue>
+            </Message>
+            <Message Id="W" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Name="MemberMoreMeaningfulName" Certainty="75" Level="CriticalWarning">考虑将成员名称 'Vector4.W' 改为一个更能体现其意义的名称。</Issue>
+            </Message>
+           </Messages>
+          </Member>
+          <Member Name="#X" Kind="Field" Static="False" Accessibility="Public" ExternallyVisible="True">
+           <Messages>
+            <Message TypeName="DoNotDeclareVisibleInstanceFields" Category="Microsoft.Design" CheckId="CA1051" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Certainty="90" Level="Error">由于字段 'Vector4.X' 在其声明类型的外部可见，因此，请将它的可访问性改为私有，并添加一个与该字段当前的可访问性相同的属性以提供对该属性的访问。</Issue>
+            </Message>
+            <Message Id="X" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Name="MemberMoreMeaningfulName" Certainty="75" Level="CriticalWarning">考虑将成员名称 'Vector4.X' 改为一个更能体现其意义的名称。</Issue>
+            </Message>
+           </Messages>
+          </Member>
+          <Member Name="#XYZ" Kind="Property" Static="False" Accessibility="Public" ExternallyVisible="True">
+           <Messages>
+            <Message Id="XYZ" TypeName="IdentifiersShouldBeCasedCorrectly" Category="Microsoft.Naming" CheckId="CA1709" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Name="Member" Certainty="85" Level="Error">更正成员名称 'Vector4.XYZ' 中“XYZ”的大小写，将其改为“Xyz”。</Issue>
+            </Message>
+           </Messages>
+          </Member>
+          <Member Name="#Y" Kind="Field" Static="False" Accessibility="Public" ExternallyVisible="True">
+           <Messages>
+            <Message TypeName="DoNotDeclareVisibleInstanceFields" Category="Microsoft.Design" CheckId="CA1051" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Certainty="90" Level="Error">由于字段 'Vector4.Y' 在其声明类型的外部可见，因此，请将它的可访问性改为私有，并添加一个与该字段当前的可访问性相同的属性以提供对该属性的访问。</Issue>
+            </Message>
+            <Message Id="Y" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Name="MemberMoreMeaningfulName" Certainty="75" Level="CriticalWarning">考虑将成员名称 'Vector4.Y' 改为一个更能体现其意义的名称。</Issue>
+            </Message>
+           </Messages>
+          </Member>
+          <Member Name="#Z" Kind="Field" Static="False" Accessibility="Public" ExternallyVisible="True">
+           <Messages>
+            <Message TypeName="DoNotDeclareVisibleInstanceFields" Category="Microsoft.Design" CheckId="CA1051" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Certainty="90" Level="Error">由于字段 'Vector4.Z' 在其声明类型的外部可见，因此，请将它的可访问性改为私有，并添加一个与该字段当前的可访问性相同的属性以提供对该属性的访问。</Issue>
+            </Message>
+            <Message Id="Z" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Active" Created="2025-10-31 14:18:23Z" FixCategory="Breaking">
+             <Issue Name="MemberMoreMeaningfulName" Certainty="75" Level="CriticalWarning">考虑将成员名称 'Vector4.Z' 改为一个更能体现其意义的名称。</Issue>
+            </Message>
+           </Messages>
+          </Member>
+         </Members>
+        </Type>
+       </Types>
+      </Namespace>
+     </Namespaces>
+    </Module>
+   </Modules>
+  </Target>
+ </Targets>
+ <Rules>
+  <Rule TypeName="AssembliesShouldHaveValidStrongNames" Category="Microsoft.Design" CheckId="CA2210">
+   <Name>程序集应具有有效的强名称</Name>
+   <Description>程序集没有强名称，强名称无效，或者强名称只有经过计算机配置后才有效。不应部署处于这种状态的程序集。出现这种情况最常见原因有: 1) 对程序集进行签名后，修改了该程序集的内容；2) 签名过程失败；3) 延迟了程序集签名；4) 存在一个允许检查通过(原本不应通过)的注册表项。</Description>
+   <Resolution Name="NoStrongName">用强名称密钥对 {0} 进行签名。</Resolution>
+   <Owner />
+   <Url>http://msdn.microsoft.com/library/ms182127.aspx</Url>
+   <Email>[none]</Email>
+   <MessageLevel Certainty="95">CriticalError</MessageLevel>
+   <File Name="designrules.dll" Version="17.0.0.0" />
+  </Rule>
+  <Rule TypeName="DoNotDeclareVisibleInstanceFields" Category="Microsoft.Design" CheckId="CA1051">
+   <Name>不要声明可见实例字段</Name>
+   <Description>在其声明类型的外部可见的实例字段会限制您更改这些数据项的实现详细信息的能力。请改用属性。属性不会降低可用性或性能，并且能够提供灵活性，因为它们隐藏了基础数据的实现详细信息。</Description>
+   <Resolution Name="Default">由于字段 {0} 在其声明类型的外部可见，因此，请将它的可访问性改为私有，并添加一个与该字段当前的可访问性相同的属性以提供对该属性的访问。</Resolution>
+   <Owner />
+   <Url>http://msdn.microsoft.com/library/ms182141.aspx</Url>
+   <Email>[none]</Email>
+   <MessageLevel Certainty="90">Error</MessageLevel>
+   <File Name="designrules.dll" Version="17.0.0.0" />
+  </Rule>
+  <Rule TypeName="EnumsShouldHaveZeroValue" Category="Microsoft.Design" CheckId="CA1008">
+   <Name>枚举应具有零值</Name>
+   <Description>通常，枚举应具有零值。如果使用 Flags 特性修饰枚举，则该枚举应该具有一个值为零、表示空状态的成员。可选择“None”作为该成员的名称。对于带 Flags 特性的枚举来说，值为零的成员是可选的，但如果存在则始终应名为“None”。该值应指示尚未在相应枚举中设置任何值。如果将值为零的成员用于其他目的，则与 Flags 特性的用法相反，因为对于该成员来说，AND 和 OR 运算符无效。</Description>
+   <Resolution Name="NotFlagsNoZeroValue">将一个值为零且建议名称为“None”的成员添加到 {0} 中。</Resolution>
+   <Owner />
+   <Url>http://msdn.microsoft.com/library/ms182149.aspx</Url>
+   <Email>[none]</Email>
+   <MessageLevel Certainty="95">CriticalError</MessageLevel>
+   <File Name="designrules.dll" Version="17.0.0.0" />
+  </Rule>
+  <Rule TypeName="GenericMethodsShouldProvideTypeParameter" Category="Microsoft.Design" CheckId="CA1004">
+   <Name>泛型方法应提供类型参数</Name>
+   <Description>以下方法令人难以理解，在这些方法中，类型参数无法从参数中推理出来，因此必须在方法调用中定义。如果方法带有类型化为泛型方法类型参数的形参，则这些方法支持推理；如果方法没有类型化为泛型方法类型参数的形参，则这些方法不支持推理。</Description>
+   <Resolution Name="Default">考虑使用 {0} 在任何对它的调用中都不需要显式类型参数 {1} 的设计。</Resolution>
+   <Owner />
+   <Url>http://msdn.microsoft.com/library/ms182150.aspx</Url>
+   <Email>[none]</Email>
+   <MessageLevel Certainty="75">Warning</MessageLevel>
+   <File Name="designrules.dll" Version="17.0.0.0" />
+  </Rule>
+  <Rule TypeName="IdentifiersShouldBeCasedCorrectly" Category="Microsoft.Naming" CheckId="CA1709">
+   <Name>标识符的大小写应当正确</Name>
+   <Description>类型、命名空间和成员标识符应采用 Pascal 大小写格式。参数标识符应采用 Camel 大小写格式。这些标识符内由两个字母组成的首字母缩略词应全部大写，例如，应采用 System.IO，而不是 System.Io。由三个或更多个字母组成的首字母缩略词应采用 Pascal 大小写格式，例如，应采用 System.Xml，而不是 System.XML。Pascal 大小写格式约定每个单词的首字母大写，如 BackColor。Camel 大小写格式约定第一个单词的首字母小写，所有后续单词的首字母都大写，如 backgroundColor。尽管有些由两个字母组成的首字母缩略词习惯采用不完全大写形式，但不能因此而排斥此规则。例如，“DbConnection”很常见，但并不正确，应采用 DBConnection。为了与现有的非托管符号方案兼容，可能需要违反此规则。但一般来说，这些符号在使用它们的程序集之外不可见。</Description>
+   <Resolution Name="Member">更正成员名称 {1} 中“{0}”的大小写，将其改为“{2}”。</Resolution>
+   <Owner />
+   <Url>http://msdn.microsoft.com/library/ms182240.aspx</Url>
+   <Email>[none]</Email>
+   <MessageLevel Certainty="85">Error</MessageLevel>
+   <File Name="namingrules.dll" Version="17.0.0.0" />
+  </Rule>
+  <Rule TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704">
+   <Name>标识符应正确拼写</Name>
+   <Description>组成标识符的各单词不应缩写，并且应正确拼写。如果此规则对应识别的词条产生了误报，请将该词添加到 FxCop 自定义字典中。</Description>
+   <Resolution Name="MemberMoreMeaningfulName">考虑将成员名称 {0} 改为一个更能体现其意义的名称。</Resolution>
+   <Resolution Name="MemberParameterMoreMeaningfulName">在方法 {0} 中，考虑将参数名称 {1} 改为一个更能体现其意义的名称。</Resolution>
+   <Owner />
+   <Url>http://msdn.microsoft.com/library/bb264492.aspx</Url>
+   <Email>[none]</Email>
+   <MessageLevel Certainty="75">CriticalWarning</MessageLevel>
+   <File Name="namingrules.dll" Version="17.0.0.0" />
+  </Rule>
+  <Rule TypeName="MarkAssembliesWithAssemblyVersion" Category="Microsoft.Design" CheckId="CA1016">
+   <Name>用 AssemblyVersionAttribute 标记程序集</Name>
+   <Description>程序集应使用版本号。版本号被视为程序集标识的一部分。通过 AssemblyVersion 特性来应用版本控制。</Description>
+   <Resolution Name="Default">向 {0} 中添加 AssemblyVersion 特性。</Resolution>
+   <Owner />
+   <Url>http://msdn.microsoft.com/library/ms182155.aspx</Url>
+   <Email>[none]</Email>
+   <MessageLevel Certainty="95">Error</MessageLevel>
+   <File Name="designrules.dll" Version="17.0.0.0" />
+  </Rule>
+  <Rule TypeName="MarkAssembliesWithClsCompliant" Category="Microsoft.Design" CheckId="CA1014">
+   <Name>用 CLSCompliantAttribute 标记程序集</Name>
+   <Description>程序集应使用 CLSCompliant 特性显式说明其 ClS 遵从性。没有此特性的程序集不符合 CLS。即使程序集、模块或类型的某些部分不符合 CLS，这些程序集、模块或类型本身也可以是符合 CLS 的。适用下列规则: 1) 如果元素标记为 CLSCompliant，则所有不符合 CLS 的成员都必须有参数设置为 false 的 CLSCompliant 特性。2) 对于每个不符合 CLS 的成员，都必须提供一个相应的符合 CLS 的备选成员。</Description>
+   <Resolution Name="Default">使用 CLSCompliant(true)来标记 {0}，因为它公开外部可见的类型。</Resolution>
+   <Owner />
+   <Url>http://msdn.microsoft.com/library/ms182156.aspx</Url>
+   <Email>[none]</Email>
+   <MessageLevel Certainty="95">Error</MessageLevel>
+   <File Name="designrules.dll" Version="17.0.0.0" />
+  </Rule>
+  <Rule TypeName="MarkAssembliesWithComVisible" Category="Microsoft.Design" CheckId="CA1017">
+   <Name>用 ComVisibleAttribute 标记程序集</Name>
+   <Description>System.Runtime.InteropServices.ComVisible 特性指示 COM 客户端能否使用库。良好的设计要求开发人员显式指示 COM 可见性。此特性的默认值为“true”。但最佳设计应是: 将程序集的 ComVisible 特性标记为 false，然后根据需要将类型、接口和单个成员的 ComVisible 特性标记为 true。</Description>
+   <Resolution Name="NoAttribute">因为 {0} 公开外部可见的类型，请在程序集级别使用 ComVisible(false)来标记它，然后使用 ComVisible(true)来标记该程序集内应当向 COM 客户端公开的所有类型。</Resolution>
+   <Owner />
+   <Url>http://msdn.microsoft.com/library/ms182157.aspx</Url>
+   <Email>[none]</Email>
+   <MessageLevel Certainty="95">CriticalError, Error</MessageLevel>
+   <File Name="designrules.dll" Version="17.0.0.0" />
+  </Rule>
+  <Rule TypeName="MarkMembersAsStatic" Category="Microsoft.Performance" CheckId="CA1822">
+   <Name>将成员标记为 static</Name>
+   <Description>不访问实例数据或调用实例方法的方法可标记为 Static (在 Visual Basic 中为 Shared)。这样，编译器会向这些成员发出非虚拟调用站点，以防止在运行时对每个调用进行旨在确保当前对象指针为非 null 的检查。这样可以使对性能比较敏感的代码获得显著的性能提升。在某些情况下，无法访问当前对象实例表明存在正确性问题。</Description>
+   <Resolution Name="Default">从未使用 {0} 的“this”参数(Visual Basic 中为“Me”)。根据需要，将成员标记为 static (Visual Basic 中为“Shared”)，或者在方法主体或至少一个属性访问器中使用“this”/“Me”。</Resolution>
+   <Owner />
+   <Url>http://msdn.microsoft.com/library/ms245046.aspx</Url>
+   <Email>[none]</Email>
+   <MessageLevel Certainty="95">Warning</MessageLevel>
+   <File Name="performancerules.dll" Version="17.0.0.0" />
+  </Rule>
+  <Rule TypeName="OperatorOverloadsHaveNamedAlternates" Category="Microsoft.Usage" CheckId="CA2225">
+   <Name>运算符重载具有命名的备用项</Name>
+   <Description>重定义运算符时，请实现相应的命名方法，以便在不支持运算符重载的语言中也能访问该运算符的功能。例如，使用“Add”方法也应该可以访问“+”运算符的功能。</Description>
+   <Resolution Name="Default">提供名为“{0}”的方法作为运算符 {1} 的友好备用项。</Resolution>
+   <Owner />
+   <Url>http://msdn.microsoft.com/library/ms182355.aspx</Url>
+   <Email>[none]</Email>
+   <MessageLevel Certainty="50">Error</MessageLevel>
+   <File Name="usagerules.dll" Version="17.0.0.0" />
+  </Rule>
+  <Rule TypeName="OverloadOperatorEqualsOnOverloadingAddAndSubtract" Category="Microsoft.Design" CheckId="CA1013">
+   <Name>重载加法方法和减法方法时重载相等运算符</Name>
+   <Description>重载加运算符和减运算符时，请确保以一致的方式定义相等运算符(==)。</Description>
+   <Resolution Name="Default">考虑为与 {1} 采用相同参数的 {0} 添加一个相等运算符重载。</Resolution>
+   <Owner />
+   <Url>http://msdn.microsoft.com/library/ms182164.aspx</Url>
+   <Email>[none]</Email>
+   <MessageLevel Certainty="75">Error</MessageLevel>
+   <File Name="designrules.dll" Version="17.0.0.0" />
+  </Rule>
+  <Rule TypeName="OverrideEqualsAndOperatorEqualsOnValueTypes" Category="Microsoft.Performance" CheckId="CA1815">
+   <Name>重写值类型上的 Equals 和相等运算符</Name>
+   <Description>与自定义实现相比，默认 System.ValueType 实现的性能可能要差一些。</Description>
+   <Resolution Name="Equals">{0} 应重写 Equals。</Resolution>
+   <Resolution Name="op_Equality">{0} 应重写相等(==)和不等(!=)运算符。</Resolution>
+   <Owner />
+   <Url>http://msdn.microsoft.com/library/ms182276.aspx</Url>
+   <Email>[none]</Email>
+   <MessageLevel Certainty="75">Warning</MessageLevel>
+   <File Name="performancerules.dll" Version="17.0.0.0" />
+  </Rule>
+  <Rule TypeName="PropertyNamesShouldNotMatchGetMethods" Category="Microsoft.Naming" CheckId="CA1721">
+   <Name>属性名不应与 get 方法冲突。</Name>
+   <Description>发现与某一属性同名的 Get 方法。Get 方法和属性的名称应能够明确区分其功能上的差异。有关如何选择属性名以区分于方法名的信息，请参阅设计指南。</Description>
+   <Resolution Name="BaseType">由于存在继承方法 {1}，属性名 {0} 会造成混淆。请重命名或移除该属性。</Resolution>
+   <Owner />
+   <Url>http://msdn.microsoft.com/library/ms182253.aspx</Url>
+   <Email>[none]</Email>
+   <MessageLevel Certainty="95">Error</MessageLevel>
+   <File Name="namingrules.dll" Version="17.0.0.0" />
+  </Rule>
+  <Rule TypeName="StaticHolderTypesShouldNotHaveConstructors" Category="Microsoft.Design" CheckId="CA1053">
+   <Name>静态容器类型不应具有构造函数</Name>
+   <Description>不需要创建只定义静态成员的类型的实例。如果没有指定构造函数，许多编译器都会自动添加公共的默认构造函数。为了避免出现这种情况，可能需要添加一个空的私有构造函数。</Description>
+   <Resolution Name="Default">由于类型 {0} 仅包含“static”(在 Visual Basic 中为“Shared”)成员，因此添加默认私有构造函数可阻止编译器添加默认公共构造函数。</Resolution>
+   <Owner />
+   <Url>http://msdn.microsoft.com/library/ms182169.aspx</Url>
+   <Email>[none]</Email>
+   <MessageLevel Certainty="90">Error</MessageLevel>
+   <File Name="designrules.dll" Version="17.0.0.0" />
+  </Rule>
+ </Rules>
+ <Localized>
+  <String Key="Category">类别</String>
+  <String Key="Certainty">确定性</String>
+  <String Key="CollapseAll">全部折叠</String>
+  <String Key="CheckId">检查 ID</String>
+  <String Key="Error">错误</String>
+  <String Key="Errors">错误</String>
+  <String Key="ExpandAll">全部展开</String>
+  <String Key="Help">帮助</String>
+  <String Key="Line">行</String>
+  <String Key="Messages">消息</String>
+  <String Key="LocationNotStoredInPdb">[位置未存储在 Pdb 中]</String>
+  <String Key="Project">项目</String>
+  <String Key="Resolution">解析</String>
+  <String Key="Rule">规则</String>
+  <String Key="RuleFile">规则文件</String>
+  <String Key="RuleDescription">规则说明</String>
+  <String Key="Source">源</String>
+  <String Key="Status">状态</String>
+  <String Key="Target">目标</String>
+  <String Key="Warning">警告</String>
+  <String Key="Warnings">警告</String>
+  <String Key="ReportTitle">Code Analysis 报告</String>
+ </Localized>
+</FxCopReport>

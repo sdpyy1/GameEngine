@@ -1,7 +1,6 @@
 #pragma once
 
 namespace Hazel {
-
 	class UUID
 	{
 	public:
@@ -30,7 +29,6 @@ namespace Hazel {
 }
 
 namespace std {
-
 	template <>
 	struct hash<Hazel::UUID>
 	{

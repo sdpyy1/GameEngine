@@ -6,7 +6,6 @@
 #include <assimp/LogStream.hpp>
 
 namespace Hazel {
-
 	struct AssimpLogStream : public Assimp::LogStream
 	{
 		static void Initialize()
@@ -43,5 +42,4 @@ namespace Hazel {
 			}
 		}
 	};
-
 }

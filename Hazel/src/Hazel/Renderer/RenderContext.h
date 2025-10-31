@@ -1,8 +1,7 @@
 #pragma once
 
 namespace Hazel {
-
-	class RenderContext: public RefCounted
+	class RenderContext : public RefCounted
 	{
 	public:
 		virtual ~RenderContext() = default;
@@ -11,5 +10,4 @@ namespace Hazel {
 
 		static Ref<RenderContext> Create(void* window);
 	};
-
 }

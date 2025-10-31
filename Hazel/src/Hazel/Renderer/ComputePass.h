@@ -8,6 +8,12 @@ namespace Hazel
 		Ref<PipelineCompute> Pipeline;
 		std::string DebugName;
 		glm::vec4 MarkerColor;
+		uint32_t moreDescriptors = 0;
+	};
+	enum class InputType
+	{
+		sampler,
+		stoage
 	};
 	class ComputePass : public RefCounted
 	{
@@ -20,12 +26,12 @@ namespace Hazel
 		virtual Ref<Image2D> GetDepthOutput() = 0;
 		virtual Ref<PipelineCompute> GetPipeline() const = 0;
 		virtual void SetInput(Ref<Image2D> image, uint32_t Binding) = 0;
-		virtual void SetInput(Ref<ImageView> imageView, uint32_t Binding,int index) = 0;
+		virtual void SetInputOneLayer(Ref<ImageView> imageView, uint32_t Binding, int index) = 0;
 		virtual void SetInput(Ref<Texture2D> texture, uint32_t Binding) = 0;
-		virtual void SetInput(Ref<TextureCube> texture, uint32_t Binding) = 0;
-
+		virtual void SetInput(Ref<Image2D> texture, uint32_t Binding, uint32_t frameIndex) = 0;
+		virtual void SetInput(Ref<TextureCube> texture, uint32_t Binding, InputType type) = 0;
+		virtual void SetInput(Ref<TextureCube> texture, uint32_t Binding, InputType type, uint32_t frameIndex) = 0;  // Temp 解决Input到不同资源描述符，只能用于系统Init时的Pass
+		virtual void SetInput(Ref<TextureCube> texture, uint32_t Binding, InputType type, uint32_t levelIndex, uint32_t descriptorIndex) = 0;  // Temp 解决Input到不同资源描述符，只能用于系统Init时的Pass
 		static Ref<ComputePass> Create(const ComputePassSpecification& spec);
-
 	};
 }
-

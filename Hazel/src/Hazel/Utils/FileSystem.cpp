@@ -12,7 +12,6 @@
 #include <shellapi.h>
 
 namespace Hazel {
-
 	std::filesystem::path FileSystem::GetWorkingDirectory()
 	{
 		return std::filesystem::current_path();
@@ -141,7 +140,7 @@ namespace Hazel {
 		return true;
 #elif defined(HZ_PLATFORM_LINUX)
 		return ShowFileInExplorer(path);
-#endif		
+#endif
 	}
 
 	bool FileSystem::OpenExternally(const std::filesystem::path& path)
@@ -254,5 +253,4 @@ namespace Hazel {
 		}
 		}
 	}
-
 }

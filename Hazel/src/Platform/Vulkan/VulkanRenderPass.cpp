@@ -13,7 +13,6 @@
 #include "VulkanTexture.h"
 
 namespace Hazel {
-
 	VulkanRenderPass::VulkanRenderPass(const RenderPassSpecification& spec)
 		: m_Specification(spec)
 	{
@@ -23,7 +22,6 @@ namespace Hazel {
 	VulkanRenderPass::~VulkanRenderPass()
 	{
 	}
-
 
 	void VulkanRenderPass::SetInput(Ref<UniformBufferSet> UboSet, uint32_t Binding)
 	{
@@ -129,12 +127,11 @@ namespace Hazel {
 
 				// 更新描述符集（与 UniformBuffer 调用方式一致）
 				vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
-
 			}
-		});
+			});
 	}
 
-	void VulkanRenderPass::SetInput(Ref<Image2D> image, uint32_t Binding,bool isInit)
+	void VulkanRenderPass::SetInput(Ref<Image2D> image, uint32_t Binding, bool isInit)
 	{
 		Renderer::Submit([=]() {
 			//HZ_CORE_TRACE("RT: VulkanRenderPass [{0}]::SetInput Image2D Binding {1}", m_Specification.DebugName, Binding);
@@ -160,7 +157,8 @@ namespace Hazel {
 
 					vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
 				}
-			}else {
+			}
+			else {
 				VkImage curImage = m_BindImages[Renderer::RT_GetCurrentFrameIndex()][Binding];
 				// 图片被销毁或者更换了，需要更新绑定
 				if (!curImage || curImage != image.As<VulkanImage2D>()->GetVulkanImage()) {
@@ -183,6 +181,6 @@ namespace Hazel {
 					vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
 				}
 			}
-		});
+			});
 	}
 }

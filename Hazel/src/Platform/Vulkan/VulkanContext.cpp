@@ -20,18 +20,18 @@ namespace Hazel {
 	{
 		CheckVersion();
 		HZ_CORE_INFO("Vulkan初始化开始！");
-		createInstance(); 
+		createInstance();
 		CreateDevice();
 		createPipelineCache();
 		// VAM初始化
-		VulkanAllocator::Init(m_Device,m_Instance);
+		VulkanAllocator::Init(m_Device, m_Instance);
 		// 加载Debug Utils扩展函数
 		VKUtils::VulkanLoadDebugUtilsExtensions(m_Instance, m_Device->GetVulkanDevice());
 	}
 	void VulkanContext::CreateDevice()
 	{
 		m_PhysicalDevice = VulkanPhysicalDevice::Select(m_Instance);
-		HZ_CORE_INFO("Select PhysicalDevice: {0}",m_PhysicalDevice->getDeviceName());
+		HZ_CORE_INFO("Select PhysicalDevice: {0}", m_PhysicalDevice->getDeviceName());
 		VkPhysicalDeviceFeatures enabledFeatures;
 		memset(&enabledFeatures, 0, sizeof(VkPhysicalDeviceFeatures));
 		enabledFeatures.samplerAnisotropy = true;
@@ -119,9 +119,7 @@ namespace Hazel {
 		// Instance and Surface Creation
 		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		vkCreateInstance(&instanceCreateInfo, nullptr, &m_Instance);
-
 	}
-
 
 	void VulkanContext::createPipelineCache()
 	{
@@ -144,5 +142,4 @@ namespace Hazel {
 			HZ_CORE_ERROR(false);
 		}
 	}
-
 }

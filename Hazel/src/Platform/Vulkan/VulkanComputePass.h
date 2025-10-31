@@ -14,10 +14,15 @@ namespace Hazel
 		Ref<Image2D> GetDepthOutput() override;
 		Ref<PipelineCompute> GetPipeline() const override;
 		virtual void SetInput(Ref<Image2D> texture, uint32_t Binding) override;
-		virtual void SetInput(Ref<ImageView> imageView,uint32_t Binding, int index) override;
+		virtual void SetInputOneLayer(Ref<ImageView> imageView, uint32_t Binding, int index) override;
 		virtual void SetInput(Ref<Texture2D> texture, uint32_t Binding) override;
-		virtual void SetInput(Ref<TextureCube> texture, uint32_t Binding) override;
+		virtual void SetInput(Ref<TextureCube> texture, uint32_t Binding, InputType type) override;
+		virtual void SetInput(Ref<TextureCube> texture, uint32_t Binding, InputType type, uint32_t descriptorIndex) override;
+		virtual void SetInput(Ref<TextureCube> texture, uint32_t Binding, InputType type, uint32_t levelIndex, uint32_t descriptorIndex) override;
+		virtual void SetInput(Ref<Image2D> texture, uint32_t Binding, uint32_t descriptorSetIndex) override;
+		VkDescriptorSet GetMoreDescriptorSet(uint32_t index) { return moreDescriptorSets[index][0]; };
 	private:
 		ComputePassSpecification m_Specification;
+		std::vector<std::vector<VkDescriptorSet>> moreDescriptorSets;
 	};
 }

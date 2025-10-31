@@ -2,7 +2,6 @@
 #include"Hazel/Renderer/Shader.h"
 #include <vulkan/vulkan.h>
 namespace Hazel {
-
 	class VulkanShader : public Shader
 	{
 	public:
@@ -20,9 +19,9 @@ namespace Hazel {
 		VkShaderModule GetVertShaderModule() { return m_VertShaderModule; }
 		VkShaderModule GetFragShaderModule() { return m_FragShaderModule; }
 		VkShaderModule GetComputeShaderModule() { return m_ComputeShaderModule; }
-		const std::vector<VkDescriptorSetLayout>& GetDescriptorSetLayout() const {return m_DescriptorSetLayouts;}
+		const std::vector<VkDescriptorSetLayout>& GetDescriptorSetLayout() const { return m_DescriptorSetLayouts; }
 		std::vector<VkDescriptorSet> GetDescriptorSet() { return m_DescriptorSets; }
-		VkDescriptorPool GetDescriptorPool() {return m_DescriptorPool;}
+		VkDescriptorPool GetDescriptorPool() { return m_DescriptorPool; }
 		virtual ~VulkanShader();
 		void Release();
 		const std::vector<PushConstantRange>& GetPushConstantRanges() const { return m_PushConstantRanges; }

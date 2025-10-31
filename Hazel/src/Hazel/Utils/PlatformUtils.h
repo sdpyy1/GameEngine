@@ -3,7 +3,6 @@
 #include <string>
 
 namespace Hazel {
-
 	class FileDialogs
 	{
 	public:
@@ -17,5 +16,4 @@ namespace Hazel {
 	public:
 		static float GetTime();
 	};
-
 }

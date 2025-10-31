@@ -123,10 +123,10 @@ namespace Hazel {
 	class MeshSource : public Asset {
 	public:
 		MeshSource() = default;
-		Ref<VertexBuffer> GetVertexBuffer() {return m_VertexBuffer;}
-		Ref<IndexBuffer> GetIndexBuffer() {return m_IndexBuffer;}
+		Ref<VertexBuffer> GetVertexBuffer() { return m_VertexBuffer; }
+		Ref<IndexBuffer> GetIndexBuffer() { return m_IndexBuffer; }
 		std::vector<Submesh>& GetSubmeshes() { return m_Submeshes; }
-		AssetHandle GetMaterialHandle(uint32_t index) {return m_Materials[index];}
+		AssetHandle GetMaterialHandle(uint32_t index) { return m_Materials[index]; }
 		bool HasSkeleton() const { return (bool)m_Skeleton; }
 		const Skeleton* GetSkeleton() const { return m_Skeleton.get(); }
 		const Animation* GetAnimation(const std::string& animationName, const Skeleton& skeleton, const bool isMaskedRootMotion, const glm::vec3& rootTranslationMask, float rootRotationMask) const;
@@ -138,7 +138,7 @@ namespace Hazel {
 		std::vector<AssetHandle> m_Materials;
 		const MeshNode& GetRootNode() const { return m_Nodes[0]; }
 		const std::vector<MeshNode>& GetNodes() const { return m_Nodes; }
-		std::vector<BoneInfo>& GetBoneInfo()  { return m_BoneInfo; }
+		std::vector<BoneInfo>& GetBoneInfo() { return m_BoneInfo; }
 	private:
 		std::vector<Submesh> m_Submeshes;
 		std::vector<Vertex> m_Vertices;
@@ -152,11 +152,10 @@ namespace Hazel {
 		std::vector<BoneInfluence> m_BoneInfluences; // 每个顶点对应的骨骼影响数据
 		std::vector<BoneInfo> m_BoneInfo; // 骨骼信息
 
-
 		std::filesystem::path m_FilePath;
 
 		Ref<VertexBuffer> m_VertexBuffer;
-		Ref<VertexBuffer> m_BoneInfluenceBuffer;	
+		Ref<VertexBuffer> m_BoneInfluenceBuffer;
 		Ref<IndexBuffer> m_IndexBuffer;
 		AABB m_BoundingBox;
 		friend class AssimpMeshImporter;
@@ -164,5 +163,4 @@ namespace Hazel {
 		friend class Skeleton;
 		friend class SceneRender;
 	};
-
 }

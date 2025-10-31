@@ -2,7 +2,7 @@
 
 #include "Hazel/Core/Base.h"
 #include "Hazel/Renderer/Image.h"
-
+#include "Hazel/Renderer/RenderCommandBuffer.h"
 #include <string>
 
 namespace Hazel {
@@ -80,9 +80,9 @@ namespace Hazel {
 		static Ref<TextureCube> Create(const TextureSpecification& specification, Buffer imageData = Buffer());
 
 		virtual TextureType GetType() const override { return TextureType::TextureCube; }
-
+		virtual void GenerateMips(bool readonly = false) = 0;
+		virtual void GenerateMips(Ref<RenderCommandBuffer> renderCommandBuffer,bool readonly = false) = 0;
 		static AssetType GetStaticType() { return AssetType::EnvMap; }
 		virtual AssetType GetAssetType() const override { return GetStaticType(); }
 	};
-
 }

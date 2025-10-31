@@ -14,7 +14,6 @@
 #define HZ_GPU_TRACK_MEMORY_ALLOCATION 1
 
 namespace Hazel {
-
 	struct VulkanAllocatorData
 	{
 		VmaAllocator Allocator;
@@ -276,7 +275,7 @@ namespace Hazel {
 
 		vmaCreateAllocator(&allocatorInfo, &s_Data->Allocator);
 	}
-	void VulkanAllocator::Init(Ref<VulkanDevice> device,VkInstance instance)
+	void VulkanAllocator::Init(Ref<VulkanDevice> device, VkInstance instance)
 	{
 		s_Data = new VulkanAllocatorData();
 
@@ -301,5 +300,4 @@ namespace Hazel {
 	{
 		return s_Data->Allocator;
 	}
-
 }

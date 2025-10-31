@@ -33,5 +33,3 @@ namespace Hazel {
 		VkPipelineCache m_PipelineCache = nullptr;
 	};
 }
-
-

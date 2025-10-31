@@ -3,7 +3,6 @@
 #include "Hazel/Core/Ref.h"
 
 namespace Hazel {
-
 	struct StorageBufferSpecification
 	{
 		bool GPUOnly = true;
@@ -20,5 +19,4 @@ namespace Hazel {
 
 		static Ref<StorageBuffer> Create(uint32_t size, const StorageBufferSpecification& specification);
 	};
-
 }

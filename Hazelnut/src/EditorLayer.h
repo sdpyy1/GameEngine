@@ -48,7 +48,5 @@ namespace Hazel {
 		bool isMouseInViewport = false;
 		bool firstRenderGUI = true;
 		std::string m_SceneFilePath;
-
 	};
-
 }

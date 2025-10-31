@@ -17,7 +17,7 @@ namespace Hazel {
 		static Ref<T> GetAsset(AssetHandle assetHandle)
 		{
 			Ref<Asset> asset = m_MemoryAssets[assetHandle];
-			if (asset==nullptr || !asset->IsValid()) return nullptr;
+			if (asset == nullptr || !asset->IsValid()) return nullptr;
 			return asset.As<T>();
 		}
 		// 加载Mesh并缓存
@@ -33,15 +33,14 @@ namespace Hazel {
 			m_MemoryAssets[meshAsset->Handle] = meshAsset;
 			return meshAsset;
 		}
-		static void RegisterDependency(AssetHandle handle, AssetHandle dependency) { 
+		static void RegisterDependency(AssetHandle handle, AssetHandle dependency) {
 			// TODO:这里缺少handle校验
 			m_AssetDependencies[handle].insert(dependency);
 		}
 
-	private:		
+	private:
 		static std::unordered_map<AssetHandle, Ref<Asset>> m_MemoryAssets;
 		static std::unordered_map<AssetHandle, std::unordered_set<AssetHandle>> m_AssetDependencies;
 		static std::map<std::filesystem::path, Ref<Asset>> MesheSourceCacheMap;
-
 	};
 }

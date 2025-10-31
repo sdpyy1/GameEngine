@@ -13,13 +13,12 @@
 #include "Hazel/Scene/Entity.h"
 
 namespace Hazel {
-
 	FolderPreviewPanel::FolderPreviewPanel(const std::filesystem::path& assetsDir)
 		: m_AssetsDir(assetsDir), m_CurrentDir(assetsDir)
 	{
 		TextureSpecification spec;
 		spec.DebugName = "FolderIcons";
-
+		spec.GenerateMips = false;
 		std::filesystem::path dirIcon = "Resources/Icons/DirectoryIcon.png";
 		std::filesystem::path fileIcon = "Resources/Icons/FileIcon.png";
 
@@ -80,57 +79,57 @@ namespace Hazel {
 
 		ImGui::Columns(columnCount, nullptr, false);
 
-	for (auto& entry : std::filesystem::directory_iterator(m_CurrentDir))
-	{
-		const auto& path = entry.path();
-		std::string name = path.filename().string();
-
-		ImGui::PushID(name.c_str());
-		ImGui::BeginGroup();
-
-		Ref<Texture2D> icon = entry.is_directory() ? m_DirectoryIcon : m_FileIcon;
-
-		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0,0,0,0));
-		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3f,0.3f,0.3f,0.35f));
-		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.2f,0.5f,0.7f,0.45f));
-
-		// 1. 为按钮生成唯一 ID（确保每个按钮的 ID 唯一，避免冲突）
-		ImGuiID imageBtnId = ImGui::GetID(("custom_image_btn_" + std::to_string(123123)).c_str());
-
-		// 2. 使用 ImageButtonEx 绘制按钮，显式传入 ID 和其他参数
-		bool isClicked = ImGui::ImageButtonEx(imageBtnId, UI::GetImageId(icon->GetImage()), { 90.0f, 90.0f }, { 0, 1 }, { 1, 0 }, ImVec2(0, 0), ImVec4(0, 0, 0, 0), ImVec4(255, 255, 255, 255)
-		);
-		ImGui::PopStyleColor(3);
-
-		ImGui::SetItemAllowOverlap();
-
-		// 拖拽逻辑
-		if (ImGui::BeginDragDropSource())
+		for (auto& entry : std::filesystem::directory_iterator(m_CurrentDir))
 		{
-			std::string absPath = std::filesystem::absolute(path).string();
-			ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", absPath.c_str(), absPath.size() + 1);
-			ImGui::Text("Dragging: %s", absPath.c_str());
-			ImGui::EndDragDropSource();
+			const auto& path = entry.path();
+			std::string name = path.filename().string();
+
+			ImGui::PushID(name.c_str());
+			ImGui::BeginGroup();
+
+			Ref<Texture2D> icon = entry.is_directory() ? m_DirectoryIcon : m_FileIcon;
+
+			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3f, 0.3f, 0.3f, 0.35f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.2f, 0.5f, 0.7f, 0.45f));
+
+			// 1. 为按钮生成唯一 ID（确保每个按钮的 ID 唯一，避免冲突）
+			ImGuiID imageBtnId = ImGui::GetID(("custom_image_btn_" + std::to_string(123123)).c_str());
+
+			// 2. 使用 ImageButtonEx 绘制按钮，显式传入 ID 和其他参数
+			bool isClicked = ImGui::ImageButtonEx(imageBtnId, UI::GetImageId(icon->GetImage()), { 90.0f, 90.0f }, { 0, 1 }, { 1, 0 }, ImVec2(0, 0), ImVec4(0, 0, 0, 0), ImVec4(255, 255, 255, 255)
+			);
+			ImGui::PopStyleColor(3);
+
+			ImGui::SetItemAllowOverlap();
+
+			// 拖拽逻辑
+			if (ImGui::BeginDragDropSource())
+			{
+				std::string absPath = std::filesystem::absolute(path).string();
+				ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", absPath.c_str(), absPath.size() + 1);
+				ImGui::Text("Dragging: %s", absPath.c_str());
+				ImGui::EndDragDropSource();
+			}
+
+			// 双击打开逻辑
+			if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+			{
+				if (entry.is_directory())
+					m_CurrentDir /= path.filename();
+				else
+					OnFileOpen(path);
+			}
+
+			// 悬停提示
+			if (ImGui::IsItemHovered())
+				ImGui::SetTooltip("%s", path.string().c_str());
+
+			ImGui::TextWrapped(name.c_str());
+			ImGui::EndGroup();
+			ImGui::NextColumn();
+			ImGui::PopID();
 		}
-
-		// 双击打开逻辑
-		if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
-		{
-			if (entry.is_directory())
-				m_CurrentDir /= path.filename();
-			else
-				OnFileOpen(path);
-		}
-
-		// 悬停提示
-		if (ImGui::IsItemHovered())
-			ImGui::SetTooltip("%s", path.string().c_str());
-
-		ImGui::TextWrapped(name.c_str());
-		ImGui::EndGroup();
-		ImGui::NextColumn();
-		ImGui::PopID();
-	}
 		ImGui::Columns(1);
 
 		// ================== 图片预览窗口 ==================
@@ -200,5 +199,4 @@ namespace Hazel {
 
 		ImGui::PopStyleVar();
 	}
-
 } // namespace Hazel

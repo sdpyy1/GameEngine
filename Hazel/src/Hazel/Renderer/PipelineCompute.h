@@ -4,7 +4,6 @@
 #include "RenderCommandBuffer.h"
 #include "StorageBuffer.h"
 
-
 namespace Hazel
 {
 	class PipelineCompute : public RefCounted
@@ -19,7 +18,5 @@ namespace Hazel
 		virtual void ImageMemoryBarrier(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<Image2D> image, ResourceAccessFlags fromAccess, ResourceAccessFlags toAccess) = 0;
 		virtual void ImageMemoryBarrier(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<Image2D> image, PipelineStage fromStage, ResourceAccessFlags fromAccess, PipelineStage toStage, ResourceAccessFlags toAccess) = 0;
 		virtual Ref<Shader> GetShader() const = 0;
-
 	};
-
 }

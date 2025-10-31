@@ -17,39 +17,97 @@ namespace Hazel {
 	void SceneRender::InitEnvNeed()
 	{
 		const uint32_t cubemapSize = Renderer::GetConfig().EnvironmentMapResolution;
-		const uint32_t irradianceMapSize = 32;
+		const uint32_t irradianceMapSize = Renderer::GetConfig().IrradianceMapSize;
 		m_EnvEquirect = Texture2D::Create(TextureSpecification(), std::filesystem::path("assets/HDR/1.hdr"));
 		HZ_CORE_ASSERT(m_EnvEquirect->GetFormat() == ImageFormat::RGBA32F, "Texture is not HDR!");
 		TextureSpecification cubemapSpec;
-		cubemapSpec.Format = ImageFormat::RGBA16F;
+		cubemapSpec.Format = ImageFormat::RGBA32F;
 		cubemapSpec.Width = cubemapSize;
 		cubemapSpec.Height = cubemapSize;
 		cubemapSpec.Storage = true;
+		cubemapSpec.GenerateMips = false;
 		m_EnvCubeMap = TextureCube::Create(cubemapSpec);
-		
+		m_EnvPreFilterMap = TextureCube::Create(cubemapSpec);
+
+		TextureSpecification IrradianceMapSpec;
+		IrradianceMapSpec.Format = ImageFormat::RGBA32F;
+		IrradianceMapSpec.Width = irradianceMapSize;
+		IrradianceMapSpec.Height = irradianceMapSize;
+		IrradianceMapSpec.Storage = true;
+		IrradianceMapSpec.GenerateMips = false;
+		m_EnvIrradianceMap = TextureCube::Create(IrradianceMapSpec);
+
+		// HDR->Cubemap Pass
 		Ref<Shader> equirectangularConversionShader = Renderer::GetShaderLibrary()->Get("EquirectangularToCubeMap");
 		ComputePassSpecification equirectangularSpec;
 		equirectangularSpec.DebugName = "EquirectangularToCubeMap";
 		equirectangularSpec.Pipeline = PipelineCompute::Create(equirectangularConversionShader);
+		equirectangularSpec.moreDescriptors = 1;
 		m_EquirectangularPass = ComputePass::Create(equirectangularSpec);
 
+		// irradianceMap Pass
+		Ref<Shader> environmentIrradianceShader = Renderer::GetShaderLibrary()->Get("EnvironmentIrradiance");
+		ComputePassSpecification environmentIrradianceSpec;
+		environmentIrradianceSpec.DebugName = "EnvironmentIrradiance";
+		environmentIrradianceSpec.Pipeline = PipelineCompute::Create(environmentIrradianceShader);
+		m_EnvironmentIrradiancePass = ComputePass::Create(environmentIrradianceSpec);
 
+		// PreFilterCubeMap Pass
+		Ref<Shader> preFilterShader = Renderer::GetShaderLibrary()->Get("EnvironmentMipFilter");
+		ComputePassSpecification preFilterSpec;
+		preFilterSpec.DebugName = "EnvironmentMipFilter";
+		preFilterSpec.Pipeline = PipelineCompute::Create(preFilterShader);
+		preFilterSpec.moreDescriptors = m_EnvCubeMap->GetMipLevelCount();
+		m_EnvironmentPreFilterPass = ComputePass::Create(preFilterSpec);
+
+		m_EnvLut = Renderer::GetBRDFLutTexture();
 	}
 	void SceneRender::preComputeEnv()
 	{
 		InitEnvNeed();
 		m_CommandBuffer->Begin();
 		const uint32_t cubemapSize = Renderer::GetConfig().EnvironmentMapResolution;
+		const uint32_t irradianceMapSize = Renderer::GetConfig().IrradianceMapSize;
 
 		// HDR转CubemapPass
 		Renderer::BeginComputePass(m_CommandBuffer, m_EquirectangularPass);
 		m_EquirectangularPass->SetInput(m_EnvEquirect, 1);
-		m_EquirectangularPass->SetInput(m_EnvCubeMap, 0);
+		m_EquirectangularPass->SetInput(m_EnvCubeMap, 0, InputType::stoage);
 		Renderer::DispatchCompute(m_CommandBuffer, m_EquirectangularPass, nullptr, glm::ivec3(cubemapSize / 32, cubemapSize / 32, 6));
 		Renderer::EndComputePass(m_CommandBuffer, m_EquirectangularPass);
 
+		Renderer::Submit([this]() {		
+			m_EnvCubeMap->GenerateMips(m_CommandBuffer); // DispatchCompute无法自动生成mipmap，所以这里手动生成，在MipFilter计算中会使用
+		});
+		// PreFilterCubeMap第一层用HDR
+		Renderer::BeginComputePass(m_CommandBuffer, m_EquirectangularPass);
+		m_EquirectangularPass->SetInput(m_EnvEquirect, 1, 0);
+		m_EquirectangularPass->SetInput(m_EnvPreFilterMap, 0, InputType::stoage, 0);
+		Renderer::DispatchCompute(m_CommandBuffer, m_EquirectangularPass, nullptr, glm::ivec3(cubemapSize / 32, cubemapSize / 32, 6), 0);
+		Renderer::EndComputePass(m_CommandBuffer, m_EquirectangularPass);
 
-
+		// 环境Irradiance
+		Renderer::BeginComputePass(m_CommandBuffer, m_EnvironmentIrradiancePass);
+		m_EnvironmentIrradiancePass->SetInput(m_EnvCubeMap, 1, InputType::sampler);
+		m_EnvironmentIrradiancePass->SetInput(m_EnvIrradianceMap, 0, InputType::stoage);
+		Renderer::DispatchCompute(m_CommandBuffer, m_EnvironmentIrradiancePass, nullptr, glm::ivec3(irradianceMapSize / 32, irradianceMapSize / 32, 6), Buffer(&Renderer::GetConfig().IrradianceMapComputeSamples, sizeof(uint32_t)));
+		Renderer::EndComputePass(m_CommandBuffer, m_EnvironmentIrradiancePass);
+	
+		// 环境MipFilter
+		Renderer::BeginComputePass(m_CommandBuffer, m_EnvironmentPreFilterPass);
+		uint32_t mipCount = m_EnvCubeMap->GetMipLevelCount();
+		for (uint32_t i = 1; i < mipCount; i++){
+			m_EnvironmentPreFilterPass->SetInput(m_EnvPreFilterMap, 0, InputType::stoage,i,i);
+			m_EnvironmentPreFilterPass->SetInput(m_EnvCubeMap, 1, InputType::sampler, i);
+		}
+		const float deltaRoughness = 1.0f / glm::max((float)mipCount - 1.0f, 1.0f);
+		for (uint32_t i = 1, size = cubemapSize; i < mipCount; i++, size /= 2)
+		{
+			uint32_t numGroups = glm::max(1u, size / 32);
+			float roughness = i * deltaRoughness;
+			Renderer::DispatchCompute(m_CommandBuffer, m_EnvironmentPreFilterPass, nullptr, glm::ivec3(numGroups, numGroups, 6), i,{ &roughness, sizeof(float)});
+		}
+		Renderer::EndComputePass(m_CommandBuffer, m_EnvironmentPreFilterPass);
 
 
 		m_CommandBuffer->End();
@@ -78,7 +136,7 @@ namespace Hazel {
 		GridPass();
 	}
 	void SceneRender::PreRender(SceneInfo sceneData)
-	{	
+	{
 		m_SceneData = &sceneData;
 		// 注意如果Resize里有图片被当作了资源描述符资源，销毁的资源需要在UploadDescriptorRuntime()中重新绑定（会自动判断是否需要更新）
 		HandleResizeRuntime();
@@ -108,8 +166,8 @@ namespace Hazel {
 		Renderer::BeginRenderPass(m_CommandBuffer, m_GeoPass, false);
 		for (auto& [meshKey, drawCommand] : m_StaticMeshDrawList)
 		{
-			const auto& transformData = m_MeshTransformMap.at(meshKey); 
-			Renderer::RenderStaticMeshWithMaterial(m_CommandBuffer, m_GeoPipeline,drawCommand.MeshSource, drawCommand.SubmeshIndex, drawCommand.MaterialAsset->GetMaterial(), m_SubmeshTransformBuffers[frameIndex].Buffer, transformData.TransformOffset, drawCommand.InstanceCount);
+			const auto& transformData = m_MeshTransformMap.at(meshKey);
+			Renderer::RenderStaticMeshWithMaterial(m_CommandBuffer, m_GeoPipeline, drawCommand.MeshSource, drawCommand.SubmeshIndex, drawCommand.MaterialAsset->GetMaterial(), m_SubmeshTransformBuffers[frameIndex].Buffer, transformData.TransformOffset, drawCommand.InstanceCount);
 		}
 		Renderer::EndRenderPass(m_CommandBuffer);
 
@@ -124,7 +182,6 @@ namespace Hazel {
 			}
 			else {
 				Renderer::RenderSkeletonMeshWithMaterial(m_CommandBuffer, m_GeoAnimPipeline, drawCommand.MeshSource, drawCommand.SubmeshIndex, drawCommand.MaterialAsset->GetMaterial(), m_SubmeshTransformBuffers[frameIndex].Buffer, transformData.TransformOffset, 0, drawCommand.InstanceCount);
-
 			}
 		}
 		Renderer::EndRenderPass(m_CommandBuffer);
@@ -407,15 +464,14 @@ namespace Hazel {
 			}
 		}
 		Renderer::EndRenderPass(m_CommandBuffer);
-
 	}
 	void SceneRender::GridPass()
 	{
 		Renderer::BeginRenderPass(m_CommandBuffer, m_GridPass, false);
-		Renderer::DrawPrueVertex(m_CommandBuffer,6);
+		Renderer::DrawPrueVertex(m_CommandBuffer, 6);
 		Renderer::EndRenderPass(m_CommandBuffer);
 	}
-	
+
 	void SceneRender::UploadCameraData()
 	{
 		m_CameraData->view = m_SceneData->camera.GetViewMatrix();
@@ -429,7 +485,7 @@ namespace Hazel {
 	}
 	void SceneRender::SubmitStaticMesh(Ref<MeshSource> meshSource, const glm::mat4& transform) {
 		const auto& submeshData = meshSource->GetSubmeshes();
-		for(uint32_t submeshIndex = 0; submeshIndex <submeshData.size(); submeshIndex++){
+		for (uint32_t submeshIndex = 0; submeshIndex < submeshData.size(); submeshIndex++) {
 			glm::mat4 submeshTransform = transform * submeshData[submeshIndex].Transform;  // subMesh的全局变换
 			AssetHandle materialHandle = meshSource->GetMaterialHandle(submeshData[submeshIndex].MaterialIndex);
 			Ref<MaterialAsset> material = AssetManager::GetAsset<MaterialAsset>(materialHandle);// subMesh的材质索引;
@@ -498,7 +554,7 @@ namespace Hazel {
 		}
 	}
 	void SceneRender::SetViewprotSize(float width, float height) {
-		if(width != m_ViewportWidth || height != m_ViewportHeight)
+		if (width != m_ViewportWidth || height != m_ViewportHeight)
 		{
 			m_ViewportWidth = width;
 			m_ViewportHeight = height;
@@ -513,7 +569,7 @@ namespace Hazel {
 		m_UBSCameraData = UniformBufferSet::Create(sizeof(CameraData), "CameraData");
 		m_ShadowData = new UBShadow();
 		m_UBSShadow = UniformBufferSet::Create(sizeof(UBShadow), "Shadow");
-		m_UBSSpotShadowData = UniformBufferSet::Create(sizeof(UBSpotShadowData),"SportShadowData");
+		m_UBSSpotShadowData = UniformBufferSet::Create(sizeof(UBSpotShadowData), "SportShadowData");
 		// 用一个很大的顶点缓冲区来存储所有的变换矩阵
 		const size_t TransformBufferCount = 10 * 1024; // 10240 transforms
 		m_SubmeshTransformBuffers.resize(framesInFlight);
@@ -568,7 +624,8 @@ namespace Hazel {
 		m_DirectionalShadowMapPass.resize(NumShadowCascades);
 		m_DirectionalShadowMapAnimPass.resize(NumShadowCascades);
 		for (uint32_t i = 0; i < NumShadowCascades; i++)
-		{		shadowMapRenderPassSpec.DebugName = shadowMapFramebufferSpec.DebugName;
+		{
+			shadowMapRenderPassSpec.DebugName = shadowMapFramebufferSpec.DebugName;
 
 			shadowMapFramebufferSpec.ExistingImageLayers.clear();
 			shadowMapFramebufferSpec.ExistingImageLayers.emplace_back(i);
@@ -591,11 +648,10 @@ namespace Hazel {
 			shadowMapRenderPassSpec.Pipeline = m_ShadowPassPipelinesAnim[i];
 			m_DirectionalShadowMapAnimPass[i] = RenderPass::Create(shadowMapRenderPassSpec);
 			m_DirectionalShadowMapAnimPass[i]->SetInput(m_UBSShadow, 0);
-			m_DirectionalShadowMapAnimPass[i]->SetInput(m_SBSBoneTransforms, 1,true); // TODO:注意绑定点
+			m_DirectionalShadowMapAnimPass[i]->SetInput(m_SBSBoneTransforms, 1, true); // TODO:注意绑定点
 		}
 	}
 	void SceneRender::InitGeoPass() {
-
 		// GeoPass
 		{
 			FramebufferSpecification framebufferSpec;
@@ -788,8 +844,7 @@ namespace Hazel {
 		m_HierarchicalDepthPass->SetInput(m_PreDepthLoadFramebuffer->GetDepthImage(), 0);
 		uint32_t mipLevels = 0;
 		for (mipLevels = 0; mipLevels < m_HierarchicalDepthTexture.ImageViews.size(); mipLevels++) {
-
-			m_HierarchicalDepthPass->SetInput(m_HierarchicalDepthTexture.ImageViews[mipLevels], 1, mipLevels);
+			m_HierarchicalDepthPass->SetInputOneLayer(m_HierarchicalDepthTexture.ImageViews[mipLevels], 1, mipLevels);
 		}
 
 		const Buffer mip(&mipLevels, sizeof(uint32_t));
@@ -797,8 +852,4 @@ namespace Hazel {
 		Renderer::DispatchCompute(m_CommandBuffer, m_HierarchicalDepthPass, nullptr, glm::uvec3(groupCountX, groupCountY, 1), mip);
 		Renderer::EndComputePass(m_CommandBuffer, m_HierarchicalDepthPass);
 	}
-
-
-
-
 }

@@ -15,7 +15,7 @@ namespace Hazel {
 	public:
 		enum class Type
 		{
-			None = 0, OpenGL = 1, Vulkan=2
+			None = 0, OpenGL = 1, Vulkan = 2
 		};
 		enum class PrimitiveType
 		{
@@ -34,8 +34,8 @@ namespace Hazel {
 		virtual void BeginComputePass(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<ComputePass> computePass) = 0;
 		virtual void EndComputePass(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<ComputePass> computePass) = 0;
 		virtual void DispatchCompute(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<ComputePass> computePass, Ref<Material> material, const glm::uvec3& workGroups, Buffer constants = Buffer()) = 0;
+		virtual void DispatchCompute(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<ComputePass> computePass, Ref<Material> material, const glm::uvec3& workGroups, uint32_t descriptorIndex, Buffer constants = Buffer()) = 0;
 
-		
 		virtual void RenderStaticMeshWithMaterial(Ref<RenderCommandBuffer> commandBuffer, Ref<Pipeline> pipeline, Ref<MeshSource> meshSource, uint32_t submeshIndex, Ref<Material> material, Ref<VertexBuffer> transformBuffer, uint32_t transformOffset, uint32_t instanceCount, Buffer additionalUniforms = Buffer()) = 0;
 		virtual void RenderSkeletonMeshWithMaterial(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<Pipeline> pipeline, Ref<MeshSource> meshSource, uint32_t submeshIndex, Ref<Material> material, Ref<VertexBuffer> transformBuffer, uint32_t transformOffset, uint32_t boneTransformsOffset, uint32_t instanceCount, Buffer additionalUniforms = Buffer()) = 0;
 		static RendererAPI* CreateAPI();
@@ -45,5 +45,4 @@ namespace Hazel {
 	private:
 		static Type s_API;
 	};
-
 }
