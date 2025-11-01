@@ -21,39 +21,8 @@ namespace Hazel {
 		InitPreDepthPass();
 		InitHZBPass();
 		InitGeoPass();
-		InitLightPass();
+		//InitLightPass();
 		InitGridPass();
-	}
-	void SceneRender::InitLightPass()
-	{
-		FramebufferSpecification lightPassFramebufferSpec;
-		lightPassFramebufferSpec.Attachments = { ImageFormat::RGBA32F };
-		lightPassFramebufferSpec.DebugName = "LightPass";
-		m_LightPassFramebuffer = Framebuffer::Create(lightPassFramebufferSpec);
-		PipelineSpecification pSpec;
-		pSpec.Shader = Renderer::GetShaderLibrary()->Get("Lighting");
-		pSpec.TargetFramebuffer = m_LightPassFramebuffer;
-		pSpec.DebugName = "LightPassPipeline";
-		pSpec.DepthTest = false;
-		m_LightPassPipeline = Pipeline::Create(pSpec);
-		RenderPassSpecification lightPassSpec;
-		lightPassSpec.Pipeline = m_LightPassPipeline;
-		lightPassSpec.DebugName = "LightPass";
-		m_LightPass = RenderPass::Create(lightPassSpec);
-		m_LightPass->SetInput(m_EnvIrradianceMap, 4);
-		m_LightPass->SetInput(m_EnvPreFilterMap, 5);
-		m_LightPass->SetInput(m_EnvLut, 6);
-	}
-	void SceneRender::LightPass()
-	{
-		m_LightPass->SetInput(m_GeoFrameBuffer->GetImage(0),0);
-		m_LightPass->SetInput(m_GeoFrameBuffer->GetImage(1),1);
-		m_LightPass->SetInput(m_GeoFrameBuffer->GetImage(2),2);
-		m_LightPass->SetInput(m_GeoFrameBuffer->GetImage(3),3);
-
-		Renderer::BeginRenderPass(m_CommandBuffer, m_LightPass , false);
-		Renderer::DrawPrueVertex(m_CommandBuffer, 3);
-		Renderer::EndRenderPass(m_CommandBuffer);
 	}
 
 	void SceneRender::Draw() {
@@ -62,18 +31,27 @@ namespace Hazel {
 		PreDepthPass();
 		HZBComputePass();
 		GeoPass();
-		LightPass();
+		//LightPass();
 		GridPass();
 	}
 	void SceneRender::PreRender(SceneInfo sceneData)
 	{
-		m_SceneData = &sceneData;
+		m_SceneDataFromScene = &sceneData;
 		HandleResizeRuntime();
 		// 更新各种资源信息
 		UploadCameraData(); // 摄像机数据
 		UploadMeshAndBoneTransForm(); // 模型变换和骨骼变换矩阵
 		UploadCSMShadowData(); // 级联阴影数据
 		UploadSpotShadowData(); // 聚光阴影 TODO：待完成
+
+		// tmp：临时放在这里
+		m_RenderData->CascadeSplits = CascadeSplits;
+		m_RenderData->LightSize = 1.f;
+		m_UBSRenderData->Get()->SetData((void*)m_RenderData, sizeof(RenderData));
+
+		m_SceneData->DirectionalLight = m_SceneDataFromScene->SceneLightEnvironment.DirectionalLights[0];
+		m_SceneData->EnvironmentMapIntensity = 1.f;
+		m_UBSSceneData->Get()->SetData((void*)m_SceneData, sizeof(SceneData));
 	}
 	void SceneRender::EndRender()
 	{
@@ -96,7 +74,15 @@ namespace Hazel {
 		for (auto& [meshKey, drawCommand] : m_StaticMeshDrawList)
 		{
 			const auto& transformData = m_MeshTransformMap.at(meshKey);
-			Renderer::RenderStaticMeshWithMaterial(m_CommandBuffer, m_GeoPipeline, drawCommand.MeshSource, drawCommand.SubmeshIndex, drawCommand.MaterialAsset->GetMaterial(), m_SubmeshTransformBuffers[frameIndex].Buffer, transformData.TransformOffset, drawCommand.InstanceCount);
+			MaterialPush materialPush;
+			Ref<Material> CurMaterial = drawCommand.MaterialAsset->GetMaterial();
+			materialPush.AlbedoColor = CurMaterial->m_AlbedoColor;
+			materialPush.Emission = CurMaterial->m_EmissionColor.x; //tmp
+            materialPush.Metalness = CurMaterial->m_MetalnessColor;
+            materialPush.Roughness = CurMaterial->m_RoughnessColor;
+            materialPush.UseNormalMap = CurMaterial->bUseNormalTexture;
+			
+			Renderer::RenderStaticMeshWithMaterial(m_CommandBuffer, m_GeoPipeline, drawCommand.MeshSource, drawCommand.SubmeshIndex, drawCommand.MaterialAsset->GetMaterial(), m_SubmeshTransformBuffers[frameIndex].Buffer, transformData.TransformOffset, drawCommand.InstanceCount, Buffer(&materialPush, sizeof(MaterialPush)));
 		}
 		Renderer::EndRenderPass(m_CommandBuffer);
 
@@ -104,13 +90,20 @@ namespace Hazel {
 		Renderer::BeginRenderPass(m_CommandBuffer, m_GeoAnimPass, false);
 		for (auto& [meshKey, drawCommand] : m_DynamicDrawList)
 		{
+			MaterialPush materialPush;
+			Ref<Material> CurMaterial = drawCommand.MaterialAsset->GetMaterial();
+			materialPush.AlbedoColor = CurMaterial->m_AlbedoColor;
+			materialPush.Emission = CurMaterial->m_EmissionColor.x; //tmp
+			materialPush.Metalness = CurMaterial->m_MetalnessColor;
+			materialPush.Roughness = CurMaterial->m_RoughnessColor;
+			materialPush.UseNormalMap = CurMaterial->bUseNormalTexture;
 			const auto& transformData = m_MeshTransformMap.at(meshKey);
 			if (drawCommand.IsRigged) {
 				const auto& boneTransformsData = m_MeshBoneTransformsMap.at(meshKey);
-				Renderer::RenderSkeletonMeshWithMaterial(m_CommandBuffer, m_GeoAnimPipeline, drawCommand.MeshSource, drawCommand.SubmeshIndex, drawCommand.MaterialAsset->GetMaterial(), m_SubmeshTransformBuffers[frameIndex].Buffer, transformData.TransformOffset, boneTransformsData.BoneTransformsBaseIndex, drawCommand.InstanceCount);
+				Renderer::RenderSkeletonMeshWithMaterial(m_CommandBuffer, m_GeoAnimPipeline, drawCommand.MeshSource, drawCommand.SubmeshIndex, drawCommand.MaterialAsset->GetMaterial(), m_SubmeshTransformBuffers[frameIndex].Buffer, transformData.TransformOffset, boneTransformsData.BoneTransformsBaseIndex, drawCommand.InstanceCount, Buffer(&materialPush, sizeof(MaterialPush)));
 			}
 			else {
-				Renderer::RenderSkeletonMeshWithMaterial(m_CommandBuffer, m_GeoAnimPipeline, drawCommand.MeshSource, drawCommand.SubmeshIndex, drawCommand.MaterialAsset->GetMaterial(), m_SubmeshTransformBuffers[frameIndex].Buffer, transformData.TransformOffset, 0, drawCommand.InstanceCount);
+				Renderer::RenderSkeletonMeshWithMaterial(m_CommandBuffer, m_GeoAnimPipeline, drawCommand.MeshSource, drawCommand.SubmeshIndex, drawCommand.MaterialAsset->GetMaterial(), m_SubmeshTransformBuffers[frameIndex].Buffer, transformData.TransformOffset, 0, drawCommand.InstanceCount, Buffer(&materialPush, sizeof(MaterialPush)));
 			}
 		}
 		Renderer::EndRenderPass(m_CommandBuffer);
@@ -274,7 +267,7 @@ namespace Hazel {
 	}
 	void SceneRender::UploadSpotShadowData()
 	{
-		const std::vector<SpotLight>& spotLightsVec = m_SceneData->SceneLightEnvironment.SpotLights;
+		const std::vector<SpotLight>& spotLightsVec = m_SceneDataFromScene->SceneLightEnvironment.SpotLights;
 		// TODO:待完成
 	}
 	void SceneRender::SpotShadowPass()
@@ -282,9 +275,9 @@ namespace Hazel {
 		//throw std::logic_error("The method or operation is not implemented.");
 	}
 	void SceneRender::UploadCSMShadowData() {
-		if (m_SceneData->SceneLightEnvironment.DirectionalLights[0].Intensity == 0) return;
+		if (m_SceneDataFromScene->SceneLightEnvironment.DirectionalLights[0].Intensity == 0) return;
 		CascadeData cascades[4];
-		CalculateCascades(cascades, m_SceneData->camera, m_SceneData->SceneLightEnvironment.DirectionalLights[0].Direction);
+		CalculateCascades(cascades, m_SceneDataFromScene->camera, m_SceneDataFromScene->SceneLightEnvironment.DirectionalLights[0].Direction);
 		for (int i = 0; i < NumShadowCascades; i++)
 		{
 			CascadeSplits[i] = cascades[i].SplitDepth;
@@ -294,8 +287,8 @@ namespace Hazel {
 	}
 	void SceneRender::ShadowPass() {
 		uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
-		auto& directionalLights = m_SceneData->SceneLightEnvironment.DirectionalLights;
-		if (directionalLights[0].Intensity == 0.0f || !directionalLights[0].CastShadows)
+		auto& directionalLights = m_SceneDataFromScene->SceneLightEnvironment.DirectionalLights;
+		if (directionalLights[0].Intensity == 0.0f)
 		{
 			return;
 		}
@@ -400,13 +393,14 @@ namespace Hazel {
 	}
 	void SceneRender::UploadCameraData()
 	{
-		m_CameraData->view = m_SceneData->camera.GetViewMatrix();
-		m_CameraData->proj = m_SceneData->camera.GetProjectionMatrix();
+		m_CameraData->view = m_SceneDataFromScene->camera.GetViewMatrix();
+		m_CameraData->proj = m_SceneDataFromScene->camera.GetProjectionMatrix();
 		m_CameraData->proj[1][1] *= -1; // Y轴反转
-		m_CameraData->Near = m_SceneData->camera.GetNearClip();
-		m_CameraData->Far = m_SceneData->camera.GetFarClip();
-		m_CameraData->Width = m_SceneData->camera.GetViewportWidth();
-		m_CameraData->Height = m_SceneData->camera.GetViewportHeight();
+		m_CameraData->Near = m_SceneDataFromScene->camera.GetNearClip();
+		m_CameraData->Far = m_SceneDataFromScene->camera.GetFarClip();
+		m_CameraData->Width = m_SceneDataFromScene->camera.GetViewportWidth();
+		m_CameraData->Height = m_SceneDataFromScene->camera.GetViewportHeight();
+		m_CameraData->Position = m_SceneDataFromScene->camera.GetPosition();
 		m_UBSCameraData->Get()->SetData((void*)m_CameraData, sizeof(CameraData));
 	}
 	void SceneRender::SubmitStaticMesh(Ref<MeshSource> meshSource, const glm::mat4& transform) {
@@ -496,6 +490,10 @@ namespace Hazel {
 		m_ShadowData = new UBShadow();
 		m_UBSShadow = UniformBufferSet::Create(sizeof(UBShadow), "Shadow");
 		m_UBSSpotShadowData = UniformBufferSet::Create(sizeof(UBSpotShadowData), "SportShadowData");
+		m_RenderData = new RenderData();
+        m_UBSRenderData = UniformBufferSet::Create(sizeof(RenderData), "RenderData");
+		m_SceneData = new SceneData();
+        m_UBSSceneData = UniformBufferSet::Create(sizeof(SceneData), "SceneData");
 		// 用一个很大的顶点缓冲区来存储所有的变换矩阵
 		const size_t TransformBufferCount = 10 * 1024; // 10240 transforms
 		m_SubmeshTransformBuffers.resize(framesInFlight);
@@ -581,9 +579,9 @@ namespace Hazel {
 		{
 			FramebufferSpecification framebufferSpec;
 			// pos normal albedo mr depth
-			framebufferSpec.Attachments = { ImageFormat::RGBA32F,ImageFormat::RGBA32F,ImageFormat::RGBA32F,ImageFormat::RGBA32F,ImageFormat::Depth };
+			framebufferSpec.Attachments = { ImageFormat::RGBA32F,ImageFormat::RGBA32F,ImageFormat::Depth };
 			framebufferSpec.DebugName = "GBuffer";
-			framebufferSpec.ExistingImages[4] = m_PreDepthLoadFramebuffer->GetDepthImage();
+			framebufferSpec.ExistingImages[2] = m_PreDepthLoadFramebuffer->GetDepthImage();
 			framebufferSpec.ClearDepthOnLoad = false;
 			m_GeoFrameBuffer = Framebuffer::Create(framebufferSpec);
 			PipelineSpecification pSpec;
@@ -598,20 +596,26 @@ namespace Hazel {
 			gBufferPassSpec.Pipeline = m_GeoPipeline;
 			gBufferPassSpec.DebugName = "gBufferPass";
 			m_GeoPass = RenderPass::Create(gBufferPassSpec);
-			m_GeoPass->SetInput(m_UBSCameraData, 0);  // 设置binding=0的ubo
+			m_GeoPass->SetInput(m_UBSCameraData, 0);
+			m_GeoPass->SetInput(m_UBSShadow, 2);
+			m_GeoPass->SetInput(m_UBSRenderData, 3);
+			m_GeoPass->SetInput(m_UBSSceneData, 4);
+			m_GeoPass->SetInput(m_ShadowPassPipelines[0]->GetSpecification().TargetFramebuffer->GetDepthImage(), 5,true);
+			m_GeoPass->SetInput(m_EnvPreFilterMap, 6);
+			m_GeoPass->SetInput(m_EnvIrradianceMap, 7);
+			m_GeoPass->SetInput(m_EnvLut, 8);
+
 		}
 		// GeoAnimPass
 		{
 			FramebufferSpecification framebufferSpec;
-			framebufferSpec.Attachments = { ImageFormat::RGBA32F,ImageFormat::RGBA32F,ImageFormat::RGBA32F,ImageFormat::RGBA32F,ImageFormat::Depth };
+			framebufferSpec.Attachments = { ImageFormat::RGBA32F,ImageFormat::RGBA32F,ImageFormat::Depth };
 			framebufferSpec.DebugName = "GBufferAmin";
 			framebufferSpec.ClearDepthOnLoad = false;
 			framebufferSpec.ClearColorOnLoad = false;
 			framebufferSpec.ExistingImages[0] = m_GeoFrameBuffer->GetImage(0);
 			framebufferSpec.ExistingImages[1] = m_GeoFrameBuffer->GetImage(1);
-			framebufferSpec.ExistingImages[2] = m_GeoFrameBuffer->GetImage(2);
-			framebufferSpec.ExistingImages[3] = m_GeoFrameBuffer->GetImage(3);
-			framebufferSpec.ExistingImages[4] = m_GeoFrameBuffer->GetDepthImage();
+			framebufferSpec.ExistingImages[2] = m_GeoFrameBuffer->GetDepthImage();
 			m_GeoAnimFrameBuffer = Framebuffer::Create(framebufferSpec);
 			PipelineSpecification pSpec;
 			pSpec.Layout = vertexLayout;
@@ -628,6 +632,14 @@ namespace Hazel {
 			m_GeoAnimPass = RenderPass::Create(gBufferPassSpec);
 			m_GeoAnimPass->SetInput(m_UBSCameraData, 0);  // 设置binding=0的ubo
 			m_GeoAnimPass->SetInput(m_SBSBoneTransforms, 1, true);  // 设置binding=1的ubo
+			m_GeoAnimPass->SetInput(m_UBSCameraData, 0);
+			m_GeoAnimPass->SetInput(m_UBSShadow, 2);
+			m_GeoAnimPass->SetInput(m_UBSRenderData, 3);
+			m_GeoAnimPass->SetInput(m_UBSSceneData, 4);
+			m_GeoAnimPass->SetInput(m_ShadowPassPipelines[0]->GetSpecification().TargetFramebuffer->GetDepthImage(), 5, true);
+			m_GeoAnimPass->SetInput(m_EnvPreFilterMap, 6);
+			m_GeoAnimPass->SetInput(m_EnvIrradianceMap, 7);
+			m_GeoAnimPass->SetInput(m_EnvLut, 8);
 		}
 	}
 	void SceneRender::InitGridPass() {
@@ -635,7 +647,7 @@ namespace Hazel {
 		FramebufferSpecification gridPassFramebufferSpec;
 		gridPassFramebufferSpec.Attachments = { gridColorOutputSpec };
 		gridPassFramebufferSpec.DebugName = "Grid";
-		gridPassFramebufferSpec.ExistingImages[0] = m_LightPassFramebuffer->GetImage(0);  // 这张图片谁创建的就指向它，不然会报错
+		gridPassFramebufferSpec.ExistingImages[0] = m_GeoFrameBuffer->GetImage(0);  // 这张图片谁创建的就指向它，不然会报错
 		gridPassFramebufferSpec.Attachments.Attachments[0].LoadOp = AttachmentLoadOp::Load;
 		m_GridFrameBuffer = Framebuffer::Create(gridPassFramebufferSpec);
 		PipelineSpecification gridPipelineSpec;
@@ -691,16 +703,16 @@ namespace Hazel {
 		}
 	}
 	void SceneRender::HandleResizeRuntime() {
-		SetViewprotSize(m_SceneData->camera.GetViewportWidth(), m_SceneData->camera.GetViewportHeight());
+		SetViewprotSize(m_SceneDataFromScene->camera.GetViewportWidth(), m_SceneDataFromScene->camera.GetViewportHeight());
 		if (NeedResize) {
 			// 更新FBO尺寸
-			HZ_CORE_WARN("SceneRender::PreRender Resize FBO to {0}x{1}", m_SceneData->camera.GetViewportWidth(), m_SceneData->camera.GetViewportHeight());
-			m_PreDepthClearFramebuffer->Resize(m_SceneData->camera.GetViewportWidth(), m_SceneData->camera.GetViewportHeight());
-			m_PreDepthLoadFramebuffer->Resize(m_SceneData->camera.GetViewportWidth(), m_SceneData->camera.GetViewportHeight());
-			m_GeoFrameBuffer->Resize(m_SceneData->camera.GetViewportWidth(), m_SceneData->camera.GetViewportHeight());
-			m_GeoAnimFrameBuffer->Resize(m_SceneData->camera.GetViewportWidth(), m_SceneData->camera.GetViewportHeight());
-			m_LightPassFramebuffer->Resize(m_SceneData->camera.GetViewportWidth(), m_SceneData->camera.GetViewportHeight()); 
-			m_GridFrameBuffer->Resize(m_SceneData->camera.GetViewportWidth(), m_SceneData->camera.GetViewportHeight());
+			HZ_CORE_WARN("SceneRender::PreRender Resize FBO to {0}x{1}", m_SceneDataFromScene->camera.GetViewportWidth(), m_SceneDataFromScene->camera.GetViewportHeight());
+			m_PreDepthClearFramebuffer->Resize(m_SceneDataFromScene->camera.GetViewportWidth(), m_SceneDataFromScene->camera.GetViewportHeight());
+			m_PreDepthLoadFramebuffer->Resize(m_SceneDataFromScene->camera.GetViewportWidth(), m_SceneDataFromScene->camera.GetViewportHeight());
+			m_GeoFrameBuffer->Resize(m_SceneDataFromScene->camera.GetViewportWidth(), m_SceneDataFromScene->camera.GetViewportHeight());
+			m_GeoAnimFrameBuffer->Resize(m_SceneDataFromScene->camera.GetViewportWidth(), m_SceneDataFromScene->camera.GetViewportHeight());
+			// m_LightPassFramebuffer->Resize(m_SceneDataFromScene->camera.GetViewportWidth(), m_SceneDataFromScene->camera.GetViewportHeight()); 
+			m_GridFrameBuffer->Resize(m_SceneDataFromScene->camera.GetViewportWidth(), m_SceneDataFromScene->camera.GetViewportHeight());
 			HandleHZBResize();
 			NeedResize = false;
 		}
@@ -713,7 +725,7 @@ namespace Hazel {
 	}
 	void SceneRender::HandleHZBResize()
 	{
-		m_HierarchicalDepthTexture.Texture->Resize(m_SceneData->camera.GetViewportWidth(), m_SceneData->camera.GetViewportHeight());
+		m_HierarchicalDepthTexture.Texture->Resize(m_SceneDataFromScene->camera.GetViewportWidth(), m_SceneDataFromScene->camera.GetViewportHeight());
 		uint32_t mipCount = m_HierarchicalDepthTexture.Texture->GetMipLevelCount();
 		m_HierarchicalDepthTexture.ImageViews.resize(m_HierarchicalDepthTexture.Texture->GetMipLevelCount());
 		ImageViewSpecification imageViewSpec;
@@ -878,5 +890,36 @@ namespace Hazel {
 	}
 
 
+	void SceneRender::InitLightPass()
+	{
+		FramebufferSpecification lightPassFramebufferSpec;
+		lightPassFramebufferSpec.Attachments = { ImageFormat::RGBA32F };
+		lightPassFramebufferSpec.DebugName = "LightPass";
+		m_LightPassFramebuffer = Framebuffer::Create(lightPassFramebufferSpec);
+		PipelineSpecification pSpec;
+		pSpec.Shader = Renderer::GetShaderLibrary()->Get("Lighting");
+		pSpec.TargetFramebuffer = m_LightPassFramebuffer;
+		pSpec.DebugName = "LightPassPipeline";
+		pSpec.DepthTest = false;
+		m_LightPassPipeline = Pipeline::Create(pSpec);
+		RenderPassSpecification lightPassSpec;
+		lightPassSpec.Pipeline = m_LightPassPipeline;
+		lightPassSpec.DebugName = "LightPass";
+		m_LightPass = RenderPass::Create(lightPassSpec);
+		m_LightPass->SetInput(m_EnvIrradianceMap, 4);
+		m_LightPass->SetInput(m_EnvPreFilterMap, 5);
+		m_LightPass->SetInput(m_EnvLut, 6);
+	}
+	void SceneRender::LightPass()
+	{
+		m_LightPass->SetInput(m_GeoFrameBuffer->GetImage(0), 0);
+		m_LightPass->SetInput(m_GeoFrameBuffer->GetImage(1), 1);
+		m_LightPass->SetInput(m_GeoFrameBuffer->GetImage(2), 2);
+		m_LightPass->SetInput(m_GeoFrameBuffer->GetImage(3), 3);
+
+		Renderer::BeginRenderPass(m_CommandBuffer, m_LightPass, false);
+		Renderer::DrawPrueVertex(m_CommandBuffer, 3);
+		Renderer::EndRenderPass(m_CommandBuffer);
+	}
 
 }

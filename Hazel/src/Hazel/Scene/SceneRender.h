@@ -156,6 +156,7 @@ namespace Hazel {
 			float Height;
 			float Near;
 			float Far;
+			glm::vec3 Position;
 		};
 		struct UBSpotLights
 		{
@@ -168,18 +169,34 @@ namespace Hazel {
 			Ref<Texture2D> Texture;
 			std::vector<Ref<ImageView>> ImageViews; // per-mip
 		} m_HierarchicalDepthTexture;
+		struct RenderData {
+			glm::vec4 CascadeSplits;
+			float LightSize;
+		};
+		struct SceneData {
+			DirectionalLight DirectionalLight;
+			float EnvironmentMapIntensity;
+		};
+		struct MaterialPush {
+			glm::vec3 AlbedoColor;
+			float Metalness;
+			float Roughness;
+			float Emission;
 
+			bool UseNormalMap;
+		};
 	private: // Utils which need struct
 		void CopyToBoneTransformStorage(const MeshKey& meshKey, const Ref<MeshSource>& meshSource, const std::vector<glm::mat4>& boneTransforms);
 		void CalculateCascades(CascadeData* cascades, const EditorCamera& sceneCamera, const glm::vec3& lightDirection) const;
 
 	private: // member
 		bool NeedResize = false;
-		SceneInfo* m_SceneData = nullptr;
+		SceneInfo* m_SceneDataFromScene = nullptr;
 		float m_ViewportWidth = 1216.0f, m_ViewportHeight = 849.0f;
 		uint32_t shadowMapResolution = 4096;
 		uint32_t NumShadowCascades = 4;
-
+		RenderData * m_RenderData = nullptr;
+		Ref<UniformBufferSet> m_UBSRenderData;
 		glm::vec4 CascadeSplits;
 		std::map<MeshKey, DynamicDrawCommand> m_DynamicDrawList;
 		std::map<MeshKey, StaticDrawCommand> m_StaticMeshDrawList;
@@ -192,6 +209,8 @@ namespace Hazel {
 		CameraData* m_CameraData = nullptr;
 		Ref<UniformBufferSet> m_UBSCameraData;
 		UBShadow* m_ShadowData = nullptr;
+		SceneData* m_SceneData = nullptr;
+        Ref<UniformBufferSet> m_UBSSceneData;
 		Ref<UniformBufferSet> m_UBSShadow;
 		Ref<UniformBufferSet> m_UBSSpotShadowData;
 		UBSpotLights* spotLightData = nullptr;

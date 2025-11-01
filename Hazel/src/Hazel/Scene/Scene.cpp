@@ -38,10 +38,9 @@ namespace Hazel {
 				light.DirectionalLights[directionalLightIndex++] =
 				{
 					direction,
+					lightComponent.ShadowAmount,	
 					lightComponent.Radiance,
 					lightComponent.Intensity,
-					lightComponent.ShadowAmount,
-					lightComponent.CastShadows,
 				};
 			}
 		}

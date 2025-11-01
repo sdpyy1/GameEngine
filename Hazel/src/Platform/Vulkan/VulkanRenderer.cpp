@@ -391,7 +391,7 @@ namespace Hazel {
 			uint32_t pushConstantOffset = 0;
 			if (pushConstantBuffer.Size)
 			{
-				vkCmdPushConstants(commandBuffer, layout, VK_SHADER_STAGE_VERTEX_BIT, pushConstantOffset, pushConstantBuffer.Size, pushConstantBuffer.Data);
+				vkCmdPushConstants(commandBuffer, layout, VK_SHADER_STAGE_FRAGMENT_BIT, pushConstantOffset, pushConstantBuffer.Size, pushConstantBuffer.Data);
 			}
 
 			vkCmdDrawIndexed(commandBuffer, submesh.IndexCount/*索引数量*/, instanceCount/*实例数量*/, submesh.BaseIndex/*索引缓冲区的偏移*/, submesh.BaseVertex/*顶点偏移*/, 0/*实例化ID开始的编号*/);
@@ -415,7 +415,7 @@ namespace Hazel {
 				pushConstantBuffer.Write(&boneTransformsOffset, sizeof(uint32_t), additionalUniforms.Size);
 		}
 
-		Renderer::Submit([renderCommandBuffer, pipeline, meshSource, submeshIndex, material, transformBuffer, transformOffset, instanceCount, pushConstantBuffer]() mutable
+		Renderer::Submit([additionalUniforms,renderCommandBuffer, pipeline, meshSource, submeshIndex, material, transformBuffer, transformOffset, instanceCount, pushConstantBuffer]() mutable
 			{
 				uint32_t frameIndex = Renderer::RT_GetCurrentFrameIndex();
 				VkCommandBuffer commandBuffer = renderCommandBuffer.As<VulkanRenderCommandBuffer>()->GetActiveCommandBuffer();
@@ -449,7 +449,9 @@ namespace Hazel {
 				uint32_t pushConstantOffset = 0;
 				if (pushConstantBuffer.Size)
 				{
-					vkCmdPushConstants(commandBuffer, layout, VK_SHADER_STAGE_VERTEX_BIT, pushConstantOffset, pushConstantBuffer.Size, pushConstantBuffer.Data);
+					vkCmdPushConstants(commandBuffer, layout, VK_SHADER_STAGE_FRAGMENT_BIT, pushConstantOffset, pushConstantBuffer.Size - sizeof(uint32_t), pushConstantBuffer.Data);
+					pushConstantOffset += additionalUniforms.Size;
+					vkCmdPushConstants(commandBuffer, layout, VK_SHADER_STAGE_VERTEX_BIT, pushConstantOffset, sizeof(uint32_t), pushConstantBuffer.Data);
 				}
 
 				// 每个材质绑定自己的 Set=1

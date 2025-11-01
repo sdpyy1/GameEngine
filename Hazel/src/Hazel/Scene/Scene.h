@@ -25,11 +25,9 @@ namespace Hazel {
 	struct DirectionalLight
 	{
 		glm::vec3 Direction = { 0.0f, 0.0f, 0.0f };
+		float ShadowAmount = 1.0f;
 		glm::vec3 Radiance = { 0.0f, 0.0f, 0.0f };
 		float Intensity = 0.0f;
-		float ShadowAmount = 1.0f;
-		// C++ only
-		bool CastShadows = true;
 	};
 
 	struct PointLight

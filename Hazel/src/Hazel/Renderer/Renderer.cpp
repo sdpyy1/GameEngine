@@ -51,7 +51,7 @@ namespace Hazel {
 		Shader::DescriptorBinding cameraDataBinding;
 		cameraDataBinding.binding = 0;
 		cameraDataBinding.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		cameraDataBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+		cameraDataBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 		cameraDataBinding.count = 1;
 		cameraDataBinding.set = 0;
 		Shader::DescriptorBinding boneTrasnfromBinding;
@@ -68,6 +68,48 @@ namespace Hazel {
 		{
 			Shader::ShaderSpecification gbufferShaderSpec;
 			gbufferShaderSpec.bindings.push_back(cameraDataBinding);
+			Shader::DescriptorBinding shadowBinding;
+            shadowBinding.binding = 2;
+            shadowBinding.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            shadowBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+            shadowBinding.count = 1;
+            shadowBinding.set = 0;
+            gbufferShaderSpec.bindings.push_back(shadowBinding);
+			Shader::DescriptorBinding RendererDataBinding;
+            RendererDataBinding.binding = 3;
+            RendererDataBinding.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            RendererDataBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+            RendererDataBinding.count = 1;
+            RendererDataBinding.set = 0;
+            gbufferShaderSpec.bindings.push_back(RendererDataBinding);
+			Shader::DescriptorBinding SceneDataBinding;
+            SceneDataBinding.binding = 4;
+            SceneDataBinding.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            SceneDataBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+            SceneDataBinding.count = 1;
+            SceneDataBinding.set = 0;
+            gbufferShaderSpec.bindings.push_back(SceneDataBinding);
+
+			Shader::DescriptorBinding u_ShadowMapTextureBinding;
+            u_ShadowMapTextureBinding.binding = 5;
+            u_ShadowMapTextureBinding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            u_ShadowMapTextureBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+            u_ShadowMapTextureBinding.count = 4;
+            u_ShadowMapTextureBinding.set = 0;
+            gbufferShaderSpec.bindings.push_back(u_ShadowMapTextureBinding);
+
+			Shader::DescriptorBinding textureBinding;
+            textureBinding.binding = 6;
+            textureBinding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            textureBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+            textureBinding.count = 1;
+            textureBinding.set = 0;
+            gbufferShaderSpec.bindings.push_back(textureBinding);
+			textureBinding.binding = 7;
+			gbufferShaderSpec.bindings.push_back(textureBinding);
+			textureBinding.binding = 8;
+			gbufferShaderSpec.bindings.push_back(textureBinding);
+			
 			// 2. Albedo 贴图（combined image sampler）
 			Shader::DescriptorBinding albedoBinding;
 			albedoBinding.binding = 0;
@@ -100,8 +142,24 @@ namespace Hazel {
 			roughnessBinding.count = 1;
 			roughnessBinding.set = 1;
 			gbufferShaderSpec.bindings.push_back(roughnessBinding);
+
+			Shader::DescriptorBinding emsBinding;
+			emsBinding.binding = 4;
+			emsBinding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+			emsBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+			emsBinding.count = 1;
+			emsBinding.set = 1;
+			gbufferShaderSpec.bindings.push_back(emsBinding);
+			Shader::PushConstantRange PushRange;
+            PushRange.shaderStage = VK_SHADER_STAGE_FRAGMENT_BIT ;
+            PushRange.offset = 0;
+            PushRange.size = 64;
+            gbufferShaderSpec.pushConstantRanges = { PushRange };
 			s_Data->m_ShaderLibrary->LoadCommonShader("gBuffer", gbufferShaderSpec);
-			gbufferShaderSpec.pushConstantRanges = { BoneInfluencePushRange };
+			PushRange.shaderStage = VK_SHADER_STAGE_VERTEX_BIT;
+            PushRange.size = 4;
+			PushRange.offset = 64;
+			gbufferShaderSpec.pushConstantRanges.push_back(PushRange);
 			gbufferShaderSpec.bindings.push_back(boneTrasnfromBinding);
 			s_Data->m_ShaderLibrary->LoadCommonShader("gBufferAnim", gbufferShaderSpec);
 		}

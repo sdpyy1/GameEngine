@@ -1,0 +1,5 @@
+#ifndef BUFFER_GLSL
+#define BUFFER_GLSL
+
+
+#endif // BUFFER_GLSL

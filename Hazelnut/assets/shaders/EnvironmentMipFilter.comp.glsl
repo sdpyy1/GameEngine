@@ -1,12 +1,9 @@
 #version 450 core
 #ifdef COMPUTE_SHADER
+#include "include/Common.glslh"
 // Pre-filters environment cube map using GGX NDF importance sampling.
 // Part of specular IBL split-sum approximation.
 
-const float PI = 3.141592;
-const float TwoPI = 2 * PI;
-
-const float Epsilon = 0.00001;
 
 const uint NumSamples = 1024;
 const float InvNumSamples = 1.0 / float(NumSamples);

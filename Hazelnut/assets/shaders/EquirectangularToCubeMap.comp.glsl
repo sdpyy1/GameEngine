@@ -1,8 +1,9 @@
 #version 450 core
 #ifdef COMPUTE_SHADER
+#include "include/Common.glslh"
 layout(binding = 0, rgba32f) restrict writeonly uniform imageCube o_CubeMap;
 layout(binding = 1) uniform sampler2D u_EquirectangularTex;
-const float PI = 3.141592;
+
 
 vec3 GetCubeMapTexCoord(vec2 imageSize)
 {

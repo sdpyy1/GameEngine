@@ -1,15 +1,12 @@
 #version 450 core
 #ifdef COMPUTE_SHADER
+#include"include/Common.glslh"
 layout(binding = 0, rgba32f) restrict writeonly uniform imageCube o_IrradianceMap;
 layout(binding = 1) uniform samplerCube u_RadianceMap;
 layout(push_constant) uniform Uniforms
 {
 	uint Samples;
 } u_Uniforms;
-
-const float PI = 3.141592;
-const float TwoPI = 2 * PI;
-const float Epsilon = 0.00001;
 
 // ---------------------------------------------------------------------------------------------------
 // The following code (from Unreal Engine 4's paper) shows how to filter the environment map
