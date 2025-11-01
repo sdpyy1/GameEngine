@@ -43,9 +43,6 @@ namespace Hazel {
 	class Texture2D : public Texture
 	{
 	public:
-		static Ref<Texture2D> Create_old(const TextureSpecification& specification);
-		static Ref<Texture2D> Create_old(const TextureSpecification& specification, const std::filesystem::path& filepath);
-		static Ref<Texture2D> Create_old(const TextureSpecification& specification, Buffer imageData);
 		static Ref<Texture2D> Create(const TextureSpecification& specification);
 		static Ref<Texture2D> Create(const TextureSpecification& specification, const std::filesystem::path& filepath);
 		static Ref<Texture2D> Create(const TextureSpecification& specification, Buffer imageData);

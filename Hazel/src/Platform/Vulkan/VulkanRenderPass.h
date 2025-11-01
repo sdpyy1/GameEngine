@@ -21,6 +21,7 @@ namespace Hazel {
 		virtual void SetInput(Ref<Texture2D> texture, uint32_t Binding)override;
 		virtual Ref<Image2D> GetDepthOutput();
 		virtual void SetInput(Ref<Image2D> image, uint32_t Binding, bool isInit =false);
+		virtual void SetInput(Ref<TextureCube> cubeMap, uint32_t Binding) override;
 
 	private:
 		bool IsInvalidated(uint32_t set, uint32_t binding) const;

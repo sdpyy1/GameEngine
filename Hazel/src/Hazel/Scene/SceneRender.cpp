@@ -10,121 +10,50 @@
 #include <Hazel/Math/Math.h>
 #include <Platform/Vulkan/VulkanRenderCommandBuffer.h>
 namespace Hazel {
-	SceneRender::SceneRender()
-	{
-		Init();
-	}
-	void SceneRender::InitEnvNeed()
-	{
-		const uint32_t cubemapSize = Renderer::GetConfig().EnvironmentMapResolution;
-		const uint32_t irradianceMapSize = Renderer::GetConfig().IrradianceMapSize;
-		m_EnvEquirect = Texture2D::Create(TextureSpecification(), std::filesystem::path("assets/HDR/1.hdr"));
-		HZ_CORE_ASSERT(m_EnvEquirect->GetFormat() == ImageFormat::RGBA32F, "Texture is not HDR!");
-		TextureSpecification cubemapSpec;
-		cubemapSpec.Format = ImageFormat::RGBA32F;
-		cubemapSpec.Width = cubemapSize;
-		cubemapSpec.Height = cubemapSize;
-		cubemapSpec.Storage = true;
-		cubemapSpec.GenerateMips = false;
-		m_EnvCubeMap = TextureCube::Create(cubemapSpec);
-		m_EnvPreFilterMap = TextureCube::Create(cubemapSpec);
-
-		TextureSpecification IrradianceMapSpec;
-		IrradianceMapSpec.Format = ImageFormat::RGBA32F;
-		IrradianceMapSpec.Width = irradianceMapSize;
-		IrradianceMapSpec.Height = irradianceMapSize;
-		IrradianceMapSpec.Storage = true;
-		IrradianceMapSpec.GenerateMips = false;
-		m_EnvIrradianceMap = TextureCube::Create(IrradianceMapSpec);
-
-		// HDR->Cubemap Pass
-		Ref<Shader> equirectangularConversionShader = Renderer::GetShaderLibrary()->Get("EquirectangularToCubeMap");
-		ComputePassSpecification equirectangularSpec;
-		equirectangularSpec.DebugName = "EquirectangularToCubeMap";
-		equirectangularSpec.Pipeline = PipelineCompute::Create(equirectangularConversionShader);
-		equirectangularSpec.moreDescriptors = 1;
-		m_EquirectangularPass = ComputePass::Create(equirectangularSpec);
-
-		// irradianceMap Pass
-		Ref<Shader> environmentIrradianceShader = Renderer::GetShaderLibrary()->Get("EnvironmentIrradiance");
-		ComputePassSpecification environmentIrradianceSpec;
-		environmentIrradianceSpec.DebugName = "EnvironmentIrradiance";
-		environmentIrradianceSpec.Pipeline = PipelineCompute::Create(environmentIrradianceShader);
-		m_EnvironmentIrradiancePass = ComputePass::Create(environmentIrradianceSpec);
-
-		// PreFilterCubeMap Pass
-		Ref<Shader> preFilterShader = Renderer::GetShaderLibrary()->Get("EnvironmentMipFilter");
-		ComputePassSpecification preFilterSpec;
-		preFilterSpec.DebugName = "EnvironmentMipFilter";
-		preFilterSpec.Pipeline = PipelineCompute::Create(preFilterShader);
-		preFilterSpec.moreDescriptors = m_EnvCubeMap->GetMipLevelCount();
-		m_EnvironmentPreFilterPass = ComputePass::Create(preFilterSpec);
-
-		m_EnvLut = Renderer::GetBRDFLutTexture();
-	}
-	void SceneRender::preComputeEnv()
-	{
-		InitEnvNeed();
-		m_CommandBuffer->Begin();
-		const uint32_t cubemapSize = Renderer::GetConfig().EnvironmentMapResolution;
-		const uint32_t irradianceMapSize = Renderer::GetConfig().IrradianceMapSize;
-
-		// HDR转CubemapPass
-		Renderer::BeginComputePass(m_CommandBuffer, m_EquirectangularPass);
-		m_EquirectangularPass->SetInput(m_EnvEquirect, 1);
-		m_EquirectangularPass->SetInput(m_EnvCubeMap, 0, InputType::stoage);
-		Renderer::DispatchCompute(m_CommandBuffer, m_EquirectangularPass, nullptr, glm::ivec3(cubemapSize / 32, cubemapSize / 32, 6));
-		Renderer::EndComputePass(m_CommandBuffer, m_EquirectangularPass);
-
-		Renderer::Submit([this]() {		
-			m_EnvCubeMap->GenerateMips(m_CommandBuffer); // DispatchCompute无法自动生成mipmap，所以这里手动生成，在MipFilter计算中会使用
-		});
-		// PreFilterCubeMap第一层用HDR
-		Renderer::BeginComputePass(m_CommandBuffer, m_EquirectangularPass);
-		m_EquirectangularPass->SetInput(m_EnvEquirect, 1, 0);
-		m_EquirectangularPass->SetInput(m_EnvPreFilterMap, 0, InputType::stoage, 0);
-		Renderer::DispatchCompute(m_CommandBuffer, m_EquirectangularPass, nullptr, glm::ivec3(cubemapSize / 32, cubemapSize / 32, 6), 0);
-		Renderer::EndComputePass(m_CommandBuffer, m_EquirectangularPass);
-
-		// 环境Irradiance
-		Renderer::BeginComputePass(m_CommandBuffer, m_EnvironmentIrradiancePass);
-		m_EnvironmentIrradiancePass->SetInput(m_EnvCubeMap, 1, InputType::sampler);
-		m_EnvironmentIrradiancePass->SetInput(m_EnvIrradianceMap, 0, InputType::stoage);
-		Renderer::DispatchCompute(m_CommandBuffer, m_EnvironmentIrradiancePass, nullptr, glm::ivec3(irradianceMapSize / 32, irradianceMapSize / 32, 6), Buffer(&Renderer::GetConfig().IrradianceMapComputeSamples, sizeof(uint32_t)));
-		Renderer::EndComputePass(m_CommandBuffer, m_EnvironmentIrradiancePass);
-	
-		// 环境MipFilter
-		Renderer::BeginComputePass(m_CommandBuffer, m_EnvironmentPreFilterPass);
-		uint32_t mipCount = m_EnvCubeMap->GetMipLevelCount();
-		for (uint32_t i = 1; i < mipCount; i++){
-			m_EnvironmentPreFilterPass->SetInput(m_EnvPreFilterMap, 0, InputType::stoage,i,i);
-			m_EnvironmentPreFilterPass->SetInput(m_EnvCubeMap, 1, InputType::sampler, i);
-		}
-		const float deltaRoughness = 1.0f / glm::max((float)mipCount - 1.0f, 1.0f);
-		for (uint32_t i = 1, size = cubemapSize; i < mipCount; i++, size /= 2)
-		{
-			uint32_t numGroups = glm::max(1u, size / 32);
-			float roughness = i * deltaRoughness;
-			Renderer::DispatchCompute(m_CommandBuffer, m_EnvironmentPreFilterPass, nullptr, glm::ivec3(numGroups, numGroups, 6), i,{ &roughness, sizeof(float)});
-		}
-		Renderer::EndComputePass(m_CommandBuffer, m_EnvironmentPreFilterPass);
-
-
-		m_CommandBuffer->End();
-		m_CommandBuffer->Submit();
-	}
 	void SceneRender::Init()
 	{
 		m_CommandBuffer = RenderCommandBuffer::Create("PassCommandBuffer");
 		InitBuffers();
+		preComputeEnv();
+
 		InitDirShadowPass();
 		InitSpotShadowPass();
 		InitPreDepthPass();
 		InitHZBPass();
 		InitGeoPass();
+		InitLightPass();
 		InitGridPass();
+	}
+	void SceneRender::InitLightPass()
+	{
+		FramebufferSpecification lightPassFramebufferSpec;
+		lightPassFramebufferSpec.Attachments = { ImageFormat::RGBA32F };
+		lightPassFramebufferSpec.DebugName = "LightPass";
+		m_LightPassFramebuffer = Framebuffer::Create(lightPassFramebufferSpec);
+		PipelineSpecification pSpec;
+		pSpec.Shader = Renderer::GetShaderLibrary()->Get("Lighting");
+		pSpec.TargetFramebuffer = m_LightPassFramebuffer;
+		pSpec.DebugName = "LightPassPipeline";
+		pSpec.DepthTest = false;
+		m_LightPassPipeline = Pipeline::Create(pSpec);
+		RenderPassSpecification lightPassSpec;
+		lightPassSpec.Pipeline = m_LightPassPipeline;
+		lightPassSpec.DebugName = "LightPass";
+		m_LightPass = RenderPass::Create(lightPassSpec);
+		m_LightPass->SetInput(m_EnvIrradianceMap, 4);
+		m_LightPass->SetInput(m_EnvPreFilterMap, 5);
+		m_LightPass->SetInput(m_EnvLut, 6);
+	}
+	void SceneRender::LightPass()
+	{
+		m_LightPass->SetInput(m_GeoFrameBuffer->GetImage(0),0);
+		m_LightPass->SetInput(m_GeoFrameBuffer->GetImage(1),1);
+		m_LightPass->SetInput(m_GeoFrameBuffer->GetImage(2),2);
+		m_LightPass->SetInput(m_GeoFrameBuffer->GetImage(3),3);
 
-		preComputeEnv();
+		Renderer::BeginRenderPass(m_CommandBuffer, m_LightPass , false);
+		Renderer::DrawPrueVertex(m_CommandBuffer, 3);
+		Renderer::EndRenderPass(m_CommandBuffer);
 	}
 
 	void SceneRender::Draw() {
@@ -133,14 +62,13 @@ namespace Hazel {
 		PreDepthPass();
 		HZBComputePass();
 		GeoPass();
+		LightPass();
 		GridPass();
 	}
 	void SceneRender::PreRender(SceneInfo sceneData)
 	{
 		m_SceneData = &sceneData;
-		// 注意如果Resize里有图片被当作了资源描述符资源，销毁的资源需要在UploadDescriptorRuntime()中重新绑定（会自动判断是否需要更新）
 		HandleResizeRuntime();
-		UploadDescriptorRuntime();
 		// 更新各种资源信息
 		UploadCameraData(); // 摄像机数据
 		UploadMeshAndBoneTransForm(); // 模型变换和骨骼变换矩阵
@@ -150,9 +78,10 @@ namespace Hazel {
 	void SceneRender::EndRender()
 	{
 		m_CommandBuffer->Begin();
-		Draw(); // 执行渲染命令
+		Draw();
 		m_CommandBuffer->End();
 		m_CommandBuffer->Submit();
+
 		m_DynamicDrawList.clear();
 		m_StaticMeshDrawList.clear();
 		m_MeshTransformMap.clear();
@@ -343,13 +272,11 @@ namespace Hazel {
 		m_SpotShadowAnimPass->SetInput(m_UBSSpotShadowData, 0);
 		m_SpotShadowAnimPass->SetInput(m_SBSBoneTransforms, 1, true);
 	}
-
 	void SceneRender::UploadSpotShadowData()
 	{
 		const std::vector<SpotLight>& spotLightsVec = m_SceneData->SceneLightEnvironment.SpotLights;
 		// TODO:待完成
 	}
-
 	void SceneRender::SpotShadowPass()
 	{
 		//throw std::logic_error("The method or operation is not implemented.");
@@ -406,7 +333,6 @@ namespace Hazel {
 			Renderer::EndRenderPass(m_CommandBuffer);
 		}
 	}
-
 	void SceneRender::InitPreDepthPass() {
 		FramebufferSpecification preDepthFramebufferSpec;
 		preDepthFramebufferSpec.DebugName = "PreDepth";
@@ -467,11 +393,11 @@ namespace Hazel {
 	}
 	void SceneRender::GridPass()
 	{
+		m_GridPass->SetInput(m_GeoAnimPass->GetDepthOutput(), 1);
 		Renderer::BeginRenderPass(m_CommandBuffer, m_GridPass, false);
 		Renderer::DrawPrueVertex(m_CommandBuffer, 6);
 		Renderer::EndRenderPass(m_CommandBuffer);
 	}
-
 	void SceneRender::UploadCameraData()
 	{
 		m_CameraData->view = m_SceneData->camera.GetViewMatrix();
@@ -652,7 +578,6 @@ namespace Hazel {
 		}
 	}
 	void SceneRender::InitGeoPass() {
-		// GeoPass
 		{
 			FramebufferSpecification framebufferSpec;
 			// pos normal albedo mr depth
@@ -710,13 +635,13 @@ namespace Hazel {
 		FramebufferSpecification gridPassFramebufferSpec;
 		gridPassFramebufferSpec.Attachments = { gridColorOutputSpec };
 		gridPassFramebufferSpec.DebugName = "Grid";
-		gridPassFramebufferSpec.ExistingImages[0] = m_GeoFrameBuffer->GetImage(2);  // 这张图片谁创建的就指向它，不然会报错
+		gridPassFramebufferSpec.ExistingImages[0] = m_LightPassFramebuffer->GetImage(0);  // 这张图片谁创建的就指向它，不然会报错
 		gridPassFramebufferSpec.Attachments.Attachments[0].LoadOp = AttachmentLoadOp::Load;
 		m_GridFrameBuffer = Framebuffer::Create(gridPassFramebufferSpec);
 		PipelineSpecification gridPipelineSpec;
 		gridPipelineSpec.Shader = Renderer::GetShaderLibrary()->Get("grid");
 		gridPipelineSpec.TargetFramebuffer = m_GridFrameBuffer;
-		gridPipelineSpec.DepthTest = true;
+		gridPipelineSpec.DepthTest = false;
 		gridPipelineSpec.DebugName = "GridPipeline";
 		m_GridPipeline = Pipeline::Create(gridPipelineSpec);
 		RenderPassSpecification gridPassSpec;
@@ -773,21 +698,19 @@ namespace Hazel {
 			m_PreDepthClearFramebuffer->Resize(m_SceneData->camera.GetViewportWidth(), m_SceneData->camera.GetViewportHeight());
 			m_PreDepthLoadFramebuffer->Resize(m_SceneData->camera.GetViewportWidth(), m_SceneData->camera.GetViewportHeight());
 			m_GeoFrameBuffer->Resize(m_SceneData->camera.GetViewportWidth(), m_SceneData->camera.GetViewportHeight());
-			m_GeoAnimFrameBuffer->Resize(m_SceneData->camera.GetViewportWidth(), m_SceneData->camera.GetViewportHeight()); // ReSize会重新获取引用的图片，之前的FBO的图片必须立刻创建好
+			m_GeoAnimFrameBuffer->Resize(m_SceneData->camera.GetViewportWidth(), m_SceneData->camera.GetViewportHeight());
+			m_LightPassFramebuffer->Resize(m_SceneData->camera.GetViewportWidth(), m_SceneData->camera.GetViewportHeight()); 
 			m_GridFrameBuffer->Resize(m_SceneData->camera.GetViewportWidth(), m_SceneData->camera.GetViewportHeight());
 			HandleHZBResize();
 			NeedResize = false;
 		}
 	}
-	void SceneRender::UploadDescriptorRuntime() {
-		m_GridPass->SetInput(m_GeoAnimPass->GetDepthOutput(), 1);
-	}
+
 	void SceneRender::ClearPass(Ref<RenderPass> renderPass, bool explicitClear)
 	{
 		Renderer::BeginRenderPass(m_CommandBuffer, renderPass, explicitClear);
 		Renderer::EndRenderPass(m_CommandBuffer);
 	}
-
 	void SceneRender::HandleHZBResize()
 	{
 		m_HierarchicalDepthTexture.Texture->Resize(m_SceneData->camera.GetViewportWidth(), m_SceneData->camera.GetViewportHeight());
@@ -852,4 +775,108 @@ namespace Hazel {
 		Renderer::DispatchCompute(m_CommandBuffer, m_HierarchicalDepthPass, nullptr, glm::uvec3(groupCountX, groupCountY, 1), mip);
 		Renderer::EndComputePass(m_CommandBuffer, m_HierarchicalDepthPass);
 	}
+	void SceneRender::InitEnvNeed()
+	{
+		const uint32_t cubemapSize = Renderer::GetConfig().EnvironmentMapResolution;
+		const uint32_t irradianceMapSize = Renderer::GetConfig().IrradianceMapSize;
+		m_EnvEquirect = Texture2D::Create(TextureSpecification(), std::filesystem::path("assets/HDR/1.hdr"));
+		HZ_CORE_ASSERT(m_EnvEquirect->GetFormat() == ImageFormat::RGBA32F, "Texture is not HDR!");
+		TextureSpecification cubemapSpec;
+		cubemapSpec.Format = ImageFormat::RGBA32F;
+		cubemapSpec.Width = cubemapSize;
+		cubemapSpec.Height = cubemapSize;
+		cubemapSpec.Storage = true;
+		cubemapSpec.GenerateMips = false;
+		m_EnvCubeMap = TextureCube::Create(cubemapSpec);
+		m_EnvPreFilterMap = TextureCube::Create(cubemapSpec);
+
+		TextureSpecification IrradianceMapSpec;
+		IrradianceMapSpec.Format = ImageFormat::RGBA32F;
+		IrradianceMapSpec.Width = irradianceMapSize;
+		IrradianceMapSpec.Height = irradianceMapSize;
+		IrradianceMapSpec.Storage = true;
+		IrradianceMapSpec.GenerateMips = false;
+		m_EnvIrradianceMap = TextureCube::Create(IrradianceMapSpec);
+
+		// HDR->Cubemap Pass
+		Ref<Shader> equirectangularConversionShader = Renderer::GetShaderLibrary()->Get("EquirectangularToCubeMap");
+		ComputePassSpecification equirectangularSpec;
+		equirectangularSpec.DebugName = "EquirectangularToCubeMap";
+		equirectangularSpec.Pipeline = PipelineCompute::Create(equirectangularConversionShader);
+		equirectangularSpec.moreDescriptors = 1;
+		m_EquirectangularPass = ComputePass::Create(equirectangularSpec);
+
+		// irradianceMap Pass
+		Ref<Shader> environmentIrradianceShader = Renderer::GetShaderLibrary()->Get("EnvironmentIrradiance");
+		ComputePassSpecification environmentIrradianceSpec;
+		environmentIrradianceSpec.DebugName = "EnvironmentIrradiance";
+		environmentIrradianceSpec.Pipeline = PipelineCompute::Create(environmentIrradianceShader);
+		m_EnvironmentIrradiancePass = ComputePass::Create(environmentIrradianceSpec);
+
+		// PreFilterCubeMap Pass
+		Ref<Shader> preFilterShader = Renderer::GetShaderLibrary()->Get("EnvironmentMipFilter");
+		ComputePassSpecification preFilterSpec;
+		preFilterSpec.DebugName = "EnvironmentMipFilter";
+		preFilterSpec.Pipeline = PipelineCompute::Create(preFilterShader);
+		preFilterSpec.moreDescriptors = m_EnvCubeMap->GetMipLevelCount();
+		m_EnvironmentPreFilterPass = ComputePass::Create(preFilterSpec);
+
+		m_EnvLut = Renderer::GetBRDFLutTexture();
+	}
+	void SceneRender::preComputeEnv()
+	{
+		InitEnvNeed();
+		m_CommandBuffer->Begin();
+		const uint32_t cubemapSize = Renderer::GetConfig().EnvironmentMapResolution;
+		const uint32_t irradianceMapSize = Renderer::GetConfig().IrradianceMapSize;
+
+		// HDR转CubemapPass
+		Renderer::BeginComputePass(m_CommandBuffer, m_EquirectangularPass);
+		m_EquirectangularPass->SetInput(m_EnvEquirect, 1);
+		m_EquirectangularPass->SetInput(m_EnvCubeMap, 0, InputType::stoage);
+		Renderer::DispatchCompute(m_CommandBuffer, m_EquirectangularPass, nullptr, glm::ivec3(cubemapSize / 32, cubemapSize / 32, 6));
+		Renderer::EndComputePass(m_CommandBuffer, m_EquirectangularPass);
+
+		Renderer::Submit([this]() {
+			m_EnvCubeMap->GenerateMips(m_CommandBuffer); // DispatchCompute无法自动生成mipmap，所以这里手动生成，在MipFilter计算中会使用
+			});
+		// PreFilterCubeMap第一层用HDR
+		Renderer::BeginComputePass(m_CommandBuffer, m_EquirectangularPass);
+		m_EquirectangularPass->SetInput(m_EnvEquirect, 1, 0);
+		m_EquirectangularPass->SetInput(m_EnvPreFilterMap, 0, InputType::stoage, 0);
+		Renderer::DispatchCompute(m_CommandBuffer, m_EquirectangularPass, nullptr, glm::ivec3(cubemapSize / 32, cubemapSize / 32, 6), 0);
+		Renderer::EndComputePass(m_CommandBuffer, m_EquirectangularPass);
+
+		// 环境Irradiance
+		Renderer::BeginComputePass(m_CommandBuffer, m_EnvironmentIrradiancePass);
+		m_EnvironmentIrradiancePass->SetInput(m_EnvCubeMap, 1, InputType::sampler);
+		m_EnvironmentIrradiancePass->SetInput(m_EnvIrradianceMap, 0, InputType::stoage);
+		Renderer::DispatchCompute(m_CommandBuffer, m_EnvironmentIrradiancePass, nullptr, glm::ivec3(irradianceMapSize / 32, irradianceMapSize / 32, 6), Buffer(&Renderer::GetConfig().IrradianceMapComputeSamples, sizeof(uint32_t)));
+		Renderer::EndComputePass(m_CommandBuffer, m_EnvironmentIrradiancePass);
+
+		// 环境MipFilter
+		Renderer::BeginComputePass(m_CommandBuffer, m_EnvironmentPreFilterPass);
+		uint32_t mipCount = m_EnvCubeMap->GetMipLevelCount();
+		for (uint32_t i = 1; i < mipCount; i++) {
+			m_EnvironmentPreFilterPass->SetInput(m_EnvPreFilterMap, 0, InputType::stoage, i, i);
+			m_EnvironmentPreFilterPass->SetInput(m_EnvCubeMap, 1, InputType::sampler, i);
+		}
+		const float deltaRoughness = 1.0f / glm::max((float)mipCount - 1.0f, 1.0f);
+		for (uint32_t i = 1, size = cubemapSize; i < mipCount; i++, size /= 2)
+		{
+			uint32_t numGroups = glm::max(1u, size / 32);
+			float roughness = i * deltaRoughness;
+			Renderer::DispatchCompute(m_CommandBuffer, m_EnvironmentPreFilterPass, nullptr, glm::ivec3(numGroups, numGroups, 6), i, { &roughness, sizeof(float) });
+		}
+		Renderer::EndComputePass(m_CommandBuffer, m_EnvironmentPreFilterPass);
+		m_CommandBuffer->End();
+		m_CommandBuffer->Submit();
+	}
+	SceneRender::SceneRender()
+	{
+		Init();
+	}
+
+
+
 }

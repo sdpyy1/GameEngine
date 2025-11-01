@@ -58,7 +58,7 @@ namespace Hazel {
 	class VulkanTextureCube : public TextureCube
 	{
 	public:
-		VulkanTextureCube(const TextureSpecification& specification, Buffer data = nullptr);
+		VulkanTextureCube(const TextureSpecification& specification, Buffer data = nullptr); // 创建后图片布局均为General
 		virtual ~VulkanTextureCube();
 
 		void Release();

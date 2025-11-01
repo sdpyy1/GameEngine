@@ -3,51 +3,50 @@
 #include "Hazel/Asset/Model/Mesh.h"
 #include <Hazel/Renderer/ComputePass.h>
 namespace Hazel {
+
 	class SceneRender : public RefCounted
 	{
-	public:
+	public: // open
 		SceneRender();
 		Ref<Image2D> GetFinalImage() { return m_GridFrameBuffer->GetImage(0); }
 		void PreRender(SceneInfo sceneData);
 		void EndRender();
 		void SubmitStaticMesh(Ref<MeshSource> meshSource, const glm::mat4& transform);
 		void SubmitDynamicMesh(Ref<MeshSource> meshSource, uint32_t submeshIndex, const glm::mat4& transform, const std::vector<glm::mat4>& boneTransforms);
-		void SetViewprotSize(float width, float height);
-
-	private:
-		// Shadow
-		void ShadowPass();
-		// Geo
-		void GeoPass();
-		// Grid
-		void GridPass();
-	private:
+	private: // Initial
 		void Init();
-		void Draw();
 		void InitBuffers();
-		void UploadCameraData();
 		void InitDirShadowPass();
 		void InitGeoPass();
 		void InitGridPass();
+		void InitPreDepthPass();
+		void InitSpotShadowPass();
+		void InitHZBPass();
+		void InitLightPass();
+		void InitEnvNeed();
+
+	private: // Update Pre Frame
+		void UploadCameraData();
 		void UploadMeshAndBoneTransForm();
 		void UploadCSMShadowData();
-		void InitPreDepthPass();
-
-		void PreDepthPass();
-
 		void HandleResizeRuntime();
-		void UploadDescriptorRuntime();
-
-		void ClearPass(Ref<RenderPass> renderPass, bool explicitClear = false);
-		void InitSpotShadowPass();
 		void UploadSpotShadowData();
-		void SpotShadowPass();
-	private:
-		SceneInfo* m_SceneData = nullptr;
-		uint32_t shadowMapResolution = 4096;
-		uint32_t NumShadowCascades = 4;
-		float m_ViewportWidth = 1216.0f, m_ViewportHeight = 849.0f;
+		void HandleHZBResize();
 
+	private: // Pass
+		void preComputeEnv();
+		void Draw();
+		void ShadowPass();
+		void GeoPass();
+		void GridPass();
+		void PreDepthPass();
+		void SpotShadowPass();
+		void HZBComputePass();
+		void LightPass();
+		void ClearPass(Ref<RenderPass> renderPass, bool explicitClear = false);
+	private: // Utils
+		void SetViewprotSize(float width, float height);
+	private: // struct
 		VertexBufferLayout vertexLayout = {
 			{ ShaderDataType::Float3, "a_Position" },
 			{ ShaderDataType::Float3, "a_Normal" },
@@ -55,7 +54,6 @@ namespace Hazel {
 			{ ShaderDataType::Float3, "a_Binormal" },
 			{ ShaderDataType::Float2, "a_TexCoord" }
 		};
-
 		VertexBufferLayout instanceLayout = {
 			{ ShaderDataType::Float4, "a_MRow0" },
 			{ ShaderDataType::Float4, "a_MRow1" },
@@ -65,15 +63,7 @@ namespace Hazel {
 			{ ShaderDataType::Int4,   "a_BoneIDs" },
 			{ ShaderDataType::Float4, "a_BoneWeights" },
 		};
-		struct CascadeData
-		{
-			glm::mat4 ViewProj;
-			glm::mat4 View;
-			float SplitDepth;
-		};
-		glm::vec4 CascadeSplits;
-
-		void CalculateCascades(CascadeData* cascades, const EditorCamera& sceneCamera, const glm::vec3& lightDirection) const;
+		using BoneTransforms = std::array<glm::mat4, 100>; // Note: 100 == MAX_BONES from the shaders
 
 		struct MeshKey
 		{
@@ -110,8 +100,12 @@ namespace Hazel {
 				return IsSelected < other.IsSelected;
 			}
 		};
-		void CopyToBoneTransformStorage(const MeshKey& meshKey, const Ref<MeshSource>& meshSource, const std::vector<glm::mat4>& boneTransforms);
-
+		struct CascadeData
+		{
+			glm::mat4 ViewProj;
+			glm::mat4 View;
+			float SplitDepth;
+		};
 		struct StaticDrawCommand
 		{
 			Ref<MeshSource> MeshSource;
@@ -128,8 +122,6 @@ namespace Hazel {
 			uint32_t InstanceOffset = 0;
 			bool IsRigged = false;
 		};
-		std::map<MeshKey, DynamicDrawCommand> m_DynamicDrawList;
-		std::map<MeshKey, StaticDrawCommand> m_StaticMeshDrawList;
 		struct TransformVertexData
 		{
 			glm::vec4 MRow[3]; // 4行4列存储Model变换矩阵，最后一行不存，因为固定是0001
@@ -139,39 +131,24 @@ namespace Hazel {
 			Ref<VertexBuffer> Buffer;  //用顶点数据来传递Model变换矩阵
 			TransformVertexData* Data = nullptr; // 具体的数据
 		};
-		std::vector<TransformBuffer> m_SubmeshTransformBuffers;
-
 		struct TransformMapData
 		{
 			std::vector<TransformVertexData> Transforms;
 			uint32_t TransformOffset = 0;
 		};
-		std::map<MeshKey, TransformMapData> m_MeshTransformMap;  // 每个MeshKey对应多个实例的变换矩阵
-
-		using BoneTransforms = std::array<glm::mat4, 100>; // Note: 100 == MAX_BONES from the shaders
 		struct BoneTransformsMapData
 		{
 			std::vector<BoneTransforms> BoneTransformsData;
 			uint32_t BoneTransformsBaseIndex = 0;
 		};
-		std::map<MeshKey, BoneTransformsMapData> m_MeshBoneTransformsMap;
-		BoneTransforms* m_BoneTransformsData = nullptr;
-		Ref<StorageBufferSet> m_SBSBoneTransforms;
-		std::vector<Ref<Material>> m_HZBMaterials; // per-mip
-
 		struct UBShadow
 		{
 			glm::mat4 ViewProjection[4];
 		};
-	private:
-		bool NeedResize = false;
-		// command buffer
-		Ref<RenderCommandBuffer> m_CommandBuffer;
 		struct UBSpotShadowData
 		{
 			glm::mat4 ShadowMatrices[1000]{};
 		} SpotShadowDataUB;
-		// uniform buffer
 		struct CameraData {
 			glm::mat4 view;
 			glm::mat4 proj;
@@ -186,19 +163,40 @@ namespace Hazel {
 			glm::vec3 Padding{};
 			SpotLight SpotLights[1000]{};
 		} SpotLightUB;
-		CameraData* m_CameraData = nullptr;
-		Ref<UniformBufferSet> m_UBSCameraData;
-		UBShadow* m_ShadowData = nullptr;
-		Ref<UniformBufferSet> m_UBSShadow;
-		Ref<UniformBufferSet> m_UBSSpotShadowData;
-		UBSpotLights* spotLightData = nullptr;
-		// Hierarchical Depth
 		struct HierarchicalDepthTexture
 		{
 			Ref<Texture2D> Texture;
 			std::vector<Ref<ImageView>> ImageViews; // per-mip
 		} m_HierarchicalDepthTexture;
 
+	private: // Utils which need struct
+		void CopyToBoneTransformStorage(const MeshKey& meshKey, const Ref<MeshSource>& meshSource, const std::vector<glm::mat4>& boneTransforms);
+		void CalculateCascades(CascadeData* cascades, const EditorCamera& sceneCamera, const glm::vec3& lightDirection) const;
+
+	private: // member
+		bool NeedResize = false;
+		SceneInfo* m_SceneData = nullptr;
+		float m_ViewportWidth = 1216.0f, m_ViewportHeight = 849.0f;
+		uint32_t shadowMapResolution = 4096;
+		uint32_t NumShadowCascades = 4;
+
+		glm::vec4 CascadeSplits;
+		std::map<MeshKey, DynamicDrawCommand> m_DynamicDrawList;
+		std::map<MeshKey, StaticDrawCommand> m_StaticMeshDrawList;
+		std::vector<TransformBuffer> m_SubmeshTransformBuffers;
+		std::map<MeshKey, TransformMapData> m_MeshTransformMap;  // 每个MeshKey对应多个实例的变换矩阵
+		std::map<MeshKey, BoneTransformsMapData> m_MeshBoneTransformsMap;
+		BoneTransforms* m_BoneTransformsData = nullptr;
+		Ref<StorageBufferSet> m_SBSBoneTransforms;
+		Ref<RenderCommandBuffer> m_CommandBuffer;
+		CameraData* m_CameraData = nullptr;
+		Ref<UniformBufferSet> m_UBSCameraData;
+		UBShadow* m_ShadowData = nullptr;
+		Ref<UniformBufferSet> m_UBSShadow;
+		Ref<UniformBufferSet> m_UBSSpotShadowData;
+		UBSpotLights* spotLightData = nullptr;
+
+	private: // Pass
 		// shadowPass
 		std::vector<Ref<RenderPass>> m_DirectionalShadowMapPass; // Per-cascade
 		std::vector<Ref<RenderPass>> m_DirectionalShadowMapAnimPass; // Per-cascade
@@ -215,14 +213,17 @@ namespace Hazel {
 		Ref<Pipeline> m_PreDepthPipelineAnim;
 		Ref<RenderPass> m_PreDepthPass, m_PreDepthAnimPass;
 		Ref<Framebuffer> m_PreDepthClearFramebuffer, m_PreDepthLoadFramebuffer;
+
 		// GeoPass
 		Ref<RenderPass> m_GeoPass;
 		Ref<Pipeline> m_GeoPipeline;
 		Ref<Framebuffer> m_GeoFrameBuffer;
+
 		// GeoAnimPass
 		Ref<RenderPass> m_GeoAnimPass;
 		Ref<Pipeline> m_GeoAnimPipeline;
 		Ref<Framebuffer> m_GeoAnimFrameBuffer;
+
 		// GridPass
 		Ref<RenderPass> m_GridPass;
 		Ref<Pipeline> m_GridPipeline;
@@ -240,10 +241,10 @@ namespace Hazel {
 		Ref<Texture2D> m_EnvLut;
 		Ref<ComputePass> m_EnvironmentIrradiancePass;
 		Ref<ComputePass> m_EnvironmentPreFilterPass;
-		void InitHZBPass();
-		void HZBComputePass();
-		void HandleHZBResize();
-		void preComputeEnv();
-		void InitEnvNeed();
+
+		// LightPass
+		Ref<Framebuffer> m_LightPassFramebuffer;
+		Ref<Pipeline> m_LightPassPipeline;
+		Ref<RenderPass> m_LightPass;
 	};
 }

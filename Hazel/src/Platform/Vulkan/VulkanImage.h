@@ -14,7 +14,7 @@ namespace Hazel {
 		VmaAllocation MemoryAlloc = nullptr;
 	};
 
-	class VulkanImage2D : public Image2D {
+	class VulkanImage2D : public Image2D { // 默认VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL 需要写入时，改为 VK_IMAGE_LAYOUT_GENERAL
 	public:
 		VulkanImage2D(const ImageSpecification& specification);
 		virtual ~VulkanImage2D() override;

@@ -7,14 +7,14 @@
 #include <Platform/Vulkan/VulkanImage.h>
 
 namespace Hazel {
-	Ref<Texture2D> Renderer::WhiteTexture = nullptr;
 	// 这里存储常用渲染资源
 	struct RendererData
 	{
 		Ref<ShaderLibrary> m_ShaderLibrary;
 		Ref<TextureCube> BlackCubeTexture;
 		Ref<Texture2D> BRDFLutTexture;
-
+		Ref<Texture2D> WhiteTexture;
+		Ref<Texture2D> BlackTexture;
 	};
 
 	static RendererConfig s_Config;
@@ -105,7 +105,6 @@ namespace Hazel {
 			gbufferShaderSpec.bindings.push_back(boneTrasnfromBinding);
 			s_Data->m_ShaderLibrary->LoadCommonShader("gBufferAnim", gbufferShaderSpec);
 		}
-
 		// DirShadowPass
 		{
 			Shader::ShaderSpecification shadowShaderSpec;
@@ -135,7 +134,6 @@ namespace Hazel {
 			shadowShaderSpec.pushConstantRanges[0].size = 8;
 			s_Data->m_ShaderLibrary->LoadCommonShader("SpotShadowMapAnim", shadowShaderSpec);
 		}
-
 		// GridPass
 		{
 			Shader::ShaderSpecification gridShaderSpec;
@@ -155,7 +153,6 @@ namespace Hazel {
 			gridShaderSpec.bindings.push_back(depthBinding);
 			s_Data->m_ShaderLibrary->LoadCommonShader("grid", gridShaderSpec);
 		}
-
 		// PreDepthPass
 		{
 			Shader::ShaderSpecification preDepthShaderSpec;
@@ -165,7 +162,6 @@ namespace Hazel {
 			preDepthShaderSpec.pushConstantRanges.push_back(BoneInfluencePushRange);
 			s_Data->m_ShaderLibrary->LoadCommonShader("PreDepthAnim", preDepthShaderSpec);
 		}
-
 		// HZBPass
 		{
 			Shader::ShaderSpecification hzbShaderSpec;
@@ -190,7 +186,6 @@ namespace Hazel {
 			hzbShaderSpec.pushConstantRanges = { PushRange };
 			s_Data->m_ShaderLibrary->LoadCommonShader("HZB", hzbShaderSpec, true);
 		}
-
 		// EquirectangularToCubeMap
 		{
 			Shader::ShaderSpecification EquirectangularToCubeMapShaderSpec;
@@ -234,7 +229,6 @@ namespace Hazel {
 			IrradianceMapShaderSpec.pushConstantRanges = { PushRange };
 			s_Data->m_ShaderLibrary->LoadCommonShader("EnvironmentIrradiance", IrradianceMapShaderSpec, true);
 		}
-
 		// PrefilterMap
 		{
             Shader::ShaderSpecification PrefilterMapShaderSpec;
@@ -259,28 +253,62 @@ namespace Hazel {
             PrefilterMapShaderSpec.pushConstantRanges = { PushRange };
             s_Data->m_ShaderLibrary->LoadCommonShader("EnvironmentMipFilter", PrefilterMapShaderSpec, true);
 		}
-		// 加载纹理
-		uint32_t whiteTextureData = 0xffffffff;
-		TextureSpecification spec;
-		spec.Format = ImageFormat::RGBA;
-		spec.Width = 1;
-		spec.Height = 1;
-		WhiteTexture = Texture2D::Create(spec, Buffer(&whiteTextureData, sizeof(uint32_t)));
-
-		constexpr uint32_t blackTextureData = 0xff000000;
-
-		constexpr uint32_t blackCubeTextureData[6] = { 0xff000000, 0xff000000, 0xff000000, 0xff000000, 0xff000000, 0xff000000 };
-		s_Data->BlackCubeTexture = TextureCube::Create(spec, Buffer(&blackTextureData, sizeof(blackCubeTextureData)));
+		
+		// lighting
 		{
+            Shader::ShaderSpecification LightingShaderSpec;
+            Shader::DescriptorBinding imageBinding;
+            imageBinding.binding = 0;
+            imageBinding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            imageBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+            imageBinding.count = 1;
+            imageBinding.set = 0;
+            LightingShaderSpec.bindings.push_back(imageBinding);
+			imageBinding.binding = 1;
+			LightingShaderSpec.bindings.push_back(imageBinding);
+			imageBinding.binding = 2;
+			LightingShaderSpec.bindings.push_back(imageBinding);
+			imageBinding.binding = 3;
+			LightingShaderSpec.bindings.push_back(imageBinding);
+            imageBinding.binding = 4;
+			LightingShaderSpec.bindings.push_back(imageBinding);
+			imageBinding.binding = 5;
+			LightingShaderSpec.bindings.push_back(imageBinding);
+			imageBinding.binding = 6;
+			LightingShaderSpec.bindings.push_back(imageBinding);
+			s_Data->m_ShaderLibrary->LoadCommonShader("Lighting", LightingShaderSpec);
+		}
+		
+		
+		// 加载纹理
+		{
+			uint32_t whiteTextureData = 0xffffffff;
 			TextureSpecification spec;
-			spec.SamplerWrap = TextureWrap::Clamp;
-			s_Data->BRDFLutTexture = Texture2D::Create(spec, std::filesystem::path("assets/textures/BRDF_LUT.png"));
+			spec.Format = ImageFormat::RGBA;
+			spec.Width = 1;
+			spec.Height = 1;
+			s_Data->WhiteTexture = Texture2D::Create(spec, Buffer(&whiteTextureData, sizeof(uint32_t)));
+
+			constexpr uint32_t blackTextureData = 0xff000000;
+			s_Data->BlackTexture = Texture2D::Create(spec, Buffer(&blackTextureData, sizeof(uint32_t)));
+
+			constexpr uint32_t blackCubeTextureData[6] = { 0xff000000, 0xff000000, 0xff000000, 0xff000000, 0xff000000, 0xff000000 };
+			s_Data->BlackCubeTexture = TextureCube::Create(spec, Buffer(&blackTextureData, sizeof(blackCubeTextureData)));
+			{
+				TextureSpecification spec;
+				spec.SamplerWrap = TextureWrap::Clamp;
+				s_Data->BRDFLutTexture = Texture2D::Create(spec, std::filesystem::path("assets/textures/BRDF_LUT.png"));
+			}
 		}
 		// 为并发帧创建了描述符池、提前准备了全屏顶点数据存入了GPU
 		s_RendererAPI->Init();
 	}
 	void Renderer::Shutdown()
 	{
+	}
+	Ref<Texture2D> Renderer::GetBlackTexture()
+	{
+		return s_Data->BlackTexture;
 	}
 	Ref<Texture2D> Renderer::GetBRDFLutTexture()
 	{
@@ -328,8 +356,6 @@ namespace Hazel {
 	{
 		s_RenderCommandQueueSubmissionIndex = (s_RenderCommandQueueSubmissionIndex + 1) % s_RenderCommandQueueCount;
 	}
-	//void Renderer::DrawStaticMesh(Ref<RenderCommandBuffer> commandBuffer, Ref<VertexBuffer> vertexBuffer, Ref<MeshSource> meshSource, uint32_t subMeshIndex) {
-	//}
 
 	void Renderer::BindVertData(Ref<RenderCommandBuffer> commandBuffer, Ref<VertexBuffer> testVertexBuffer)
 	{
@@ -408,7 +434,7 @@ namespace Hazel {
 
 	Ref<Texture2D> Renderer::GetWhiteTexture()
 	{
-		return WhiteTexture;
+		return s_Data->WhiteTexture;
 	}
 
 	Ref<TextureCube> Renderer::GetBlackCubeTexture()

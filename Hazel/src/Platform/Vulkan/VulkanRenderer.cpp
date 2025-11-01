@@ -28,9 +28,6 @@ namespace Hazel {
 
 		Ref<VertexBuffer> QuadVertexBuffer;
 		Ref<IndexBuffer> QuadIndexBuffer;
-		//VulkanShader::ShaderMaterialDescriptorSet QuadDescriptorSet;
-
-		//std::unordered_map<SceneRenderer*, std::vector<VulkanShader::ShaderMaterialDescriptorSet>> RendererDescriptorSet;
 		VkDescriptorSet ActiveRendererDescriptorSet = nullptr;
 		std::vector<VkDescriptorPool> DescriptorPools;
 		VkDescriptorPool MaterialDescriptorPool;
@@ -122,34 +119,6 @@ namespace Hazel {
 
 				VK_CHECK_RESULT(vkCreateDescriptorPool(device, &pool_info, nullptr, &s_Data->MaterialDescriptorPool));
 			});
-
-		// 提前把全屏正方形顶点数据创建好
-		float x = -1;
-		float y = -1;
-		float width = 2, height = 2;
-		struct QuadVertex
-		{
-			glm::vec3 Position;
-			glm::vec2 TexCoord;
-		};
-
-		QuadVertex* data = new QuadVertex[4];
-
-		data[0].Position = glm::vec3(x, y, 0.0f);
-		data[0].TexCoord = glm::vec2(0, 0);
-
-		data[1].Position = glm::vec3(x + width, y, 0.0f);
-		data[1].TexCoord = glm::vec2(1, 0);
-
-		data[2].Position = glm::vec3(x + width, y + height, 0.0f);
-		data[2].TexCoord = glm::vec2(1, 1);
-
-		data[3].Position = glm::vec3(x, y + height, 0.0f);
-		data[3].TexCoord = glm::vec2(0, 1);
-
-		s_Data->QuadVertexBuffer = VertexBuffer::Create(data, 4 * sizeof(QuadVertex), "QuadVertexBuffer");
-		uint32_t indices[6] = { 0, 1, 2, 2, 3, 0, };
-		s_Data->QuadIndexBuffer = IndexBuffer::Create(indices, 6 * sizeof(uint32_t));
 	}
 	void VulkanRenderer::Shutdown()
 	{
@@ -361,9 +330,12 @@ namespace Hazel {
 					vkCmdSetLineWidth(commandBuffer, vulkanPipeline->GetSpecification().LineWidth);
 
 				// Bind input descriptors
-				Ref<VulkanRenderPass> vulkanRenderPass = renderPass.As<VulkanRenderPass>();
-				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderPass->GetPipeline().As<VulkanPipeline>()->GetVulkanPipelineLayout(), 0, 1, &renderPass->GetPipeline()->GetShader().As<VulkanShader>()->GetDescriptorSet()[frameIndex], 0, nullptr);
-			});
+				if (!renderPass->GetPipeline()->GetShader().As<VulkanShader>()->GetDescriptorSet().empty()) {
+					Ref<VulkanRenderPass> vulkanRenderPass = renderPass.As<VulkanRenderPass>();
+					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderPass->GetPipeline().As<VulkanPipeline>()->GetVulkanPipelineLayout(), 0, 1, &renderPass->GetPipeline()->GetShader().As<VulkanShader>()->GetDescriptorSet()[frameIndex], 0, nullptr);
+
+				}
+		});
 	}
 	void VulkanRenderer::EndRenderPass(Ref<RenderCommandBuffer> renderCommandBuffer)
 	{

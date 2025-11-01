@@ -22,6 +22,27 @@ namespace Hazel {
 	VulkanRenderPass::~VulkanRenderPass()
 	{
 	}
+	void VulkanRenderPass::SetInput(Ref<TextureCube> cubeMap, uint32_t Binding) {
+		Renderer::Submit([=]() {
+			VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+			auto vulkanTexture = cubeMap.As<VulkanTextureCube>();
+			for (size_t i = 0; i < Renderer::GetConfig().FramesInFlight; i++) {
+				VkDescriptorImageInfo imageInfo{};
+				imageInfo.sampler = vulkanTexture->GetDescriptorInfoVulkan().sampler;
+				imageInfo.imageView = vulkanTexture->GetDescriptorInfoVulkan().imageView;
+				imageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+				std::array<VkWriteDescriptorSet, 1> descriptorWrites{};
+				descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+				descriptorWrites[0].dstSet = GetSpecification().Pipeline->GetShader().As<VulkanShader>()->GetDescriptorSet()[i];
+				descriptorWrites[0].dstBinding = Binding;
+				descriptorWrites[0].dstArrayElement = 0;
+				descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+				descriptorWrites[0].descriptorCount = 1;
+				descriptorWrites[0].pImageInfo = &imageInfo;
+				vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+			}		
+			});
+	}
 
 	void VulkanRenderPass::SetInput(Ref<UniformBufferSet> UboSet, uint32_t Binding)
 	{
@@ -162,8 +183,8 @@ namespace Hazel {
 				VkImage curImage = m_BindImages[Renderer::RT_GetCurrentFrameIndex()][Binding];
 				// 图片被销毁或者更换了，需要更新绑定
 				if (!curImage || curImage != image.As<VulkanImage2D>()->GetVulkanImage()) {
-					HZ_CORE_INFO("VulkanRenderPass [{0}]::SetInput Image2D Binding {1} Update Image Bind", m_Specification.DebugName, Binding);
-					m_BindImages[Renderer::RT_GetCurrentFrameIndex()][Binding] = image.As<VulkanImage2D>()->GetVulkanImage();
+					HZ_CORE_INFO("VulkanRenderPass [{}]::SetInput Image2D Binding {} Update Image Bind", m_Specification.DebugName, Binding);
+ 					m_BindImages[Renderer::RT_GetCurrentFrameIndex()][Binding] = image.As<VulkanImage2D>()->GetVulkanImage();
 					VkDescriptorImageInfo imageInfo{};
 					imageInfo.sampler = vulkanTexture->GetDescriptorInfoVulkan().sampler;
 					imageInfo.imageView = vulkanTexture->GetDescriptorInfoVulkan().imageView;

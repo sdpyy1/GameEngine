@@ -11,17 +11,9 @@
 
 #include "Hazel/Utils/UIUtils.h"
 
-#include <Platform/Vulkan/VulkanShader.h>
-#include <Platform/Vulkan/VulkanVertexBuffer.h>
-#include <Platform/Vulkan/VulkanIndexBuffer.h>
-#include <Platform/Vulkan/VulkanUniformBuffer.h>
-#include <Platform/Vulkan/VulkanTexture.h>
-#include <Platform/Vulkan/VulkanFramebuffer.h>
-#include <Platform/Vulkan/VulkanPipeline.h>
 #include <imgui.h>
 #include <Hazel/Asset/AssetImporter.h>
 #include <Hazel/Asset/Model/Mesh.h>
-#include <Platform/Vulkan/VulkanMaterial.h>
 #include "SceneRender.h"
 
 namespace Hazel {

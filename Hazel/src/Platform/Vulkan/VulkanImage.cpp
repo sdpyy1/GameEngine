@@ -184,7 +184,7 @@ namespace Hazel {
 		}
 
 		// 根据不同的用途，设置不同的图片内存布局
-		if (m_Specification.Usage == ImageUsage::Storage)
+		if (m_Specification.Usage == ImageUsage::Storage) // General
 		{
 			// Transition image to GENERAL layout   传入true就会立即开始记录命令
 			VkCommandBuffer commandBuffer = VulkanContext::GetCurrentDevice()->GetCommandBuffer(true);
@@ -203,7 +203,7 @@ namespace Hazel {
 
 			VulkanContext::GetCurrentDevice()->FlushCommandBuffer(commandBuffer);
 		}
-		else if (m_Specification.Usage == ImageUsage::HostRead)
+		else if (m_Specification.Usage == ImageUsage::HostRead) // VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
 		{
 			// Transition image to TRANSFER_DST layout
 			VkCommandBuffer commandBuffer = VulkanContext::GetCurrentDevice()->GetCommandBuffer(true);
@@ -364,6 +364,7 @@ namespace Hazel {
 			m_DescriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 
 		m_DescriptorImageInfo.imageView = m_Info.ImageView;
+
 		m_DescriptorImageInfo.sampler = m_Info.Sampler;
 
 		//HZ_CORE_WARN_TAG("Renderer", "VulkanImage2D::UpdateDescriptor to ImageView = {0}", (const void*)m_Info.ImageView);

@@ -750,9 +750,9 @@ namespace Hazel {
 		imageCreateInfo.imageType = VK_IMAGE_TYPE_2D;
 		imageCreateInfo.format = format;
 		imageCreateInfo.mipLevels = mipCount;
-		imageCreateInfo.arrayLayers = 6;
+		imageCreateInfo.arrayLayers = 6; // cubeMap本质是一个图片数组，arrayLayers来表示6个面
 		imageCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-		imageCreateInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+		imageCreateInfo.tiling = VK_IMAGE_TILING_OPTIMAL; // VK_IMAGE_TILING_OPTIMAL 是 Vulkan 推荐的布局，由驱动程序决定最适合 GPU 访问的内存排列方式，通常性能最优，但 CPU 无法直接访问该布局的图像数据
 		imageCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 		imageCreateInfo.extent = { m_Specification.Width, m_Specification.Height, 1 };
 		imageCreateInfo.usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT;
@@ -761,7 +761,7 @@ namespace Hazel {
 		VKUtils::SetDebugUtilsObjectName(vulkanDevice, VK_OBJECT_TYPE_IMAGE, m_Specification.DebugName, m_Image);
 		s_TextureCubeReferences[m_Image] = this;
 
-		m_DescriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+		m_DescriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL; // 图片布局都是GENERAL
 
 		// Copy data if present
 		if (m_LocalStorage)
