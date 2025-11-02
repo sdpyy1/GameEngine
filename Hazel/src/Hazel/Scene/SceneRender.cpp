@@ -46,7 +46,7 @@ namespace Hazel {
 
 		// tmp：临时放在这里
 		m_RenderData->CascadeSplits = CascadeSplits;
-		m_RenderData->LightSize = 1.f;
+		m_RenderData->LightSize = 0.5;
 		m_UBSRenderData->Get()->SetData((void*)m_RenderData, sizeof(RenderData));
 
 		m_SceneData->DirectionalLight = m_SceneDataFromScene->SceneLightEnvironment.DirectionalLights[0];
@@ -74,15 +74,7 @@ namespace Hazel {
 		for (auto& [meshKey, drawCommand] : m_StaticMeshDrawList)
 		{
 			const auto& transformData = m_MeshTransformMap.at(meshKey);
-			MaterialPush materialPush;
-			Ref<Material> CurMaterial = drawCommand.MaterialAsset->GetMaterial();
-			materialPush.AlbedoColor = CurMaterial->m_AlbedoColor;
-			materialPush.Emission = CurMaterial->m_EmissionColor.x; //tmp
-            materialPush.Metalness = CurMaterial->m_MetalnessColor;
-            materialPush.Roughness = CurMaterial->m_RoughnessColor;
-            materialPush.UseNormalMap = CurMaterial->bUseNormalTexture;
-			
-			Renderer::RenderStaticMeshWithMaterial(m_CommandBuffer, m_GeoPipeline, drawCommand.MeshSource, drawCommand.SubmeshIndex, drawCommand.MaterialAsset->GetMaterial(), m_SubmeshTransformBuffers[frameIndex].Buffer, transformData.TransformOffset, drawCommand.InstanceCount, Buffer(&materialPush, sizeof(MaterialPush)));
+			Renderer::RenderStaticMeshWithMaterial(m_CommandBuffer, m_GeoPipeline, drawCommand.MeshSource, drawCommand.SubmeshIndex, drawCommand.MaterialAsset->GetMaterial(), m_SubmeshTransformBuffers[frameIndex].Buffer, transformData.TransformOffset, drawCommand.InstanceCount);
 		}
 		Renderer::EndRenderPass(m_CommandBuffer);
 
@@ -90,20 +82,13 @@ namespace Hazel {
 		Renderer::BeginRenderPass(m_CommandBuffer, m_GeoAnimPass, false);
 		for (auto& [meshKey, drawCommand] : m_DynamicDrawList)
 		{
-			MaterialPush materialPush;
-			Ref<Material> CurMaterial = drawCommand.MaterialAsset->GetMaterial();
-			materialPush.AlbedoColor = CurMaterial->m_AlbedoColor;
-			materialPush.Emission = CurMaterial->m_EmissionColor.x; //tmp
-			materialPush.Metalness = CurMaterial->m_MetalnessColor;
-			materialPush.Roughness = CurMaterial->m_RoughnessColor;
-			materialPush.UseNormalMap = CurMaterial->bUseNormalTexture;
 			const auto& transformData = m_MeshTransformMap.at(meshKey);
 			if (drawCommand.IsRigged) {
 				const auto& boneTransformsData = m_MeshBoneTransformsMap.at(meshKey);
-				Renderer::RenderSkeletonMeshWithMaterial(m_CommandBuffer, m_GeoAnimPipeline, drawCommand.MeshSource, drawCommand.SubmeshIndex, drawCommand.MaterialAsset->GetMaterial(), m_SubmeshTransformBuffers[frameIndex].Buffer, transformData.TransformOffset, boneTransformsData.BoneTransformsBaseIndex, drawCommand.InstanceCount, Buffer(&materialPush, sizeof(MaterialPush)));
+				Renderer::RenderSkeletonMeshWithMaterial(m_CommandBuffer, m_GeoAnimPipeline, drawCommand.MeshSource, drawCommand.SubmeshIndex, drawCommand.MaterialAsset->GetMaterial(), m_SubmeshTransformBuffers[frameIndex].Buffer, transformData.TransformOffset, boneTransformsData.BoneTransformsBaseIndex, drawCommand.InstanceCount);
 			}
 			else {
-				Renderer::RenderSkeletonMeshWithMaterial(m_CommandBuffer, m_GeoAnimPipeline, drawCommand.MeshSource, drawCommand.SubmeshIndex, drawCommand.MaterialAsset->GetMaterial(), m_SubmeshTransformBuffers[frameIndex].Buffer, transformData.TransformOffset, 0, drawCommand.InstanceCount, Buffer(&materialPush, sizeof(MaterialPush)));
+				Renderer::RenderSkeletonMeshWithMaterial(m_CommandBuffer, m_GeoAnimPipeline, drawCommand.MeshSource, drawCommand.SubmeshIndex, drawCommand.MaterialAsset->GetMaterial(), m_SubmeshTransformBuffers[frameIndex].Buffer, transformData.TransformOffset, 0, drawCommand.InstanceCount);
 			}
 		}
 		Renderer::EndRenderPass(m_CommandBuffer);
@@ -119,7 +104,7 @@ namespace Hazel {
 		constexpr glm::vec4 origin = glm::vec4(glm::vec3(0.0f), 1.0f);
 		viewMatrix[3] = glm::lerp(viewMatrix[3], origin, scaleToOrigin);
 
-		auto viewProjection = sceneCamera.GetUnReversedProjectionMatrix() * viewMatrix;
+		auto viewProjection = sceneCamera.GetProjectionMatrix() * viewMatrix;
 
 		const int SHADOW_MAP_CASCADE_COUNT = 4;
 		float cascadeSplits[SHADOW_MAP_CASCADE_COUNT];
@@ -145,7 +130,6 @@ namespace Hazel {
 			cascadeSplits[i] = (d - nearClip) / clipRange;
 		}
 
-		cascadeSplits[3] = 0.3f;
 
 		// Calculate orthographic projection matrix for each cascade
 		float lastSplitDist = 0.0;
@@ -200,13 +184,13 @@ namespace Hazel {
 			glm::vec3 maxExtents = glm::vec3(radius);
 			glm::vec3 minExtents = -maxExtents;
 
-			glm::vec3 lightDir = -lightDirection;
-			glm::mat4 lightViewMatrix = glm::lookAt(frustumCenter - lightDir * -minExtents.z, frustumCenter, glm::vec3(0.0f, 0.0f, 1.0f));
+			glm::vec3 lightDir = lightDirection;
+			glm::mat4 lightViewMatrix = glm::lookAt(frustumCenter + lightDir * minExtents.z, frustumCenter, glm::vec3(0.0f, 0.0f, 1.0f));
 			glm::mat4 lightOrthoMatrix = glm::ortho(minExtents.x, maxExtents.x, minExtents.y, maxExtents.y, 0.0f + CascadeNearPlaneOffset, maxExtents.z - minExtents.z + CascadeFarPlaneOffset);
 
 			// Offset to texel space to avoid shimmering (from https://stackoverflow.com/questions/33499053/cascaded-shadow-map-shimmering)
 			glm::mat4 shadowMatrix = lightOrthoMatrix * lightViewMatrix;
-			float ShadowMapResolution = (float)m_PreDepthLoadFramebuffer->GetWidth();
+			float ShadowMapResolution = shadowMapResolution;
 
 			glm::vec4 shadowOrigin = (shadowMatrix * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)) * ShadowMapResolution / 2.0f;
 			glm::vec4 roundedOrigin = glm::round(shadowOrigin);
@@ -512,6 +496,7 @@ namespace Hazel {
 		}
 	}
 	void SceneRender::InitDirShadowPass() {
+		// 一张多Layer深度图用于不同的阴影级
 		ImageSpecification spec;
 		spec.Format = ImageFormat::DEPTH32F;
 		spec.Usage = ImageUsage::Attachment;

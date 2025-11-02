@@ -62,7 +62,12 @@ void main() {
 	shadowCoords[1] = u_DirShadow.DirLightMatrices[1] * vec4(Output.WorldPosition.xyz, 1.0);
 	shadowCoords[2] = u_DirShadow.DirLightMatrices[2] * vec4(Output.WorldPosition.xyz, 1.0);
 	shadowCoords[3] = u_DirShadow.DirLightMatrices[3] * vec4(Output.WorldPosition.xyz, 1.0);
+	Output.ShadowMapCoords[0] = vec3(shadowCoords[0].xyz / shadowCoords[0].w);
+	Output.ShadowMapCoords[1] = vec3(shadowCoords[1].xyz / shadowCoords[1].w);
+	Output.ShadowMapCoords[2] = vec3(shadowCoords[2].xyz / shadowCoords[2].w);
+	Output.ShadowMapCoords[3] = vec3(shadowCoords[3].xyz / shadowCoords[3].w);
 	Output.ViewPosition = vec3(u_CameraData.view * vec4(Output.WorldPosition, 1.0));
+	Output.ViewPosition.z = - Output.ViewPosition.z;
 	gl_Position = u_CameraData.proj * u_CameraData.view * worldPosition;
 }
 #endif
@@ -142,31 +147,28 @@ void main() {
 	const vec3 Fdielectric = vec3(0.04);
 	vec3 F0 = mix(Fdielectric, m_Params.Albedo, m_Params.Metalness);
 
-	uint cascadeIndex = 0;
+	uint cascadeIndex = 3;
 	const uint SHADOW_MAP_CASCADE_COUNT = 4;
-	for (uint i = 0; i < SHADOW_MAP_CASCADE_COUNT - 1; i++)
-	{
-		if (Input.ViewPosition.z < u_RendererData.CascadeSplits[i])
-			cascadeIndex = i + 1;
-	}
 
+		for (uint i = 0; i < SHADOW_MAP_CASCADE_COUNT; i++)
+		{
+			if (Input.ViewPosition.z < u_RendererData.CascadeSplits[i])
+			{
+				cascadeIndex = i;
+				break;  // 找到第一个匹配就退出
+			}
+		}
 
 	float shadowScale;
 
 	vec3 shadowMapCoords = GetShadowMapCoords(Input.ShadowMapCoords, cascadeIndex);
-	shadowScale = true ? PCSS_DirectionalLight(u_ShadowMapTexture, cascadeIndex, shadowMapCoords, u_RendererData.LightSize) : HardShadows_DirectionalLight(u_ShadowMapTexture, cascadeIndex, shadowMapCoords);
-
-
-	shadowScale = 1.0 - clamp(u_Scene.DirectionalLights.ShadowAmount - shadowScale, 0.0f, 1.0f);
-
+	shadowScale = HardShadows_DirectionalLight(u_ShadowMapTexture, cascadeIndex, shadowMapCoords);
 	// Direct lighting
 	vec3 lightContribution = CalculateDirLights(F0) * shadowScale;
-	// lightContribution += CalculatePointLights(F0, Input.WorldPosition);
-	// lightContribution += CalculateSpotLights(F0, Input.WorldPosition) * SpotShadowCalculation(u_SpotShadowTexture, Input.WorldPosition);
-	lightContribution += m_Params.Albedo * u_MaterialUniforms.Emission;
+	// lightContribution += texture(u_EmssiveTexture, Input.TexCoord).xyz
 
 	// Indirect lighting
-	vec3 iblContribution = IBL(F0, Lr) * u_Scene.EnvironmentMapIntensity;
+	vec3 iblContribution = IBL(F0, Lr);
 
 	// Final color
 	o_Color = vec4(iblContribution + lightContribution, 1.0);

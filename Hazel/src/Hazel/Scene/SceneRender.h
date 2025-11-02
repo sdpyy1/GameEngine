@@ -177,14 +177,7 @@ namespace Hazel {
 			DirectionalLight DirectionalLight;
 			float EnvironmentMapIntensity;
 		};
-		struct MaterialPush {
-			glm::vec3 AlbedoColor;
-			float Metalness;
-			float Roughness;
-			float Emission;
 
-			bool UseNormalMap;
-		};
 	private: // Utils which need struct
 		void CopyToBoneTransformStorage(const MeshKey& meshKey, const Ref<MeshSource>& meshSource, const std::vector<glm::mat4>& boneTransforms);
 		void CalculateCascades(CascadeData* cascades, const EditorCamera& sceneCamera, const glm::vec3& lightDirection) const;

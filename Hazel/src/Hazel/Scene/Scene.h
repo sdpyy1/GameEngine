@@ -25,9 +25,9 @@ namespace Hazel {
 	struct DirectionalLight
 	{
 		glm::vec3 Direction = { 0.0f, 0.0f, 0.0f };
-		float ShadowAmount = 1.0f;
-		glm::vec3 Radiance = { 0.0f, 0.0f, 0.0f };
 		float Intensity = 0.0f;
+		glm::vec3 Radiance = { 0.0f, 0.0f, 0.0f };
+		float ShadowAmount = 1.0f;
 	};
 
 	struct PointLight
@@ -61,7 +61,7 @@ namespace Hazel {
 
 	struct LightEnvironment
 	{
-		static constexpr size_t MaxDirectionalLights = 4;
+		static constexpr size_t MaxDirectionalLights = 1;
 
 		DirectionalLight DirectionalLights[MaxDirectionalLights];
 		std::vector<PointLight> PointLights;

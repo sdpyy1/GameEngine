@@ -25,6 +25,7 @@ namespace Hazel {
 			auto normal = NormalTexture ? NormalTexture : Renderer::GetWhiteTexture();
 			auto metalness = MetalnessTexture ? MetalnessTexture : Renderer::GetWhiteTexture();
 			auto roughness = RoughnessTexture ? RoughnessTexture : Renderer::GetWhiteTexture();
+			auto rms = EmissionTexture ? EmissionTexture : Renderer::GetBlackTexture();
 
 			// 准备 VkDescriptorImageInfo
 			auto getImageInfo = [](Ref<Texture2D> tex) -> VkDescriptorImageInfo {
@@ -36,15 +37,16 @@ namespace Hazel {
 				return info;
 				};
 
-			std::array<VkDescriptorImageInfo, 4> imageInfos = {
+			std::array<VkDescriptorImageInfo, 5> imageInfos = {
 				getImageInfo(albedo),
 				getImageInfo(normal),
 				getImageInfo(metalness),
-				getImageInfo(roughness)
+				getImageInfo(roughness),
+                getImageInfo(rms)
 			};
 
 			// 写入操作模板
-			std::array<VkWriteDescriptorSet, 4> writeSets{};
+			std::array<VkWriteDescriptorSet, 5> writeSets{};
 			for (size_t i = 0; i < writeSets.size(); i++)
 			{
 				writeSets[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;

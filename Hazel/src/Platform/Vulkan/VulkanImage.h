@@ -47,7 +47,7 @@ namespace Hazel {
 		virtual const ImageSpecification& GetSpecification() const override { return m_Specification; }
 
 		void RT_Invalidate();
-
+		int GetLayerCount() {return m_Specification.Layers;}
 		virtual void CreatePerLayerImageViews() override;
 		void RT_CreatePerLayerImageViews();
 		void RT_CreatePerSpecificLayerImageViews(const std::vector<uint32_t>& layerIndices);

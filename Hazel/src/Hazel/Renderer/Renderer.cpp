@@ -154,12 +154,13 @@ namespace Hazel {
             PushRange.shaderStage = VK_SHADER_STAGE_FRAGMENT_BIT ;
             PushRange.offset = 0;
             PushRange.size = 64;
-            gbufferShaderSpec.pushConstantRanges = { PushRange };
+            gbufferShaderSpec.pushConstantRanges.push_back(PushRange);
 			s_Data->m_ShaderLibrary->LoadCommonShader("gBuffer", gbufferShaderSpec);
-			PushRange.shaderStage = VK_SHADER_STAGE_VERTEX_BIT;
-            PushRange.size = 4;
-			PushRange.offset = 64;
-			gbufferShaderSpec.pushConstantRanges.push_back(PushRange);
+			Shader::PushConstantRange PushRange1;
+			PushRange1.shaderStage = VK_SHADER_STAGE_VERTEX_BIT;
+            PushRange1.size = 4;
+			PushRange1.offset = 64;
+			gbufferShaderSpec.pushConstantRanges.push_back(PushRange1);
 			gbufferShaderSpec.bindings.push_back(boneTrasnfromBinding);
 			s_Data->m_ShaderLibrary->LoadCommonShader("gBufferAnim", gbufferShaderSpec);
 		}

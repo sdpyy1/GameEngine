@@ -161,11 +161,15 @@ namespace Hazel {
 
 			if (isInit) {
 				for (size_t i = 0; i < Renderer::GetConfig().FramesInFlight; i++) {
+					uint32_t layerCount = vulkanTexture->GetLayerCount();
+
 					m_BindImages[i][Binding] = image.As<VulkanImage2D>()->GetVulkanImage();
-					VkDescriptorImageInfo imageInfo{};
-					imageInfo.sampler = vulkanTexture->GetDescriptorInfoVulkan().sampler;
-					imageInfo.imageView = vulkanTexture->GetDescriptorInfoVulkan().imageView;
-					imageInfo.imageLayout = vulkanTexture->GetDescriptorInfoVulkan().imageLayout;
+					std::vector<VkDescriptorImageInfo> imageInfos(layerCount);
+					for (uint32_t i = 0; i < layerCount; ++i) {
+						imageInfos[i].sampler = vulkanTexture->GetDescriptorInfoVulkan().sampler;
+						imageInfos[i].imageView = vulkanTexture->GetDescriptorInfoVulkan().imageView; // 包含所有 Layer 的 ImageView
+						imageInfos[i].imageLayout = vulkanTexture->GetDescriptorInfoVulkan().imageLayout; // 确保是合法布局（如 VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL）
+					}
 
 					std::array<VkWriteDescriptorSet, 1> descriptorWrites{};
 					descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -173,13 +177,13 @@ namespace Hazel {
 					descriptorWrites[0].dstBinding = Binding;
 					descriptorWrites[0].dstArrayElement = 0;
 					descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-					descriptorWrites[0].descriptorCount = 1;
-					descriptorWrites[0].pImageInfo = &imageInfo;
+					descriptorWrites[0].descriptorCount = layerCount; // 与数组大小一致
+					descriptorWrites[0].pImageInfo = imageInfos.data(); // 指向数组首地址
 
 					vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
 				}
 			}
-			else {
+			else { // TODO：Layer处理
 				VkImage curImage = m_BindImages[Renderer::RT_GetCurrentFrameIndex()][Binding];
 				// 图片被销毁或者更换了，需要更新绑定
 				if (!curImage || curImage != image.As<VulkanImage2D>()->GetVulkanImage()) {

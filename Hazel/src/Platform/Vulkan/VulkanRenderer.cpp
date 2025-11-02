@@ -202,6 +202,7 @@ namespace Hazel {
 	{
 		Renderer::Submit([renderCommandBuffer, renderPass, explicitClear]()
 			{
+				//HZ_CORE_TRACE(" Pass Begin [{}]", renderPass->GetSpecification().DebugName);
 				uint32_t frameIndex = Renderer::RT_GetCurrentFrameIndex();
 				VkCommandBuffer commandBuffer = renderCommandBuffer.As<VulkanRenderCommandBuffer>()->GetActiveCommandBuffer();
 
@@ -355,8 +356,7 @@ namespace Hazel {
 		if (additionalUniforms.Size)
 		{
 			pushConstantBuffer.Allocate(additionalUniforms.Size);
-			if (additionalUniforms.Size)
-				pushConstantBuffer.Write(additionalUniforms.Data, additionalUniforms.Size);
+			pushConstantBuffer.Write(additionalUniforms.Data, additionalUniforms.Size);
 		}
 		Renderer::Submit([renderCommandBuffer, pipeline, meshSource, submeshIndex, material, pushConstantBuffer, transformBuffer, transformOffset, instanceCount]() mutable {
 			uint32_t frameIndex = Renderer::RT_GetCurrentFrameIndex();
@@ -373,7 +373,8 @@ namespace Hazel {
 			auto vulkanMeshIB = Ref<VulkanIndexBuffer>(meshSource->GetIndexBuffer());
 			VkBuffer ibBuffer = vulkanMeshIB->GetVulkanBuffer();
 			vkCmdBindIndexBuffer(commandBuffer, ibBuffer, 0, VK_INDEX_TYPE_UINT32); // 索引缓冲区全绑定
-
+			VkPipelineLayout layout = pipeline.As<VulkanPipeline>()->GetVulkanPipelineLayout();
+			uint32_t pushConstantOffset = 0;
 			// 每个材质绑定自己的 Set=1
 			if (material) {
 				Ref<VulkanMaterial> vulkanMaterial = material.As<VulkanMaterial>();
@@ -383,15 +384,32 @@ namespace Hazel {
 					1, // Set=1
 					1, &matSet,
 					0, nullptr);
+				struct MaterialPush {
+					glm::vec3 AlbedoColor;
+					float Metalness;
+					float Roughness;
+					float Emission;
+
+					bool UseNormalMap;
+				};
+				MaterialPush materialPush;
+				materialPush.AlbedoColor = material->m_AlbedoColor;
+				materialPush.Emission = material->m_EmissionColor.x; //tmp
+				materialPush.Metalness = material->m_MetalnessColor;
+				materialPush.Roughness = material->m_RoughnessColor;
+				materialPush.UseNormalMap = material->bUseNormalTexture;
+				Buffer mB = Buffer(&materialPush, sizeof(MaterialPush));
+				vkCmdPushConstants(commandBuffer, layout, VK_SHADER_STAGE_FRAGMENT_BIT, pushConstantOffset, mB.Size, mB.Data);
+				pushConstantOffset += 64;
 			}
 			const auto& submeshes = meshSource->GetSubmeshes();
 			const auto& submesh = submeshes[submeshIndex];
-			VkPipelineLayout layout = pipeline.As<VulkanPipeline>()->GetVulkanPipelineLayout();
 
-			uint32_t pushConstantOffset = 0;
-			if (pushConstantBuffer.Size)
+
+			if (pushConstantBuffer.Size > 0)
 			{
-				vkCmdPushConstants(commandBuffer, layout, VK_SHADER_STAGE_FRAGMENT_BIT, pushConstantOffset, pushConstantBuffer.Size, pushConstantBuffer.Data);
+				// HZ_CORE_INFO("Pass{}", pipeline->GetSpecification().DebugName);
+				vkCmdPushConstants(commandBuffer, layout, VK_SHADER_STAGE_VERTEX_BIT, pushConstantOffset, pushConstantBuffer.Size, pushConstantBuffer.Data);
 			}
 
 			vkCmdDrawIndexed(commandBuffer, submesh.IndexCount/*索引数量*/, instanceCount/*实例数量*/, submesh.BaseIndex/*索引缓冲区的偏移*/, submesh.BaseVertex/*顶点偏移*/, 0/*实例化ID开始的编号*/);
@@ -443,17 +461,8 @@ namespace Hazel {
 					VkBuffer vbBoneInfluencesBuffer = vulkanBoneInfluencesVB->GetVulkanBuffer();
 					vkCmdBindVertexBuffers(commandBuffer, 2, 1, &vbBoneInfluencesBuffer, vertexOffsets);
 				}
-
-				VkPipelineLayout layout = vulkanPipeline->GetVulkanPipelineLayout();
-
 				uint32_t pushConstantOffset = 0;
-				if (pushConstantBuffer.Size)
-				{
-					vkCmdPushConstants(commandBuffer, layout, VK_SHADER_STAGE_FRAGMENT_BIT, pushConstantOffset, pushConstantBuffer.Size - sizeof(uint32_t), pushConstantBuffer.Data);
-					pushConstantOffset += additionalUniforms.Size;
-					vkCmdPushConstants(commandBuffer, layout, VK_SHADER_STAGE_VERTEX_BIT, pushConstantOffset, sizeof(uint32_t), pushConstantBuffer.Data);
-				}
-
+				VkPipelineLayout layout = vulkanPipeline->GetVulkanPipelineLayout();
 				// 每个材质绑定自己的 Set=1
 				if (material) {
 					Ref<VulkanMaterial> vulkanMaterial = material.As<VulkanMaterial>();
@@ -464,7 +473,31 @@ namespace Hazel {
 						1, // Set=1
 						1, &matSet,
 						0, nullptr);
+					struct MaterialPush {
+						glm::vec3 AlbedoColor;
+						float Metalness;
+						float Roughness;
+						float Emission;
+
+						bool UseNormalMap;
+					};
+					MaterialPush materialPush;
+					materialPush.AlbedoColor = material->m_AlbedoColor;
+					materialPush.Emission = material->m_EmissionColor.x; //tmp
+					materialPush.Metalness = material->m_MetalnessColor;
+					materialPush.Roughness = material->m_RoughnessColor;
+					materialPush.UseNormalMap = material->bUseNormalTexture;
+					Buffer mB = Buffer(&materialPush, sizeof(MaterialPush));
+					vkCmdPushConstants(commandBuffer, layout, VK_SHADER_STAGE_FRAGMENT_BIT, pushConstantOffset, mB.Size, mB.Data);
+					pushConstantOffset += 64;
 				}
+
+				if (pushConstantBuffer.Size > 0)
+				{
+					vkCmdPushConstants(commandBuffer, layout, VK_SHADER_STAGE_VERTEX_BIT, pushConstantOffset, pushConstantBuffer.Size, pushConstantBuffer.Data);
+				}
+
+	
 
 				vkCmdDrawIndexed(commandBuffer, submesh.IndexCount, instanceCount, submesh.BaseIndex, submesh.BaseVertex, 0);
 

@@ -26,5 +26,6 @@ namespace Hazel {
 		std::string m_Name;
 		VkDevice  m_Device;
 		std::vector<VkDescriptorSet> m_DescriptorSets;
+		Buffer m_UniformBuffer;
 	};
 }

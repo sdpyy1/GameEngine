@@ -238,7 +238,7 @@ namespace Hazel {
 		bool CastShadows = true;
 		bool SoftShadows = true;
 		float LightSize = 0.5f; // For PCSS
-		float ShadowAmount = 1.0f;
+		float ShadowAmount = 1.0f; // “ı”∞≥Ã∂»
 	};
 	struct ScriptComponent
 	{
