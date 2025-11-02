@@ -24,8 +24,6 @@ namespace Hazel {
 		virtual uint32_t GetHeight() const override { return m_Specification.Height; }
 		virtual glm::uvec2 GetSize() const override { return { m_Specification.Width, m_Specification.Height }; }
 
-		virtual void Bind(uint32_t slot = 0) const override;
-
 		virtual Ref<Image2D> GetImage() const override { return m_Image; }
 		virtual ResourceDescriptorInfo GetDescriptorInfo() const override { return m_Image.As<VulkanImage2D>()->GetDescriptorInfo(); }
 		const VkDescriptorImageInfo& GetDescriptorInfoVulkan() const { return *(VkDescriptorImageInfo*)GetDescriptorInfo(); }
@@ -63,7 +61,6 @@ namespace Hazel {
 
 		void Release();
 
-		virtual void Bind(uint32_t slot = 0) const override {}
 
 		virtual ImageFormat GetFormat() const override { return m_Specification.Format; }
 

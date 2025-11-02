@@ -17,7 +17,7 @@ namespace Hazel {
 		preComputeEnv();
 
 		InitDirShadowPass();
-		InitSpotShadowPass();
+		//InitSpotShadowPass();
 		InitPreDepthPass();
 		InitHZBPass();
 		InitGeoPass();
@@ -27,7 +27,7 @@ namespace Hazel {
 
 	void SceneRender::Draw() {
 		ShadowPass();
-		SpotShadowPass();
+		// SpotShadowPass();
 		PreDepthPass();
 		HZBComputePass();
 		GeoPass();
@@ -93,9 +93,10 @@ namespace Hazel {
 		}
 		Renderer::EndRenderPass(m_CommandBuffer);
 	}
+
 	void SceneRender::CalculateCascades(CascadeData* cascades, const EditorCamera& sceneCamera, const glm::vec3& lightDirection) const
 	{
-		float CascadeSplitLambda = 0.92f;
+		float CascadeSplitLambda = 0.7f;
 		float CascadeFarPlaneOffset = 50.0f, CascadeNearPlaneOffset = -50.0f;
 		float m_ScaleShadowCascadesToOrigin = 0.0f;
 		float scaleToOrigin = m_ScaleShadowCascadesToOrigin;
@@ -130,7 +131,6 @@ namespace Hazel {
 			cascadeSplits[i] = (d - nearClip) / clipRange;
 		}
 
-
 		// Calculate orthographic projection matrix for each cascade
 		float lastSplitDist = 0.0;
 		for (uint32_t i = 0; i < SHADOW_MAP_CASCADE_COUNT; i++)
@@ -155,6 +155,7 @@ namespace Hazel {
 			{
 				glm::vec4 invCorner = invCam * glm::vec4(frustumCorners[i], 1.0f);
 				frustumCorners[i] = invCorner / invCorner.w;
+				frustumCorners[i].z = - frustumCorners[i].z;
 			}
 
 			for (uint32_t i = 0; i < 4; i++)
@@ -185,7 +186,7 @@ namespace Hazel {
 			glm::vec3 minExtents = -maxExtents;
 
 			glm::vec3 lightDir = lightDirection;
-			glm::mat4 lightViewMatrix = glm::lookAt(frustumCenter + lightDir * minExtents.z, frustumCenter, glm::vec3(0.0f, 0.0f, 1.0f));
+			glm::mat4 lightViewMatrix = glm::lookAt(frustumCenter + lightDir * minExtents.z , frustumCenter, glm::vec3(0.0f, 0.0f, -1.0f));
 			glm::mat4 lightOrthoMatrix = glm::ortho(minExtents.x, maxExtents.x, minExtents.y, maxExtents.y, 0.0f + CascadeNearPlaneOffset, maxExtents.z - minExtents.z + CascadeFarPlaneOffset);
 
 			// Offset to texel space to avoid shimmering (from https://stackoverflow.com/questions/33499053/cascaded-shadow-map-shimmering)
@@ -204,6 +205,9 @@ namespace Hazel {
 			// Store split distance and matrix in cascade
 			//cascades[i].SplitDepth = (nearClip + splitDist * clipRange) * -1.0f;
 			cascades[i].SplitDepth = (nearClip + splitDist * clipRange);
+
+			
+
 			cascades[i].ViewProj = lightOrthoMatrix * lightViewMatrix;
 			cascades[i].View = lightViewMatrix;
 
@@ -509,7 +513,7 @@ namespace Hazel {
 		if (NumShadowCascades > 1)
 			cascadedDepthImage->CreatePerLayerImageViews();
 		FramebufferSpecification shadowMapFramebufferSpec;
-		shadowMapFramebufferSpec.DebugName = "Dir Shadow Map";
+		shadowMapFramebufferSpec.DebugName = "DirShadowMap";
 		shadowMapFramebufferSpec.Width = shadowMapResolution;
 		shadowMapFramebufferSpec.Height = shadowMapResolution;
 		shadowMapFramebufferSpec.Attachments = { ImageFormat::DEPTH32F };
@@ -776,7 +780,7 @@ namespace Hazel {
 	{
 		const uint32_t cubemapSize = Renderer::GetConfig().EnvironmentMapResolution;
 		const uint32_t irradianceMapSize = Renderer::GetConfig().IrradianceMapSize;
-		m_EnvEquirect = Texture2D::Create(TextureSpecification(), std::filesystem::path("assets/HDR/1.hdr"));
+		m_EnvEquirect = Texture2D::Create(TextureSpecification(), std::filesystem::path("assets/HDR/4.hdr"));
 		HZ_CORE_ASSERT(m_EnvEquirect->GetFormat() == ImageFormat::RGBA32F, "Texture is not HDR!");
 		TextureSpecification cubemapSpec;
 		cubemapSpec.Format = ImageFormat::RGBA32F;

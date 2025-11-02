@@ -33,8 +33,9 @@ namespace Hazel {
 			for (auto entity : lights)
 			{
 				auto [transformComponent, lightComponent] = lights.get<TransformComponent, DirectionalLightComponent>(entity);
-				glm::vec3 initialDir = glm::vec3(0.0f, 0.0f, -1.0f);
-				glm::vec3 direction = glm::normalize(transformComponent.GetRotation() * initialDir);
+				//glm::vec3 initialDir = glm::vec3(0.0f, 0.0f, -1.0f);
+				//glm::vec3 direction = glm::normalize(transformComponent.GetRotation() * initialDir);
+				glm::vec3 direction = glm::normalize(-transformComponent.Translation);
 
 				HZ_CORE_ASSERT(directionalLightIndex < LightEnvironment::MaxDirectionalLights);
 				light.DirectionalLights[directionalLightIndex++] =

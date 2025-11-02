@@ -75,7 +75,7 @@ namespace Hazel {
 
 		ImageFormat Format = ImageFormat::RGBA;
 		ImageUsage Usage = ImageUsage::Texture;
-		bool Transfer = false; // Will it be used for transfer ops?
+		bool Transfer = false;
 		uint32_t Width = 1;
 		uint32_t Height = 1;
 		uint32_t Mips = 1;
@@ -83,31 +83,14 @@ namespace Hazel {
 		bool CreateSampler = true;
 	};
 
-	struct ImageSubresourceRange
-	{
-		uint32_t BaseMip = 0; // 起始mip层
-		uint32_t MipCount = UINT_MAX; // 多少mip层
-		uint32_t BaseLayer = 0; // 起始的图层（Layer）索引。图层通常用于立方体纹理（6 个面）、数组纹理（多个图像的集合）等场景。
-		uint32_t LayerCount = UINT_MAX; // 需要包含的图层数量。
-	};
-
-	// 清除值
-	union ImageClearValue
-	{
-		glm::vec4 FloatValues;
-		glm::ivec4 IntValues;
-		glm::uvec4 UIntValues;
-	};
-
-	// 图片接口
 	class Image : public RendererResource
 	{
 	public:
 		virtual ~Image() = default;
 
 		virtual void Resize(const uint32_t width, const uint32_t height) = 0;
-		virtual void Invalidate() = 0; // 重建
-		virtual void Release() = 0;  // 释放
+		virtual void Invalidate() = 0;
+		virtual void Release() = 0;
 
 		virtual uint32_t GetWidth() const = 0;
 		virtual uint32_t GetHeight() const = 0;
@@ -122,16 +105,14 @@ namespace Hazel {
 		virtual Buffer GetBuffer() const = 0;
 		virtual Buffer& GetBuffer() = 0;
 
-		virtual uint64_t GetGPUMemoryUsage() const = 0; // 显存使用量
+		virtual uint64_t GetGPUMemoryUsage() const = 0; 
 
-		virtual void CreatePerLayerImageViews() = 0;  // 为每层图像创建视图
+		virtual void CreatePerLayerImageViews() = 0;
 
 		virtual uint64_t GetHash() const = 0;
 
 		virtual void SetData(Buffer buffer) = 0;
-		virtual void CopyToHostBuffer(Buffer& buffer) const = 0; // 复制到CPU可读的buffer
-
-		// TODO: usage (eg. shader read)
+		virtual void CopyToHostBuffer(Buffer& buffer) const = 0; 
 	};
 
 	class Image2D : public Image
@@ -194,12 +175,11 @@ namespace Hazel {
 
 		inline uint32_t CalculateMipCount(uint32_t width, uint32_t height)
 		{
-			if (width == 0 || height == 0) return 1; // 异常尺寸兜底
-
-			uint32_t mipCount = 1; // 至少包含第0级（原始尺寸）
+			if (width == 0 || height == 0) return 1;
+			uint32_t mipCount = 1;
 			uint32_t currentMin = glm::min(width, height);
-			while (currentMin > 1) { // 直到最小边≤1，停止计算
-				currentMin = (currentMin + 1) / 2; // 向上取整缩小（避免奇数尺寸卡住）
+			while (currentMin > 1) {
+				currentMin = (currentMin + 1) / 2; 
 				mipCount++;
 			}
 			return mipCount;
@@ -212,7 +192,7 @@ namespace Hazel {
 
 		inline bool IsDepthFormat(ImageFormat format)
 		{
-			if (format == ImageFormat::DEPTH24STENCIL8 || format == ImageFormat::DEPTH32F || format == ImageFormat::DEPTH32FSTENCIL8UINT)
+			if (format == ImageFormat::DEPTH24STENCIL8 || format == ImageFormat::DEPTH32F || format == ImageFormat::DEPTH32FSTENCIL8UINT  || format == ImageFormat::Depth)
 				return true;
 
 			return false;

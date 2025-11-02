@@ -76,8 +76,6 @@ namespace Hazel {
 
 		void UpdateDescriptor();
 
-		// Debug
-		static const std::map<VkImage, WeakRef<VulkanImage2D>>& GetImageRefs();
 
 		virtual void SetData(Buffer buffer) override;
 		virtual void CopyToHostBuffer(Buffer& buffer) const override;

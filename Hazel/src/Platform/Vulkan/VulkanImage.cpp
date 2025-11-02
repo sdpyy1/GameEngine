@@ -9,8 +9,6 @@
 #include "Hazel/Renderer/Renderer.h"
 
 namespace Hazel {
-	static std::map<VkImage, WeakRef<VulkanImage2D>> s_ImageReferences;   // Weak 不会增加对象的引用计数
-
 	// 创建时只会保存规格，没有实际创建
 	VulkanImage2D::VulkanImage2D(const ImageSpecification& specification)
 		: m_Specification(specification)
@@ -54,7 +52,6 @@ namespace Hazel {
 				}
 				VulkanAllocator allocator("VulkanImage2D");
 				allocator.DestroyImage(info.Image, info.MemoryAlloc);
-				s_ImageReferences.erase(info.Image);
 			});
 		m_Info.Image = nullptr;
 		m_Info.ImageView = nullptr;
@@ -85,15 +82,13 @@ namespace Hazel {
 	{
 		HZ_CORE_ASSERT(m_Specification.Width > 0 && m_Specification.Height > 0);
 		HZ_CORE_TRACE("RT: VulkanImage2D [{0}] Create!", m_Specification.DebugName);
-
-		// Try release first if necessary
 		Release();
 
 		VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 		VulkanAllocator allocator("Image2D");
 
 		// 处理图片的用途
-		VkImageUsageFlags usage = VK_IMAGE_USAGE_SAMPLED_BIT; // TODO: this (probably) shouldn't be implied
+		VkImageUsageFlags usage = VK_IMAGE_USAGE_SAMPLED_BIT;
 		if (m_Specification.Usage == ImageUsage::Attachment)
 		{
 			if (Utils::IsDepthFormat(m_Specification.Format))
@@ -113,7 +108,7 @@ namespace Hazel {
 		// 指定图片是操作 颜色 还是 深度、模板
 		// 是深度还是颜色操作
 		VkImageAspectFlags aspectMask = Utils::IsDepthFormat(m_Specification.Format) ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
-		if (m_Specification.Format == ImageFormat::DEPTH24STENCIL8)
+		if (m_Specification.Format == ImageFormat::DEPTH24STENCIL8 || m_Specification.Format == ImageFormat::DEPTH32FSTENCIL8UINT)
 			aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
 
 		// 把抽象的格式转为Vulkan的格式
@@ -130,11 +125,11 @@ namespace Hazel {
 		imageCreateInfo.extent.depth = 1;
 		imageCreateInfo.mipLevels = m_Specification.Mips;
 		imageCreateInfo.arrayLayers = m_Specification.Layers;
-		imageCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT;  // 多重采样设置
+		imageCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT;
 		imageCreateInfo.tiling = m_Specification.Usage == ImageUsage::HostRead ? VK_IMAGE_TILING_LINEAR : VK_IMAGE_TILING_OPTIMAL; // 内存布局
 		imageCreateInfo.usage = usage;
 		m_Info.MemoryAlloc = allocator.AllocateImage(imageCreateInfo, memoryUsage, m_Info.Image, &m_GPUAllocationSize);
-		s_ImageReferences[m_Info.Image] = this;
+		// s_ImageReferences[m_Info.Image] = this;
 		VKUtils::SetDebugUtilsObjectName(device, VK_OBJECT_TYPE_IMAGE, m_Specification.DebugName, m_Info.Image);
 
 		// Create a default image view
@@ -186,7 +181,7 @@ namespace Hazel {
 		// 根据不同的用途，设置不同的图片内存布局
 		if (m_Specification.Usage == ImageUsage::Storage) // General
 		{
-			// Transition image to GENERAL layout   传入true就会立即开始记录命令
+			// Transition image to GENERAL layout
 			VkCommandBuffer commandBuffer = VulkanContext::GetCurrentDevice()->GetCommandBuffer(true);
 
 			VkImageSubresourceRange subresourceRange = {};
@@ -223,7 +218,7 @@ namespace Hazel {
 			VulkanContext::GetCurrentDevice()->FlushCommandBuffer(commandBuffer); // 会把命令提交并等待完成
 		}
 
-		UpdateDescriptor(); // 创建好图片后，更新描述符
+		UpdateDescriptor();
 	}
 
 	void VulkanImage2D::CreatePerLayerImageViews()
@@ -242,7 +237,7 @@ namespace Hazel {
 		VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 
 		VkImageAspectFlags aspectMask = Utils::IsDepthFormat(m_Specification.Format) ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
-		if (m_Specification.Format == ImageFormat::DEPTH24STENCIL8)
+		if (m_Specification.Format == ImageFormat::DEPTH24STENCIL8 || m_Specification.Format == ImageFormat::DEPTH32FSTENCIL8UINT)
 			aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
 
 		const VkFormat vulkanFormat = Utils::VulkanImageFormat(m_Specification.Format);
@@ -315,7 +310,7 @@ namespace Hazel {
 	}
 
 	void VulkanImage2D::RT_CreatePerSpecificLayerImageViews(const std::vector<uint32_t>& layerIndices)
-	{
+	{	
 		HZ_CORE_ASSERT(m_Specification.Layers > 1);
 
 		VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
@@ -351,28 +346,24 @@ namespace Hazel {
 
 	void VulkanImage2D::UpdateDescriptor()
 	{
-		if (m_Specification.Format == ImageFormat::DEPTH24STENCIL8 || m_Specification.Format == ImageFormat::DEPTH32F || m_Specification.Format == ImageFormat::DEPTH32FSTENCIL8UINT)
+		if (m_Specification.Format == ImageFormat::DEPTH24STENCIL8 ||
+			m_Specification.Format == ImageFormat::DEPTH32F ||
+			m_Specification.Format == ImageFormat::DEPTH32FSTENCIL8UINT) {
 			m_DescriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
-		else if (m_Specification.Usage == ImageUsage::Storage)
+		}
+		else if (m_Specification.Usage == ImageUsage::Storage) {
 			m_DescriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-		else
-			m_DescriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-
-		if (m_Specification.Usage == ImageUsage::Storage)
-			m_DescriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-		else if (m_Specification.Usage == ImageUsage::HostRead)
+		}
+		else if (m_Specification.Usage == ImageUsage::HostRead) {
 			m_DescriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+		}
+		else {
+			m_DescriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		}
 
 		m_DescriptorImageInfo.imageView = m_Info.ImageView;
 
 		m_DescriptorImageInfo.sampler = m_Info.Sampler;
-
-		//HZ_CORE_WARN_TAG("Renderer", "VulkanImage2D::UpdateDescriptor to ImageView = {0}", (const void*)m_Info.ImageView);
-	}
-
-	const std::map<VkImage, WeakRef<VulkanImage2D>>& VulkanImage2D::GetImageRefs()
-	{
-		return s_ImageReferences;
 	}
 
 	void VulkanImage2D::SetData(Buffer buffer)

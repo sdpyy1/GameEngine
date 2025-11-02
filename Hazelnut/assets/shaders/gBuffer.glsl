@@ -134,13 +134,13 @@ void main() {
 	m_Params.Roughness = max(m_Params.Roughness, 0.05); // Minimum roughness of 0.05 to keep specular highlight
 
 	// Normals (either from vertex or map)
-	m_Params.Normal = normalize(Input.Normal);
+	m_Params.Normal = normalize(Input.Normal);		
 	if (u_MaterialUniforms.UseNormalMap)
 	{
 		m_Params.Normal = normalize(texture(u_NormalTexture, Input.TexCoord).rgb * 2.0f - 1.0f);
 		m_Params.Normal = normalize(Input.WorldNormals * m_Params.Normal);
 	}
-	m_Params.View = normalize(u_CameraData.CameraPosition - Input.WorldPosition);
+	m_Params.View = normalize(u_CameraData.CameraPosition - Input.WorldPosition); 
 	m_Params.NdotV = max(dot(m_Params.Normal, m_Params.View), 0.0);
 	// Specular reflection vector
 	vec3 Lr = 2.0 * m_Params.NdotV * m_Params.Normal - m_Params.View;
@@ -165,12 +165,21 @@ void main() {
 	shadowScale = HardShadows_DirectionalLight(u_ShadowMapTexture, cascadeIndex, shadowMapCoords);
 	// Direct lighting
 	vec3 lightContribution = CalculateDirLights(F0) * shadowScale;
-	// lightContribution += texture(u_EmssiveTexture, Input.TexCoord).xyz
 
 	// Indirect lighting
 	vec3 iblContribution = IBL(F0, Lr);
+	  // 级联调试颜色：为每个级联分配不同颜色
+    vec3 cascadeColor;
+    switch(cascadeIndex) {
+        case 0: cascadeColor = vec3(1.0, 0.0, 0.0); break; // 红色 - 级联0
+        case 1: cascadeColor = vec3(0.0, 1.0, 0.0); break; // 绿色 - 级联1
+        case 2: cascadeColor = vec3(0.0, 0.0, 1.0); break; // 蓝色 - 级联2
+        case 3: cascadeColor = vec3(1.0, 1.0, 0.0); break; // 黄色 - 级联3
+        default: cascadeColor = vec3(1.0, 0.0, 1.0); // 紫色 - 异常
+    }
+	vec3 finalColor = lightContribution + iblContribution;
 
 	// Final color
-	o_Color = vec4(iblContribution + lightContribution, 1.0);
+    o_Color = vec4(mix(finalColor, cascadeColor, 0.5), 1.0);
 }
 #endif

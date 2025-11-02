@@ -25,8 +25,6 @@ namespace Hazel {
 	public:
 		virtual ~Texture() {}
 
-		virtual void Bind(uint32_t slot = 0) const = 0;
-
 		virtual ImageFormat GetFormat() const = 0;
 		virtual uint32_t GetWidth() const = 0;
 		virtual uint32_t GetHeight() const = 0;
@@ -48,14 +46,12 @@ namespace Hazel {
 		static Ref<Texture2D> Create(const TextureSpecification& specification, Buffer imageData);
 		virtual void CreateFromFile(const TextureSpecification& specification, const std::filesystem::path& filepath) = 0;
 		virtual void CreateFromBuffer(const TextureSpecification& specification, Buffer data = Buffer()) = 0;
-		bool  IsLoaded() const { return true; } // 需要删除，瞎写的为了编译
 		virtual void ReplaceFromFile(const TextureSpecification& specification, const std::filesystem::path& filepath) = 0;
 
 		virtual void Resize(const glm::uvec2& size) = 0;
 		virtual void Resize(const uint32_t width, const uint32_t height) = 0;
 
 		virtual Ref<Image2D> GetImage() const = 0;
-		virtual uint32_t GetRendererID() const { return 1; }  // 需要删除，瞎写的为了编译
 
 		virtual void Lock() = 0;
 		virtual void Unlock() = 0;

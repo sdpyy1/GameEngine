@@ -97,7 +97,6 @@ namespace Hazel {
 		m_ImageData = TextureImporter::ToBufferFromFile(filepath, m_Specification.Format, m_Specification.Width, m_Specification.Height);
 		if (!m_ImageData)
 		{
-			// TODO(Yan): move this to asset manager
 			HZ_CORE_ERROR("Failed to load texture from file: {}", filepath);
 			m_ImageData = TextureImporter::ToBufferFromFile("Resources/Textures/ErrorTexture.png", m_Specification.Format, m_Specification.Width, m_Specification.Height);
 		}
@@ -229,7 +228,7 @@ namespace Hazel {
 		imageSpec.Height = m_Specification.Height;
 		imageSpec.Mips = mipCount;
 		imageSpec.CreateSampler = false;
-		if (!m_ImageData) // TODO(Yan): better management for this, probably from texture spec
+		if (!m_ImageData)
 			imageSpec.Usage = ImageUsage::Storage;
 
 		Ref<VulkanImage2D> image = m_Image.As<VulkanImage2D>();
@@ -270,22 +269,8 @@ namespace Hazel {
 		samplerInfo.compareOp = VK_COMPARE_OP_NEVER;
 		samplerInfo.minLod = 0.0f;
 		samplerInfo.maxLod = (float)mipCount;
-		// Enable anisotropic filtering
-		// This feature is optional, so we must check if it's supported on the device
-
-		// TODO:
-		/*if (vulkanDevice->features.samplerAnisotropy) {
-				// Use max. level of anisotropy for this example
-				sampler.maxAnisotropy = 1.0f;// vulkanDevice->properties.limits.maxSamplerAnisotropy;
-				sampler.anisotropyEnable = VK_TRUE;
-		}
-		else {
-				// The device does not support anisotropic filtering
-				sampler.maxAnisotropy = 1.0;
-				sampler.anisotropyEnable = VK_FALSE;
-		}*/
 		samplerInfo.maxAnisotropy = 1.0;
-		samplerInfo.anisotropyEnable = VK_FALSE;
+		samplerInfo.anisotropyEnable = VK_FALSE;  // TODO:开启这个需要Device的Features
 		samplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
 
 		info.Sampler = Vulkan::CreateSampler(samplerInfo);
@@ -298,8 +283,6 @@ namespace Hazel {
 			view.viewType = VK_IMAGE_VIEW_TYPE_2D;
 			view.format = Utils::VulkanImageFormat(m_Specification.Format);
 			view.components = { VK_COMPONENT_SWIZZLE_R, VK_COMPONENT_SWIZZLE_G, VK_COMPONENT_SWIZZLE_B, VK_COMPONENT_SWIZZLE_A };
-			// The subresource range describes the set of mip levels (and array layers) that can be accessed through this image view
-			// It's possible to create multiple image views for a single image referring to different (and/or overlapping) ranges of the image
 			view.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 			view.subresourceRange.baseMipLevel = 0;
 			view.subresourceRange.baseArrayLayer = 0;
@@ -405,26 +388,6 @@ namespace Hazel {
 			1,
 			&bufferCopyRegion);
 
-#if 0
-		// Once the data has been uploaded we transfer to the texture image to the shader read layout, so it can be sampled from
-		imageMemoryBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-		imageMemoryBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-		imageMemoryBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-		imageMemoryBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-
-		// Insert a memory dependency at the proper pipeline stages that will execute the image layout transition
-		// Source pipeline stage stage is copy command exection (VK_PIPELINE_STAGE_TRANSFER_BIT)
-		// Destination pipeline stage fragment shader access (VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT)
-		vkCmdPipelineBarrier(
-			copyCmd,
-			VK_PIPELINE_STAGE_TRANSFER_BIT,
-			VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-			0,
-			0, nullptr,
-			0, nullptr,
-			1, &imageMemoryBarrier);
-
-#endif
 		uint32_t mipCount = m_Specification.GenerateMips ? GetMipLevelCount() : 1;
 		if (mipCount > 1) // Mips to generate
 		{
@@ -452,9 +415,6 @@ namespace Hazel {
 			GenerateMips();
 	}
 
-	void VulkanTexture2D::Bind(uint32_t slot) const
-	{
-	}
 
 	void VulkanTexture2D::Lock()
 	{
@@ -581,96 +541,6 @@ namespace Hazel {
 			subresourceRange);
 
 		VulkanContext::GetCurrentDevice()->FlushCommandBuffer(blitCmd);
-
-#if 0
-		VkImageMemoryBarrier barrier = {};
-		barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-		barrier.image = m_Image;
-		barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-		barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-
-		VkImageSubresourceRange subresourceRange = {};
-		subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-		subresourceRange.levelCount = 1;
-		subresourceRange.layerCount = 1;
-		barrier.subresourceRange = subresourceRange;
-
-		int32_t mipWidth = m_Specification.Width;
-		int32_t mipHeight = m_Specification.Height;
-
-		VkCommandBuffer commandBuffer = VulkanContext::GetCurrentDevice()->GetCommandBuffer(true);
-
-		barrier.subresourceRange.baseMipLevel = 0;
-		barrier.subresourceRange.baseArrayLayer = 0;
-		barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-		barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-		barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-		barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
-
-		vkCmdPipelineBarrier(commandBuffer,
-			VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0,
-			0, nullptr,
-			0, nullptr,
-			1, &barrier);
-
-		auto mipLevels = GetMipLevelCount();
-		for (uint32_t i = 1; i < mipLevels; i++)
-		{
-			VkImageBlit blit = {};
-			blit.srcOffsets[0] = { 0, 0, 0 };
-			blit.srcOffsets[1] = { mipWidth, mipHeight, 1 };
-			blit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-			blit.srcSubresource.mipLevel = i - 1;
-			blit.srcSubresource.baseArrayLayer = 0;
-			blit.srcSubresource.layerCount = 1;
-
-			blit.dstOffsets[0] = { 0, 0, 0 };
-			blit.dstOffsets[1] = { mipWidth / 2, mipHeight / 2, 1 };
-			blit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-			blit.dstSubresource.mipLevel = i;
-			blit.dstSubresource.baseArrayLayer = 0;
-			blit.dstSubresource.layerCount = 1;
-
-			vkCmdBlitImage(commandBuffer,
-				m_Image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-				m_Image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-				1, &blit,
-				VK_FILTER_LINEAR);
-
-			barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-			barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-			barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-			barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
-			barrier.subresourceRange.baseMipLevel = i;
-
-			vkCmdPipelineBarrier(commandBuffer,
-				VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0,
-				0, nullptr,
-				0, nullptr,
-				1, &barrier);
-
-			if (mipWidth > 1)
-				mipWidth /= 2;
-			if (mipHeight > 1)
-				mipHeight /= 2;
-		}
-
-		// Transition all mips from transfer to shader read
-		barrier.subresourceRange.baseMipLevel = 0;
-		barrier.subresourceRange.levelCount = mipLevels;
-		barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-		barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-		barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-		barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-
-		vkCmdPipelineBarrier(commandBuffer,
-			VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0,
-			0, nullptr,
-			0, nullptr,
-			1, &barrier);
-
-		VulkanContext::GetCurrentDevice()->FlushCommandBuffer(commandBuffer);
-#endif
 	}
 
 	void VulkanTexture2D::CopyToHostBuffer(Buffer& buffer)

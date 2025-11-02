@@ -1,0 +1,45 @@
+Scene: Untitled
+Entities:
+  - Entity: 1764367110568725772
+    TagComponent:
+      Tag: assets\model\AnimatedMorphCube\glTF\AnimatedMorphCube.gltf
+    Parent: 0
+    Children:
+      []
+    TransformComponent:
+      Translation: [0, 1.03509688, 0]
+      Rotation: [0, 0, 0]
+      Scale: [18, 0.600000024, 39.2999992]
+    StaticMeshComponent:
+      MeshSourcePath: assets\model\AnimatedMorphCube\glTF\AnimatedMorphCube.gltf
+      Visible: true
+  - Entity: 14027912289157016418
+    TagComponent:
+      Tag: Empty Entity
+    Parent: 0
+    Children:
+      []
+    TransformComponent:
+      Translation: [2.24907136, 5.55667448, -6.69431543]
+      Rotation: [-0.0174531937, -0.0174531937, -0.0174531937]
+      Scale: [1, 1, 1]
+    DirectionalLightComponent:
+      Intensity: 1
+      Radiance: [1, 1, 1]
+      CastShadows: true
+      SoftShadows: true
+      LightSize: 0.5
+      ShadowAmount: 1
+  - Entity: 17096254945763097097
+    TagComponent:
+      Tag: assets\model\helmet\DamagedHelmet.gltf
+    Parent: 0
+    Children:
+      []
+    TransformComponent:
+      Translation: [0, 3.83998728, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    StaticMeshComponent:
+      MeshSourcePath: assets\model\helmet\DamagedHelmet.gltf
+      Visible: true
