@@ -8,14 +8,16 @@ vec3 kNdcPoints[6] = vec3[](
     vec3( 1,  1, 0), 
     vec3( 1, -1, 0)
 );
-layout(set = 0,binding = 0) uniform UniformBufferObject {
+layout(set = 0,binding = 0) uniform CameraDataUniform {
     mat4 view;
     mat4 proj;
+	mat4 viewProj;
 	float width;
 	float height;
 	float Near;
 	float Far;
-} cameraData;
+	vec3 CameraPosition;
+} u_CameraData;
 // 描述符集
 layout (set = 0, binding = 1) uniform sampler2D inDepth;
 
@@ -24,7 +26,7 @@ layout(location = 0) out vec3 nearPoint;
 layout(location = 1) out vec3 farPoint; 
 vec3 deprojectNDC2World(vec2 pos, float z) 
 {
-    vec4 worldH = inverse(cameraData.proj * cameraData.view) * vec4(pos, z, 1.0);
+    vec4 worldH = inverse(u_CameraData.viewProj) * vec4(pos, z, 1.0);
     return worldH.xyz / worldH.w;
 }
 void main()
@@ -95,7 +97,7 @@ vec4 grid(vec3 fragPos3D)
 
 float computeDepth(vec3 pos) 
 {
-    vec4 posH = cameraData.proj * cameraData.view * vec4(pos, 1.0);
+    vec4 posH = u_CameraData.proj * u_CameraData.view * vec4(pos, 1.0);
     float deviceZ = posH.z / posH.w;
     // 将设备空间深度值钳制在 [0.0, 1.0] 范围内
     return clamp(deviceZ, 0.0, 1.0);
@@ -117,10 +119,10 @@ vec4 getColor(vec3 fragPos3D, float t)
     float deviceZ = computeDepth(fragPos3D);
 
 	// 获取场景深度，做深度测试
-    vec2 uv = gl_FragCoord.xy / vec2(cameraData.width, cameraData.height);
+    vec2 uv = gl_FragCoord.xy / vec2(u_CameraData.width, u_CameraData.height);
     float sceneZ = texture(inDepth,uv).r;
 
-    float linearDepth = linearizeDepth(deviceZ,cameraData.Near,cameraData.Far);
+    float linearDepth = linearizeDepth(deviceZ,u_CameraData.Near,u_CameraData.Far);
 
     float fading = exp2(-linearDepth * 0.05);
 

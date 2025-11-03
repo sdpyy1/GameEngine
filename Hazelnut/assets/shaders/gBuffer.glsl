@@ -1,15 +1,7 @@
 #version 450 core
 #include "include/Utils.glslh"
 #include "include/Common.glslh"
-layout(set = 0,binding = 0) uniform CameraDataUniform {
-    mat4 view;
-    mat4 proj;
-	float width;
-	float height;
-	float Near;
-	float Far;
-	vec3 CameraPosition;
-} u_CameraData;
+#include "include/Buffer.glslh"
 struct VertexOutput
 {
 	vec3 WorldPosition;
@@ -25,10 +17,7 @@ struct VertexOutput
 
 #ifdef VERTEX_SHADER
 
-layout (std140, set = 0, binding = 2) uniform ShadowData 
-{
-	mat4 DirLightMatrices[4];
-} u_DirShadow;
+
 layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec3 inNormal;
 layout(location = 2) in vec3 inTangent;
@@ -67,8 +56,8 @@ void main() {
 	Output.ShadowMapCoords[2] = vec3(shadowCoords[2].xyz / shadowCoords[2].w);
 	Output.ShadowMapCoords[3] = vec3(shadowCoords[3].xyz / shadowCoords[3].w);
 	Output.ViewPosition = vec3(u_CameraData.view * vec4(Output.WorldPosition, 1.0));
-	Output.ViewPosition.z = - Output.ViewPosition.z;
-	gl_Position = u_CameraData.proj * u_CameraData.view * worldPosition;
+	Output.ViewPosition.z *= -1;
+	gl_Position = u_CameraData.viewProj * worldPosition;
 }
 #endif
 
@@ -97,20 +86,6 @@ layout(location = 0) out vec4 o_Color;
 layout(location = 1) out vec4 o_MetalnessRoughness;
 
 
-layout(std140, set = 0, binding = 3) uniform RendererData
-{
-	uniform vec4 CascadeSplits;
-	uniform float LightSize;
-} u_RendererData;
-layout(std140, set = 0, binding = 4) uniform SceneData
-{
-	DirectionalLight DirectionalLights;
-	float EnvironmentMapIntensity;
-} u_Scene;
-layout(set = 0, binding = 5) uniform sampler2DArray u_ShadowMapTexture;
-layout(set = 0, binding = 6) uniform samplerCube u_EnvRadianceTex;
-layout(set = 0, binding = 7) uniform samplerCube u_EnvIrradianceTex;
-layout(set = 0, binding = 8) uniform sampler2D u_BRDFLUTTexture;
 // Used in PBR shader
 struct PBRParameters
 {
@@ -161,14 +136,37 @@ void main() {
 
 	float shadowScale;
 
-	vec3 shadowMapCoords = GetShadowMapCoords(Input.ShadowMapCoords, cascadeIndex);
-	shadowScale = HardShadows_DirectionalLight(u_ShadowMapTexture, cascadeIndex, shadowMapCoords);
+	vec3 posInShadowMap = Input.ShadowMapCoords[cascadeIndex];
+	float bias = GetDirShadowBias();
+	float shadowMapDepth = texture(u_ShadowMapTexture, vec3(posInShadowMap.xy * 0.5 + 0.5, cascadeIndex)).x;
+	shadowScale =  step(posInShadowMap.z, shadowMapDepth + bias);
+
+
+	vec3 Li = u_Scene.DirectionalLights.Direction;
+	vec3 Lradiance = u_Scene.DirectionalLights.Radiance * u_Scene.DirectionalLights.Multiplier;
+	vec3 Lh = normalize(Li + m_Params.View);
+
+	// Calculate angles between surface normal and various light vectors.
+	float cosLi = max(0.0, dot(m_Params.Normal, Li));
+	float cosLh = max(0.0, dot(m_Params.Normal, Lh));
+
+	vec3 F = FresnelSchlickRoughness(F0, max(0.0, dot(Lh, m_Params.View)), m_Params.Roughness);
+	float D = NdfGGX(cosLh, m_Params.Roughness);
+	float G = GaSchlickGGX(cosLi, m_Params.NdotV, m_Params.Roughness);
+
+	vec3 kd = (1.0 - F) * (1.0 - m_Params.Metalness);
+	vec3 diffuseBRDF = kd * m_Params.Albedo;
+
+	// Cook-Torrance
+	vec3 specularBRDF = (F * D * G) / max(Epsilon, 4.0 * cosLi * m_Params.NdotV);
+	specularBRDF = clamp(specularBRDF, vec3(0.0f), vec3(10.0f));
+
 	// Direct lighting
-	vec3 lightContribution = CalculateDirLights(F0) * shadowScale;
+	vec3 lightContribution = (diffuseBRDF + specularBRDF) * Lradiance * cosLi;
 
 	// Indirect lighting
 	vec3 iblContribution = IBL(F0, Lr);
-	  // 级联调试颜色：为每个级联分配不同颜色
+	// 级联调试颜色：为每个级联分配不同颜色
     vec3 cascadeColor;
     switch(cascadeIndex) {
         case 0: cascadeColor = vec3(1.0, 0.0, 0.0); break; // 红色 - 级联0
@@ -177,9 +175,12 @@ void main() {
         case 3: cascadeColor = vec3(1.0, 1.0, 0.0); break; // 黄色 - 级联3
         default: cascadeColor = vec3(1.0, 0.0, 1.0); // 紫色 - 异常
     }
-	vec3 finalColor = lightContribution + iblContribution;
-
+	vec3 finalColor = m_Params.Albedo * shadowScale;
+	if(u_RendererData.debugCSM)
+	{
+		finalColor = mix(finalColor,cascadeColor,0.5);
+	}
 	// Final color
-    o_Color = vec4(mix(finalColor, cascadeColor, 0.5), 1.0);
+    o_Color = vec4(finalColor, 1.0);
 }
 #endif

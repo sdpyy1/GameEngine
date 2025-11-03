@@ -1,6 +1,23 @@
 Scene: Untitled
 Entities:
-  - Entity: 4696020610702071020
+  - Entity: 14070268251616852585
+    TagComponent:
+      Tag: Empty Entity
+    Parent: 0
+    Children:
+      []
+    TransformComponent:
+      Translation: [-1, 4.70435619, -0.550687909]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    DirectionalLightComponent:
+      Intensity: 1
+      Radiance: [1, 1, 1]
+      CastShadows: true
+      SoftShadows: true
+      LightSize: 0.5
+      ShadowAmount: 1
+  - Entity: 17525417039784691078
     TagComponent:
       Tag: assets\model\Sponza\glTF\Sponza.gltf
     Parent: 0
@@ -13,20 +30,3 @@ Entities:
     StaticMeshComponent:
       MeshSourcePath: assets\model\Sponza\glTF\Sponza.gltf
       Visible: true
-  - Entity: 16796454228590658757
-    TagComponent:
-      Tag: Empty Entity
-    Parent: 0
-    Children:
-      []
-    TransformComponent:
-      Translation: [-1, -1.20000005, -1.20000005]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-    DirectionalLightComponent:
-      Intensity: 1
-      Radiance: [1, 1, 1]
-      CastShadows: true
-      SoftShadows: true
-      LightSize: 0.5
-      ShadowAmount: 1

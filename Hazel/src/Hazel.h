@@ -1,5 +1,5 @@
 #pragma once
-
+#define GLM_FORCE_DEPTH_ZERO_TO_FE
 // For use by Hazel applications
 #define HZ_VERSION "2025.10.28"
 

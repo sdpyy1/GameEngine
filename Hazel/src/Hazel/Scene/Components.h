@@ -195,7 +195,11 @@ namespace Hazel {
 
 			RotationEuler = wrapToPi(RotationEuler);
 		}
-
+		glm::vec3 GetDirection() const
+		{
+			// Ĭ�Ϲ⳯ -Z
+			return Rotation * glm::vec3(0.0f, 0.0f, -1.0f);
+		}
 		friend class SceneSerializer;
 	};
 

@@ -15,14 +15,16 @@ layout(location = 7) in vec4 a_MRow2;
 // Make sure both shaders compute the exact same answer(PBR shader). 
 // We need to have the same exact calculations to produce the gl_Position value (eg. matrix multiplications).
 // precise invariant gl_Position;
-layout(binding = 0) uniform UniformBufferObject {
+layout(set = 0,binding = 0) uniform CameraDataUniform {
     mat4 view;
     mat4 proj;
+	mat4 viewProj;
 	float width;
 	float height;
 	float Near;
 	float Far;
-} ubo;
+	vec3 CameraPosition;
+} u_CameraData;
 void main()
 {
 	mat4 transform = mat4(
@@ -34,7 +36,7 @@ void main()
 
 	vec4 worldPosition = transform * vec4(a_Position, 1.0);
 
-    gl_Position =ubo.proj * ubo.view * worldPosition;
+    gl_Position =u_CameraData.viewProj * worldPosition;
 }
 #endif
 

@@ -1,7 +1,4 @@
 #pragma once
-
-#include <glm/detail/type_quat.hpp>
-
 #include "Hazel/Renderer/Camera.h"
 #include "Hazel/Core/TimeStep.h"
 #include "Hazel/Events/KeyEvent.h"

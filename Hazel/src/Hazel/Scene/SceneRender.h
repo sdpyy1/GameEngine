@@ -32,6 +32,8 @@ namespace Hazel {
 		void HandleResizeRuntime();
 		void UploadSpotShadowData();
 		void HandleHZBResize();
+		void UploadRenderSettingData();
+		void uploadSceneData();
 
 	private: // Pass
 		void preComputeEnv();
@@ -128,8 +130,8 @@ namespace Hazel {
 		};
 		struct TransformBuffer
 		{
-			Ref<VertexBuffer> Buffer;  //用顶点数据来传递Model变换矩阵
-			TransformVertexData* Data = nullptr; // 具体的数据
+			Ref<VertexBuffer> Buffer;
+			TransformVertexData* Data = nullptr;
 		};
 		struct TransformMapData
 		{
@@ -141,7 +143,7 @@ namespace Hazel {
 			std::vector<BoneTransforms> BoneTransformsData;
 			uint32_t BoneTransformsBaseIndex = 0;
 		};
-		struct UBShadow
+		struct UBViewProjToLight
 		{
 			glm::mat4 ViewProjection[4];
 		};
@@ -152,6 +154,7 @@ namespace Hazel {
 		struct CameraData {
 			glm::mat4 view;
 			glm::mat4 proj;
+			glm::mat4 viewproj;
 			float Width;
 			float Height;
 			float Near;
@@ -169,11 +172,12 @@ namespace Hazel {
 			Ref<Texture2D> Texture;
 			std::vector<Ref<ImageView>> ImageViews; // per-mip
 		} m_HierarchicalDepthTexture;
-		struct RenderData {
+		struct RenderSettingData {
 			glm::vec4 CascadeSplits;
 			float LightSize;
+			bool deBugCSM = false;
 		};
-		struct SceneData {
+		struct SceneDataForShader {
 			DirectionalLight DirectionalLight;
 			float EnvironmentMapIntensity;
 		};
@@ -183,30 +187,50 @@ namespace Hazel {
 		void CalculateCascades(CascadeData* cascades, const EditorCamera& sceneCamera, const glm::vec3& lightDirection) const;
 
 	private: // member
+		// 配置信息
 		bool NeedResize = false;
-		SceneInfo* m_SceneDataFromScene = nullptr;
 		float m_ViewportWidth = 1216.0f, m_ViewportHeight = 849.0f;
 		uint32_t shadowMapResolution = 4096;
 		uint32_t NumShadowCascades = 4;
-		RenderData * m_RenderData = nullptr;
-		Ref<UniformBufferSet> m_UBSRenderData;
+		Ref<RenderCommandBuffer> m_CommandBuffer;
 		glm::vec4 CascadeSplits;
+		
+		// 收集来自场景的数据
+		SceneInfo* m_SceneDataFromScene = nullptr;
+
+		// 这些Map用于注册要绘制的Mesh，同时自动处理实例化
 		std::map<MeshKey, DynamicDrawCommand> m_DynamicDrawList;
 		std::map<MeshKey, StaticDrawCommand> m_StaticMeshDrawList;
-		std::vector<TransformBuffer> m_SubmeshTransformBuffers;
-		std::map<MeshKey, TransformMapData> m_MeshTransformMap;  // 每个MeshKey对应多个实例的变换矩阵
+		std::map<MeshKey, TransformMapData> m_MeshTransformMap;
 		std::map<MeshKey, BoneTransformsMapData> m_MeshBoneTransformsMap;
+
+		// 用一个很大的顶点缓冲区来存储所有的变换矩阵（这是为了适配实例化渲染。切换一个实例，才会切换一次数据）
+		const size_t TransformBufferCount = 10 * 1024;
+		std::vector<TransformBuffer> m_SubmeshTransformBuffers;
+
+		// 骨骼变换矩阵 SSBO
 		BoneTransforms* m_BoneTransformsData = nullptr;
 		Ref<StorageBufferSet> m_SBSBoneTransforms;
-		Ref<RenderCommandBuffer> m_CommandBuffer;
-		CameraData* m_CameraData = nullptr;
+
+		// 摄像机数据 UBO
+		std::vector<CameraData> m_CameraData;
 		Ref<UniformBufferSet> m_UBSCameraData;
-		UBShadow* m_ShadowData = nullptr;
-		SceneData* m_SceneData = nullptr;
-        Ref<UniformBufferSet> m_UBSSceneData;
-		Ref<UniformBufferSet> m_UBSShadow;
+
+		// 平行光级联阴影变换矩阵
+		std::vector<UBViewProjToLight> m_ViewProjToLigthData;
+		Ref<UniformBufferSet> m_UBSViewProjToLight;
+
+		// TODO: 聚光灯级联阴影变换矩阵
+		std::vector<UBSpotLights> spotLightData;
 		Ref<UniformBufferSet> m_UBSSpotShadowData;
-		UBSpotLights* spotLightData = nullptr;
+
+		// 渲染设置 UBO
+		std::vector<RenderSettingData> m_RenderSettingData;
+		Ref<UniformBufferSet> m_UBSRenderSetting;
+
+		// Shader需要的场景数据
+		std::vector <SceneDataForShader> m_SceneDataForShader;
+        Ref<UniformBufferSet> m_UBSSceneDataForShader;
 
 	private: // Pass
 		// shadowPass
@@ -258,5 +282,6 @@ namespace Hazel {
 		Ref<Framebuffer> m_LightPassFramebuffer;
 		Ref<Pipeline> m_LightPassPipeline;
 		Ref<RenderPass> m_LightPass;
+
 	};
 }

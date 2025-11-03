@@ -34,7 +34,7 @@ namespace Hazel {
 		void SettingGUI();
 	private:
 		Ref<Scene> m_Scene;  // 场景
-		EditorCamera m_EditorCamera; // 摄像机（目前设计摄像机不归场景管理）
+		EditorCamera m_EditorCamera; // 摄像机 TODO:交给场景管理
 		// Gizmo's
 		int m_GizmoType = -1;
 		Entity m_HoveredEntity;

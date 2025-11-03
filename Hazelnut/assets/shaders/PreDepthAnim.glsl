@@ -22,14 +22,16 @@ layout(push_constant) uniform BoneTransformIndex
 {
 	uint Base;
 } u_BoneTransformIndex;
-layout(binding = 0) uniform UniformBufferObject {
+layout(set = 0,binding = 0) uniform CameraDataUniform {
     mat4 view;
     mat4 proj;
+	mat4 viewProj;
 	float width;
 	float height;
 	float Near;
 	float Far;
-} ubo;
+	vec3 CameraPosition;
+} u_CameraData;
 layout (std140, set = 0, binding = 1) readonly buffer BoneTransforms
 {
 	mat4 BoneTransforms[MAX_BONES * MAX_ANIMATED_MESHES];
@@ -57,7 +59,7 @@ void main()
 
 	// Near and far are flipped for better precision.
 	// Only change along with the PBR shader.
-	gl_Position = ubo.proj * ubo.view * worldPosition;
+	gl_Position = u_CameraData.viewProj * worldPosition;
 }
 
 #endif

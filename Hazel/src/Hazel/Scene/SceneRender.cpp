@@ -36,22 +36,18 @@ namespace Hazel {
 	}
 	void SceneRender::PreRender(SceneInfo sceneData)
 	{
+		uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
+		// 接收场景数据
 		m_SceneDataFromScene = &sceneData;
+		// 处理Resize
 		HandleResizeRuntime();
 		// 更新各种资源信息
 		UploadCameraData(); // 摄像机数据
 		UploadMeshAndBoneTransForm(); // 模型变换和骨骼变换矩阵
 		UploadCSMShadowData(); // 级联阴影数据
 		UploadSpotShadowData(); // 聚光阴影 TODO：待完成
-
-		// tmp：临时放在这里
-		m_RenderData->CascadeSplits = CascadeSplits;
-		m_RenderData->LightSize = 0.5;
-		m_UBSRenderData->Get()->SetData((void*)m_RenderData, sizeof(RenderData));
-
-		m_SceneData->DirectionalLight = m_SceneDataFromScene->SceneLightEnvironment.DirectionalLights[0];
-		m_SceneData->EnvironmentMapIntensity = 1.f;
-		m_UBSSceneData->Get()->SetData((void*)m_SceneData, sizeof(SceneData));
+		UploadRenderSettingData();  // 渲染设置数据
+		uploadSceneData(); // 场景数据
 	}
 	void SceneRender::EndRender()
 	{
@@ -96,30 +92,20 @@ namespace Hazel {
 
 	void SceneRender::CalculateCascades(CascadeData* cascades, const EditorCamera& sceneCamera, const glm::vec3& lightDirection) const
 	{
-		float CascadeSplitLambda = 0.7f;
-		float CascadeFarPlaneOffset = 50.0f, CascadeNearPlaneOffset = -50.0f;
-		float m_ScaleShadowCascadesToOrigin = 0.0f;
-		float scaleToOrigin = m_ScaleShadowCascadesToOrigin;
-
-		glm::mat4 viewMatrix = sceneCamera.GetViewMatrix();
-		constexpr glm::vec4 origin = glm::vec4(glm::vec3(0.0f), 1.0f);
-		viewMatrix[3] = glm::lerp(viewMatrix[3], origin, scaleToOrigin);
-
-		auto viewProjection = sceneCamera.GetProjectionMatrix() * viewMatrix;
-
+		float nearOffset = -250.f; // 光空间需要往后移动一些（其实最好是通过计算场景内最远的物体在哪里，然后后移Near平面，不然无法处理光照遮挡了，但不在视锥内的物体）
+		float farOffset = 0.f;
+		glm::mat4 viewProjection = sceneCamera.GetViewProjection();
+		float CascadeSplitLambda = 0.9f;
 		const int SHADOW_MAP_CASCADE_COUNT = 4;
 		float cascadeSplits[SHADOW_MAP_CASCADE_COUNT];
-
 		float nearClip = sceneCamera.GetNearClip();
 		float farClip = sceneCamera.GetFarClip();
 		float clipRange = farClip - nearClip;
-
 		float minZ = nearClip;
 		float maxZ = nearClip + clipRange;
-
 		float range = maxZ - minZ;
 		float ratio = maxZ / minZ;
-
+		
 		// Calculate split depths based on view camera frustum
 		// Based on method presented in https://developer.nvidia.com/gpugems/GPUGems3/gpugems3_ch10.html
 		for (uint32_t i = 0; i < SHADOW_MAP_CASCADE_COUNT; i++)
@@ -130,15 +116,14 @@ namespace Hazel {
 			float d = CascadeSplitLambda * (log - uniform) + uniform;
 			cascadeSplits[i] = (d - nearClip) / clipRange;
 		}
-
+	
 		// Calculate orthographic projection matrix for each cascade
 		float lastSplitDist = 0.0;
 		for (uint32_t i = 0; i < SHADOW_MAP_CASCADE_COUNT; i++)
 		{
 			float splitDist = cascadeSplits[i];
 
-			glm::vec3 frustumCorners[8] =
-			{
+			glm::vec3 frustumCorners[8] = {
 				glm::vec3(-1.0f,  1.0f, -1.0f),
 				glm::vec3(1.0f,  1.0f, -1.0f),
 				glm::vec3(1.0f, -1.0f, -1.0f),
@@ -155,9 +140,8 @@ namespace Hazel {
 			{
 				glm::vec4 invCorner = invCam * glm::vec4(frustumCorners[i], 1.0f);
 				frustumCorners[i] = invCorner / invCorner.w;
-				frustumCorners[i].z = - frustumCorners[i].z;
 			}
-
+			// frustumCorners设置成一个级联的8个顶点位置
 			for (uint32_t i = 0; i < 4; i++)
 			{
 				glm::vec3 dist = frustumCorners[i + 4] - frustumCorners[i];
@@ -165,33 +149,29 @@ namespace Hazel {
 				frustumCorners[i] = frustumCorners[i] + (dist * lastSplitDist);
 			}
 
-			// Get frustum center
+			// 计算级联的中心坐标（8个顶点的平均值）
 			glm::vec3 frustumCenter = glm::vec3(0.0f);
 			for (uint32_t i = 0; i < 8; i++)
 				frustumCenter += frustumCorners[i];
 
 			frustumCenter /= 8.0f;
 
-			//frustumCenter *= 0.01f;
-
+			// 计算级联的半径（中心点到各个角点距离的最大值）
 			float radius = 0.0f;
 			for (uint32_t i = 0; i < 8; i++)
 			{
 				float distance = glm::length(frustumCorners[i] - frustumCenter);
 				radius = glm::max(radius, distance);
 			}
+			// 向上取整到最近的 1/16 整数倍(??)
 			radius = std::ceil(radius * 16.0f) / 16.0f;
 
-			glm::vec3 maxExtents = glm::vec3(radius);
-			glm::vec3 minExtents = -maxExtents;
-
-			glm::vec3 lightDir = lightDirection;
-			glm::mat4 lightViewMatrix = glm::lookAt(frustumCenter + lightDir * minExtents.z , frustumCenter, glm::vec3(0.0f, 0.0f, -1.0f));
-			glm::mat4 lightOrthoMatrix = glm::ortho(minExtents.x, maxExtents.x, minExtents.y, maxExtents.y, 0.0f + CascadeNearPlaneOffset, maxExtents.z - minExtents.z + CascadeFarPlaneOffset);
+			glm::mat4 lightViewMatrix = glm::lookAt(frustumCenter - lightDirection * radius, frustumCenter, glm::vec3(0.0f, 1.0f, 0.0f)); // 最终顶点也是用这个view来转移到光空间，所以Up方向不影响
+			glm::mat4 lightOrthoMatrix = glm::ortho(-radius, radius, -radius, radius, 0.0f + nearOffset, radius * 2 + farOffset); // TODO:范围设计还需要更加精细化的设计，offset目前设计很大才能包括最后一个级联
 
 			// Offset to texel space to avoid shimmering (from https://stackoverflow.com/questions/33499053/cascaded-shadow-map-shimmering)
 			glm::mat4 shadowMatrix = lightOrthoMatrix * lightViewMatrix;
-			float ShadowMapResolution = shadowMapResolution;
+			float ShadowMapResolution = (float)m_DirectionalShadowMapPass[0]->GetSpecification().Pipeline->GetSpecification().TargetFramebuffer->GetWidth();
 
 			glm::vec4 shadowOrigin = (shadowMatrix * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)) * ShadowMapResolution / 2.0f;
 			glm::vec4 roundedOrigin = glm::round(shadowOrigin);
@@ -200,15 +180,11 @@ namespace Hazel {
 			roundOffset.z = 0.0f;
 			roundOffset.w = 0.0f;
 
-			lightOrthoMatrix[3] += roundOffset;
+			lightOrthoMatrix[3] += roundOffset;  // TODO:这个优化还没看懂roundOffset相关的
 
 			// Store split distance and matrix in cascade
-			//cascades[i].SplitDepth = (nearClip + splitDist * clipRange) * -1.0f;
 			cascades[i].SplitDepth = (nearClip + splitDist * clipRange);
-
-			
-
-			cascades[i].ViewProj = lightOrthoMatrix * lightViewMatrix;
+			cascades[i].ViewProj = shadowMatrix;
 			cascades[i].View = lightViewMatrix;
 
 			lastSplitDist = cascadeSplits[i];
@@ -263,15 +239,16 @@ namespace Hazel {
 		//throw std::logic_error("The method or operation is not implemented.");
 	}
 	void SceneRender::UploadCSMShadowData() {
+        uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
 		if (m_SceneDataFromScene->SceneLightEnvironment.DirectionalLights[0].Intensity == 0) return;
 		CascadeData cascades[4];
 		CalculateCascades(cascades, m_SceneDataFromScene->camera, m_SceneDataFromScene->SceneLightEnvironment.DirectionalLights[0].Direction);
 		for (int i = 0; i < NumShadowCascades; i++)
 		{
 			CascadeSplits[i] = cascades[i].SplitDepth;
-			m_ShadowData->ViewProjection[i] = cascades[i].ViewProj;
+			m_ViewProjToLigthData[frameIndex].ViewProjection[i] = cascades[i].ViewProj;
 		}
-		m_UBSShadow->Get()->SetData(m_ShadowData, sizeof(UBShadow));
+		m_UBSViewProjToLight->Get()->SetData(&m_ViewProjToLigthData[frameIndex], sizeof(UBViewProjToLight));
 	}
 	void SceneRender::ShadowPass() {
 		uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
@@ -381,15 +358,17 @@ namespace Hazel {
 	}
 	void SceneRender::UploadCameraData()
 	{
-		m_CameraData->view = m_SceneDataFromScene->camera.GetViewMatrix();
-		m_CameraData->proj = m_SceneDataFromScene->camera.GetProjectionMatrix();
-		m_CameraData->proj[1][1] *= -1; // Y轴反转
-		m_CameraData->Near = m_SceneDataFromScene->camera.GetNearClip();
-		m_CameraData->Far = m_SceneDataFromScene->camera.GetFarClip();
-		m_CameraData->Width = m_SceneDataFromScene->camera.GetViewportWidth();
-		m_CameraData->Height = m_SceneDataFromScene->camera.GetViewportHeight();
-		m_CameraData->Position = m_SceneDataFromScene->camera.GetPosition();
-		m_UBSCameraData->Get()->SetData((void*)m_CameraData, sizeof(CameraData));
+		uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
+		m_CameraData[frameIndex].view = m_SceneDataFromScene->camera.GetViewMatrix();
+		m_CameraData[frameIndex].proj = m_SceneDataFromScene->camera.GetProjectionMatrix();
+		m_CameraData[frameIndex].proj[1][1] *= -1; // Y轴反转
+		m_CameraData[frameIndex].viewproj = m_CameraData[frameIndex].proj * m_CameraData[frameIndex].view;
+		m_CameraData[frameIndex].Near = m_SceneDataFromScene->camera.GetNearClip();
+		m_CameraData[frameIndex].Far = m_SceneDataFromScene->camera.GetFarClip();
+		m_CameraData[frameIndex].Width = m_SceneDataFromScene->camera.GetViewportWidth();
+		m_CameraData[frameIndex].Height = m_SceneDataFromScene->camera.GetViewportHeight();
+		m_CameraData[frameIndex].Position = m_SceneDataFromScene->camera.GetPosition();
+		m_UBSCameraData->Get()->SetData(&m_CameraData[frameIndex], sizeof(CameraData));
 	}
 	void SceneRender::SubmitStaticMesh(Ref<MeshSource> meshSource, const glm::mat4& transform) {
 		const auto& submeshData = meshSource->GetSubmeshes();
@@ -473,17 +452,18 @@ namespace Hazel {
 	{
 		uint32_t framesInFlight = Renderer::GetConfig().FramesInFlight;
 		// MVP矩阵的UBO
-		m_CameraData = new CameraData();
+		m_CameraData.resize(framesInFlight);
 		m_UBSCameraData = UniformBufferSet::Create(sizeof(CameraData), "CameraData");
-		m_ShadowData = new UBShadow();
-		m_UBSShadow = UniformBufferSet::Create(sizeof(UBShadow), "Shadow");
-		m_UBSSpotShadowData = UniformBufferSet::Create(sizeof(UBSpotShadowData), "SportShadowData");
-		m_RenderData = new RenderData();
-        m_UBSRenderData = UniformBufferSet::Create(sizeof(RenderData), "RenderData");
-		m_SceneData = new SceneData();
-        m_UBSSceneData = UniformBufferSet::Create(sizeof(SceneData), "SceneData");
-		// 用一个很大的顶点缓冲区来存储所有的变换矩阵
-		const size_t TransformBufferCount = 10 * 1024; // 10240 transforms
+
+		m_ViewProjToLigthData.resize(framesInFlight);
+		m_UBSViewProjToLight = UniformBufferSet::Create(sizeof(UBViewProjToLight), "Shadow");
+
+		m_RenderSettingData.resize(framesInFlight);
+        m_UBSRenderSetting = UniformBufferSet::Create(sizeof(RenderSettingData), "RenderSettingData");
+
+		m_SceneDataForShader.resize(framesInFlight);
+        m_UBSSceneDataForShader = UniformBufferSet::Create(sizeof(SceneDataForShader), "SceneDataForShader");
+		
 		m_SubmeshTransformBuffers.resize(framesInFlight);
 		for (uint32_t i = 0; i < framesInFlight; i++)
 		{
@@ -555,12 +535,12 @@ namespace Hazel {
 			m_ShadowPassPipelinesAnim[i] = Pipeline::Create(pipelineSpecAnim);
 
 			m_DirectionalShadowMapPass[i] = RenderPass::Create(shadowMapRenderPassSpec);
-			m_DirectionalShadowMapPass[i]->SetInput(m_UBSShadow, 0);
+			m_DirectionalShadowMapPass[i]->SetInput(m_UBSViewProjToLight, 0);
 
 			shadowMapRenderPassSpec.DebugName = "DirShadowPassAnim";
 			shadowMapRenderPassSpec.Pipeline = m_ShadowPassPipelinesAnim[i];
 			m_DirectionalShadowMapAnimPass[i] = RenderPass::Create(shadowMapRenderPassSpec);
-			m_DirectionalShadowMapAnimPass[i]->SetInput(m_UBSShadow, 0);
+			m_DirectionalShadowMapAnimPass[i]->SetInput(m_UBSViewProjToLight, 0);
 			m_DirectionalShadowMapAnimPass[i]->SetInput(m_SBSBoneTransforms, 1, true); // TODO:注意绑定点
 		}
 	}
@@ -586,9 +566,9 @@ namespace Hazel {
 			gBufferPassSpec.DebugName = "gBufferPass";
 			m_GeoPass = RenderPass::Create(gBufferPassSpec);
 			m_GeoPass->SetInput(m_UBSCameraData, 0);
-			m_GeoPass->SetInput(m_UBSShadow, 2);
-			m_GeoPass->SetInput(m_UBSRenderData, 3);
-			m_GeoPass->SetInput(m_UBSSceneData, 4);
+			m_GeoPass->SetInput(m_UBSViewProjToLight, 2);
+			m_GeoPass->SetInput(m_UBSRenderSetting, 3);
+			m_GeoPass->SetInput(m_UBSSceneDataForShader, 4);
 			m_GeoPass->SetInput(m_ShadowPassPipelines[0]->GetSpecification().TargetFramebuffer->GetDepthImage(), 5,true);
 			m_GeoPass->SetInput(m_EnvPreFilterMap, 6);
 			m_GeoPass->SetInput(m_EnvIrradianceMap, 7);
@@ -622,9 +602,9 @@ namespace Hazel {
 			m_GeoAnimPass->SetInput(m_UBSCameraData, 0);  // 设置binding=0的ubo
 			m_GeoAnimPass->SetInput(m_SBSBoneTransforms, 1, true);  // 设置binding=1的ubo
 			m_GeoAnimPass->SetInput(m_UBSCameraData, 0);
-			m_GeoAnimPass->SetInput(m_UBSShadow, 2);
-			m_GeoAnimPass->SetInput(m_UBSRenderData, 3);
-			m_GeoAnimPass->SetInput(m_UBSSceneData, 4);
+			m_GeoAnimPass->SetInput(m_UBSViewProjToLight, 2);
+			m_GeoAnimPass->SetInput(m_UBSRenderSetting, 3);
+			m_GeoAnimPass->SetInput(m_UBSSceneDataForShader, 4);
 			m_GeoAnimPass->SetInput(m_ShadowPassPipelines[0]->GetSpecification().TargetFramebuffer->GetDepthImage(), 5, true);
 			m_GeoAnimPass->SetInput(m_EnvPreFilterMap, 6);
 			m_GeoAnimPass->SetInput(m_EnvIrradianceMap, 7);
@@ -909,6 +889,22 @@ namespace Hazel {
 		Renderer::BeginRenderPass(m_CommandBuffer, m_LightPass, false);
 		Renderer::DrawPrueVertex(m_CommandBuffer, 3);
 		Renderer::EndRenderPass(m_CommandBuffer);
+	}
+
+	void SceneRender::UploadRenderSettingData()
+	{
+		uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
+		m_RenderSettingData[frameIndex].CascadeSplits = CascadeSplits;
+		m_RenderSettingData[frameIndex].LightSize = 0.5;
+		m_UBSRenderSetting->Get()->SetData(&m_RenderSettingData[frameIndex], sizeof(RenderSettingData));
+	}
+
+	void SceneRender::uploadSceneData()
+	{
+		uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
+		m_SceneDataForShader[frameIndex].DirectionalLight = m_SceneDataFromScene->SceneLightEnvironment.DirectionalLights[0];
+		m_SceneDataForShader[frameIndex].EnvironmentMapIntensity = 1.f;
+		m_UBSSceneDataForShader->Get()->SetData(&m_SceneDataForShader[frameIndex], sizeof(SceneDataForShader));
 	}
 
 }
