@@ -13,7 +13,7 @@ namespace Hazel {
 		uint32_t Height = 1;
 		TextureWrap SamplerWrap = TextureWrap::Repeat;
 		TextureFilter SamplerFilter = TextureFilter::Linear;
-
+		bool needYFlip = true;
 		bool GenerateMips = true;
 		bool Storage = false;
 		bool StoreLocally = false;

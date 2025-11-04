@@ -48,6 +48,7 @@ namespace Hazel {
 		UploadSpotShadowData(); // 聚光阴影 TODO：待完成
 		UploadRenderSettingData();  // 渲染设置数据
 		uploadSceneData(); // 场景数据
+		isFirstFrame = false;
 	}
 	void SceneRender::EndRender()
 	{
@@ -760,7 +761,7 @@ namespace Hazel {
 	{
 		const uint32_t cubemapSize = Renderer::GetConfig().EnvironmentMapResolution;
 		const uint32_t irradianceMapSize = Renderer::GetConfig().IrradianceMapSize;
-		m_EnvEquirect = Texture2D::Create(TextureSpecification(), std::filesystem::path("assets/HDR/4.hdr"));
+		m_EnvEquirect = Texture2D::Create(TextureSpecification(), std::filesystem::path("assets/HDR/6.hdr"));
 		HZ_CORE_ASSERT(m_EnvEquirect->GetFormat() == ImageFormat::RGBA32F, "Texture is not HDR!");
 		TextureSpecification cubemapSpec;
 		cubemapSpec.Format = ImageFormat::RGBA32F;
@@ -833,6 +834,9 @@ namespace Hazel {
 		m_EnvironmentIrradiancePass->SetInput(m_EnvCubeMap, 1, InputType::sampler);
 		m_EnvironmentIrradiancePass->SetInput(m_EnvIrradianceMap, 0, InputType::stoage);
 		Renderer::DispatchCompute(m_CommandBuffer, m_EnvironmentIrradiancePass, nullptr, glm::ivec3(irradianceMapSize / 32, irradianceMapSize / 32, 6), Buffer(&Renderer::GetConfig().IrradianceMapComputeSamples, sizeof(uint32_t)));
+		Renderer::Submit([this]() {
+			m_EnvIrradianceMap->GenerateMips(m_CommandBuffer);
+			});
 		Renderer::EndComputePass(m_CommandBuffer, m_EnvironmentIrradiancePass);
 
 		// 环境MipFilter
@@ -895,7 +899,8 @@ namespace Hazel {
 	{
 		uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
 		m_RenderSettingData[frameIndex].CascadeSplits = CascadeSplits;
-		m_RenderSettingData[frameIndex].LightSize = 0.5;
+		m_RenderSettingData[frameIndex].ShadowType = m_SceneDataFromScene->RenderSettingData.ShadowType;
+		m_RenderSettingData[frameIndex].deBugCSM = m_SceneDataFromScene->RenderSettingData.deBugCSM;
 		m_UBSRenderSetting->Get()->SetData(&m_RenderSettingData[frameIndex], sizeof(RenderSettingData));
 	}
 

@@ -4,7 +4,7 @@
 #include <stb_image.h>
 namespace Hazel {
 
-	Buffer TextureImporter::ToBufferFromFile(const std::filesystem::path& path, ImageFormat& outFormat, uint32_t& outWidth, uint32_t& outHeight)
+	Buffer TextureImporter::ToBufferFromFile(const std::filesystem::path& path, ImageFormat& outFormat, uint32_t& outWidth, uint32_t& outHeight, bool flip)
 	{
 		FileStatus fileStatus = FileSystem::TryOpenFileAndWait(path, 100);
 		Buffer imageBuffer;
@@ -19,7 +19,7 @@ namespace Hazel {
 		}
 		else
 		{
-			stbi_set_flip_vertically_on_load(1); // 反转像素
+			if(flip) stbi_set_flip_vertically_on_load(1); // 反转像素
 			imageBuffer.Data = stbi_load(pathString.c_str(), &width, &height, &channels, 4);
 			imageBuffer.Size = width * height * 4;
 			outFormat = isSRGB ? ImageFormat::SRGBA : ImageFormat::RGBA;

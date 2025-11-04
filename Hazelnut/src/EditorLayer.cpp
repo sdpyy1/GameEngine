@@ -280,7 +280,19 @@ namespace Hazel {
 	void EditorLayer::SettingGUI()
 	{
 		ImGui::Begin("Setting");
-		ImGui::Text("Some Settings...");
+
+		// 阴影设置栏目
+		if (ImGui::CollapsingHeader("Shadow", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			// 阴影类型选择
+			ImGui::Text("Type");
+			ImGui::SameLine();
+			ImGui::RadioButton("Hard Shadow", &m_Scene->GetRenderSettingData().ShadowType, 0);
+			ImGui::RadioButton("PCF", &m_Scene->GetRenderSettingData().ShadowType, 1);
+			ImGui::RadioButton("PCSS", &m_Scene->GetRenderSettingData().ShadowType, 2);
+			ImGui::Checkbox("Show Cascade", &m_Scene->GetRenderSettingData().deBugCSM);
+		}
+
 		ImGui::End();
 	}
 

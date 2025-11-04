@@ -384,23 +384,10 @@ namespace Hazel {
 					1, // Set=1
 					1, &matSet,
 					0, nullptr);
-				struct MaterialPush {
-					glm::vec3 AlbedoColor;
-					float Metalness;
-					float Roughness;
-					float Emission;
 
-					bool UseNormalMap;
-				};
-				MaterialPush materialPush;
-				materialPush.AlbedoColor = material->m_AlbedoColor;
-				materialPush.Emission = material->m_EmissionColor.x; //tmp
-				materialPush.Metalness = material->m_MetalnessColor;
-				materialPush.Roughness = material->m_RoughnessColor;
-				materialPush.UseNormalMap = material->bUseNormalTexture;
-				Buffer mB = Buffer(&materialPush, sizeof(MaterialPush));
+				Buffer mB = Buffer(&material->BuildPush(), sizeof(Material::MaterialPush));
 				vkCmdPushConstants(commandBuffer, layout, VK_SHADER_STAGE_FRAGMENT_BIT, pushConstantOffset, mB.Size, mB.Data);
-				pushConstantOffset += 64;
+				pushConstantOffset += mB.Size;
 			}
 			const auto& submeshes = meshSource->GetSubmeshes();
 			const auto& submesh = submeshes[submeshIndex];
@@ -473,23 +460,11 @@ namespace Hazel {
 						1, // Set=1
 						1, &matSet,
 						0, nullptr);
-					struct MaterialPush {
-						glm::vec3 AlbedoColor;
-						float Metalness;
-						float Roughness;
-						float Emission;
+					
+					Buffer mB = Buffer(&material->BuildPush(), sizeof(Material::MaterialPush));
 
-						bool UseNormalMap;
-					};
-					MaterialPush materialPush;
-					materialPush.AlbedoColor = material->m_AlbedoColor;
-					materialPush.Emission = material->m_EmissionColor.x; //tmp
-					materialPush.Metalness = material->m_MetalnessColor;
-					materialPush.Roughness = material->m_RoughnessColor;
-					materialPush.UseNormalMap = material->bUseNormalTexture;
-					Buffer mB = Buffer(&materialPush, sizeof(MaterialPush));
 					vkCmdPushConstants(commandBuffer, layout, VK_SHADER_STAGE_FRAGMENT_BIT, pushConstantOffset, mB.Size, mB.Data);
-					pushConstantOffset += 64;
+					pushConstantOffset += mB.Size;
 				}
 
 				if (pushConstantBuffer.Size > 0)

@@ -58,7 +58,12 @@ namespace Hazel {
 		bool CastsShadows = true;
 		char Padding1[3]{ 0, 0, 0 };
 	};
-
+	struct RenderSettingData {
+		glm::vec4 CascadeSplits;
+		float LightSize = 0.5;
+		int ShadowType = 2;  // 0=Hard 1=PCF 2=PCSS
+		bool deBugCSM = false;
+	};
 	struct LightEnvironment
 	{
 		static constexpr size_t MaxDirectionalLights = 1;
@@ -69,10 +74,12 @@ namespace Hazel {
 		[[nodiscard]] uint32_t GetPointLightsSize() const { return (uint32_t)(PointLights.size() * sizeof(PointLight)); }
 		[[nodiscard]] uint32_t GetSpotLightsSize() const { return (uint32_t)(SpotLights.size() * sizeof(SpotLight)); }
 	};
+
 	struct SceneInfo
 	{
 		EditorCamera camera;
 		LightEnvironment SceneLightEnvironment;
+		RenderSettingData RenderSettingData;
 	};
 	class Scene : public RefCounted
 	{
@@ -102,7 +109,8 @@ namespace Hazel {
 		}
 		entt::registry& GetRegistry() { return m_Registry; }
 		Entity BuildDynamicMeshEntity(Ref<MeshSource> mesh, Entity& root, const std::filesystem::path& path);
-
+		RenderSettingData& GetRenderSettingData() { return m_SceneInfo.RenderSettingData; }
+		SceneInfo& GetSceneInfo() { return m_SceneInfo; }
 	private:
 		void BuildMeshBoneEntityIds(Entity entity, Entity rootEntity);
 		Entity TryGetDescendantEntityWithTag(Entity entity, const std::string& tag);

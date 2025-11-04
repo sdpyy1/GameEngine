@@ -172,11 +172,7 @@ namespace Hazel {
 			Ref<Texture2D> Texture;
 			std::vector<Ref<ImageView>> ImageViews; // per-mip
 		} m_HierarchicalDepthTexture;
-		struct RenderSettingData {
-			glm::vec4 CascadeSplits;
-			float LightSize;
-			bool deBugCSM = false;
-		};
+
 		struct SceneDataForShader {
 			DirectionalLight DirectionalLight;
 			float EnvironmentMapIntensity;
@@ -194,7 +190,7 @@ namespace Hazel {
 		uint32_t NumShadowCascades = 4;
 		Ref<RenderCommandBuffer> m_CommandBuffer;
 		glm::vec4 CascadeSplits;
-		
+		bool isFirstFrame = true;
 		// 收集来自场景的数据
 		SceneInfo* m_SceneDataFromScene = nullptr;
 

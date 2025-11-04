@@ -48,6 +48,9 @@ namespace Hazel {
 			{
 				if (ImGui::MenuItem("Create Empty Entity"))
 					m_Context->CreateEntity("Empty Entity");
+				else if (ImGui::MenuItem("Create Directional Light"))
+					m_Context->CreateEntity("Directional Light").AddComponent<DirectionalLightComponent>();
+
 				ImGui::EndPopup();
 			}
 		}

@@ -76,7 +76,7 @@ layout(push_constant) uniform Material
 	vec3 AlbedoColor;
 	float Metalness;
 	float Roughness;
-	float Emission;
+	vec3 Emission;
 
 	bool UseNormalMap;
 } u_MaterialUniforms;
@@ -97,7 +97,7 @@ struct PBRParameters
 	vec3 View;
 	float NdotV;
 } m_Params;
-#include "include/GBufferUtils.glslh"
+#include "include/PBR.glslh"
 
 void main() {
 	vec4 albedoTexColor = texture(u_AlbedoTexture, Input.TexCoord);
@@ -113,7 +113,7 @@ void main() {
 	if (u_MaterialUniforms.UseNormalMap)
 	{
 		m_Params.Normal = normalize(texture(u_NormalTexture, Input.TexCoord).rgb * 2.0f - 1.0f);
-		m_Params.Normal = normalize(Input.WorldNormals * m_Params.Normal);
+		m_Params.Normal = normalize(Input.WorldNormals * m_Params.Normal); // Transform from Tangent to World space
 	}
 	m_Params.View = normalize(u_CameraData.CameraPosition - Input.WorldPosition); 
 	m_Params.NdotV = max(dot(m_Params.Normal, m_Params.View), 0.0);
@@ -133,54 +133,39 @@ void main() {
 				break;  // 找到第一个匹配就退出
 			}
 		}
-
+	// shadowScale：可见性
 	float shadowScale;
-
-	vec3 posInShadowMap = Input.ShadowMapCoords[cascadeIndex];
-	float bias = GetDirShadowBias();
-	float shadowMapDepth = texture(u_ShadowMapTexture, vec3(posInShadowMap.xy * 0.5 + 0.5, cascadeIndex)).x;
-	shadowScale =  step(posInShadowMap.z, shadowMapDepth + bias);
-
-
-	vec3 Li = u_Scene.DirectionalLights.Direction;
-	vec3 Lradiance = u_Scene.DirectionalLights.Radiance * u_Scene.DirectionalLights.Multiplier;
-	vec3 Lh = normalize(Li + m_Params.View);
-
-	// Calculate angles between surface normal and various light vectors.
-	float cosLi = max(0.0, dot(m_Params.Normal, Li));
-	float cosLh = max(0.0, dot(m_Params.Normal, Lh));
-
-	vec3 F = FresnelSchlickRoughness(F0, max(0.0, dot(Lh, m_Params.View)), m_Params.Roughness);
-	float D = NdfGGX(cosLh, m_Params.Roughness);
-	float G = GaSchlickGGX(cosLi, m_Params.NdotV, m_Params.Roughness);
-
-	vec3 kd = (1.0 - F) * (1.0 - m_Params.Metalness);
-	vec3 diffuseBRDF = kd * m_Params.Albedo;
-
-	// Cook-Torrance
-	vec3 specularBRDF = (F * D * G) / max(Epsilon, 4.0 * cosLi * m_Params.NdotV);
-	specularBRDF = clamp(specularBRDF, vec3(0.0f), vec3(10.0f));
+	vec3 shadowMapCoords = GetShadowMapCoords(Input.ShadowMapCoords, cascadeIndex);
+	if(u_RendererData.ShadowType == 0) shadowScale = HardShadows_DirectionalLight(u_ShadowMapTexture, cascadeIndex, shadowMapCoords);
+	else if(u_RendererData.ShadowType == 1) shadowScale = PCF_DirectionalLight(u_ShadowMapTexture, cascadeIndex, shadowMapCoords, 3);
+	else if(u_RendererData.ShadowType == 2) shadowScale = PCSS_DirectionalLight(u_ShadowMapTexture, cascadeIndex, shadowMapCoords, u_RendererData.LightSize);
+		
 
 	// Direct lighting
-	vec3 lightContribution = (diffuseBRDF + specularBRDF) * Lradiance * cosLi;
+	vec3 lightContribution = CalculateDirLights(F0) * shadowScale;
+	lightContribution += u_MaterialUniforms.Emission + texture(u_EmssiveTexture,Input.TexCoord).rgb;
 
 	// Indirect lighting
-	vec3 iblContribution = IBL(F0, Lr);
-	// 级联调试颜色：为每个级联分配不同颜色
-    vec3 cascadeColor;
-    switch(cascadeIndex) {
-        case 0: cascadeColor = vec3(1.0, 0.0, 0.0); break; // 红色 - 级联0
-        case 1: cascadeColor = vec3(0.0, 1.0, 0.0); break; // 绿色 - 级联1
-        case 2: cascadeColor = vec3(0.0, 0.0, 1.0); break; // 蓝色 - 级联2
-        case 3: cascadeColor = vec3(1.0, 1.0, 0.0); break; // 黄色 - 级联3
-        default: cascadeColor = vec3(1.0, 0.0, 1.0); // 紫色 - 异常
-    }
-	vec3 finalColor = m_Params.Albedo * shadowScale;
-	if(u_RendererData.debugCSM)
-	{
-		finalColor = mix(finalColor,cascadeColor,0.5);
-	}
+	vec3 iblContribution = IBL(F0, Lr) * u_Scene.EnvironmentMapIntensity;
+
+	vec3 finalColor = lightContribution + iblContribution;
+	
 	// Final color
     o_Color = vec4(finalColor, 1.0);
+
+
+	// Debug
+	if(u_RendererData.debugCSM)
+	{
+		vec3 cascadeColor;
+			switch(cascadeIndex) {
+			case 0: cascadeColor = vec3(1.0, 0.0, 0.0); break; // 红色 - 级联0
+			case 1: cascadeColor = vec3(0.0, 1.0, 0.0); break; // 绿色 - 级联1
+			case 2: cascadeColor = vec3(0.0, 0.0, 1.0); break; // 蓝色 - 级联2
+			case 3: cascadeColor = vec3(1.0, 1.0, 0.0); break; // 黄色 - 级联3
+			default: cascadeColor = vec3(1.0, 0.0, 1.0); // 紫色 - 异常
+		}
+		o_Color = vec4(mix(finalColor,cascadeColor,0.5), 1.0);
+	}
 }
 #endif

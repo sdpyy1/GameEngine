@@ -24,8 +24,9 @@ layout (std140, set = 0, binding = 2) uniform ShadowData
 
 layout(std140, set = 0, binding = 3) uniform RendererData
 {
-	uniform vec4 CascadeSplits;
-	uniform float LightSize;
+	vec4 CascadeSplits;
+	float LightSize;
+	int ShadowType;
 	bool debugCSM;
 } u_RendererData;
 

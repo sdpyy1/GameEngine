@@ -94,11 +94,11 @@ namespace Hazel {
 	{
 		Utils::ValidateSpecification(specification);
 
-		m_ImageData = TextureImporter::ToBufferFromFile(filepath, m_Specification.Format, m_Specification.Width, m_Specification.Height);
+		m_ImageData = TextureImporter::ToBufferFromFile(filepath, m_Specification.Format, m_Specification.Width, m_Specification.Height, m_Specification.needYFlip);
 		if (!m_ImageData)
 		{
 			HZ_CORE_ERROR("Failed to load texture from file: {}", filepath);
-			m_ImageData = TextureImporter::ToBufferFromFile("Resources/Textures/ErrorTexture.png", m_Specification.Format, m_Specification.Width, m_Specification.Height);
+			m_ImageData = TextureImporter::ToBufferFromFile("Resources/Textures/ErrorTexture.png", m_Specification.Format, m_Specification.Width, m_Specification.Height ,m_Specification.needYFlip);
 		}
 
 		ImageSpecification imageSpec;
@@ -119,12 +119,12 @@ namespace Hazel {
 	{
 		Utils::ValidateSpecification(specification);
 
-		m_ImageData = TextureImporter::ToBufferFromFile(filepath, m_Specification.Format, m_Specification.Width, m_Specification.Height);
+		m_ImageData = TextureImporter::ToBufferFromFile(filepath, m_Specification.Format, m_Specification.Width, m_Specification.Height, m_Specification.needYFlip);
 		if (!m_ImageData)
 		{
 			// TODO(Yan): move this to asset manager
 			HZ_CORE_ERROR("Failed to load texture from file: {}", filepath);
-			m_ImageData = TextureImporter::ToBufferFromFile("Resources/Textures/ErrorTexture.png", m_Specification.Format, m_Specification.Width, m_Specification.Height);
+			m_ImageData = TextureImporter::ToBufferFromFile("Resources/Textures/ErrorTexture.png", m_Specification.Format, m_Specification.Width, m_Specification.Height,m_Specification.needYFlip);
 		}
 
 		ImageSpecification imageSpec;

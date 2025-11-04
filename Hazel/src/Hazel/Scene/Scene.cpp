@@ -21,6 +21,13 @@ namespace Hazel {
 	{
 		m_SceneRender = Ref<SceneRender>::Create();
 	}
+	void Scene::OnEditorRender(Timestep ts, EditorCamera& editorCamera) {
+		PackupSceneInfo(editorCamera);
+		UpdateAnimation(ts); // 动画更新
+		CollectRenderableEntities();
+		m_SceneRender->PreRender(m_SceneInfo);
+		m_SceneRender->EndRender();
+	};
 	// 打包一帧的场景数据
 	void Scene::PackupSceneInfo(EditorCamera& editorCamera) {
 		m_SceneInfo.camera = editorCamera;
@@ -33,9 +40,7 @@ namespace Hazel {
 			for (auto entity : lights)
 			{
 				auto [transformComponent, lightComponent] = lights.get<TransformComponent, DirectionalLightComponent>(entity);
-				//glm::vec3 initialDir = glm::vec3(0.0f, 0.0f, -1.0f);
-				//glm::vec3 direction = glm::normalize(transformComponent.GetRotation() * initialDir);
-				// glm::vec3 direction = transformComponent.GetDirection();
+
 				glm::vec3 direction = glm::normalize(-transformComponent.Translation);
 
 				HZ_CORE_ASSERT(directionalLightIndex < LightEnvironment::MaxDirectionalLights);
@@ -48,16 +53,9 @@ namespace Hazel {
 				};
 			}
 		}
+
 	}
-	void Scene::OnEditorRender(Timestep ts, EditorCamera& editorCamera) {
-		PackupSceneInfo(editorCamera);
 
-		UpdateAnimation(ts); // 动画更新
-		CollectRenderableEntities();
-		m_SceneRender->PreRender(m_SceneInfo);
-
-		m_SceneRender->EndRender();
-	};
 
 	void Scene::UpdateAnimation(Timestep ts) {
 		auto view = GetAllEntitiesWith<AnimationComponent>();

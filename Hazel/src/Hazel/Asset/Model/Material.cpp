@@ -15,4 +15,16 @@ namespace Hazel {
 		HZ_CORE_ASSERT(false, "Unknown RendererAPI");
 		return nullptr;
 	}
+
+	Material::MaterialPush Material::BuildPush()
+	{
+		MaterialPush push;
+		push.AlbedoColor = m_AlbedoColor;
+        push.Metalness = m_MetalnessColor;
+        push.Roughness = m_RoughnessColor;
+		push.Emission = m_EmissionColor;
+		push.UseNormalMap = bUseNormalTexture ? 1u : 0u;
+		return push;
+	}
+
 }

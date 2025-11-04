@@ -21,6 +21,7 @@ namespace Hazel {
 
 		const std::vector<VkDescriptorSet>& GetDescriptorSets() const { return m_DescriptorSets; }
 		virtual ~VulkanMaterial() override;
+
 	private:
 		Ref<VulkanShader> m_Shader;
 		std::string m_Name;

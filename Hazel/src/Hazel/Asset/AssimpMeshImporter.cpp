@@ -307,7 +307,7 @@ namespace Hazel {
 				// 材质某个属性是固定值
 				glm::vec3 albedoColor(0.8f);
 				glm::vec3 emission(0.0f);
-				aiColor3D aiColor, aiEmission;
+				aiColor3D aiColor(1.0f), aiEmission(0.0f);
 				if (aiMaterial->Get(AI_MATKEY_COLOR_DIFFUSE, aiColor) == AI_SUCCESS)
 					albedoColor = { aiColor.r, aiColor.g, aiColor.b };
 
