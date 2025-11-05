@@ -17,7 +17,7 @@ namespace Hazel {
 	static std::thread::id s_MainThreadID;
 
 	Application::Application(const ApplicationSpecification& specification)
-		: m_Specification(specification), m_RenderThread(ThreadingPolicy::SingleThreaded) // SingleThreaded MultiThreaded
+		: m_Specification(specification), m_RenderThread(ThreadingPolicy::MultiThreaded) // SingleThreaded MultiThreaded
 	{
 		HZ_PROFILE_FUNCTION();
 
@@ -80,11 +80,10 @@ namespace Hazel {
 						layer->OnUpdate(timestep);
 				}
 
-				// GUI渲染
-				Application* app = this;
+				// GUI渲染 RT
 				if (m_Specification.EnableImGui)
 				{
-					Renderer::Submit([app]() { app->RenderImGui(); });
+					RenderImGui();
 				}
 
 				// 提交命令缓冲区、呈现图片
@@ -124,12 +123,16 @@ namespace Hazel {
 
 	void Application::RenderImGui()
 	{
-		// ImGUI渲染前需要的准备函数
-		m_ImGuiLayer->Begin();
-		// 渲染各层的ImGUI窗口
-		for (Layer* layer : m_LayerStack)
-			layer->OnImGuiRender();
-		m_ImGuiLayer->End();
+		Renderer::Submit([this]()
+		{
+			m_ImGuiLayer->Begin();
+
+			for (Layer* layer : m_LayerStack)
+				layer->OnImGuiRender(); {
+			}
+
+			m_ImGuiLayer->End();
+		});
 	}
 
 	void Application::Close()

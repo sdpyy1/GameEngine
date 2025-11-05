@@ -6,7 +6,7 @@ namespace Hazel {
 
 	ImGuiLogPanel::ImGuiLogPanel()
 		: m_ShowTrace(false)
-		, m_ShowInfo(true)
+		, m_ShowInfo(false)
 		, m_ShowWarn(true)
 		, m_ShowError(true)
 		, m_ScrollToBottom(true)
