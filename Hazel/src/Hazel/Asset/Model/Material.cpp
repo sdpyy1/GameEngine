@@ -16,13 +16,13 @@ namespace Hazel {
 		return nullptr;
 	}
 
-	Material::MaterialPush Material::BuildPush()
+	MaterialPush Material::BuildPush()
 	{
 		MaterialPush push;
 		push.AlbedoColor = m_AlbedoColor;
+		push.Emission = m_EmissionColor;
         push.Metalness = m_MetalnessColor;
         push.Roughness = m_RoughnessColor;
-		push.Emission = m_EmissionColor;
 		push.UseNormalMap = bUseNormalTexture ? 1u : 0u;
 		return push;
 	}

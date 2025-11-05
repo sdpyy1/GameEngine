@@ -21,10 +21,15 @@ namespace Hazel {
 		void DrawComponents(Entity entity);
 
 	private:
+		static void DrawMaterial(AssetHandle meshSourceHandle);
+		
+	private:
 		Ref<Scene> m_Context;
 		Entity m_SelectionContext;
 		Entity m_RenameEntity;
 		char m_RenameBuffer[256]{};
+		Ref<Texture2D> m_EntityIcon;
+		Ref<Texture2D> m_DirLightIcon;
 		template<typename T, typename UIFunction>
 		void DrawComponent(const std::string& name, Entity entity, UIFunction uiFunction);
 		template<typename T>

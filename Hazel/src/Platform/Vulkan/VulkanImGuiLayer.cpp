@@ -201,7 +201,7 @@ namespace Hazel {
 				{
 					ImGuiIO& io = ImGui::GetIO();
 
-					io.Fonts->AddFontFromFileTTF("assets/fonts/opensans/OpenSans-SemiBoldItalic.ttf", 18.0f, nullptr, io.Fonts->GetGlyphRangesChineseFull());
+					io.Fonts->AddFontFromFileTTF("Assets/Font/opensans/OpenSans-SemiBoldItalic.ttf", 18.0f, nullptr, io.Fonts->GetGlyphRangesChineseFull());
 					VkCommandBuffer commandBuffer = vulkanContext->GetCurrentDevice()->GetCommandBuffer(true);
 					ImGui_ImplVulkan_CreateFontsTexture(commandBuffer);
 					vulkanContext->GetCurrentDevice()->FlushCommandBuffer(commandBuffer);

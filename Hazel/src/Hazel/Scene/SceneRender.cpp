@@ -761,7 +761,7 @@ namespace Hazel {
 	{
 		const uint32_t cubemapSize = Renderer::GetConfig().EnvironmentMapResolution;
 		const uint32_t irradianceMapSize = Renderer::GetConfig().IrradianceMapSize;
-		m_EnvEquirect = Texture2D::Create(TextureSpecification(), std::filesystem::path("assets/HDR/6.hdr"));
+		m_EnvEquirect = Texture2D::Create(TextureSpecification(), std::filesystem::path("Assets/HDR/6.hdr"));
 		HZ_CORE_ASSERT(m_EnvEquirect->GetFormat() == ImageFormat::RGBA32F, "Texture is not HDR!");
 		TextureSpecification cubemapSpec;
 		cubemapSpec.Format = ImageFormat::RGBA32F;

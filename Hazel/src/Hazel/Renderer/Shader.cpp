@@ -47,11 +47,11 @@ namespace Hazel {
 	{
 		Ref<Shader> shader;
 		if (!isComputeShader) {
-			shader = Shader::Create(name, "D:/AAA_GameEngine/Hazelnut/assets/shaders/spv/" + name + "Vert.spv", "D:/AAA_GameEngine/Hazelnut/assets/shaders/spv/" + name + "Frag.spv", spec);
+			shader = Shader::Create(name, "D:/AAA_GameEngine/Hazelnut/Assets/shader/spv/" + name + "Vert.spv", "D:/AAA_GameEngine/Hazelnut/Assets/shader/spv/" + name + "Frag.spv", spec);
 			Add(shader);
 		}
 		else {
-			shader = Shader::Create(name, "D:/AAA_GameEngine/Hazelnut/assets/shaders/spv/" + name + ".comp.spv", spec);
+			shader = Shader::Create(name, "D:/AAA_GameEngine/Hazelnut/Assets/shader/spv/" + name + ".comp.spv", spec);
 			Add(shader);
 		}
 		return shader;

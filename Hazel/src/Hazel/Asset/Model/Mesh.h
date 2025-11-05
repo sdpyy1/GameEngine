@@ -16,15 +16,6 @@ namespace Hazel {
 		glm::vec3 Tangent;
 		glm::vec3 Binormal;
 		glm::vec2 Texcoord;
-		// 用于创建pipeline
-		static VertexBufferLayout GetVertexLayout() {
-			VertexBufferElement Position(ShaderDataType::Float3, "Position");
-			VertexBufferElement Normal(ShaderDataType::Float3, "Normal");
-			VertexBufferElement Tangent(ShaderDataType::Float3, "Tangent");
-			VertexBufferElement Binormal(ShaderDataType::Float3, "Binormal");
-			VertexBufferElement Texcoord(ShaderDataType::Float2, "Texcoord");
-			return { Position ,Normal ,Tangent ,Binormal,Texcoord };
-		}
 	};
 	struct Index
 	{
@@ -126,7 +117,8 @@ namespace Hazel {
 		Ref<VertexBuffer> GetVertexBuffer() { return m_VertexBuffer; }
 		Ref<IndexBuffer> GetIndexBuffer() { return m_IndexBuffer; }
 		std::vector<Submesh>& GetSubmeshes() { return m_Submeshes; }
-		AssetHandle GetMaterialHandle(uint32_t index) { return m_Materials[index]; }
+		AssetHandle GetMaterialHandle(uint32_t index) { return m_Materials[index]; } // 返回的是MaterialAsset
+		Ref<Material> GetMaterial(uint32_t index){ return AssetManager::GetAsset<MaterialAsset>(GetMaterialHandle(index))->GetMaterial();} // Material
 		bool HasSkeleton() const { return (bool)m_Skeleton; }
 		const Skeleton* GetSkeleton() const { return m_Skeleton.get(); }
 		const Animation* GetAnimation(const std::string& animationName, const Skeleton& skeleton, const bool isMaskedRootMotion, const glm::vec3& rootTranslationMask, float rootRotationMask) const;

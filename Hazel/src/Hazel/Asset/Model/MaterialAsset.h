@@ -16,9 +16,9 @@ namespace Hazel {
 		void SetRoughnessMap(AssetHandle handle);
 		void SetMetalnessMap(AssetHandle handle);
 		void SetAlbedoColor(const glm::vec3& color);
+		void SetEmission(const glm::vec3& value);
 		void SetMetalness(float value);
 		void SetRoughness(float value);
-		void SetEmission(const glm::vec3& value);
 		void ClearAlbedoMap();
 		void ClearNormalMap();
 		void ClearEmssiveMap();

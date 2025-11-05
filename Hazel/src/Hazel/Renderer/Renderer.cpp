@@ -154,13 +154,13 @@ namespace Hazel {
 			Shader::PushConstantRange PushRange;
             PushRange.shaderStage = VK_SHADER_STAGE_FRAGMENT_BIT ;
             PushRange.offset = 0;
-            PushRange.size = sizeof(Material::MaterialPush);
+            PushRange.size = sizeof(MaterialPush);
             gbufferShaderSpec.pushConstantRanges.push_back(PushRange);
 			s_Data->m_ShaderLibrary->LoadCommonShader("gBuffer", gbufferShaderSpec);
 			Shader::PushConstantRange PushRange1;
 			PushRange1.shaderStage = VK_SHADER_STAGE_VERTEX_BIT;
             PushRange1.size = 4;
-			PushRange1.offset =sizeof(Material::MaterialPush);
+			PushRange1.offset =sizeof(MaterialPush);
 			gbufferShaderSpec.pushConstantRanges.push_back(PushRange1);
 			gbufferShaderSpec.bindings.push_back(boneTrasnfromBinding);
 			s_Data->m_ShaderLibrary->LoadCommonShader("gBufferAnim", gbufferShaderSpec);
@@ -358,7 +358,7 @@ namespace Hazel {
 				TextureSpecification spec;
 				spec.SamplerWrap = TextureWrap::Clamp;
 				spec.needYFlip = false;
-				s_Data->BRDFLutTexture = Texture2D::Create(spec, std::filesystem::path("assets/textures/BRDF_LUT.png"));
+				s_Data->BRDFLutTexture = Texture2D::Create(spec, std::filesystem::path("Assets/Texture/BRDF_LUT.png"));
 			}
 		}
 		// 为并发帧创建了描述符池、提前准备了全屏顶点数据存入了GPU

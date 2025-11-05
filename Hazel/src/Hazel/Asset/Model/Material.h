@@ -3,6 +3,14 @@
 #include <Hazel/Renderer/Renderer.h>
 #include <Hazel/Renderer/Texture.h>
 namespace Hazel {
+	struct MaterialPush {  // PushRange需要是16字节的整数倍
+		glm::vec3 AlbedoColor;
+		float Metalness;
+		glm::vec3 Emission;
+		float Roughness;
+		uint32_t UseNormalMap;
+		uint32_t padding[3];
+	};
 	class Material : public RefCounted
 	{
 	public:
@@ -18,27 +26,30 @@ namespace Hazel {
 		virtual void SetRoughnessColor(float color) = 0;
 		virtual void SetEmissionColor(glm::vec3 color) = 0;
 		virtual void SetUseNormalTexture(bool value) { bUseNormalTexture = value; }
+		Ref<Texture2D> GetAlbedoTexture() { return AlbedoTexture; }
+        Ref<Texture2D> GetNormalTexture() { return NormalTexture; }
+        Ref<Texture2D> GetMetalnessTexture() { return MetalnessTexture; }
+        Ref<Texture2D> GetRoughnessTexture() { return RoughnessTexture; }
+        Ref<Texture2D> GetEmissionTexture() { return EmissionTexture; }
+		glm::vec3 GetAlbedoColor() { return m_AlbedoColor; }
+        glm::vec3 GetEmissionColor() { return m_EmissionColor; }
+        float GetRoughnessColor() { return m_RoughnessColor; }
+        float GetMetalnessColor() { return m_MetalnessColor; }
+        bool GetUseNormalTexture() { return bUseNormalTexture; }
 		virtual ~Material() {}
-		struct MaterialPush {
-			glm::vec3 AlbedoColor;
-			float Metalness;
-			float Roughness;
-			glm::vec3 Emission;
-			uint32_t UseNormalMap;
-			// uint32_t padding; // PushRange需要是16字节的整数倍
-		};
+
 		MaterialPush BuildPush();
+
+	protected:
 		glm::vec3 m_AlbedoColor = glm::vec3{ 1,1,1 };
+		glm::vec3 m_EmissionColor = glm::vec3{ 0,0,0 };
 		float m_MetalnessColor = 0.0f;
 		float m_RoughnessColor = 1.0f;
-		glm::vec3& m_EmissionColor = glm::vec3{ 0,0,0 }; 
 		bool bUseNormalTexture = false;
-	protected:
 		Ref<Texture2D> AlbedoTexture = nullptr;
 		Ref<Texture2D> NormalTexture = nullptr;
 		Ref<Texture2D> MetalnessTexture = nullptr;
 		Ref<Texture2D> RoughnessTexture = nullptr;
 		Ref<Texture2D> EmissionTexture = nullptr;
-
 	};
 }

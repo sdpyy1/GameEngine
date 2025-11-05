@@ -7,7 +7,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <cstring>
 #include <filesystem>
-
+#include <Hazel/Utils/UIUtils.h>
 #ifdef _MSVC_LANG
 #define _CRT_SECURE_NO_WARNINGS
 #endif
@@ -15,6 +15,15 @@
 namespace Hazel {
 	AssetManagerPanel::AssetManagerPanel()
 	{
+		TextureSpecification spec;
+		spec.Format = ImageFormat::SRGBA;
+		spec.DebugName = "EntityIcons";
+		spec.GenerateMips = false;
+		spec.needYFlip = false;
+		std::filesystem::path dirIcon = "Assets/Icon/Entity.png";
+		m_EntityIcon = Texture2D::Create(spec, dirIcon);
+		dirIcon = "Assets/Icon/Sun.png";
+		m_DirLightIcon = Texture2D::Create(spec, dirIcon);
 	}
 
 	void AssetManagerPanel::SetContext(Ref<Scene>& context)
@@ -44,13 +53,14 @@ namespace Hazel {
 			if (ImGui::IsMouseDown(0) && ImGui::IsWindowHovered())
 				m_SelectionContext = {};
 
-			if (ImGui::BeginPopupContextWindow(0, 1, false))
+			if (ImGui::BeginPopupContextWindow("SceneManagerContext", 1, false))
 			{
 				if (ImGui::MenuItem("Create Empty Entity"))
 					m_Context->CreateEntity("Empty Entity");
-				else if (ImGui::MenuItem("Create Directional Light"))
+				if (ImGui::MenuItem("Create Directional Light"))
 					m_Context->CreateEntity("Directional Light").AddComponent<DirectionalLightComponent>();
-
+				if (ImGui::MenuItem("Create Sky Light"))
+					m_Context->CreateEntity("Sky Light"); // TODO: add component
 				ImGui::EndPopup();
 			}
 		}
@@ -73,29 +83,51 @@ namespace Hazel {
 		auto& relationship = entity.GetComponent<RelationshipComponent>();
 		bool hasChildren = !relationship.Children.empty();
 
-		// 节点标志：如果有子节点则显示箭头，否则显示叶子节点
+		// 设置 TreeNodeFlags
 		ImGuiTreeNodeFlags flags = ((m_SelectionContext == entity) ? ImGuiTreeNodeFlags_Selected : 0) |
 			ImGuiTreeNodeFlags_OpenOnArrow |
-			ImGuiTreeNodeFlags_SpanAvailWidth;
+			ImGuiTreeNodeFlags_SpanAvailWidth |
+			ImGuiTreeNodeFlags_AllowItemOverlap;
 
 		if (!hasChildren)
-			flags |= ImGuiTreeNodeFlags_Leaf; // 没有子节点时显示为叶子节点
+			flags |= ImGuiTreeNodeFlags_Leaf;
 
-		bool opened = ImGui::TreeNodeEx((void*)(uint64_t)(uint32_t)entity, flags, tag.c_str());
-		if (ImGui::IsItemClicked())
+		float iconSize = 16.0f;
+		float iconSpacing = 2.0f;
+
+		ImGui::PushID((void*)(uint64_t)(uint32_t)entity);
+
+		// ---------------- 绘制箭头（TreeNode） ----------------
+		bool opened = ImGui::TreeNodeEx((void*)(uint64_t)(uint32_t)entity, flags, "");
+
+		ImGui::SameLine(0.0f, iconSpacing);
+
+		// ---------------- 绘制图标 ----------------
+		Ref<Texture2D> icon = m_EntityIcon;
+		if (entity.HasComponent<DirectionalLightComponent>())
+			icon = m_DirLightIcon;
+
+		if (icon)
+			ImGui::Image(UI::GetImageId(icon->GetImage()), { iconSize, iconSize });
+
+		ImGui::SameLine(0.0f, iconSpacing);
+
+		// ---------------- 绘制可选文字 ----------------
+		if (ImGui::Selectable(tag.c_str(), m_SelectionContext == entity, ImGuiSelectableFlags_SpanAllColumns))
 			m_SelectionContext = entity;
 
+		// ---------------- 右键菜单 ----------------
 		bool entityDeleted = false;
-		if (ImGui::BeginPopupContextItem())
+		if (ImGui::BeginPopupContextItem(("EntityPopup_" + std::to_string((uint64_t)(uint32_t)entity)).c_str()))
 		{
 			if (ImGui::MenuItem("Delete Entity"))
 				entityDeleted = true;
 			ImGui::EndPopup();
 		}
 
+		// ---------------- 递归绘制子实体 ----------------
 		if (opened)
 		{
-			// 递归绘制所有子实体
 			for (const UUID& childId : relationship.Children)
 			{
 				Entity child = m_Context->GetEntityByUUID(childId);
@@ -105,13 +137,17 @@ namespace Hazel {
 			ImGui::TreePop();
 		}
 
+		// ---------------- 删除实体 ----------------
 		if (entityDeleted)
 		{
 			m_Context->DestroyEntity(entity);
 			if (m_SelectionContext == entity)
 				m_SelectionContext = {};
 		}
+
+		ImGui::PopID();
 	}
+
 
 	static void DrawVec3Control(const std::string& label, glm::vec3& values, float resetValue = 0.0f, float columnWidth = 100.0f)
 	{
@@ -215,7 +251,7 @@ namespace Hazel {
 			}
 
 			if (removeComponent) {
-				m_Context->DestroyEntity(entity);
+				entity.RemoveComponent<T>();
 			}
 		}
 	}
@@ -286,15 +322,12 @@ namespace Hazel {
 			});
 		DrawComponent<StaticMeshComponent>("Static Mesh", entity, [](auto& component)
 			{
-				ImGui::Text("Asset Handle: %u", component.StaticMesh);
-				ImGui::Text("Asset Path: %s", component.path.c_str());
-
 				ImGui::Checkbox("Visible", &component.Visible);
 
-				if (ImGui::Button("Select Mesh"))
-				{
-				}
+				DrawMaterial(component.StaticMesh);
+
 			});
+
 		DrawComponent<DirectionalLightComponent>("DirectionalLight", entity, [](auto& component)
 			{
 				ImGui::Text("DirectionalLight Add!");
@@ -302,11 +335,8 @@ namespace Hazel {
 
 		DrawComponent<DynamicMeshComponent>("Dynamic Mesh", entity, [](auto& component)
 			{
-				ImGui::Text("Mesh Source Handle: %llu", (uint64_t)component.meshSource);
-
-				if (ImGui::Button("Select Source"))
-				{
-				}
+				DrawMaterial(component.meshSource);
+				return;
 			});
 
 		DrawComponent<AnimationComponent>("Animation", entity, [](auto& component)
@@ -364,4 +394,135 @@ namespace Hazel {
 			}
 		}
 	}
+	bool IsImageFile(const std::string& filepath)
+	{
+		// 找最后一个 '.' 位置
+		size_t dotPos = filepath.find_last_of('.');
+		if (dotPos == std::string::npos)
+			return false;
+
+		std::string ext = filepath.substr(dotPos + 1);
+		std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+
+		return ext == "png" || ext == "jpg" || ext == "jpeg" ||
+			ext == "tga" || ext == "bmp" || ext == "hdr";
+	}
+	void AssetManagerPanel::DrawMaterial(AssetHandle meshSourceHandle)
+	{
+		Ref<MeshSource> meshSource = AssetManager::GetAsset<MeshSource>(meshSourceHandle);
+		if (!meshSource)
+			return;
+
+		auto& submeshes = meshSource->GetSubmeshes();
+		for (uint32_t i = 0; i < submeshes.size(); i++)
+		{
+			Submesh& submesh = submeshes[i];
+			Ref<Material> material = meshSource->GetMaterial(submesh.MaterialIndex);
+			if (!material)
+				continue;
+
+			if (ImGui::CollapsingHeader(submesh.MeshName.c_str()))
+			{
+				// ---------------- 材质基础参数 ----------------
+				glm::vec3 albedo = material->GetAlbedoColor();
+				if (ImGui::ColorEdit3("Albedo", glm::value_ptr(albedo)))
+					material->SetAlbedoColor(albedo);
+
+				float metalness = material->GetMetalnessColor();
+				if (ImGui::SliderFloat("Metalness", &metalness, 0.0f, 1.0f))
+					material->SetMetalnessColor(metalness);
+
+				float roughness = material->GetRoughnessColor();
+				if (ImGui::SliderFloat("Roughness", &roughness, 0.0f, 1.0f))
+					material->SetRoughnessColor(roughness);
+
+				glm::vec3 emission = material->GetEmissionColor();
+				if (ImGui::ColorEdit3("Emission", glm::value_ptr(emission)))
+					material->SetEmissionColor(emission);
+
+				bool useNormal = material->GetUseNormalTexture();
+				if (ImGui::Checkbox("Use Normal Map", &useNormal))
+					material->SetUseNormalTexture(useNormal);
+
+				// ---------------- 纹理缩略图 ----------------
+				struct TextureItem
+				{
+					std::string Name;
+					Ref<Texture2D>* TexturePtr;
+					std::function<void(Ref<Texture2D>)> SetFunc; // 设置纹理的方法
+				};
+
+				std::vector<TextureItem> textures = {
+					{ "Albedo", &material->GetAlbedoTexture(), [&material](Ref<Texture2D> tex) { material->SetAlbedoTexture(tex); } },
+					{ "Normal", &material->GetNormalTexture(), [&material](Ref<Texture2D> tex) { material->SetNormalTexture(tex); } },
+					{ "Metalness", &material->GetMetalnessTexture(), [&material](Ref<Texture2D> tex) { material->SetMetalnessTexture(tex); } },
+					{ "Roughness", &material->GetRoughnessTexture(), [&material](Ref<Texture2D> tex) { material->SetRoughnessTexture(tex); } },
+					{ "Emission", &material->GetEmissionTexture(), [&material](Ref<Texture2D> tex) { material->SetEmissionTexture(tex); } }
+				};
+
+				const float thumbnailSize = 64.0f;
+				const float padding = 8.0f;
+				const float cellSize = thumbnailSize + padding;
+				float panelWidth = ImGui::GetContentRegionAvail().x;
+				int columnCount = (int)(panelWidth / cellSize);
+				if (columnCount < 1) columnCount = 1;
+
+				int currentColumn = 0;
+				for (auto& texItem : textures)
+				{
+					ImGui::BeginGroup();
+					ImGui::TextUnformatted(texItem.Name.c_str());
+
+					if (*(texItem.TexturePtr))
+						ImGui::Image(UI::GetImageId((*(texItem.TexturePtr))->GetImage()), { thumbnailSize, thumbnailSize });
+
+					// ---------------- Drag and Drop Target ----------------
+					if (ImGui::BeginDragDropTarget())
+					{
+						if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
+						{
+							IM_ASSERT(payload->DataSize > 0);
+							const char* droppedPath = (const char*)payload->Data;
+							HZ_CORE_INFO("Dropped File: {0} for texture: {1}", droppedPath, texItem.Name);
+
+							// 判断是否为图片
+							if (IsImageFile(droppedPath))
+							{
+								HZ_CORE_INFO("Dropped image: {0}", droppedPath);
+
+								// ---------------- 加载纹理逻辑由你实现 ----------------
+								TextureSpecification spec;
+								spec.Format = ImageFormat::SRGBA;
+								spec.DebugName = "changeTexture";
+								std::filesystem::path dirIcon = droppedPath;
+								Ref<Texture2D> newTex = Texture2D::Create(spec, dirIcon);
+
+								// 设置到对应纹理
+								if (newTex)
+									texItem.SetFunc(newTex);
+							}	
+							else
+							{
+								HZ_CORE_WARN("Dropped file is not an image: {0}", droppedPath);
+							}
+						}
+						ImGui::EndDragDropTarget();
+					}
+
+					ImGui::EndGroup();
+
+					currentColumn++;
+					if (currentColumn < columnCount)
+						ImGui::SameLine();
+					else
+						currentColumn = 0;
+				}
+
+				ImGui::Separator();
+			}
+		}
+	}
+
+
+
 } // namespace Hazel

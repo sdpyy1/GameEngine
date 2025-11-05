@@ -385,7 +385,7 @@ namespace Hazel {
 					1, &matSet,
 					0, nullptr);
 
-				Buffer mB = Buffer(&material->BuildPush(), sizeof(Material::MaterialPush));
+				Buffer mB = Buffer(&material->BuildPush(), sizeof(MaterialPush));
 				vkCmdPushConstants(commandBuffer, layout, VK_SHADER_STAGE_FRAGMENT_BIT, pushConstantOffset, mB.Size, mB.Data);
 				pushConstantOffset += mB.Size;
 			}
@@ -461,7 +461,7 @@ namespace Hazel {
 						1, &matSet,
 						0, nullptr);
 					
-					Buffer mB = Buffer(&material->BuildPush(), sizeof(Material::MaterialPush));
+					Buffer mB = Buffer(&material->BuildPush(), sizeof(MaterialPush));
 
 					vkCmdPushConstants(commandBuffer, layout, VK_SHADER_STAGE_FRAGMENT_BIT, pushConstantOffset, mB.Size, mB.Data);
 					pushConstantOffset += mB.Size;
