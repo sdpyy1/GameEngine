@@ -181,7 +181,7 @@ Entities:
       Scale: [1, 0.999999821, 1.00000286]
   - Entity: 11429555195020473807
     TagComponent:
-      Tag: assets\model\helmet\DamagedHelmet.gltf
+      Tag: Helmet
     Parent: 0
     Children:
       []
@@ -234,7 +234,7 @@ Entities:
       Scale: [1, 0.999999881, 1.00000966]
   - Entity: 13708483440127732879
     TagComponent:
-      Tag: assets\model\Box.gltf
+      Tag: Box
     Parent: 0
     Children:
       []
@@ -257,7 +257,7 @@ Entities:
       Scale: [1, 0.999999583, 1.00000954]
   - Entity: 15191213868430471995
     TagComponent:
-      Tag: assets\model\m1911\M1911.gltf
+      Tag: M1911
     Parent: 0
     Children:
       - Handle: 5855059743072793188

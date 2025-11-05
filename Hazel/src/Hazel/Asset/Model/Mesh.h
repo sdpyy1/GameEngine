@@ -114,6 +114,7 @@ namespace Hazel {
 	class MeshSource : public Asset {
 	public:
 		MeshSource() = default;
+		const std::vector<Triangle> GetTriangleCache(uint32_t index) const { return m_TriangleCache.at(index); }
 		Ref<VertexBuffer> GetVertexBuffer() { return m_VertexBuffer; }
 		Ref<IndexBuffer> GetIndexBuffer() { return m_IndexBuffer; }
 		std::vector<Submesh>& GetSubmeshes() { return m_Submeshes; }

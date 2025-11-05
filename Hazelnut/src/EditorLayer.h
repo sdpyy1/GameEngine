@@ -32,6 +32,9 @@ namespace Hazel {
 		void ViewportGUI();
 		void DrawGizmo();
 		void SettingGUI();
+		bool OnMouseButtonPressed(MouseButtonPressedEvent& event);
+		std::pair<float, float> GetMouseViewportSpace();
+		std::pair<glm::vec3, glm::vec3> CastRay(const EditorCamera& camera, float mx, float my);
 	private:
 		Ref<Scene> m_Scene;  // 场景
 		EditorCamera m_EditorCamera; // 摄像机 TODO:交给场景管理
@@ -48,5 +51,12 @@ namespace Hazel {
 		bool isMouseInViewport = false;
 		bool firstRenderGUI = true;
 		std::string m_SceneFilePath;
+		struct SelectionData
+		{
+			Entity Entity;
+			Submesh* submesh = nullptr;
+			Ref<MeshSource> meshSource = nullptr;
+			float Distance = 0.0f;
+		};
 	};
 }

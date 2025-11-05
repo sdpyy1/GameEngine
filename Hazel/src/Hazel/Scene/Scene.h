@@ -111,10 +111,11 @@ namespace Hazel {
 		Entity BuildDynamicMeshEntity(Ref<MeshSource> mesh, Entity& root, const std::filesystem::path& path);
 		RenderSettingData& GetRenderSettingData() { return m_SceneInfo.RenderSettingData; }
 		SceneInfo& GetSceneInfo() { return m_SceneInfo; }
+		glm::mat4 GetWorldSpaceTransformMatrix(Entity entity);
+
 	private:
 		void BuildMeshBoneEntityIds(Entity entity, Entity rootEntity);
 		Entity TryGetDescendantEntityWithTag(Entity entity, const std::string& tag);
-		glm::mat4 GetWorldSpaceTransformMatrix(Entity entity);
 		void BuildBoneEntityIds(Entity entity);
 		void BuildAnimationBoneEntityIds(Entity entity, Entity rootEntity);
 		void BuildMeshEntityHierarchy(Entity parent, Ref<MeshSource> mesh, const MeshNode& node);

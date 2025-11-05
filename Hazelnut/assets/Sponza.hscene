@@ -2,7 +2,7 @@ Scene: Untitled
 Entities:
   - Entity: 14070268251616852585
     TagComponent:
-      Tag: Empty Entity
+      Tag: DirLight
     Parent: 0
     Children:
       []
@@ -19,7 +19,7 @@ Entities:
       ShadowAmount: 1
   - Entity: 17525417039784691078
     TagComponent:
-      Tag: assets\model\Sponza\glTF\Sponza.gltf
+      Tag: Sponza
     Parent: 0
     Children:
       []

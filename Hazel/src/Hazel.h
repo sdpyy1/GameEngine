@@ -10,7 +10,7 @@
 #include "Hazel/Core/Assert.h"
 
 #include "Hazel/Core/Timestep.h"
-
+#include "Hazel/Math/ray.h"
 #include "Hazel/Core/Input.h"
 #include "Hazel/Core/KeyCodes.h"
 #include "Hazel/Core/MouseCodes.h"

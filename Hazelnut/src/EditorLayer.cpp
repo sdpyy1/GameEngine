@@ -131,6 +131,10 @@ namespace Hazel {
 
 	void EditorLayer::OnEvent(Event& e)
 	{
+		EventDispatcher dispatcher(e);
+
+		dispatcher.Dispatch<MouseButtonPressedEvent>([this](MouseButtonPressedEvent& event) { return OnMouseButtonPressed(event); });
+
 	}
 	bool EditorLayer::OpenScene()
 	{
@@ -298,4 +302,116 @@ namespace Hazel {
 	}
 
 	void EditorLayer::OnDetach() {}
+
+	bool EditorLayer::OnMouseButtonPressed(MouseButtonPressedEvent& event)
+	{
+		if (event.GetMouseButton() != Mouse::ButtonLeft)
+			return false;
+		if (ImGuizmo::IsOver())
+			return false;
+		auto [mouseX, mouseY] = GetMouseViewportSpace();
+		if (mouseX > -1.0f && mouseX < 1.0f && mouseY > -1.0f && mouseY < 1.0f) {
+			std::vector<SelectionData> selectionData;
+
+			auto [origin, direction] = CastRay(m_EditorCamera, mouseX, mouseY);
+			auto meshEntities = m_Scene->GetAllEntitiesWith<StaticMeshComponent>();
+			for (auto e : meshEntities) {
+				Entity entity = { e, m_Scene.Raw() };
+				auto& mc = entity.GetComponent<StaticMeshComponent>();
+				Ref<MeshSource> meshSource = AssetManager::GetAsset<MeshSource>(mc.StaticMesh);
+				auto& submeshes = meshSource->GetSubmeshes();
+				for (uint32_t i = 0; i < submeshes.size(); i++)
+				{
+					auto& submesh = submeshes[i];
+					glm::mat4 transform = m_Scene->GetWorldSpaceTransformMatrix(entity);
+					Ray ray = {
+						glm::inverse(transform * submesh.Transform) * glm::vec4(origin, 1.0f),
+						glm::inverse(glm::mat3(transform * submesh.Transform)) * direction
+					};
+
+					float t;
+					bool intersects = ray.IntersectsAABB(submesh.BoundingBox, t);
+					if (intersects)
+					{
+						const auto& triangleCache = meshSource->GetTriangleCache(i);
+						for (const auto& triangle : triangleCache)
+						{
+							if (ray.IntersectsTriangle(triangle.V0.Position, triangle.V1.Position, triangle.V2.Position, t))
+							{
+								selectionData.push_back({ entity, &submesh,meshSource, t });
+								break;
+							}
+						}
+					}
+				}
+			}
+			auto dynamicMeshEntities = m_Scene->GetAllEntitiesWith<DynamicMeshComponent>();
+
+			for (auto e : dynamicMeshEntities) {
+				Entity entity = { e, m_Scene.Raw() };
+				auto& mc = entity.GetComponent<DynamicMeshComponent>();
+				Ref<MeshSource> meshSource = AssetManager::GetAsset<MeshSource>(mc.meshSource);
+				auto& submeshes = meshSource->GetSubmeshes();
+				for (uint32_t i = 0; i < submeshes.size(); i++)
+				{
+					auto& submesh = submeshes[i];
+					glm::mat4 transform = m_Scene->GetWorldSpaceTransformMatrix(entity);
+					Ray ray = {
+						glm::inverse(transform * submesh.Transform) * glm::vec4(origin, 1.0f),
+						glm::inverse(glm::mat3(transform * submesh.Transform)) * direction
+					};
+
+					float t;
+					bool intersects = ray.IntersectsAABB(submesh.BoundingBox, t);
+					if (intersects)
+					{
+						const auto& triangleCache = meshSource->GetTriangleCache(i);
+						for (const auto& triangle : triangleCache)
+						{
+							if (ray.IntersectsTriangle(triangle.V0.Position, triangle.V1.Position, triangle.V2.Position, t))
+							{
+								HZ_CORE_INFO("Intersects");
+
+								selectionData.push_back({ entity, &submesh,meshSource, t });
+								break;
+							}
+						}
+					}
+				}
+			}
+			if (selectionData.size() > 0) {
+				std::sort(selectionData.begin(), selectionData.end(), [](auto& a, auto& b) { return a.Distance < b.Distance; });
+
+				m_SelectedEntity = selectionData[0].Entity;
+				m_AssetManagerPanel.SetSelectedEntity(selectionData[0].Entity);
+			}
+
+		}
+
+		return false;
+	}
+	std::pair<float, float> EditorLayer::GetMouseViewportSpace()  // NDC坐标
+	{
+		auto [mx, my] = ImGui::GetMousePos();
+		const auto& viewportBounds = m_ViewportBounds;
+		mx -= viewportBounds[0].x;
+		my -= viewportBounds[0].y;
+		auto viewportWidth = viewportBounds[1].x - viewportBounds[0].x;
+		auto viewportHeight = viewportBounds[1].y - viewportBounds[0].y;
+
+		return { (mx / viewportWidth) * 2.0f - 1.0f, ((my / viewportHeight) * 2.0f - 1.0f) * -1.0f };
+	}
+	std::pair<glm::vec3, glm::vec3> EditorLayer::CastRay(const EditorCamera& camera, float mx, float my)
+	{
+		glm::vec4 mouseClipPos = { mx, my, -1.0f, 1.0f };
+
+		auto inverseProj = glm::inverse(camera.GetProjectionMatrix());
+		auto inverseView = glm::inverse(glm::mat3(camera.GetViewMatrix()));
+
+		glm::vec4 ray = inverseProj * mouseClipPos;
+		glm::vec3 rayPos = camera.GetPosition();
+		glm::vec3 rayDir = inverseView * glm::vec3(ray);
+
+		return { rayPos, rayDir };
+	}
 }
