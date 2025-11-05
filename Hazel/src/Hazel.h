@@ -16,6 +16,7 @@
 #include "Hazel/Core/MouseCodes.h"
 
 #include "Hazel/ImGui/ImGuiLayer.h"
+#include "Hazel/ImGui/ImGuiLogPanel.h"
 #include "Hazel/Utils/FileSystem.h"
 
 #include "Hazel/Scene/Scene.h"

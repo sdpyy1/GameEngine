@@ -5,7 +5,17 @@
 
 VKAPI_ATTR VkBool32 VKAPI_CALL Hazel::VKUtils::debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
 {
-	std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl; return VK_FALSE;
+	std::string msg = pCallbackData->pMessage;
+
+	if (!(messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT))
+		return VK_FALSE;
+
+	if (msg.find("shader validation cache") != std::string::npos)
+		return VK_FALSE; 
+
+	HZ_CORE_ERROR("[Validation] {}\n\n", msg);
+
+	return VK_FALSE;
 }
 void Hazel::VKUtils::SetDebugUtilsObjectName(const VkDevice device, const VkObjectType objectType, const std::string& name, const void* handle)
 {

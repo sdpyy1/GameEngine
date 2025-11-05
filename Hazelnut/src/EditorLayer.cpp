@@ -124,6 +124,9 @@ namespace Hazel {
 
 		if (m_AssetManagerPanel.isOpen)
 			m_AssetManagerPanel.OnImGuiRender();
+
+		if(m_LogPanel.isOpen)
+            m_LogPanel.OnImGuiRender();
 	}
 
 	void EditorLayer::OnEvent(Event& e)

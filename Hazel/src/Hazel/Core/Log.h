@@ -1,16 +1,31 @@
 #pragma once
 
 #include "Hazel/Core/Base.h"
-
 #define GLM_ENABLE_EXPERIMENTAL
 #include "glm/gtx/string_cast.hpp"
-// This ignores all warnings raised inside External headers
 #pragma warning(push, 0)
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/ostr.h>
 #pragma warning(pop)
+#include <mutex>
+#include <deque>
 
 namespace Hazel {
+
+	enum class LogLevel
+	{
+		Trace,
+		Info,
+		Warn,
+		Error,
+		Critical
+	};
+
+	struct LogEntry
+	{
+		LogLevel Level;
+		std::string Message;
+	};
 
 	class Log
 	{
@@ -19,12 +34,21 @@ namespace Hazel {
 
 		static std::shared_ptr<spdlog::logger>& GetCoreLogger() { return s_CoreLogger; }
 		static std::shared_ptr<spdlog::logger>& GetClientLogger() { return s_ClientLogger; }
-	private:
+
+		// 日志缓存相关接口
+		static void AddToCache(LogLevel level, const std::string& message);
+		static const std::deque<LogEntry>& GetCache() { return s_LogCache; }
+
 		static std::shared_ptr<spdlog::logger> s_CoreLogger;
 		static std::shared_ptr<spdlog::logger> s_ClientLogger;
+
+		// 日志缓存
+		static std::deque<LogEntry> s_LogCache;
+		static std::mutex s_LogMutex;
 	};
 
-}
+} // namespace Hazel
+
 
 template<typename OStream, glm::length_t L, typename T, glm::qualifier Q>
 inline OStream& operator<<(OStream& os, const glm::vec<L, T, Q>& vector)
@@ -45,11 +69,12 @@ inline OStream& operator<<(OStream& os, glm::qua<T, Q> quaternion)
 }
 
 // Core log macros
-#define HZ_CORE_TRACE(...)    ::Hazel::Log::GetCoreLogger()->trace(__VA_ARGS__)
-#define HZ_CORE_INFO(...)     ::Hazel::Log::GetCoreLogger()->info(__VA_ARGS__)
-#define HZ_CORE_WARN(...)     ::Hazel::Log::GetCoreLogger()->warn(__VA_ARGS__)
-#define HZ_CORE_ERROR(...)    ::Hazel::Log::GetCoreLogger()->error(__VA_ARGS__)
-#define HZ_CORE_CRITICAL(...) ::Hazel::Log::GetCoreLogger()->critical(__VA_ARGS__)
+#define HZ_CORE_TRACE(...)    do { ::Hazel::Log::GetCoreLogger()->trace(__VA_ARGS__); ::Hazel::Log::AddToCache(::Hazel::LogLevel::Trace, fmt::format(__VA_ARGS__)); } while(0)
+#define HZ_CORE_INFO(...)     do { ::Hazel::Log::GetCoreLogger()->info(__VA_ARGS__);  ::Hazel::Log::AddToCache(::Hazel::LogLevel::Info,  fmt::format(__VA_ARGS__)); } while(0)
+#define HZ_CORE_WARN(...)     do { ::Hazel::Log::GetCoreLogger()->warn(__VA_ARGS__);  ::Hazel::Log::AddToCache(::Hazel::LogLevel::Warn,  fmt::format(__VA_ARGS__)); } while(0)
+#define HZ_CORE_ERROR(...)    do { ::Hazel::Log::GetCoreLogger()->error(__VA_ARGS__); ::Hazel::Log::AddToCache(::Hazel::LogLevel::Error, fmt::format(__VA_ARGS__)); } while(0)
+#define HZ_CORE_CRITICAL(...) do { ::Hazel::Log::GetCoreLogger()->critical(__VA_ARGS__); ::Hazel::Log::AddToCache(::Hazel::LogLevel::Critical, fmt::format(__VA_ARGS__)); } while(0)
+
 
 // Client log macros
 #define HZ_TRACE(...)         ::Hazel::Log::GetClientLogger()->trace(__VA_ARGS__)

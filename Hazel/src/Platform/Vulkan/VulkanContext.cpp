@@ -8,7 +8,7 @@ namespace Hazel {
 #if defined(HZ_DEBUG) || defined(HZ_RELEASE)
 	static bool s_Validation = true;
 #else
-	static bool s_Validation = false; // Let's leave this on for now...
+	static bool s_Validation = false;
 #endif
 	VulkanContext::VulkanContext(void* window)
 		: window(window)
@@ -119,6 +119,24 @@ namespace Hazel {
 		// Instance and Surface Creation
 		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		vkCreateInstance(&instanceCreateInfo, nullptr, &m_Instance);
+
+		// Debug Messenger
+		VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
+		debugCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+		debugCreateInfo.messageSeverity =
+			VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
+			VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT |
+			VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
+			VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+
+		debugCreateInfo.messageType =
+			VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
+			VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
+			VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+		debugCreateInfo.pfnUserCallback = VKUtils::debugCallback;
+
+		VkDebugUtilsMessengerEXT debugMessenger;
+		Hazel::VKUtils::CreateDebugUtilsMessengerEXT(m_Instance, &debugCreateInfo, nullptr, &debugMessenger);
 	}
 
 	void VulkanContext::createPipelineCache()
@@ -139,7 +157,6 @@ namespace Hazel {
 #else
 			HZ_CORE_ERROR("Incompatible Vulkan driver version.\nUpdate your GPU drivers!");
 #endif
-			HZ_CORE_ERROR(false);
 		}
 	}
 }

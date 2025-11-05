@@ -5,6 +5,8 @@
 #include <spdlog/sinks/basic_file_sink.h>
 
 namespace Hazel {
+	std::deque<LogEntry> Log::s_LogCache;
+	std::mutex Log::s_LogMutex;
 
 	std::shared_ptr<spdlog::logger> Log::s_CoreLogger;
 	std::shared_ptr<spdlog::logger> Log::s_ClientLogger;
@@ -27,6 +29,13 @@ namespace Hazel {
 		spdlog::register_logger(s_ClientLogger);
 		s_ClientLogger->set_level(spdlog::level::trace);
 		s_ClientLogger->flush_on(spdlog::level::trace);
+	}
+	void Log::AddToCache(LogLevel level, const std::string& message)
+	{
+		std::lock_guard<std::mutex> lock(s_LogMutex);
+		s_LogCache.push_back({ level, message });
+		if (s_LogCache.size() > 1000) // 限制缓存大小
+			s_LogCache.pop_front();
 	}
 }
 

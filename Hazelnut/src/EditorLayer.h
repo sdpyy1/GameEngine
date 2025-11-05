@@ -42,7 +42,7 @@ namespace Hazel {
 		// Ãæ°å
 		AssetManagerPanel m_AssetManagerPanel;
 		FolderPreviewPanel m_FolderPreviewPanel;
-
+		ImGuiLogPanel m_LogPanel;
 		//×´Ì¬
 		ImVec2 m_ViewportBounds[2] = { {0,0},{1216,849} };
 		bool isMouseInViewport = false;
