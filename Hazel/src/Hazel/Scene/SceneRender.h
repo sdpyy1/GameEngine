@@ -8,7 +8,7 @@ namespace Hazel {
 	{
 	public: // open
 		SceneRender();
-		Ref<Image2D> GetTextureWhichNeedDebug() { return m_SpotFrameBuffer->GetDepthImage(); };
+		Ref<Image2D> GetTextureWhichNeedDebug() { return m_LightPassFramebuffer->GetImage(0); };
 		Ref<Image2D> GetFinalImage() { return m_GridFrameBuffer->GetImage(0); }
 		void PreRender(SceneInfo sceneData);
 		void EndRender();

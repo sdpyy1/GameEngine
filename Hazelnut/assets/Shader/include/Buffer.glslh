@@ -35,8 +35,5 @@ layout(std140, set = 0, binding = 4) uniform SceneData
 	DirectionalLight DirectionalLights;
 	float EnvironmentMapIntensity;
 } u_Scene;
-layout(set = 0, binding = 5) uniform sampler2DArray u_ShadowMapTexture;
-layout(set = 0, binding = 6) uniform samplerCube u_EnvRadianceTex;
-layout(set = 0, binding = 7) uniform samplerCube u_EnvIrradianceTex;
-layout(set = 0, binding = 8) uniform sampler2D u_BRDFLUTTexture;
+
 #endif // BUFFER_GLSL

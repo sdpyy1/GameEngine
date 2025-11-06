@@ -46,7 +46,7 @@ void main(){
 
 	const float gamma = 2.2;
 
-	finalColor = GammaCorrect(finalColor, gamma);
+	// finalColor = GammaCorrect(finalColor, gamma);
 	out_color = vec4(finalColor, 1.0);
 }
 

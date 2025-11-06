@@ -217,6 +217,37 @@ namespace Hazel {
 
 			VulkanContext::GetCurrentDevice()->FlushCommandBuffer(commandBuffer); // 会把命令提交并等待完成
 		}
+		else // 默认是只读布局
+		{
+			VkCommandBuffer commandBuffer = VulkanContext::GetCurrentDevice()->GetCommandBuffer(true);
+
+			VkImageAspectFlags aspectMask = Utils::IsDepthFormat(m_Specification.Format) ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
+
+			VkImageLayout targetLayout;
+			if (Utils::IsDepthFormat(m_Specification.Format))
+			{
+				targetLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+			}
+			else
+			{
+				targetLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+			}
+
+			VkImageSubresourceRange subresourceRange = {};
+			subresourceRange.aspectMask = aspectMask;
+			subresourceRange.baseMipLevel = 0;
+			subresourceRange.levelCount = m_Specification.Mips;
+			subresourceRange.baseArrayLayer = 0;
+			subresourceRange.layerCount = m_Specification.Layers;
+
+			Utils::InsertImageMemoryBarrier(commandBuffer, m_Info.Image,
+				0, VK_ACCESS_SHADER_READ_BIT, 
+				VK_IMAGE_LAYOUT_UNDEFINED, targetLayout,
+				VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_VERTEX_SHADER_BIT, // 着色器阶段
+				subresourceRange);
+
+			VulkanContext::GetCurrentDevice()->FlushCommandBuffer(commandBuffer);
+		}
 
 		UpdateDescriptor();
 	}

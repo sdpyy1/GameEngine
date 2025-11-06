@@ -90,26 +90,6 @@ namespace Hazel {
             SceneDataBinding.count = 1;
             SceneDataBinding.set = 0;
             gbufferShaderSpec.bindings.push_back(SceneDataBinding);
-
-			Shader::DescriptorBinding u_ShadowMapTextureBinding;
-            u_ShadowMapTextureBinding.binding = 5;
-            u_ShadowMapTextureBinding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            u_ShadowMapTextureBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-            u_ShadowMapTextureBinding.count = 4;
-            u_ShadowMapTextureBinding.set = 0;
-            gbufferShaderSpec.bindings.push_back(u_ShadowMapTextureBinding);
-
-			Shader::DescriptorBinding textureBinding;
-            textureBinding.binding = 6;
-            textureBinding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            textureBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-            textureBinding.count = 1;
-            textureBinding.set = 0;
-            gbufferShaderSpec.bindings.push_back(textureBinding);
-			textureBinding.binding = 7;
-			gbufferShaderSpec.bindings.push_back(textureBinding);
-			textureBinding.binding = 8;
-			gbufferShaderSpec.bindings.push_back(textureBinding);
 			
 			// 2. Albedo 贴图（combined image sampler）
 			Shader::DescriptorBinding albedoBinding;
@@ -324,24 +304,45 @@ namespace Hazel {
 		{
             Shader::ShaderSpecification LightingShaderSpec;
             Shader::DescriptorBinding imageBinding;
-            imageBinding.binding = 0;
+			LightingShaderSpec.bindings.push_back(cameraDataBinding);
+            imageBinding.binding = 1;
             imageBinding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
             imageBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
             imageBinding.count = 1;
             imageBinding.set = 0;
             LightingShaderSpec.bindings.push_back(imageBinding);
-			imageBinding.binding = 1;
-			LightingShaderSpec.bindings.push_back(imageBinding);
 			imageBinding.binding = 2;
 			LightingShaderSpec.bindings.push_back(imageBinding);
 			imageBinding.binding = 3;
 			LightingShaderSpec.bindings.push_back(imageBinding);
-            imageBinding.binding = 4;
+			imageBinding.binding = 4;
 			LightingShaderSpec.bindings.push_back(imageBinding);
+			imageBinding.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            imageBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 			imageBinding.binding = 5;
 			LightingShaderSpec.bindings.push_back(imageBinding);
 			imageBinding.binding = 6;
 			LightingShaderSpec.bindings.push_back(imageBinding);
+			imageBinding.binding = 7;
+			LightingShaderSpec.bindings.push_back(imageBinding);
+			Shader::DescriptorBinding u_ShadowMapTextureBinding;
+			u_ShadowMapTextureBinding.binding = 8;
+			u_ShadowMapTextureBinding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+			u_ShadowMapTextureBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+			u_ShadowMapTextureBinding.count = 4;
+			u_ShadowMapTextureBinding.set = 0;
+			LightingShaderSpec.bindings.push_back(u_ShadowMapTextureBinding);
+			Shader::DescriptorBinding textureBinding;
+			textureBinding.binding = 9;
+			textureBinding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+			textureBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+			textureBinding.count = 1;
+			textureBinding.set = 0;
+			LightingShaderSpec.bindings.push_back(textureBinding);
+			textureBinding.binding = 10;
+			LightingShaderSpec.bindings.push_back(textureBinding);
+			textureBinding.binding = 11;
+			LightingShaderSpec.bindings.push_back(textureBinding);
 			s_Data->m_ShaderLibrary->LoadCommonShader("Lighting", LightingShaderSpec);
 		}
 		

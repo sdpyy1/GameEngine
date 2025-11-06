@@ -21,48 +21,21 @@ namespace Hazel {
 		InitPreDepthPass();
 		InitHZBPass();
 		InitGeoPass();
+		InitLightPass();
 		InitSkyPass();
-		//InitLightPass();
+
 		InitSceneCompositePass();
 		InitGridPass();
 	}
-	void SceneRender::InitSkyPass()
-	{
-		FramebufferSpecification fbSpec;
-		fbSpec.Attachments = { ImageFormat::RGBA32F, ImageFormat::DEPTH32F };
-		fbSpec.DebugName = "SkyFrameBuffer";
-		fbSpec.ExistingImages[0] = m_GeoFrameBuffer->GetImage(0);
-		fbSpec.ExistingImages[1] = m_PreDepthClearFramebuffer->GetDepthImage();
-		fbSpec.ClearDepthOnLoad = false;
-		fbSpec.ClearColorOnLoad = false;
-        m_SkyFrameBuffer = Framebuffer::Create(fbSpec);
-		PipelineSpecification pSpec;
-		pSpec.Shader = Renderer::GetShaderLibrary()->Get("Sky");
-		pSpec.TargetFramebuffer = m_SkyFrameBuffer;
-		pSpec.DebugName = "SkyPipeline";
-		pSpec.DepthOperator = DepthCompareOperator::LessOrEqual;
-		m_SkyPipeline = Pipeline::Create(pSpec);
-		RenderPassSpecification passSpec;
-		passSpec.Pipeline = m_SkyPipeline;
-		passSpec.DebugName = "SkyPass";
-		m_SkyPass = RenderPass::Create(passSpec);
-		m_SkyPass->SetInput(m_UBSCameraData, 0);
 
-		m_SkyPass->SetInput(m_EnvPreFilterMap, 1);
-	}
-	void SceneRender::SkyPass() {
-		Renderer::BeginRenderPass(m_CommandBuffer, m_SkyPass, false);
-		Renderer::DrawPrueVertex(m_CommandBuffer,3);
-		Renderer::EndRenderPass(m_CommandBuffer);
-	}
 	void SceneRender::Draw() {
 		ShadowPass();
 		SpotShadowPass();
 		PreDepthPass();
 		HZBComputePass();
 		GeoPass();
-        SkyPass();
-		//LightPass();
+		LightPass();
+		SkyPass();
 		SceneCompositePass();
 		GridPass();
 	}
@@ -77,7 +50,7 @@ namespace Hazel {
 		UploadCameraData(); // 摄像机数据
 		UploadMeshAndBoneTransForm(); // 模型变换和骨骼变换矩阵
 		UploadCSMShadowData(); // 级联阴影数据
-		UploadSpotShadowData(); // 聚光阴影 TODO：待完成
+		UploadSpotShadowData(); // 聚光阴影
 		UploadRenderSettingData();  // 渲染设置数据
 		uploadSceneData(); // 场景数据
 	}
@@ -436,7 +409,7 @@ namespace Hazel {
 	}
 	void SceneRender::SceneCompositePass()
 	{
-		m_SceneCompositePass->SetInput(m_GeoFrameBuffer->GetImage(0), 0);
+		m_SceneCompositePass->SetInput(m_LightPassFramebuffer->GetImage(0), 0, false);
 		Renderer::BeginRenderPass(m_CommandBuffer, m_SceneCompositePass, false);
 		Renderer::DrawPrueVertex(m_CommandBuffer, 3);
 		Renderer::EndRenderPass(m_CommandBuffer);
@@ -637,9 +610,9 @@ namespace Hazel {
 		{
 			FramebufferSpecification framebufferSpec;
 			// pos normal albedo mr depth
-			framebufferSpec.Attachments = { ImageFormat::RGBA32F,ImageFormat::RGBA32F,ImageFormat::Depth };
+			framebufferSpec.Attachments = { ImageFormat::RGBA32F,ImageFormat::RGBA32F,ImageFormat::RGBA32F,ImageFormat::RGBA32F,ImageFormat::Depth };
 			framebufferSpec.DebugName = "GBuffer";
-			framebufferSpec.ExistingImages[2] = m_PreDepthLoadFramebuffer->GetDepthImage();
+			framebufferSpec.ExistingImages[4] = m_PreDepthLoadFramebuffer->GetDepthImage();
 			framebufferSpec.ClearDepthOnLoad = false;
 			m_GeoFrameBuffer = Framebuffer::Create(framebufferSpec);
 			PipelineSpecification pSpec;
@@ -658,22 +631,20 @@ namespace Hazel {
 			m_GeoPass->SetInput(m_UBSViewProjToLight, 2);
 			m_GeoPass->SetInput(m_UBSRenderSetting, 3);
 			m_GeoPass->SetInput(m_UBSSceneDataForShader, 4);
-			m_GeoPass->SetInput(m_ShadowPassPipelines[0]->GetSpecification().TargetFramebuffer->GetDepthImage(), 5,true);
-			m_GeoPass->SetInput(m_EnvPreFilterMap, 6);
-			m_GeoPass->SetInput(m_EnvIrradianceMap, 7);
-			m_GeoPass->SetInput(m_EnvLut, 8);
 
 		}
 		// GeoAnimPass
 		{
 			FramebufferSpecification framebufferSpec;
-			framebufferSpec.Attachments = { ImageFormat::RGBA32F,ImageFormat::RGBA32F,ImageFormat::Depth };
+			framebufferSpec.Attachments = { ImageFormat::RGBA32F,ImageFormat::RGBA32F,ImageFormat::RGBA32F,ImageFormat::RGBA32F,ImageFormat::Depth };
 			framebufferSpec.DebugName = "GBufferAmin";
 			framebufferSpec.ClearDepthOnLoad = false;
 			framebufferSpec.ClearColorOnLoad = false;
 			framebufferSpec.ExistingImages[0] = m_GeoFrameBuffer->GetImage(0);
 			framebufferSpec.ExistingImages[1] = m_GeoFrameBuffer->GetImage(1);
-			framebufferSpec.ExistingImages[2] = m_GeoFrameBuffer->GetDepthImage();
+			framebufferSpec.ExistingImages[2] = m_GeoFrameBuffer->GetImage(2);
+			framebufferSpec.ExistingImages[3] = m_GeoFrameBuffer->GetImage(3);
+			framebufferSpec.ExistingImages[4] = m_GeoFrameBuffer->GetDepthImage();
 			m_GeoAnimFrameBuffer = Framebuffer::Create(framebufferSpec);
 			PipelineSpecification pSpec;
 			pSpec.Layout = vertexLayout;
@@ -694,10 +665,6 @@ namespace Hazel {
 			m_GeoAnimPass->SetInput(m_UBSViewProjToLight, 2);
 			m_GeoAnimPass->SetInput(m_UBSRenderSetting, 3);
 			m_GeoAnimPass->SetInput(m_UBSSceneDataForShader, 4);
-			m_GeoAnimPass->SetInput(m_ShadowPassPipelines[0]->GetSpecification().TargetFramebuffer->GetDepthImage(), 5, true);
-			m_GeoAnimPass->SetInput(m_EnvPreFilterMap, 6);
-			m_GeoAnimPass->SetInput(m_EnvIrradianceMap, 7);
-			m_GeoAnimPass->SetInput(m_EnvLut, 8);
 		}
 	}
 	void SceneRender::InitGridPass() {
@@ -769,7 +736,7 @@ namespace Hazel {
 			m_PreDepthLoadFramebuffer->Resize(m_SceneDataFromScene.camera.GetViewportWidth(), m_SceneDataFromScene.camera.GetViewportHeight());
 			m_GeoFrameBuffer->Resize(m_SceneDataFromScene.camera.GetViewportWidth(), m_SceneDataFromScene.camera.GetViewportHeight());
 			m_GeoAnimFrameBuffer->Resize(m_SceneDataFromScene.camera.GetViewportWidth(), m_SceneDataFromScene.camera.GetViewportHeight());
-			// m_LightPassFramebuffer->Resize(m_SceneDataFromScene.camera.GetViewportWidth(), m_SceneDataFromScene.camera.GetViewportHeight()); 
+			m_LightPassFramebuffer->Resize(m_SceneDataFromScene.camera.GetViewportWidth(), m_SceneDataFromScene.camera.GetViewportHeight()); 
 			m_SkyFrameBuffer->Resize(m_SceneDataFromScene.camera.GetViewportWidth(), m_SceneDataFromScene.camera.GetViewportHeight());
 			m_SceneCompositeFrameBuffer->Resize(m_SceneDataFromScene.camera.GetViewportWidth(), m_SceneDataFromScene.camera.GetViewportHeight());
 			m_GridFrameBuffer->Resize(m_SceneDataFromScene.camera.GetViewportWidth(), m_SceneDataFromScene.camera.GetViewportHeight());
@@ -969,16 +936,25 @@ namespace Hazel {
 		lightPassSpec.Pipeline = m_LightPassPipeline;
 		lightPassSpec.DebugName = "LightPass";
 		m_LightPass = RenderPass::Create(lightPassSpec);
-		m_LightPass->SetInput(m_EnvIrradianceMap, 4);
-		m_LightPass->SetInput(m_EnvPreFilterMap, 5);
-		m_LightPass->SetInput(m_EnvLut, 6);
+        m_LightPass->SetInput(m_UBSCameraData, 0);
+		m_LightPass->SetInput(m_GeoFrameBuffer->GetImage(0), 1);
+		m_LightPass->SetInput(m_GeoFrameBuffer->GetImage(1), 2);
+		m_LightPass->SetInput(m_GeoFrameBuffer->GetImage(2), 3);
+		m_LightPass->SetInput(m_GeoFrameBuffer->GetImage(3), 4);
+        m_LightPass->SetInput(m_UBSRenderSetting, 5);
+        m_LightPass->SetInput(m_UBSViewProjToLight, 6);
+        m_LightPass->SetInput(m_UBSSceneDataForShader, 7);
+		m_LightPass->SetInput(m_ShadowPassPipelines[0]->GetSpecification().TargetFramebuffer->GetDepthImage(), 8, true);
+		m_LightPass->SetInput(m_EnvPreFilterMap, 9);
+		m_LightPass->SetInput(m_EnvIrradianceMap, 10);
+		m_LightPass->SetInput(m_EnvLut, 11);
 	}
 	void SceneRender::LightPass()
 	{
-		m_LightPass->SetInput(m_GeoFrameBuffer->GetImage(0), 0);
-		m_LightPass->SetInput(m_GeoFrameBuffer->GetImage(1), 1);
-		m_LightPass->SetInput(m_GeoFrameBuffer->GetImage(2), 2);
-		m_LightPass->SetInput(m_GeoFrameBuffer->GetImage(3), 3);
+		m_LightPass->SetInput(m_GeoFrameBuffer->GetImage(0), 1);
+		m_LightPass->SetInput(m_GeoFrameBuffer->GetImage(1), 2);
+		m_LightPass->SetInput(m_GeoFrameBuffer->GetImage(2), 3);
+		m_LightPass->SetInput(m_GeoFrameBuffer->GetImage(3), 4);
 
 		Renderer::BeginRenderPass(m_CommandBuffer, m_LightPass, false);
 		Renderer::DrawPrueVertex(m_CommandBuffer, 3);
@@ -1019,8 +995,36 @@ namespace Hazel {
 		sceneCompositePassSpec.Pipeline = m_SceneCompositePipeline;
 		sceneCompositePassSpec.DebugName = "FinalColorPass";
 		m_SceneCompositePass = RenderPass::Create(sceneCompositePassSpec);
-		m_SceneCompositePass->SetInput(m_GeoFrameBuffer->GetImage(0), 0,true);
+		m_SceneCompositePass->SetInput(m_LightPassFramebuffer->GetImage(0), 0,true);
 	}
 
+	void SceneRender::InitSkyPass()
+	{
+		FramebufferSpecification fbSpec;
+		fbSpec.Attachments = { ImageFormat::RGBA32F, ImageFormat::DEPTH32F };
+		fbSpec.DebugName = "SkyFrameBuffer";
+		fbSpec.ExistingImages[0] = m_LightPassFramebuffer->GetImage(0);
+		fbSpec.ExistingImages[1] = m_PreDepthClearFramebuffer->GetDepthImage();
+		fbSpec.ClearDepthOnLoad = false;
+		fbSpec.ClearColorOnLoad = false;
+		m_SkyFrameBuffer = Framebuffer::Create(fbSpec);
+		PipelineSpecification pSpec;
+		pSpec.Shader = Renderer::GetShaderLibrary()->Get("Sky");
+		pSpec.TargetFramebuffer = m_SkyFrameBuffer;
+		pSpec.DebugName = "SkyPipeline";
+		pSpec.DepthOperator = DepthCompareOperator::LessOrEqual;
+		m_SkyPipeline = Pipeline::Create(pSpec);
+		RenderPassSpecification passSpec;
+		passSpec.Pipeline = m_SkyPipeline;
+		passSpec.DebugName = "SkyPass";
+		m_SkyPass = RenderPass::Create(passSpec);
+		m_SkyPass->SetInput(m_UBSCameraData, 0);
 
+		m_SkyPass->SetInput(m_EnvPreFilterMap, 1);
+	}
+	void SceneRender::SkyPass() {
+		Renderer::BeginRenderPass(m_CommandBuffer, m_SkyPass, false);
+		Renderer::DrawPrueVertex(m_CommandBuffer, 3);
+		Renderer::EndRenderPass(m_CommandBuffer);
+	}
 }

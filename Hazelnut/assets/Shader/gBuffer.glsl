@@ -16,8 +16,6 @@ struct VertexOutput
 };
 
 #ifdef VERTEX_SHADER
-
-
 layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec3 inNormal;
 layout(location = 2) in vec3 inTangent;
@@ -46,15 +44,6 @@ void main() {
 	Output.WorldTransform = mat3(transform);
 	Output.Binormal = inBinormal;
 	Output.CameraView = mat3(u_CameraData.view);
-	vec4 shadowCoords[4];
-	shadowCoords[0] = u_DirShadow.DirLightMatrices[0] * vec4(Output.WorldPosition.xyz, 1.0);
-	shadowCoords[1] = u_DirShadow.DirLightMatrices[1] * vec4(Output.WorldPosition.xyz, 1.0);
-	shadowCoords[2] = u_DirShadow.DirLightMatrices[2] * vec4(Output.WorldPosition.xyz, 1.0);
-	shadowCoords[3] = u_DirShadow.DirLightMatrices[3] * vec4(Output.WorldPosition.xyz, 1.0);
-	Output.ShadowMapCoords[0] = vec3(shadowCoords[0].xyz / shadowCoords[0].w);
-	Output.ShadowMapCoords[1] = vec3(shadowCoords[1].xyz / shadowCoords[1].w);
-	Output.ShadowMapCoords[2] = vec3(shadowCoords[2].xyz / shadowCoords[2].w);
-	Output.ShadowMapCoords[3] = vec3(shadowCoords[3].xyz / shadowCoords[3].w);
 	Output.ViewPosition = vec3(u_CameraData.view * vec4(Output.WorldPosition, 1.0));
 	Output.ViewPosition.z *= -1;
 	gl_Position = u_CameraData.viewProj * worldPosition;
@@ -81,9 +70,10 @@ layout(push_constant) uniform Material
 	uint padding[3];
 } u_MaterialUniforms;
 
-
 layout(location = 0) out vec4 o_Color;
 layout(location = 1) out vec4 o_MetalnessRoughness;
+layout(location = 2) out vec4 o_Position;
+layout(location = 3) out vec4 o_Normal;
 
 
 // Used in PBR shader
@@ -97,15 +87,14 @@ struct PBRParameters
 	vec3 View;
 	float NdotV;
 } m_Params;
-#include "include/PBR.glslh"
 
 void main() {
 	vec4 albedoTexColor = texture(u_AlbedoTexture, Input.TexCoord);
-   	m_Params.Albedo = albedoTexColor.rgb * ToLinear(vec4(u_MaterialUniforms.AlbedoColor, 1.0)).rgb;   // MaterialUniforms.AlbedoColor is perceptual, must be converted to linear.
-	float alpha = albedoTexColor.a;
+   	o_Color = vec4(albedoTexColor.rgb * ToLinear(vec4(u_MaterialUniforms.AlbedoColor, 1.0)).rgb + u_MaterialUniforms.Emission * texture(u_EmssiveTexture,Input.TexCoord).rgb,1.0);   // MaterialUniforms.AlbedoColor is perceptual, must be converted to linear.
 	m_Params.Metalness = texture(u_MetalnessTexture, Input.TexCoord).b * u_MaterialUniforms.Metalness;
 	m_Params.Roughness = texture(u_RoughnessTexture, Input.TexCoord).g * u_MaterialUniforms.Roughness;
 	o_MetalnessRoughness = vec4(m_Params.Metalness, m_Params.Roughness, 0.f, 1.f);
+	o_Position = vec4(Input.WorldPosition, 1);
 	m_Params.Roughness = max(m_Params.Roughness, 0.05); // Minimum roughness of 0.05 to keep specular highlight
 
 	// Normals (either from vertex or map)
@@ -115,57 +104,7 @@ void main() {
 		m_Params.Normal = normalize(texture(u_NormalTexture, Input.TexCoord).rgb * 2.0f - 1.0f);
 		m_Params.Normal = normalize(Input.WorldNormals * m_Params.Normal); // Transform from Tangent to World space
 	}
-	m_Params.View = normalize(u_CameraData.CameraPosition - Input.WorldPosition); 
-	m_Params.NdotV = max(dot(m_Params.Normal, m_Params.View), 0.0);
-	// Specular reflection vector
-	vec3 Lr = 2.0 * m_Params.NdotV * m_Params.Normal - m_Params.View;
-	const vec3 Fdielectric = vec3(0.04);
-	vec3 F0 = mix(Fdielectric, m_Params.Albedo, m_Params.Metalness);
-
-	uint cascadeIndex = 3;
-	const uint SHADOW_MAP_CASCADE_COUNT = 4;
-
-		for (uint i = 0; i < SHADOW_MAP_CASCADE_COUNT; i++)
-		{
-			if (Input.ViewPosition.z < u_RendererData.CascadeSplits[i])
-			{
-				cascadeIndex = i;
-				break;  // 找到第一个匹配就退出
-			}
-		}
-	// shadowScale：可见性
-	float shadowScale;
-	vec3 shadowMapCoords = GetShadowMapCoords(Input.ShadowMapCoords, cascadeIndex);
-	if(u_RendererData.ShadowType == 0) shadowScale = HardShadows_DirectionalLight(u_ShadowMapTexture, cascadeIndex, shadowMapCoords);
-	else if(u_RendererData.ShadowType == 1) shadowScale = PCF_DirectionalLight(u_ShadowMapTexture, cascadeIndex, shadowMapCoords, 3);
-	else if(u_RendererData.ShadowType == 2) shadowScale = PCSS_DirectionalLight(u_ShadowMapTexture, cascadeIndex, shadowMapCoords, u_RendererData.LightSize);
-		
-
-	// Direct lighting
-	vec3 lightContribution = CalculateDirLights(F0) * shadowScale;
-	lightContribution += u_MaterialUniforms.Emission * texture(u_EmssiveTexture,Input.TexCoord).rgb;
-
-	// Indirect lighting
-	vec3 iblContribution = IBL(F0, Lr) * u_Scene.EnvironmentMapIntensity;
-
-	vec3 finalColor = lightContribution + iblContribution;
+	o_Normal = vec4(m_Params.Normal, 1.0);
 	
-	// Final color
-    o_Color = vec4(finalColor, 1.0);
-
-
-	// Debug
-	if(u_RendererData.debugCSM)
-	{
-		vec3 cascadeColor;
-			switch(cascadeIndex) {
-			case 0: cascadeColor = vec3(1.0, 0.0, 0.0); break; // 红色 - 级联0
-			case 1: cascadeColor = vec3(0.0, 1.0, 0.0); break; // 绿色 - 级联1
-			case 2: cascadeColor = vec3(0.0, 0.0, 1.0); break; // 蓝色 - 级联2
-			case 3: cascadeColor = vec3(1.0, 1.0, 0.0); break; // 黄色 - 级联3
-			default: cascadeColor = vec3(1.0, 0.0, 1.0); // 紫色 - 异常
-		}
-		o_Color = vec4(mix(finalColor,cascadeColor,0.5), 1.0);
-	}
 }
 #endif
