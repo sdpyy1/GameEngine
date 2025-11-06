@@ -418,7 +418,6 @@ namespace Hazel {
         ImGui::Begin("Debug Texture");
 		m_Scene->ShowDebugTexture();
 		ImGui::End();
-
 	}
 
 }

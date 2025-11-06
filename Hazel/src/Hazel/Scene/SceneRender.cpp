@@ -628,10 +628,9 @@ namespace Hazel {
 			gBufferPassSpec.DebugName = "gBufferPass";
 			m_GeoPass = RenderPass::Create(gBufferPassSpec);
 			m_GeoPass->SetInput(m_UBSCameraData, 0);
-			m_GeoPass->SetInput(m_UBSViewProjToLight, 2);
-			m_GeoPass->SetInput(m_UBSRenderSetting, 3);
-			m_GeoPass->SetInput(m_UBSSceneDataForShader, 4);
-
+			m_GeoPass->SetInput(m_UBSRenderSetting, 2);
+			m_GeoPass->SetInput(m_UBSSceneDataForShader, 3);
+			m_GeoPass->SetInput(m_UBSViewProjToLight, 4);
 		}
 		// GeoAnimPass
 		{
@@ -661,10 +660,9 @@ namespace Hazel {
 			m_GeoAnimPass = RenderPass::Create(gBufferPassSpec);
 			m_GeoAnimPass->SetInput(m_UBSCameraData, 0);  // 设置binding=0的ubo
 			m_GeoAnimPass->SetInput(m_SBSBoneTransforms, 1, true);  // 设置binding=1的ubo
-			m_GeoAnimPass->SetInput(m_UBSCameraData, 0);
-			m_GeoAnimPass->SetInput(m_UBSViewProjToLight, 2);
-			m_GeoAnimPass->SetInput(m_UBSRenderSetting, 3);
-			m_GeoAnimPass->SetInput(m_UBSSceneDataForShader, 4);
+			m_GeoAnimPass->SetInput(m_UBSRenderSetting, 2);
+			m_GeoAnimPass->SetInput(m_UBSSceneDataForShader, 3);
+			m_GeoAnimPass->SetInput(m_UBSViewProjToLight, 4);
 		}
 	}
 	void SceneRender::InitGridPass() {
@@ -937,24 +935,24 @@ namespace Hazel {
 		lightPassSpec.DebugName = "LightPass";
 		m_LightPass = RenderPass::Create(lightPassSpec);
         m_LightPass->SetInput(m_UBSCameraData, 0);
-		m_LightPass->SetInput(m_GeoFrameBuffer->GetImage(0), 1);
-		m_LightPass->SetInput(m_GeoFrameBuffer->GetImage(1), 2);
-		m_LightPass->SetInput(m_GeoFrameBuffer->GetImage(2), 3);
-		m_LightPass->SetInput(m_GeoFrameBuffer->GetImage(3), 4);
-        m_LightPass->SetInput(m_UBSRenderSetting, 5);
-        m_LightPass->SetInput(m_UBSViewProjToLight, 6);
-        m_LightPass->SetInput(m_UBSSceneDataForShader, 7);
-		m_LightPass->SetInput(m_ShadowPassPipelines[0]->GetSpecification().TargetFramebuffer->GetDepthImage(), 8, true);
-		m_LightPass->SetInput(m_EnvPreFilterMap, 9);
-		m_LightPass->SetInput(m_EnvIrradianceMap, 10);
-		m_LightPass->SetInput(m_EnvLut, 11);
+		m_LightPass->SetInput(m_GeoFrameBuffer->GetImage(0), 9);
+		m_LightPass->SetInput(m_GeoFrameBuffer->GetImage(1), 10);
+		m_LightPass->SetInput(m_GeoFrameBuffer->GetImage(2), 11);
+		m_LightPass->SetInput(m_GeoFrameBuffer->GetImage(3), 12);
+        m_LightPass->SetInput(m_UBSRenderSetting, 2);
+		m_LightPass->SetInput(m_UBSSceneDataForShader, 3);
+        m_LightPass->SetInput(m_UBSViewProjToLight, 4);
+		m_LightPass->SetInput(m_ShadowPassPipelines[0]->GetSpecification().TargetFramebuffer->GetDepthImage(), 5, true);
+		m_LightPass->SetInput(m_EnvPreFilterMap, 6);
+		m_LightPass->SetInput(m_EnvIrradianceMap, 7);
+		m_LightPass->SetInput(m_EnvLut, 8);
 	}
 	void SceneRender::LightPass()
 	{
-		m_LightPass->SetInput(m_GeoFrameBuffer->GetImage(0), 1);
-		m_LightPass->SetInput(m_GeoFrameBuffer->GetImage(1), 2);
-		m_LightPass->SetInput(m_GeoFrameBuffer->GetImage(2), 3);
-		m_LightPass->SetInput(m_GeoFrameBuffer->GetImage(3), 4);
+		m_LightPass->SetInput(m_GeoFrameBuffer->GetImage(0), 9);
+		m_LightPass->SetInput(m_GeoFrameBuffer->GetImage(1), 10);
+		m_LightPass->SetInput(m_GeoFrameBuffer->GetImage(2), 11);
+		m_LightPass->SetInput(m_GeoFrameBuffer->GetImage(3), 12);
 
 		Renderer::BeginRenderPass(m_CommandBuffer, m_LightPass, false);
 		Renderer::DrawPrueVertex(m_CommandBuffer, 3);

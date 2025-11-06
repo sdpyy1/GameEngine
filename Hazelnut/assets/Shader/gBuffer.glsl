@@ -8,11 +8,6 @@ struct VertexOutput
 	vec3 Normal;
 	vec2 TexCoord;
 	mat3 WorldNormals;
-	mat3 WorldTransform;
-	vec3 Binormal;
-	mat3 CameraView;
-	vec3 ShadowMapCoords[4];
-	vec3 ViewPosition;
 };
 
 #ifdef VERTEX_SHADER
@@ -39,13 +34,8 @@ void main() {
 
 	Output.WorldPosition = worldPosition.xyz;
 	Output.Normal = mat3(transform) * inNormal;
-	Output.TexCoord = vec2(inTexCoord.x, inTexCoord.y);
+	Output.TexCoord = inTexCoord;
 	Output.WorldNormals = mat3(transform) * mat3(inTangent, inBinormal, inNormal);
-	Output.WorldTransform = mat3(transform);
-	Output.Binormal = inBinormal;
-	Output.CameraView = mat3(u_CameraData.view);
-	Output.ViewPosition = vec3(u_CameraData.view * vec4(Output.WorldPosition, 1.0));
-	Output.ViewPosition.z *= -1;
 	gl_Position = u_CameraData.viewProj * worldPosition;
 }
 #endif
@@ -53,11 +43,11 @@ void main() {
 #ifdef FRAGMENT_SHADER
 layout(location = 0) in VertexOutput Input;
 
-layout(set = 1, binding = 0) uniform sampler2D u_AlbedoTexture;
-layout(set = 1, binding = 1) uniform sampler2D u_NormalTexture;
-layout(set = 1, binding = 2) uniform sampler2D u_MetalnessTexture;
-layout(set = 1, binding = 3) uniform sampler2D u_RoughnessTexture;
-layout(set = 1, binding = 4) uniform sampler2D u_EmssiveTexture;
+layout(set = 1, binding = 0) uniform sampler2D u_Mat_AlbedoTexture;
+layout(set = 1, binding = 1) uniform sampler2D u_Mat_NormalTexture;
+layout(set = 1, binding = 2) uniform sampler2D u_Mat_MetalnessTexture;
+layout(set = 1, binding = 3) uniform sampler2D u_Mat_RoughnessTexture;
+layout(set = 1, binding = 4) uniform sampler2D u_Mat_EmssiveTexture;
 
 
 layout(push_constant) uniform Material
@@ -71,12 +61,10 @@ layout(push_constant) uniform Material
 } u_MaterialUniforms;
 
 layout(location = 0) out vec4 o_Color;
-layout(location = 1) out vec4 o_MetalnessRoughness;
-layout(location = 2) out vec4 o_Position;
-layout(location = 3) out vec4 o_Normal;
+layout(location = 1) out vec4 o_Position;
+layout(location = 2) out vec4 o_Normal;
+layout(location = 3) out vec4 o_MetalnessRoughness;
 
-
-// Used in PBR shader
 struct PBRParameters
 {
 	vec3 Albedo;
@@ -89,22 +77,18 @@ struct PBRParameters
 } m_Params;
 
 void main() {
-	vec4 albedoTexColor = texture(u_AlbedoTexture, Input.TexCoord);
-   	o_Color = vec4(albedoTexColor.rgb * ToLinear(vec4(u_MaterialUniforms.AlbedoColor, 1.0)).rgb + u_MaterialUniforms.Emission * texture(u_EmssiveTexture,Input.TexCoord).rgb,1.0);   // MaterialUniforms.AlbedoColor is perceptual, must be converted to linear.
-	m_Params.Metalness = texture(u_MetalnessTexture, Input.TexCoord).b * u_MaterialUniforms.Metalness;
-	m_Params.Roughness = texture(u_RoughnessTexture, Input.TexCoord).g * u_MaterialUniforms.Roughness;
+	vec4 albedoTexColor = texture(u_Mat_AlbedoTexture, Input.TexCoord);
+   	o_Color = vec4(albedoTexColor.rgb * ToLinear(vec4(u_MaterialUniforms.AlbedoColor, 1.0)).rgb + u_MaterialUniforms.Emission * texture(u_Mat_EmssiveTexture,Input.TexCoord).rgb,1.0);   // MaterialUniforms.AlbedoColor is perceptual, must be converted to linear.
+	m_Params.Metalness = texture(u_Mat_MetalnessTexture, Input.TexCoord).b * u_MaterialUniforms.Metalness;
+	m_Params.Roughness = texture(u_Mat_RoughnessTexture, Input.TexCoord).g * u_MaterialUniforms.Roughness;
 	o_MetalnessRoughness = vec4(m_Params.Metalness, m_Params.Roughness, 0.f, 1.f);
 	o_Position = vec4(Input.WorldPosition, 1);
-	m_Params.Roughness = max(m_Params.Roughness, 0.05); // Minimum roughness of 0.05 to keep specular highlight
-
-	// Normals (either from vertex or map)
 	m_Params.Normal = normalize(Input.Normal);		
 	if (u_MaterialUniforms.UseNormalMap == 1)
 	{
-		m_Params.Normal = normalize(texture(u_NormalTexture, Input.TexCoord).rgb * 2.0f - 1.0f);
-		m_Params.Normal = normalize(Input.WorldNormals * m_Params.Normal); // Transform from Tangent to World space
+		m_Params.Normal = normalize(texture(u_Mat_NormalTexture, Input.TexCoord).rgb * 2.0f - 1.0f);
+		m_Params.Normal = normalize(Input.WorldNormals * m_Params.Normal);
 	}
 	o_Normal = vec4(m_Params.Normal, 1.0);
-	
 }
 #endif
