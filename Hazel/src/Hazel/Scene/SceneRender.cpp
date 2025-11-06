@@ -21,28 +21,39 @@ namespace Hazel {
 		InitPreDepthPass();
 		InitHZBPass();
 		InitGeoPass();
+		InitSkyPass();
 		//InitLightPass();
 		InitSceneCompositePass();
 		InitGridPass();
 	}
-	void SceneRender::InitSceneCompositePass()
+	void SceneRender::InitSkyPass()
 	{
-		FramebufferSpecification sceneCompositeFramebufferSpec;
-		sceneCompositeFramebufferSpec.Attachments = { ImageFormat::RGBA32F };
-		sceneCompositeFramebufferSpec.DebugName = "FinalColorFrameBuffer";
-        sceneCompositeFramebufferSpec.Transfer = true;
-		m_SceneCompositeFrameBuffer = Framebuffer::Create(sceneCompositeFramebufferSpec);
-		PipelineSpecification sceneCompositePipelineSpec;
-		sceneCompositePipelineSpec.Shader = Renderer::GetShaderLibrary()->Get("FinalColor");
-		sceneCompositePipelineSpec.TargetFramebuffer = m_SceneCompositeFrameBuffer;
-		sceneCompositePipelineSpec.DepthTest = false;
-		sceneCompositePipelineSpec.DebugName = "FinalColor";
-		m_SceneCompositePipeline = Pipeline::Create(sceneCompositePipelineSpec);
-		RenderPassSpecification sceneCompositePassSpec;
-		sceneCompositePassSpec.Pipeline = m_SceneCompositePipeline;
-		sceneCompositePassSpec.DebugName = "FinalColorPass";
-		m_SceneCompositePass = RenderPass::Create(sceneCompositePassSpec);
-		m_SceneCompositePass->SetInput(m_GeoFrameBuffer->GetImage(0), 0,true);
+		FramebufferSpecification fbSpec;
+		fbSpec.Attachments = { ImageFormat::RGBA32F, ImageFormat::DEPTH32F };
+		fbSpec.DebugName = "SkyFrameBuffer";
+		fbSpec.ExistingImages[0] = m_GeoFrameBuffer->GetImage(0);
+		fbSpec.ExistingImages[1] = m_PreDepthClearFramebuffer->GetDepthImage();
+		fbSpec.ClearDepthOnLoad = false;
+		fbSpec.ClearColorOnLoad = false;
+        m_SkyFrameBuffer = Framebuffer::Create(fbSpec);
+		PipelineSpecification pSpec;
+		pSpec.Shader = Renderer::GetShaderLibrary()->Get("Sky");
+		pSpec.TargetFramebuffer = m_SkyFrameBuffer;
+		pSpec.DebugName = "SkyPipeline";
+		pSpec.DepthOperator = DepthCompareOperator::LessOrEqual;
+		m_SkyPipeline = Pipeline::Create(pSpec);
+		RenderPassSpecification passSpec;
+		passSpec.Pipeline = m_SkyPipeline;
+		passSpec.DebugName = "SkyPass";
+		m_SkyPass = RenderPass::Create(passSpec);
+		m_SkyPass->SetInput(m_UBSCameraData, 0);
+
+		m_SkyPass->SetInput(m_EnvPreFilterMap, 1);
+	}
+	void SceneRender::SkyPass() {
+		Renderer::BeginRenderPass(m_CommandBuffer, m_SkyPass, false);
+		Renderer::DrawPrueVertex(m_CommandBuffer,3);
+		Renderer::EndRenderPass(m_CommandBuffer);
 	}
 	void SceneRender::Draw() {
 		ShadowPass();
@@ -50,6 +61,7 @@ namespace Hazel {
 		PreDepthPass();
 		HZBComputePass();
 		GeoPass();
+        SkyPass();
 		//LightPass();
 		SceneCompositePass();
 		GridPass();
@@ -709,6 +721,7 @@ namespace Hazel {
 			m_GeoFrameBuffer->Resize(m_SceneDataFromScene->camera.GetViewportWidth(), m_SceneDataFromScene->camera.GetViewportHeight());
 			m_GeoAnimFrameBuffer->Resize(m_SceneDataFromScene->camera.GetViewportWidth(), m_SceneDataFromScene->camera.GetViewportHeight());
 			// m_LightPassFramebuffer->Resize(m_SceneDataFromScene->camera.GetViewportWidth(), m_SceneDataFromScene->camera.GetViewportHeight()); 
+			m_SkyFrameBuffer->Resize(m_SceneDataFromScene->camera.GetViewportWidth(), m_SceneDataFromScene->camera.GetViewportHeight());
 			m_SceneCompositeFrameBuffer->Resize(m_SceneDataFromScene->camera.GetViewportWidth(), m_SceneDataFromScene->camera.GetViewportHeight());
 			m_GridFrameBuffer->Resize(m_SceneDataFromScene->camera.GetViewportWidth(), m_SceneDataFromScene->camera.GetViewportHeight());
 			HandleHZBResize();
@@ -940,6 +953,25 @@ namespace Hazel {
 		m_UBSSceneDataForShader->Get()->SetData(&m_SceneDataForShader[frameIndex], sizeof(SceneDataForShader));
 	}
 
+	void SceneRender::InitSceneCompositePass()
+	{
+		FramebufferSpecification sceneCompositeFramebufferSpec;
+		sceneCompositeFramebufferSpec.Attachments = { ImageFormat::RGBA32F };
+		sceneCompositeFramebufferSpec.DebugName = "FinalColorFrameBuffer";
+		sceneCompositeFramebufferSpec.Transfer = true;
+		m_SceneCompositeFrameBuffer = Framebuffer::Create(sceneCompositeFramebufferSpec);
+		PipelineSpecification sceneCompositePipelineSpec;
+		sceneCompositePipelineSpec.Shader = Renderer::GetShaderLibrary()->Get("FinalColor");
+		sceneCompositePipelineSpec.TargetFramebuffer = m_SceneCompositeFrameBuffer;
+		sceneCompositePipelineSpec.DepthTest = false;
+		sceneCompositePipelineSpec.DebugName = "FinalColor";
+		m_SceneCompositePipeline = Pipeline::Create(sceneCompositePipelineSpec);
+		RenderPassSpecification sceneCompositePassSpec;
+		sceneCompositePassSpec.Pipeline = m_SceneCompositePipeline;
+		sceneCompositePassSpec.DebugName = "FinalColorPass";
+		m_SceneCompositePass = RenderPass::Create(sceneCompositePassSpec);
+		m_SceneCompositePass->SetInput(m_GeoFrameBuffer->GetImage(0), 0,true);
+	}
 
 
 }

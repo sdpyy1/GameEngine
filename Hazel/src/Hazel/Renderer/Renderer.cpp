@@ -339,6 +339,7 @@ namespace Hazel {
 			s_Data->m_ShaderLibrary->LoadCommonShader("Lighting", LightingShaderSpec);
 		}
 		
+		//final color
 		{
             Shader::ShaderSpecification finalColorShaderSpec;
             Shader::DescriptorBinding lightBinding;
@@ -351,6 +352,22 @@ namespace Hazel {
 			s_Data->m_ShaderLibrary->LoadCommonShader("FinalColor", finalColorShaderSpec);
 
 		}
+
+		// Sky
+		{
+			Shader::ShaderSpecification skyShaderSpec;
+            Shader::DescriptorBinding imageBinding;
+            imageBinding.binding = 1;
+            imageBinding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            imageBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+            imageBinding.count = 1;
+            imageBinding.set = 0;
+            skyShaderSpec.bindings.push_back(cameraDataBinding);
+            skyShaderSpec.bindings.push_back(imageBinding);
+			s_Data->m_ShaderLibrary->LoadCommonShader("Sky", skyShaderSpec);
+		}
+
+
 		// 加载纹理
 		{
 			uint32_t whiteTextureData = 0xffffffff;

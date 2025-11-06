@@ -25,6 +25,7 @@ namespace Hazel {
 		void InitLightPass();
 		void InitEnvNeed();
 		void InitSceneCompositePass();
+		void InitSkyPass();
 
 	private: // Update Pre Frame
 		void UploadCameraData();
@@ -47,6 +48,7 @@ namespace Hazel {
 		void HZBComputePass();
 		void LightPass();
 		void SceneCompositePass();
+		void SkyPass();
 
 		void ClearPass(Ref<RenderPass> renderPass, bool explicitClear = false);
 	private: // Utils
@@ -285,5 +287,10 @@ namespace Hazel {
 		Ref<Framebuffer> m_SceneCompositeFrameBuffer;
 		Ref<Pipeline> m_SceneCompositePipeline;
 		Ref<RenderPass> m_SceneCompositePass;
+
+		// Sky
+		Ref<Framebuffer> m_SkyFrameBuffer;
+		Ref<Pipeline> m_SkyPipeline;
+		Ref<RenderPass> m_SkyPass;
 	};
 }
