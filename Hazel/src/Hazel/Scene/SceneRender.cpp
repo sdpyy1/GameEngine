@@ -22,9 +22,28 @@ namespace Hazel {
 		InitHZBPass();
 		InitGeoPass();
 		//InitLightPass();
+		InitSceneCompositePass();
 		InitGridPass();
 	}
-
+	void SceneRender::InitSceneCompositePass()
+	{
+		FramebufferSpecification sceneCompositeFramebufferSpec;
+		sceneCompositeFramebufferSpec.Attachments = { ImageFormat::RGBA32F };
+		sceneCompositeFramebufferSpec.DebugName = "FinalColorFrameBuffer";
+        sceneCompositeFramebufferSpec.Transfer = true;
+		m_SceneCompositeFrameBuffer = Framebuffer::Create(sceneCompositeFramebufferSpec);
+		PipelineSpecification sceneCompositePipelineSpec;
+		sceneCompositePipelineSpec.Shader = Renderer::GetShaderLibrary()->Get("FinalColor");
+		sceneCompositePipelineSpec.TargetFramebuffer = m_SceneCompositeFrameBuffer;
+		sceneCompositePipelineSpec.DepthTest = false;
+		sceneCompositePipelineSpec.DebugName = "FinalColor";
+		m_SceneCompositePipeline = Pipeline::Create(sceneCompositePipelineSpec);
+		RenderPassSpecification sceneCompositePassSpec;
+		sceneCompositePassSpec.Pipeline = m_SceneCompositePipeline;
+		sceneCompositePassSpec.DebugName = "FinalColorPass";
+		m_SceneCompositePass = RenderPass::Create(sceneCompositePassSpec);
+		m_SceneCompositePass->SetInput(m_GeoFrameBuffer->GetImage(0), 0,true);
+	}
 	void SceneRender::Draw() {
 		ShadowPass();
 		// SpotShadowPass();
@@ -32,6 +51,7 @@ namespace Hazel {
 		HZBComputePass();
 		GeoPass();
 		//LightPass();
+		SceneCompositePass();
 		GridPass();
 	}
 	void SceneRender::PreRender(SceneInfo sceneData)
@@ -357,6 +377,13 @@ namespace Hazel {
 		Renderer::DrawPrueVertex(m_CommandBuffer, 6);
 		Renderer::EndRenderPass(m_CommandBuffer);
 	}
+	void SceneRender::SceneCompositePass()
+	{
+		m_SceneCompositePass->SetInput(m_GeoFrameBuffer->GetImage(0), 0);
+		Renderer::BeginRenderPass(m_CommandBuffer, m_SceneCompositePass, false);
+		Renderer::DrawPrueVertex(m_CommandBuffer, 3);
+		Renderer::EndRenderPass(m_CommandBuffer);
+	}
 	void SceneRender::UploadCameraData()
 	{
 		uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
@@ -617,7 +644,7 @@ namespace Hazel {
 		FramebufferSpecification gridPassFramebufferSpec;
 		gridPassFramebufferSpec.Attachments = { gridColorOutputSpec };
 		gridPassFramebufferSpec.DebugName = "Grid";
-		gridPassFramebufferSpec.ExistingImages[0] = m_GeoFrameBuffer->GetImage(0);  // 这张图片谁创建的就指向它，不然会报错
+		gridPassFramebufferSpec.ExistingImages[0] = m_SceneCompositeFrameBuffer->GetImage(0); 
 		gridPassFramebufferSpec.Attachments.Attachments[0].LoadOp = AttachmentLoadOp::Load;
 		m_GridFrameBuffer = Framebuffer::Create(gridPassFramebufferSpec);
 		PipelineSpecification gridPipelineSpec;
@@ -675,13 +702,14 @@ namespace Hazel {
 	void SceneRender::HandleResizeRuntime() {
 		SetViewprotSize(m_SceneDataFromScene->camera.GetViewportWidth(), m_SceneDataFromScene->camera.GetViewportHeight());
 		if (NeedResize) {
-			// 更新FBO尺寸
+			// 更新FBO尺寸（需要按顺序Resize）
 			HZ_CORE_WARN("SceneRender::PreRender Resize FBO to {0}x{1}", m_SceneDataFromScene->camera.GetViewportWidth(), m_SceneDataFromScene->camera.GetViewportHeight());
 			m_PreDepthClearFramebuffer->Resize(m_SceneDataFromScene->camera.GetViewportWidth(), m_SceneDataFromScene->camera.GetViewportHeight());
 			m_PreDepthLoadFramebuffer->Resize(m_SceneDataFromScene->camera.GetViewportWidth(), m_SceneDataFromScene->camera.GetViewportHeight());
 			m_GeoFrameBuffer->Resize(m_SceneDataFromScene->camera.GetViewportWidth(), m_SceneDataFromScene->camera.GetViewportHeight());
 			m_GeoAnimFrameBuffer->Resize(m_SceneDataFromScene->camera.GetViewportWidth(), m_SceneDataFromScene->camera.GetViewportHeight());
 			// m_LightPassFramebuffer->Resize(m_SceneDataFromScene->camera.GetViewportWidth(), m_SceneDataFromScene->camera.GetViewportHeight()); 
+			m_SceneCompositeFrameBuffer->Resize(m_SceneDataFromScene->camera.GetViewportWidth(), m_SceneDataFromScene->camera.GetViewportHeight());
 			m_GridFrameBuffer->Resize(m_SceneDataFromScene->camera.GetViewportWidth(), m_SceneDataFromScene->camera.GetViewportHeight());
 			HandleHZBResize();
 			NeedResize = false;
@@ -911,5 +939,7 @@ namespace Hazel {
 		m_SceneDataForShader[frameIndex].EnvironmentMapIntensity = 1.f;
 		m_UBSSceneDataForShader->Get()->SetData(&m_SceneDataForShader[frameIndex], sizeof(SceneDataForShader));
 	}
+
+
 
 }

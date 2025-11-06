@@ -339,7 +339,18 @@ namespace Hazel {
 			s_Data->m_ShaderLibrary->LoadCommonShader("Lighting", LightingShaderSpec);
 		}
 		
-		
+		{
+            Shader::ShaderSpecification finalColorShaderSpec;
+            Shader::DescriptorBinding lightBinding;
+            lightBinding.binding = 0;
+            lightBinding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            lightBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+            lightBinding.count = 1;
+            lightBinding.set = 0;
+            finalColorShaderSpec.bindings.push_back(lightBinding);
+			s_Data->m_ShaderLibrary->LoadCommonShader("FinalColor", finalColorShaderSpec);
+
+		}
 		// 加载纹理
 		{
 			uint32_t whiteTextureData = 0xffffffff;

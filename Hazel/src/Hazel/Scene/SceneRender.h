@@ -24,6 +24,7 @@ namespace Hazel {
 		void InitHZBPass();
 		void InitLightPass();
 		void InitEnvNeed();
+		void InitSceneCompositePass();
 
 	private: // Update Pre Frame
 		void UploadCameraData();
@@ -45,6 +46,8 @@ namespace Hazel {
 		void SpotShadowPass();
 		void HZBComputePass();
 		void LightPass();
+		void SceneCompositePass();
+
 		void ClearPass(Ref<RenderPass> renderPass, bool explicitClear = false);
 	private: // Utils
 		void SetViewprotSize(float width, float height);
@@ -181,7 +184,6 @@ namespace Hazel {
 	private: // Utils which need struct
 		void CopyToBoneTransformStorage(const MeshKey& meshKey, const Ref<MeshSource>& meshSource, const std::vector<glm::mat4>& boneTransforms);
 		void CalculateCascades(CascadeData* cascades, const EditorCamera& sceneCamera, const glm::vec3& lightDirection) const;
-
 	private: // member
 		// ≈‰÷√–≈œ¢
 		bool NeedResize = false;
@@ -279,5 +281,9 @@ namespace Hazel {
 		Ref<Pipeline> m_LightPassPipeline;
 		Ref<RenderPass> m_LightPass;
 
+		// finalPass
+		Ref<Framebuffer> m_SceneCompositeFrameBuffer;
+		Ref<Pipeline> m_SceneCompositePipeline;
+		Ref<RenderPass> m_SceneCompositePass;
 	};
 }

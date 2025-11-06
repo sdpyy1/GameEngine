@@ -370,8 +370,6 @@ namespace Hazel {
 						{
 							if (ray.IntersectsTriangle(triangle.V0.Position, triangle.V1.Position, triangle.V2.Position, t))
 							{
-								HZ_CORE_INFO("Intersects");
-
 								selectionData.push_back({ entity, &submesh,meshSource, t });
 								break;
 							}
@@ -381,7 +379,7 @@ namespace Hazel {
 			}
 			if (selectionData.size() > 0) {
 				std::sort(selectionData.begin(), selectionData.end(), [](auto& a, auto& b) { return a.Distance < b.Distance; });
-
+				HZ_CORE_TRACE("Selected Entity: {}", selectionData[0].Entity.GetComponent<TagComponent>().Tag);
 				m_SelectedEntity = selectionData[0].Entity;
 				m_AssetManagerPanel.SetSelectedEntity(selectionData[0].Entity);
 			}
