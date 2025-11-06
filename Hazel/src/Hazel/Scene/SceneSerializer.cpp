@@ -243,6 +243,17 @@ namespace Hazel {
 
 			out << YAML::EndMap; // DirectionalLightComponent
 		}
+        if (entity.HasComponent<SpotLightComponent>())
+		{ 
+			out << YAML::Key << "SpotLightComponent";
+			out << YAML::BeginMap;
+            auto& spotLightComponent = entity.GetComponent<SpotLightComponent>();
+            out << YAML::Key << "Direction" << YAML::Value << spotLightComponent.Direction;
+            out << YAML::Key << "Intensity" << YAML::Value << spotLightComponent.Intensity;
+            out << YAML::Key << "Radiance" << YAML::Value << spotLightComponent.Radiance;
+            out << YAML::Key << "Position" << YAML::Value << spotLightComponent.Position;
+            out << YAML::EndMap;
+		}
 		out << YAML::EndMap; // Entity
 	}
 
@@ -353,6 +364,14 @@ namespace Hazel {
 					component.SoftShadows = directionalLightComponent["SoftShadows"].as<bool>(true);
 					component.LightSize = directionalLightComponent["LightSize"].as<float>(0.5f);
 					component.ShadowAmount = directionalLightComponent["ShadowAmount"].as<float>(1.0f);
+				}
+				if (auto spotLightComponent = entity["SpotLightComponent"]; spotLightComponent)
+				{
+                    deserializedEntity.AddComponent<SpotLightComponent>();
+                    deserializedEntity.GetComponent<SpotLightComponent>().Direction = spotLightComponent["Direction"].as<glm::vec3>(glm::vec3(0.0f, -1.0f, 0.0f));
+                    deserializedEntity.GetComponent<SpotLightComponent>().Intensity = spotLightComponent["Intensity"].as<float>(1.0f);
+                    deserializedEntity.GetComponent<SpotLightComponent>().Radiance = spotLightComponent["Radiance"].as<glm::vec3>(glm::vec3(1.0f));
+					deserializedEntity.GetComponent<SpotLightComponent>().Position = spotLightComponent["Position"].as<glm::vec3>(glm::vec3(0.0f));
 				}
 			}
 		}

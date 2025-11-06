@@ -23,7 +23,7 @@ layout(push_constant) uniform PushConstants
 } u_Constants;
 layout(std140, set = 0, binding = 0) uniform SpotShadowData
 {
-	mat4 Mats[1024];
+	mat4 Mats[10];
 } u_SpotLightMatrices;
 layout (std140, set = 0, binding = 1) readonly buffer BoneTransforms
 {

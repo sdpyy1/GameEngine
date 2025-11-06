@@ -21,6 +21,10 @@ namespace Hazel {
 	{
 		m_SceneRender = Ref<SceneRender>::Create();
 	}
+	void Scene::ShowDebugTexture()
+	{
+		UI::Image(m_SceneRender->GetTextureWhichNeedDebug(), ImGui::GetContentRegionAvail(), { 0, 0 }, { 1, 1 });
+	}
 	void Scene::OnEditorRender(Timestep ts, EditorCamera& editorCamera) {
 		PackupSceneInfo(editorCamera);
 		UpdateAnimation(ts); // ¶¯»­¸üÐÂ
@@ -53,6 +57,24 @@ namespace Hazel {
 				};
 			}
 		}
+		// Spot Lights
+        {
+            auto lights = m_Registry.group<SpotLightComponent>(entt::get<TransformComponent>);
+            uint32_t spotLightIndex = 0;
+			light.SpotLights.resize(lights.size());
+            for (auto entity : lights)
+            {
+                auto [transformComponent, lightComponent] = lights.get<TransformComponent, SpotLightComponent>(entity);
+                glm::vec3 direction = glm::normalize(transformComponent.GetDirection());
+                light.SpotLights[spotLightIndex++] =
+                {
+					transformComponent.Translation,
+                    lightComponent.Intensity,
+					direction,
+                    lightComponent.Radiance,
+                };
+            }
+        }
 
 	}
 
@@ -555,4 +577,12 @@ namespace Hazel {
 	void Scene::OnComponentAdded<DirectionalLightComponent>(Entity entity, DirectionalLightComponent& component)
 	{
 	}
+
+	template<>
+	void Scene::OnComponentAdded<SpotLightComponent>(Entity entity, SpotLightComponent& component)
+	{
+	}
+
+
+
 }

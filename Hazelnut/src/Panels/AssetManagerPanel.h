@@ -30,6 +30,7 @@ namespace Hazel {
 		char m_RenameBuffer[256]{};
 		Ref<Texture2D> m_EntityIcon;
 		Ref<Texture2D> m_DirLightIcon;
+		Ref<Texture2D> m_SpotLightIcon;
 		template<typename T, typename UIFunction>
 		void DrawComponent(const std::string& name, Entity entity, UIFunction uiFunction);
 		template<typename T>

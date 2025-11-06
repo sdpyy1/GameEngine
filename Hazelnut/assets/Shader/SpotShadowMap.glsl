@@ -16,7 +16,7 @@ layout(push_constant) uniform Transform
 } u_Renderer;
 layout(std140, set = 0, binding = 0) uniform SpotShadowData
 {
-	mat4 Mats[1024];
+	mat4 Mats[10];
 } u_SpotLightMatrices;
 void main()
 {

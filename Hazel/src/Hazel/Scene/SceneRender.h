@@ -8,6 +8,7 @@ namespace Hazel {
 	{
 	public: // open
 		SceneRender();
+		Ref<Image2D> GetTextureWhichNeedDebug() { return m_SpotFrameBuffer->GetDepthImage(); };
 		Ref<Image2D> GetFinalImage() { return m_GridFrameBuffer->GetImage(0); }
 		void PreRender(SceneInfo sceneData);
 		void EndRender();
@@ -152,7 +153,7 @@ namespace Hazel {
 		{
 			glm::mat4 ViewProjection[4];
 		};
-		struct UBSpotShadowData
+		struct SpotLightMatrixs
 		{
 			glm::mat4 ShadowMatrices[1000]{};
 		} SpotShadowDataUB;
@@ -194,9 +195,8 @@ namespace Hazel {
 		uint32_t NumShadowCascades = 4;
 		Ref<RenderCommandBuffer> m_CommandBuffer;
 		glm::vec4 CascadeSplits;
-		bool isFirstFrame = true;
 		// 收集来自场景的数据
-		SceneInfo* m_SceneDataFromScene = nullptr;
+		SceneInfo m_SceneDataFromScene;
 
 		// 这些Map用于注册要绘制的Mesh，同时自动处理实例化
 		std::map<MeshKey, DynamicDrawCommand> m_DynamicDrawList;
@@ -221,8 +221,8 @@ namespace Hazel {
 		Ref<UniformBufferSet> m_UBSViewProjToLight;
 
 		// TODO: 聚光灯级联阴影变换矩阵
-		std::vector<UBSpotLights> spotLightData;
-		Ref<UniformBufferSet> m_UBSSpotShadowData;
+		std::vector<SpotLightMatrixs> m_SpotLightMatrixData;
+		Ref<UniformBufferSet> m_UBSSpotLightMatrixData;
 
 		// 渲染设置 UBO
 		std::vector<RenderSettingData> m_RenderSettingData;
@@ -239,6 +239,8 @@ namespace Hazel {
 		Ref<Pipeline> m_ShadowPassPipelines[4];
 		Ref<Pipeline> m_ShadowPassPipelinesAnim[4];
 
+		Ref<Framebuffer> m_SpotFrameBuffer;
+		Ref<Framebuffer> m_SpotFrameAnimBuffer;
 		Ref<Pipeline> m_SpotShadowPassPipeline;
 		Ref<Pipeline> m_SpotShadowPassAnimPipeline;
 		Ref<RenderPass> m_SpotShadowPass;
@@ -292,5 +294,6 @@ namespace Hazel {
 		Ref<Framebuffer> m_SkyFrameBuffer;
 		Ref<Pipeline> m_SkyPipeline;
 		Ref<RenderPass> m_SkyPass;
+
 	};
 }

@@ -48,15 +48,9 @@ namespace Hazel {
 		glm::vec3 Position = { 0.0f, 0.0f, 0.0f };
 		float Intensity = 0.0f;
 		glm::vec3 Direction = { 0.0f, 0.0f, 0.0f };
-		float AngleAttenuation = 0.0f;
 		glm::vec3 Radiance = { 0.0f, 0.0f, 0.0f };
-		float Range = 0.1f;
-		float Angle = 0.0f;
-		float Falloff = 1.0f;
-		bool SoftShadows = true;
-		char Padding0[3]{ 0, 0, 0 };
-		bool CastsShadows = true;
-		char Padding1[3]{ 0, 0, 0 };
+        float Angle = 80.0f;
+		float Range = 100.f;
 	};
 	struct RenderSettingData {
 		glm::vec4 CascadeSplits;
@@ -91,6 +85,7 @@ namespace Hazel {
 		void OnEditorRender(Timestep ts, EditorCamera& editorCamera);
 		void UpdateAnimation(Timestep ts);
 		void OutputViewport();
+		void ShowDebugTexture();
 		void SetViewprotSize(float width, float height) { m_ViewportWidth = width; m_ViewportHeight = height; }
 	public:
 		void CollectRenderableEntities();

@@ -197,12 +197,27 @@ namespace Hazel {
 		}
 		glm::vec3 GetDirection() const
 		{
-			// 默认光朝 -Z
-			return Rotation * glm::vec3(0.0f, 0.0f, -1.0f);
+			// 默认光朝 -x
+			return Rotation * glm::vec3(-1.0f, 0.0f, 0.0f);
 		}
 		friend class SceneSerializer;
 	};
-
+	struct DirectionalLightComponent
+	{
+		glm::vec3 Radiance = { 1.0f, 1.0f, 1.0f };
+		float Intensity = 1.0f;
+		bool CastShadows = true;
+		bool SoftShadows = true;
+		float LightSize = 0.5f; // For PCSS
+		float ShadowAmount = 1.0f; // 阴影程度
+	};
+	struct SpotLightComponent
+	{ 
+        glm::vec3 Radiance = { 1.0f, 1.0f, 1.0f };
+        float Intensity = 1.0f;
+		glm::vec3 Direction = { 0.0f, -1.0f, 0.0f };
+		glm::vec3 Position = { 0.0f, 0.0f, 0.0f };
+	};
 
 
 	struct SpriteRendererComponent
@@ -234,15 +249,6 @@ namespace Hazel {
 
 		CameraComponent() = default;
 		CameraComponent(const CameraComponent&) = default;
-	};
-	struct DirectionalLightComponent
-	{
-		glm::vec3 Radiance = { 1.0f, 1.0f, 1.0f };
-		float Intensity = 1.0f;
-		bool CastShadows = true;
-		bool SoftShadows = true;
-		float LightSize = 0.5f; // For PCSS
-		float ShadowAmount = 1.0f; // 阴影程度
 	};
 	struct ScriptComponent
 	{
@@ -337,7 +343,7 @@ namespace Hazel {
 
 	using AllComponents = 
 		ComponentGroup<StaticMeshComponent,TransformComponent, SpriteRendererComponent,
-			CircleRendererComponent, CameraComponent, ScriptComponent,
+			CircleRendererComponent, CameraComponent, ScriptComponent, SpotLightComponent,
 			NativeScriptComponent, Rigidbody2DComponent, BoxCollider2DComponent,
 			CircleCollider2DComponent, TextComponent, RelationshipComponent, DirectionalLightComponent, SubmeshComponent,DynamicMeshComponent, AnimationComponent>;
 

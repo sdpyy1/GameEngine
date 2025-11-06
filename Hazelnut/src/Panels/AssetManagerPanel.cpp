@@ -24,6 +24,8 @@ namespace Hazel {
 		m_EntityIcon = Texture2D::Create(spec, dirIcon);
 		dirIcon = "Assets/Icon/Sun.png";
 		m_DirLightIcon = Texture2D::Create(spec, dirIcon);
+		dirIcon = "Assets/Icon/post.png";
+		m_SpotLightIcon = Texture2D::Create(spec, dirIcon);
 	}
 
 	void AssetManagerPanel::SetContext(Ref<Scene>& context)
@@ -59,6 +61,8 @@ namespace Hazel {
 					m_Context->CreateEntity("Empty Entity");
 				if (ImGui::MenuItem("Create Directional Light"))
 					m_Context->CreateEntity("Directional Light").AddComponent<DirectionalLightComponent>();
+				if (ImGui::MenuItem("Create Spot Light"))
+					m_Context->CreateEntity("Spot Light").AddComponent<SpotLightComponent>();
 				if (ImGui::MenuItem("Create Sky Light"))
 					m_Context->CreateEntity("Sky Light"); // TODO: add component
 				ImGui::EndPopup();
@@ -76,7 +80,6 @@ namespace Hazel {
 	{
 		m_SelectionContext = entity;
 	}
-
 	void AssetManagerPanel::DrawEntityNode(Entity entity)
 	{
 		auto& tag = entity.GetComponent<TagComponent>().Tag;
@@ -106,7 +109,8 @@ namespace Hazel {
 		Ref<Texture2D> icon = m_EntityIcon;
 		if (entity.HasComponent<DirectionalLightComponent>())
 			icon = m_DirLightIcon;
-
+		if (entity.HasComponent<SpotLightComponent>())
+			icon = m_SpotLightIcon;
 		if (icon)
 			ImGui::Image(UI::GetImageId(icon->GetImage()), { iconSize, iconSize });
 
@@ -341,6 +345,11 @@ namespace Hazel {
 				return;
 			});
 
+		DrawComponent<SpotLightComponent>("Spot Light", entity, [](auto& component)
+			{
+                ImGui::Text("SpotLight Add!");
+				return;
+			});
 		DrawComponent<AnimationComponent>("Animation", entity, [](auto& component)
 			{
 				ImGui::Text("Mesh Source Handle: %llu", (uint64_t)component.meshSource);

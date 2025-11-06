@@ -32,6 +32,7 @@ namespace Hazel {
 		void ViewportGUI();
 		void DrawGizmo();
 		void SettingGUI();
+		void DebugTexture();
 		bool OnMouseButtonPressed(MouseButtonPressedEvent& event);
 		std::pair<float, float> GetMouseViewportSpace();
 		std::pair<glm::vec3, glm::vec3> CastRay(const EditorCamera& camera, float mx, float my);

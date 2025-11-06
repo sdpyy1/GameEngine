@@ -182,7 +182,13 @@ namespace Hazel {
 		// SpotShadowPass
 		{
 			Shader::ShaderSpecification shadowShaderSpec;
-			shadowShaderSpec.bindings.push_back(cameraDataBinding); // 并不是摄像机数据是光照矩阵
+            Shader::DescriptorBinding lightMatrixBinding;
+            lightMatrixBinding.binding = 0;
+            lightMatrixBinding.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            lightMatrixBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+            lightMatrixBinding.count = 1;
+            lightMatrixBinding.set = 0;
+            shadowShaderSpec.bindings.push_back(lightMatrixBinding);
 			Shader::PushConstantRange PushRange;
 			PushRange.shaderStage = VK_SHADER_STAGE_VERTEX_BIT;
 			PushRange.offset = 0;

@@ -17,7 +17,7 @@ namespace Hazel {
 		preComputeEnv();
 
 		InitDirShadowPass();
-		//InitSpotShadowPass();
+		InitSpotShadowPass();
 		InitPreDepthPass();
 		InitHZBPass();
 		InitGeoPass();
@@ -57,7 +57,7 @@ namespace Hazel {
 	}
 	void SceneRender::Draw() {
 		ShadowPass();
-		// SpotShadowPass();
+		SpotShadowPass();
 		PreDepthPass();
 		HZBComputePass();
 		GeoPass();
@@ -70,7 +70,7 @@ namespace Hazel {
 	{
 		uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
 		// 接收场景数据
-		m_SceneDataFromScene = &sceneData;
+		m_SceneDataFromScene = sceneData;
 		// 处理Resize
 		HandleResizeRuntime();
 		// 更新各种资源信息
@@ -80,7 +80,6 @@ namespace Hazel {
 		UploadSpotShadowData(); // 聚光阴影 TODO：待完成
 		UploadRenderSettingData();  // 渲染设置数据
 		uploadSceneData(); // 场景数据
-		isFirstFrame = false;
 	}
 	void SceneRender::EndRender()
 	{
@@ -223,7 +222,7 @@ namespace Hazel {
 			lastSplitDist = cascadeSplits[i];
 		}
 	}
-	void SceneRender::InitSpotShadowPass() // TODO：这里和别的Pass不一样
+	void SceneRender::InitSpotShadowPass()
 	{
 		FramebufferSpecification framebufferSpec;
 		framebufferSpec.Width = shadowMapResolution;
@@ -235,11 +234,15 @@ namespace Hazel {
 
 		auto shadowPassShader = Renderer::GetShaderLibrary()->Get("SpotShadowMap");
 		auto shadowPassShaderAnim = Renderer::GetShaderLibrary()->Get("SpotShadowMapAnim");
-
+		m_SpotFrameBuffer = Framebuffer::Create(framebufferSpec);
+		framebufferSpec.DebugName = "SpotShadowMapAnim";
+		framebufferSpec.ClearDepthOnLoad = false;
+		framebufferSpec.ExistingImages[0] = m_SpotFrameBuffer->GetDepthImage();
+        m_SpotFrameAnimBuffer = Framebuffer::Create(framebufferSpec);
 		PipelineSpecification pipelineSpec;
 		pipelineSpec.DebugName = "SpotShadowPass";
 		pipelineSpec.Shader = shadowPassShader;
-		pipelineSpec.TargetFramebuffer = Framebuffer::Create(framebufferSpec);
+		pipelineSpec.TargetFramebuffer = m_SpotFrameBuffer;
 		pipelineSpec.DepthOperator = DepthCompareOperator::LessOrEqual;
 		pipelineSpec.Layout = vertexLayout;
 		pipelineSpec.InstanceLayout = instanceLayout;
@@ -247,7 +250,7 @@ namespace Hazel {
 		pipelineSpecAnim.DebugName = "SpotShadowPassAnim";
 		pipelineSpecAnim.Shader = shadowPassShaderAnim;
 		pipelineSpecAnim.BoneInfluenceLayout = boneInfluenceLayout;
-
+		pipelineSpecAnim.TargetFramebuffer = m_SpotFrameAnimBuffer;
 		m_SpotShadowPassPipeline = Pipeline::Create(pipelineSpec);
 		m_SpotShadowPassAnimPipeline = Pipeline::Create(pipelineSpecAnim);
 
@@ -258,24 +261,66 @@ namespace Hazel {
 		spotShadowPassSpec.DebugName = "SpotShadowMapAnim";
 		spotShadowPassSpec.Pipeline = m_SpotShadowPassAnimPipeline;
 		m_SpotShadowAnimPass = RenderPass::Create(spotShadowPassSpec);
-		m_SpotShadowPass->SetInput(m_UBSSpotShadowData, 0);
-		m_SpotShadowAnimPass->SetInput(m_UBSSpotShadowData, 0);
+		m_SpotShadowPass->SetInput(m_UBSSpotLightMatrixData, 0);
+		m_SpotShadowAnimPass->SetInput(m_UBSSpotLightMatrixData, 0);
 		m_SpotShadowAnimPass->SetInput(m_SBSBoneTransforms, 1, true);
 	}
 	void SceneRender::UploadSpotShadowData()
 	{
-		const std::vector<SpotLight>& spotLightsVec = m_SceneDataFromScene->SceneLightEnvironment.SpotLights;
-		// TODO:待完成
+		uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
+		const std::vector<SpotLight>& spotLightsVec = m_SceneDataFromScene.SceneLightEnvironment.SpotLights;
+		for (uint32_t i = 0; i < spotLightsVec.size(); i++) {
+			glm::mat4 viewMatrix = glm::lookAt(spotLightsVec[i].Position, spotLightsVec[i].Position + spotLightsVec[i].Direction, glm::vec3(0.0f, 1.0f, 0.0f));
+			glm::mat4 projection = glm::perspective(glm::radians(spotLightsVec[i].Angle), 1.f, 0.1f, spotLightsVec[i].Range);
+			m_SpotLightMatrixData[frameIndex].ShadowMatrices[i] = projection * viewMatrix;
+		}
+        m_UBSSpotLightMatrixData->Get()->SetData(&m_SpotLightMatrixData[frameIndex], sizeof(SpotLightMatrixs));
 	}
 	void SceneRender::SpotShadowPass()
 	{
-		//throw std::logic_error("The method or operation is not implemented.");
+		uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
+		const std::vector<SpotLight>& spotLights = m_SceneDataFromScene.SceneLightEnvironment.SpotLights;
+		if (spotLights.size() == 0) return;
+		for (uint32_t i = 0; i < spotLights.size(); i++)
+		{
+			Renderer::BeginRenderPass(m_CommandBuffer, m_SpotShadowPass);
+
+			// Render entities
+			const Buffer cascade(&i, sizeof(uint32_t));
+			for (auto& [mk, dc] : m_StaticMeshDrawList)
+			{
+				const auto& transformData = m_MeshTransformMap.at(mk);
+				Renderer::RenderStaticMeshWithMaterial(m_CommandBuffer, m_ShadowPassPipelines[i], dc.MeshSource, dc.SubmeshIndex, nullptr, m_SubmeshTransformBuffers[frameIndex].Buffer, transformData.TransformOffset, dc.InstanceCount, cascade);
+			}
+			Renderer::EndRenderPass(m_CommandBuffer);
+		}
+		for (uint32_t i = 0; i < spotLights.size(); i++)
+		{
+			Renderer::BeginRenderPass(m_CommandBuffer, m_SpotShadowAnimPass);
+
+			// Render entities
+			const Buffer cascade(&i, sizeof(uint32_t));
+			for (auto& [mk, dc] : m_DynamicDrawList)
+			{
+				const auto& transformData = m_MeshTransformMap.at(mk);
+				if (dc.IsRigged)
+				{
+					const auto& boneTransformsData = m_MeshBoneTransformsMap.at(mk);
+					Renderer::RenderSkeletonMeshWithMaterial(m_CommandBuffer, m_ShadowPassPipelinesAnim[i], dc.MeshSource, dc.SubmeshIndex, nullptr, m_SubmeshTransformBuffers[frameIndex].Buffer, transformData.TransformOffset, boneTransformsData.BoneTransformsBaseIndex, dc.InstanceCount, cascade);
+				}
+				else {
+					Renderer::RenderSkeletonMeshWithMaterial(m_CommandBuffer, m_ShadowPassPipelinesAnim[i], dc.MeshSource, dc.SubmeshIndex, nullptr, m_SubmeshTransformBuffers[frameIndex].Buffer, transformData.TransformOffset, 0, dc.InstanceCount, cascade);
+				}
+			}
+			Renderer::EndRenderPass(m_CommandBuffer);
+		}
+
 	}
 	void SceneRender::UploadCSMShadowData() {
         uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
-		if (m_SceneDataFromScene->SceneLightEnvironment.DirectionalLights[0].Intensity == 0) return;
+		if (m_SceneDataFromScene.SceneLightEnvironment.DirectionalLights[0].Intensity == 0) return;
 		CascadeData cascades[4];
-		CalculateCascades(cascades, m_SceneDataFromScene->camera, m_SceneDataFromScene->SceneLightEnvironment.DirectionalLights[0].Direction);
+		CalculateCascades(cascades, m_SceneDataFromScene.camera, m_SceneDataFromScene.SceneLightEnvironment.DirectionalLights[0].Direction);
 		for (int i = 0; i < NumShadowCascades; i++)
 		{
 			CascadeSplits[i] = cascades[i].SplitDepth;
@@ -285,7 +330,7 @@ namespace Hazel {
 	}
 	void SceneRender::ShadowPass() {
 		uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
-		auto& directionalLights = m_SceneDataFromScene->SceneLightEnvironment.DirectionalLights;
+		auto& directionalLights = m_SceneDataFromScene.SceneLightEnvironment.DirectionalLights;
 		if (directionalLights[0].Intensity == 0.0f)
 		{
 			return;
@@ -399,15 +444,15 @@ namespace Hazel {
 	void SceneRender::UploadCameraData()
 	{
 		uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
-		m_CameraData[frameIndex].view = m_SceneDataFromScene->camera.GetViewMatrix();
-		m_CameraData[frameIndex].proj = m_SceneDataFromScene->camera.GetProjectionMatrix();
+		m_CameraData[frameIndex].view = m_SceneDataFromScene.camera.GetViewMatrix();
+		m_CameraData[frameIndex].proj = m_SceneDataFromScene.camera.GetProjectionMatrix();
 		m_CameraData[frameIndex].proj[1][1] *= -1; // Y轴反转
 		m_CameraData[frameIndex].viewproj = m_CameraData[frameIndex].proj * m_CameraData[frameIndex].view;
-		m_CameraData[frameIndex].Near = m_SceneDataFromScene->camera.GetNearClip();
-		m_CameraData[frameIndex].Far = m_SceneDataFromScene->camera.GetFarClip();
-		m_CameraData[frameIndex].Width = m_SceneDataFromScene->camera.GetViewportWidth();
-		m_CameraData[frameIndex].Height = m_SceneDataFromScene->camera.GetViewportHeight();
-		m_CameraData[frameIndex].Position = m_SceneDataFromScene->camera.GetPosition();
+		m_CameraData[frameIndex].Near = m_SceneDataFromScene.camera.GetNearClip();
+		m_CameraData[frameIndex].Far = m_SceneDataFromScene.camera.GetFarClip();
+		m_CameraData[frameIndex].Width = m_SceneDataFromScene.camera.GetViewportWidth();
+		m_CameraData[frameIndex].Height = m_SceneDataFromScene.camera.GetViewportHeight();
+		m_CameraData[frameIndex].Position = m_SceneDataFromScene.camera.GetPosition();
 		m_UBSCameraData->Get()->SetData(&m_CameraData[frameIndex], sizeof(CameraData));
 	}
 	void SceneRender::SubmitStaticMesh(Ref<MeshSource> meshSource, const glm::mat4& transform) {
@@ -504,6 +549,10 @@ namespace Hazel {
 		m_SceneDataForShader.resize(framesInFlight);
         m_UBSSceneDataForShader = UniformBufferSet::Create(sizeof(SceneDataForShader), "SceneDataForShader");
 		
+		m_SpotLightMatrixData.resize(framesInFlight);
+        m_UBSSpotLightMatrixData = UniformBufferSet::Create(sizeof(SpotLightMatrixs), "SpotLightMatrixData");
+
+
 		m_SubmeshTransformBuffers.resize(framesInFlight);
 		for (uint32_t i = 0; i < framesInFlight; i++)
 		{
@@ -712,18 +761,18 @@ namespace Hazel {
 		}
 	}
 	void SceneRender::HandleResizeRuntime() {
-		SetViewprotSize(m_SceneDataFromScene->camera.GetViewportWidth(), m_SceneDataFromScene->camera.GetViewportHeight());
+		SetViewprotSize(m_SceneDataFromScene.camera.GetViewportWidth(), m_SceneDataFromScene.camera.GetViewportHeight());
 		if (NeedResize) {
 			// 更新FBO尺寸（需要按顺序Resize）
-			HZ_CORE_WARN("SceneRender::PreRender Resize FBO to {0}x{1}", m_SceneDataFromScene->camera.GetViewportWidth(), m_SceneDataFromScene->camera.GetViewportHeight());
-			m_PreDepthClearFramebuffer->Resize(m_SceneDataFromScene->camera.GetViewportWidth(), m_SceneDataFromScene->camera.GetViewportHeight());
-			m_PreDepthLoadFramebuffer->Resize(m_SceneDataFromScene->camera.GetViewportWidth(), m_SceneDataFromScene->camera.GetViewportHeight());
-			m_GeoFrameBuffer->Resize(m_SceneDataFromScene->camera.GetViewportWidth(), m_SceneDataFromScene->camera.GetViewportHeight());
-			m_GeoAnimFrameBuffer->Resize(m_SceneDataFromScene->camera.GetViewportWidth(), m_SceneDataFromScene->camera.GetViewportHeight());
-			// m_LightPassFramebuffer->Resize(m_SceneDataFromScene->camera.GetViewportWidth(), m_SceneDataFromScene->camera.GetViewportHeight()); 
-			m_SkyFrameBuffer->Resize(m_SceneDataFromScene->camera.GetViewportWidth(), m_SceneDataFromScene->camera.GetViewportHeight());
-			m_SceneCompositeFrameBuffer->Resize(m_SceneDataFromScene->camera.GetViewportWidth(), m_SceneDataFromScene->camera.GetViewportHeight());
-			m_GridFrameBuffer->Resize(m_SceneDataFromScene->camera.GetViewportWidth(), m_SceneDataFromScene->camera.GetViewportHeight());
+			HZ_CORE_WARN("SceneRender::PreRender Resize FBO to {0}x{1}", m_SceneDataFromScene.camera.GetViewportWidth(), m_SceneDataFromScene.camera.GetViewportHeight());
+			m_PreDepthClearFramebuffer->Resize(m_SceneDataFromScene.camera.GetViewportWidth(), m_SceneDataFromScene.camera.GetViewportHeight());
+			m_PreDepthLoadFramebuffer->Resize(m_SceneDataFromScene.camera.GetViewportWidth(), m_SceneDataFromScene.camera.GetViewportHeight());
+			m_GeoFrameBuffer->Resize(m_SceneDataFromScene.camera.GetViewportWidth(), m_SceneDataFromScene.camera.GetViewportHeight());
+			m_GeoAnimFrameBuffer->Resize(m_SceneDataFromScene.camera.GetViewportWidth(), m_SceneDataFromScene.camera.GetViewportHeight());
+			// m_LightPassFramebuffer->Resize(m_SceneDataFromScene.camera.GetViewportWidth(), m_SceneDataFromScene.camera.GetViewportHeight()); 
+			m_SkyFrameBuffer->Resize(m_SceneDataFromScene.camera.GetViewportWidth(), m_SceneDataFromScene.camera.GetViewportHeight());
+			m_SceneCompositeFrameBuffer->Resize(m_SceneDataFromScene.camera.GetViewportWidth(), m_SceneDataFromScene.camera.GetViewportHeight());
+			m_GridFrameBuffer->Resize(m_SceneDataFromScene.camera.GetViewportWidth(), m_SceneDataFromScene.camera.GetViewportHeight());
 			HandleHZBResize();
 			NeedResize = false;
 		}
@@ -736,7 +785,7 @@ namespace Hazel {
 	}
 	void SceneRender::HandleHZBResize()
 	{
-		m_HierarchicalDepthTexture.Texture->Resize(m_SceneDataFromScene->camera.GetViewportWidth(), m_SceneDataFromScene->camera.GetViewportHeight());
+		m_HierarchicalDepthTexture.Texture->Resize(m_SceneDataFromScene.camera.GetViewportWidth(), m_SceneDataFromScene.camera.GetViewportHeight());
 		uint32_t mipCount = m_HierarchicalDepthTexture.Texture->GetMipLevelCount();
 		m_HierarchicalDepthTexture.ImageViews.resize(m_HierarchicalDepthTexture.Texture->GetMipLevelCount());
 		ImageViewSpecification imageViewSpec;
@@ -940,15 +989,15 @@ namespace Hazel {
 	{
 		uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
 		m_RenderSettingData[frameIndex].CascadeSplits = CascadeSplits;
-		m_RenderSettingData[frameIndex].ShadowType = m_SceneDataFromScene->RenderSettingData.ShadowType;
-		m_RenderSettingData[frameIndex].deBugCSM = m_SceneDataFromScene->RenderSettingData.deBugCSM;
+		m_RenderSettingData[frameIndex].ShadowType = m_SceneDataFromScene.RenderSettingData.ShadowType;
+		m_RenderSettingData[frameIndex].deBugCSM = m_SceneDataFromScene.RenderSettingData.deBugCSM;
 		m_UBSRenderSetting->Get()->SetData(&m_RenderSettingData[frameIndex], sizeof(RenderSettingData));
 	}
 
 	void SceneRender::uploadSceneData()
 	{
 		uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
-		m_SceneDataForShader[frameIndex].DirectionalLight = m_SceneDataFromScene->SceneLightEnvironment.DirectionalLights[0];
+		m_SceneDataForShader[frameIndex].DirectionalLight = m_SceneDataFromScene.SceneLightEnvironment.DirectionalLights[0];
 		m_SceneDataForShader[frameIndex].EnvironmentMapIntensity = 1.f;
 		m_UBSSceneDataForShader->Get()->SetData(&m_SceneDataForShader[frameIndex], sizeof(SceneDataForShader));
 	}

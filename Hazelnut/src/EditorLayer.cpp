@@ -118,7 +118,7 @@ namespace Hazel {
 		// ========== 其他面板绘制 ==========
 		ViewportGUI();
 		SettingGUI();
-
+		DebugTexture();
 		if (m_FolderPreviewPanel.isOpen)
 			m_FolderPreviewPanel.OnImGuiRender();
 
@@ -412,4 +412,13 @@ namespace Hazel {
 
 		return { rayPos, rayDir };
 	}
+
+	void EditorLayer::DebugTexture()
+	{
+        ImGui::Begin("Debug Texture");
+		m_Scene->ShowDebugTexture();
+		ImGui::End();
+
+	}
+
 }
