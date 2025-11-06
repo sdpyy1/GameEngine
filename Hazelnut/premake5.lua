@@ -28,7 +28,6 @@ project "Hazelnut"
 		"%{IncludeDir.assimp}",
 		"%{IncludeDir.acl}",
 		"%{IncludeDir.rtm}",
-
 	}
 	-- includedirs
 	-- {

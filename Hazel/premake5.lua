@@ -21,7 +21,9 @@ project "Hazel"
 		"vendor/VMA/VulkanMemoryAllocator/**.h",
 		"vendor/VMA/VulkanMemoryAllocator/**.cpp",
 		"vendor/ImGuizmo/ImGuizmo.h",
-		"vendor/ImGuizmo/ImGuizmo.cpp"
+		"vendor/ImGuizmo/ImGuizmo.cpp",
+		"vendor/spirv_reflect/spirv_reflect.c"
+
 	}
 
 	defines
@@ -54,7 +56,7 @@ project "Hazel"
 		"%{IncludeDir.assimp}",
 		"%{IncludeDir.acl}",
 		"%{IncludeDir.rtm}",
-
+		"%{IncludeDir.spirv_reflect}",
 	}
 
 	libdirs
@@ -79,7 +81,8 @@ project "Hazel"
 
 	filter "files:vendor/ImGuizmo/**.cpp"
 	flags { "NoPCH" }
-
+	filter "files:vendor/spirv_reflect/spirv_reflect.c"
+    flags { "NoPCH" }
 	filter "system:windows"
 		systemversion "latest"
 

@@ -5,27 +5,27 @@
 #include <Platform/Vulkan/VulkanShader.h>
 
 namespace Hazel {
-	Ref<Shader> Shader::Create(const std::string& name, const std::string& vertFilePath, const std::string& fragFilePath, ShaderSpecification spec)
+	Ref<Shader> Shader::Create(const std::string& name, const std::string& vertFilePath, const std::string& fragFilePath)
 	{
 		Ref<Shader> result = nullptr;
 
 		switch (RendererAPI::Current())
 		{
 		case RendererAPI::Type::None: return nullptr;
-		case RendererAPI::Type::Vulkan:result = Ref<VulkanShader>::Create(name, vertFilePath, fragFilePath, spec);
+		case RendererAPI::Type::Vulkan:result = Ref<VulkanShader>::Create(name, vertFilePath, fragFilePath);
 			break;
 		}
 		return result;
 	}
 
-	Hazel::Ref<Hazel::Shader> Shader::Create(const std::string& name, const std::string& computeFilePath, ShaderSpecification spec)
+	Hazel::Ref<Hazel::Shader> Shader::Create(const std::string& name, const std::string& computeFilePath)
 	{
 		Ref<Shader> result = nullptr;
 
 		switch (RendererAPI::Current())
 		{
 		case RendererAPI::Type::None: return nullptr;
-		case RendererAPI::Type::Vulkan:result = Ref<VulkanShader>::Create(name, computeFilePath, spec);
+		case RendererAPI::Type::Vulkan:result = Ref<VulkanShader>::Create(name, computeFilePath);
 			break;
 		}
 		return result;
@@ -43,15 +43,15 @@ namespace Hazel {
 		Add(name, shader);
 	}
 
-	Ref<Shader> ShaderLibrary::LoadCommonShader(const std::string& name, Shader::ShaderSpecification spec, bool isComputeShader)
+	Ref<Shader> ShaderLibrary::LoadCommonShader(const std::string& name, bool isComputeShader)
 	{
 		Ref<Shader> shader;
 		if (!isComputeShader) {
-			shader = Shader::Create(name, "D:/AAA_GameEngine/Hazelnut/Assets/shader/spv/" + name + "Vert.spv", "D:/AAA_GameEngine/Hazelnut/Assets/shader/spv/" + name + "Frag.spv", spec);
+			shader = Shader::Create(name, "D:/AAA_GameEngine/Hazelnut/Assets/shader/spv/" + name + "Vert.spv", "D:/AAA_GameEngine/Hazelnut/Assets/shader/spv/" + name + "Frag.spv");
 			Add(shader);
 		}
 		else {
-			shader = Shader::Create(name, "D:/AAA_GameEngine/Hazelnut/Assets/shader/spv/" + name + ".comp.spv", spec);
+			shader = Shader::Create(name, "D:/AAA_GameEngine/Hazelnut/Assets/shader/spv/" + name + ".comp.spv");
 			Add(shader);
 		}
 		return shader;

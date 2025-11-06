@@ -48,331 +48,46 @@ namespace Hazel {
 		// 创建具体的渲染API对象
 		s_RendererAPI = RendererAPI::CreateAPI();
 
-		// Shader缓存，需要传给Shader资源描述符信息，Shader会创建好资源描述符Set
-		Shader::DescriptorBinding cameraDataBinding;
-		cameraDataBinding.binding = 0;
-		cameraDataBinding.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		cameraDataBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-		cameraDataBinding.count = 1;
-		cameraDataBinding.set = 0;
-		Shader::DescriptorBinding boneTrasnfromBinding;
-		boneTrasnfromBinding.binding = 1;
-		boneTrasnfromBinding.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-		boneTrasnfromBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-		boneTrasnfromBinding.count = 1;
-		boneTrasnfromBinding.set = 0;
-		Shader::PushConstantRange BoneInfluencePushRange;
-		BoneInfluencePushRange.shaderStage = VK_SHADER_STAGE_VERTEX_BIT;
-		BoneInfluencePushRange.offset = 0;
-		BoneInfluencePushRange.size = 4;
-		// GBufferPass
-		{
-			Shader::ShaderSpecification gbufferShaderSpec;
-			gbufferShaderSpec.bindings.push_back(cameraDataBinding);
-			Shader::DescriptorBinding shadowBinding;
-            shadowBinding.binding = 2;
-            shadowBinding.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            shadowBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-            shadowBinding.count = 1;
-            shadowBinding.set = 0;
-            gbufferShaderSpec.bindings.push_back(shadowBinding);
-			Shader::DescriptorBinding RendererDataBinding;
-            RendererDataBinding.binding = 3;
-            RendererDataBinding.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            RendererDataBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-            RendererDataBinding.count = 1;
-            RendererDataBinding.set = 0;
-            gbufferShaderSpec.bindings.push_back(RendererDataBinding);
-			Shader::DescriptorBinding SceneDataBinding;
-            SceneDataBinding.binding = 4;
-            SceneDataBinding.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            SceneDataBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-            SceneDataBinding.count = 1;
-            SceneDataBinding.set = 0;
-            gbufferShaderSpec.bindings.push_back(SceneDataBinding);
-			
-			// 2. Albedo 贴图（combined image sampler）
-			Shader::DescriptorBinding albedoBinding;
-			albedoBinding.binding = 0;
-			albedoBinding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-			albedoBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-			albedoBinding.count = 1;
-			albedoBinding.set = 1;
-			gbufferShaderSpec.bindings.push_back(albedoBinding);
-			// 3. Normal 贴图
-			Shader::DescriptorBinding normalBinding;
-			normalBinding.binding = 1;
-			normalBinding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-			normalBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-			normalBinding.count = 1;
-			normalBinding.set = 1;
-			gbufferShaderSpec.bindings.push_back(normalBinding);
-			// 4. Metalness 贴图
-			Shader::DescriptorBinding metalnessBinding;
-			metalnessBinding.binding = 2;
-			metalnessBinding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-			metalnessBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-			metalnessBinding.count = 1;
-			metalnessBinding.set = 1;
-			gbufferShaderSpec.bindings.push_back(metalnessBinding);
-			// 5. Roughness 贴图
-			Shader::DescriptorBinding roughnessBinding;
-			roughnessBinding.binding = 3;
-			roughnessBinding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-			roughnessBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-			roughnessBinding.count = 1;
-			roughnessBinding.set = 1;
-			gbufferShaderSpec.bindings.push_back(roughnessBinding);
+		// GBuffer Pass
+		s_Data->m_ShaderLibrary->LoadCommonShader("gBuffer");
+		s_Data->m_ShaderLibrary->LoadCommonShader("gBufferAnim");
 
-			Shader::DescriptorBinding emsBinding;
-			emsBinding.binding = 4;
-			emsBinding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-			emsBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-			emsBinding.count = 1;
-			emsBinding.set = 1;
-			gbufferShaderSpec.bindings.push_back(emsBinding);
-			Shader::PushConstantRange PushRange;
-            PushRange.shaderStage = VK_SHADER_STAGE_FRAGMENT_BIT ;
-            PushRange.offset = 0;
-            PushRange.size = sizeof(MaterialPush);
-            gbufferShaderSpec.pushConstantRanges.push_back(PushRange);
-			s_Data->m_ShaderLibrary->LoadCommonShader("gBuffer", gbufferShaderSpec);
-			Shader::PushConstantRange PushRange1;
-			PushRange1.shaderStage = VK_SHADER_STAGE_VERTEX_BIT;
-            PushRange1.size = 4;
-			PushRange1.offset =sizeof(MaterialPush);
-			gbufferShaderSpec.pushConstantRanges.push_back(PushRange1);
-			gbufferShaderSpec.bindings.push_back(boneTrasnfromBinding);
-			s_Data->m_ShaderLibrary->LoadCommonShader("gBufferAnim", gbufferShaderSpec);
-		}
-		// DirShadowPass
-		{
-			Shader::ShaderSpecification shadowShaderSpec;
-			shadowShaderSpec.bindings.push_back(cameraDataBinding);
-			Shader::PushConstantRange casPushRange;
-			casPushRange.shaderStage = VK_SHADER_STAGE_VERTEX_BIT;
-			casPushRange.offset = 0;
-			casPushRange.size = 4;
-			shadowShaderSpec.pushConstantRanges = { casPushRange };
-			s_Data->m_ShaderLibrary->LoadCommonShader("DirShadowMap", shadowShaderSpec);
-			shadowShaderSpec.bindings.push_back(boneTrasnfromBinding);
-			shadowShaderSpec.pushConstantRanges[0].size = 8;
-			s_Data->m_ShaderLibrary->LoadCommonShader("DirShadowMapAnim", shadowShaderSpec);
-		}
-		// SpotShadowPass
-		{
-			Shader::ShaderSpecification shadowShaderSpec;
-            Shader::DescriptorBinding lightMatrixBinding;
-            lightMatrixBinding.binding = 0;
-            lightMatrixBinding.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            lightMatrixBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-            lightMatrixBinding.count = 1;
-            lightMatrixBinding.set = 0;
-            shadowShaderSpec.bindings.push_back(lightMatrixBinding);
-			Shader::PushConstantRange PushRange;
-			PushRange.shaderStage = VK_SHADER_STAGE_VERTEX_BIT;
-			PushRange.offset = 0;
-			PushRange.offset = 0;
-			PushRange.size = 4;
-			shadowShaderSpec.pushConstantRanges = { PushRange };
-			s_Data->m_ShaderLibrary->LoadCommonShader("SpotShadowMap", shadowShaderSpec);
-			shadowShaderSpec.bindings.push_back(boneTrasnfromBinding);
-			shadowShaderSpec.pushConstantRanges[0].size = 8;
-			s_Data->m_ShaderLibrary->LoadCommonShader("SpotShadowMapAnim", shadowShaderSpec);
-		}
-		// GridPass
-		{
-			Shader::ShaderSpecification gridShaderSpec;
-			Shader::DescriptorBinding depthBinding;
-			Shader::DescriptorBinding griduboBinding;
-			griduboBinding.binding = 0;                  // 对应着色器中 binding = 0
-			griduboBinding.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-			griduboBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-			griduboBinding.count = 1;
-			griduboBinding.set = 0;
-			depthBinding.binding = 1;
-			depthBinding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-			depthBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-			depthBinding.count = 1;
-			depthBinding.set = 0;
-			gridShaderSpec.bindings.push_back(griduboBinding);
-			gridShaderSpec.bindings.push_back(depthBinding);
-			s_Data->m_ShaderLibrary->LoadCommonShader("grid", gridShaderSpec);
-		}
-		// PreDepthPass
-		{
-			Shader::ShaderSpecification preDepthShaderSpec;
-			preDepthShaderSpec.bindings.push_back(cameraDataBinding);
-			s_Data->m_ShaderLibrary->LoadCommonShader("PreDepth", preDepthShaderSpec);
-			preDepthShaderSpec.bindings.push_back(boneTrasnfromBinding);
-			preDepthShaderSpec.pushConstantRanges.push_back(BoneInfluencePushRange);
-			s_Data->m_ShaderLibrary->LoadCommonShader("PreDepthAnim", preDepthShaderSpec);
-		}
-		// HZBPass
-		{
-			Shader::ShaderSpecification hzbShaderSpec;
-			Shader::DescriptorBinding binding0;
-			binding0.binding = 0;
-			binding0.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-			binding0.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
-			binding0.count = 1;
-			binding0.set = 0;
-			hzbShaderSpec.bindings.push_back(binding0);
-			Shader::DescriptorBinding binding1;
-			binding1.binding = 1;
-			binding1.type = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-			binding1.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
-			binding1.count = 11;
-			binding1.set = 0;
-			hzbShaderSpec.bindings.push_back(binding1);
-			Shader::PushConstantRange PushRange;
-			PushRange.shaderStage = VK_SHADER_STAGE_COMPUTE_BIT;
-			PushRange.offset = 0;
-			PushRange.size = 4;
-			hzbShaderSpec.pushConstantRanges = { PushRange };
-			s_Data->m_ShaderLibrary->LoadCommonShader("HZB", hzbShaderSpec, true);
-		}
+		// DirShadow Pass
+		s_Data->m_ShaderLibrary->LoadCommonShader("DirShadowMap");
+		s_Data->m_ShaderLibrary->LoadCommonShader("DirShadowMapAnim");
+
+		// SpotShadow Pass
+		s_Data->m_ShaderLibrary->LoadCommonShader("SpotShadowMap");
+		s_Data->m_ShaderLibrary->LoadCommonShader("SpotShadowMapAnim");
+
+		// Grid Pass
+		s_Data->m_ShaderLibrary->LoadCommonShader("grid");
+
+		// PreDepth Pass
+		s_Data->m_ShaderLibrary->LoadCommonShader("PreDepth");
+		s_Data->m_ShaderLibrary->LoadCommonShader("PreDepthAnim");
+
+		// HZB Pass
+		s_Data->m_ShaderLibrary->LoadCommonShader("HZB",true);
+
 		// EquirectangularToCubeMap
-		{
-			Shader::ShaderSpecification EquirectangularToCubeMapShaderSpec;
-			Shader::DescriptorBinding binding0;
-			binding0.binding = 0;
-			binding0.type = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-			binding0.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
-			binding0.count = 1;
-			binding0.set = 0;
-			EquirectangularToCubeMapShaderSpec.bindings.push_back(binding0);
-			Shader::DescriptorBinding outputCubeBinding;
-			outputCubeBinding.binding = 1;
-			outputCubeBinding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-			outputCubeBinding.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
-			outputCubeBinding.count = 1;
-			outputCubeBinding.set = 0;
-			EquirectangularToCubeMapShaderSpec.bindings.push_back(outputCubeBinding);
-			s_Data->m_ShaderLibrary->LoadCommonShader("EquirectangularToCubeMap", EquirectangularToCubeMapShaderSpec, true);
-		}
-		// IrradianceMap
-		{
-			Shader::ShaderSpecification IrradianceMapShaderSpec;
-			Shader::DescriptorBinding binding0;
-			binding0.binding = 0;
-			binding0.type = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-			binding0.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
-			binding0.count = 1;
-			binding0.set = 0;
-			IrradianceMapShaderSpec.bindings.push_back(binding0);
-			Shader::DescriptorBinding outputCubeBinding;
-			outputCubeBinding.binding = 1;
-			outputCubeBinding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-			outputCubeBinding.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
-			outputCubeBinding.count = 1;
-			outputCubeBinding.set = 0;
-			IrradianceMapShaderSpec.bindings.push_back(outputCubeBinding);
-			Shader::PushConstantRange PushRange;
-			PushRange.shaderStage = VK_SHADER_STAGE_COMPUTE_BIT;
-			PushRange.offset = 0;
-			PushRange.size = 4;
-			IrradianceMapShaderSpec.pushConstantRanges = { PushRange };
-			s_Data->m_ShaderLibrary->LoadCommonShader("EnvironmentIrradiance", IrradianceMapShaderSpec, true);
-		}
-		// PrefilterMap
-		{
-            Shader::ShaderSpecification PrefilterMapShaderSpec;
-            Shader::DescriptorBinding binding0;
-            binding0.binding = 0;
-            binding0.type = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-            binding0.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
-            binding0.count = 1;
-            binding0.set = 0;
-            PrefilterMapShaderSpec.bindings.push_back(binding0);
-            Shader::DescriptorBinding binding1;
-            binding1.binding = 1;
-            binding1.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            binding1.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
-            binding1.count = 1;
-            binding1.set = 0;
-            PrefilterMapShaderSpec.bindings.push_back(binding1);
-            Shader::PushConstantRange PushRange;
-            PushRange.shaderStage = VK_SHADER_STAGE_COMPUTE_BIT;
-            PushRange.offset = 0;
-            PushRange.size = 4;
-            PrefilterMapShaderSpec.pushConstantRanges = { PushRange };
-            s_Data->m_ShaderLibrary->LoadCommonShader("EnvironmentMipFilter", PrefilterMapShaderSpec, true);
-		}
-		
-		// lighting
-		{
-            Shader::ShaderSpecification LightingShaderSpec;
-			LightingShaderSpec.bindings.push_back(cameraDataBinding);
-			Shader::DescriptorBinding imageBinding;
-            imageBinding.binding = 9;
-            imageBinding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            imageBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-            imageBinding.count = 1;
-            imageBinding.set = 0;
-            LightingShaderSpec.bindings.push_back(imageBinding);
-			imageBinding.binding = 10;
-			LightingShaderSpec.bindings.push_back(imageBinding);
-			imageBinding.binding = 11;
-			LightingShaderSpec.bindings.push_back(imageBinding);
-			imageBinding.binding = 12;
-			LightingShaderSpec.bindings.push_back(imageBinding);
-			imageBinding.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            imageBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-			imageBinding.binding = 2;
-			LightingShaderSpec.bindings.push_back(imageBinding);
-			imageBinding.binding = 3;
-			LightingShaderSpec.bindings.push_back(imageBinding);
-			imageBinding.binding = 4;
-			LightingShaderSpec.bindings.push_back(imageBinding);
-			Shader::DescriptorBinding u_ShadowMapTextureBinding;
-			u_ShadowMapTextureBinding.binding = 5;
-			u_ShadowMapTextureBinding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-			u_ShadowMapTextureBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-			u_ShadowMapTextureBinding.count = 4;
-			u_ShadowMapTextureBinding.set = 0;
-			LightingShaderSpec.bindings.push_back(u_ShadowMapTextureBinding);
-			Shader::DescriptorBinding textureBinding;
-			textureBinding.binding = 6;
-			textureBinding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-			textureBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-			textureBinding.count = 1;
-			textureBinding.set = 0;
-			LightingShaderSpec.bindings.push_back(textureBinding);
-			textureBinding.binding =7;
-			LightingShaderSpec.bindings.push_back(textureBinding);
-			textureBinding.binding =8;
-			LightingShaderSpec.bindings.push_back(textureBinding);
-			s_Data->m_ShaderLibrary->LoadCommonShader("Lighting", LightingShaderSpec);
-		}
-		
-		//final color
-		{
-            Shader::ShaderSpecification finalColorShaderSpec;
-            Shader::DescriptorBinding lightBinding;
-            lightBinding.binding = 0;
-            lightBinding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            lightBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-            lightBinding.count = 1;
-            lightBinding.set = 0;
-            finalColorShaderSpec.bindings.push_back(lightBinding);
-			s_Data->m_ShaderLibrary->LoadCommonShader("FinalColor", finalColorShaderSpec);
+		s_Data->m_ShaderLibrary->LoadCommonShader("EquirectangularToCubeMap",true);
 
-		}
+		// Irradiance Map
+		s_Data->m_ShaderLibrary->LoadCommonShader("EnvironmentIrradiance",true);
+
+		// Prefilter Map
+		s_Data->m_ShaderLibrary->LoadCommonShader("EnvironmentMipFilter", true);
+
+		// Lighting
+		s_Data->m_ShaderLibrary->LoadCommonShader("Lighting");
+
+		// Final Color
+		s_Data->m_ShaderLibrary->LoadCommonShader("FinalColor");
 
 		// Sky
-		{
-			Shader::ShaderSpecification skyShaderSpec;
-            Shader::DescriptorBinding imageBinding;
-            imageBinding.binding = 1;
-            imageBinding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            imageBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-            imageBinding.count = 1;
-            imageBinding.set = 0;
-            skyShaderSpec.bindings.push_back(cameraDataBinding);
-            skyShaderSpec.bindings.push_back(imageBinding);
-			s_Data->m_ShaderLibrary->LoadCommonShader("Sky", skyShaderSpec);
-		}
+		s_Data->m_ShaderLibrary->LoadCommonShader("Sky");
+
 
 
 		// 加载纹理
