@@ -76,6 +76,14 @@ namespace Hazel {
             }
         }
 
+		auto skyLight = GetAllEntitiesWith<SkyComponent>();
+        if (!skyLight.empty()) {
+            auto& skyComponent = skyLight.get<SkyComponent>(skyLight[0]);
+			light.SkyLightSetting = {
+				skyComponent.DynamicSky,
+				skyComponent.iblPath[skyComponent.selectedIBL]
+			};
+        }
 	}
 
 
@@ -581,6 +589,30 @@ namespace Hazel {
 	template<>
 	void Scene::OnComponentAdded<SpotLightComponent>(Entity entity, SpotLightComponent& component)
 	{
+	}
+	template<>
+	void Scene::OnComponentAdded<SkyComponent>(Entity entity, SkyComponent& component)
+	{
+		component.iblPath.clear(); // 先清空
+
+		std::filesystem::path assetsDir = "Assets"; // 根目录，可以根据实际路径调整
+
+		if (std::filesystem::exists(assetsDir) && std::filesystem::is_directory(assetsDir))
+		{
+			for (auto& entry : std::filesystem::recursive_directory_iterator(assetsDir))
+			{
+				if (entry.is_regular_file())
+				{
+					auto ext = entry.path().extension().string();
+					// 小写匹配
+					std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+					if (ext == ".hdr")
+					{
+						component.iblPath.push_back(entry.path());
+					}
+				}
+			}
+		}
 	}
 
 

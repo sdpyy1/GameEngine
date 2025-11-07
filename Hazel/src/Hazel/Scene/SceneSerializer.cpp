@@ -254,6 +254,15 @@ namespace Hazel {
             out << YAML::Key << "Position" << YAML::Value << spotLightComponent.Position;
             out << YAML::EndMap;
 		}
+        if (entity.HasComponent<SkyComponent>())
+		{ 
+            out << YAML::Key << "SkyComponent";
+            out << YAML::BeginMap;
+            auto& skyComponent = entity.GetComponent<SkyComponent>();
+            out << YAML::Key << "DynamicSky" << YAML::Value << skyComponent.DynamicSky;
+            out << YAML::Key << "selectedIBL" << YAML::Value << skyComponent.selectedIBL;
+			out << YAML::EndMap;
+		}
 		out << YAML::EndMap; // Entity
 	}
 
@@ -372,6 +381,12 @@ namespace Hazel {
                     deserializedEntity.GetComponent<SpotLightComponent>().Intensity = spotLightComponent["Intensity"].as<float>(1.0f);
                     deserializedEntity.GetComponent<SpotLightComponent>().Radiance = spotLightComponent["Radiance"].as<glm::vec3>(glm::vec3(1.0f));
 					deserializedEntity.GetComponent<SpotLightComponent>().Position = spotLightComponent["Position"].as<glm::vec3>(glm::vec3(0.0f));
+				}
+				if (auto skyComponent = entity["SkyComponent"]; skyComponent)
+				{
+                    deserializedEntity.AddComponent<SkyComponent>();
+                    deserializedEntity.GetComponent<SkyComponent>().DynamicSky = skyComponent["DynamicSky"].as<bool>(false);
+                    deserializedEntity.GetComponent<SkyComponent>().selectedIBL = skyComponent["selectedIBL"].as<uint32_t>(0);
 				}
 			}
 		}

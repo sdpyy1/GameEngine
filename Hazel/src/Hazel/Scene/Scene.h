@@ -58,13 +58,17 @@ namespace Hazel {
 		int ShadowType = 2;  // 0=Hard 1=PCF 2=PCSS
 		bool deBugCSM = false;
 	};
+	struct SkyLightSetting {
+		bool isDynamicSky;
+		std::filesystem::path selelctEnvPath;
+	};
 	struct LightEnvironment
 	{
 		static constexpr size_t MaxDirectionalLights = 1;
-
 		DirectionalLight DirectionalLights[MaxDirectionalLights];
 		std::vector<PointLight> PointLights;
 		std::vector<SpotLight> SpotLights;
+		SkyLightSetting SkyLightSetting;
 		[[nodiscard]] uint32_t GetPointLightsSize() const { return (uint32_t)(PointLights.size() * sizeof(PointLight)); }
 		[[nodiscard]] uint32_t GetSpotLightsSize() const { return (uint32_t)(SpotLights.size() * sizeof(SpotLight)); }
 	};

@@ -77,7 +77,7 @@ namespace Hazel {
 		const VkDescriptorImageInfo& GetDescriptorInfoVulkan() const { return *(VkDescriptorImageInfo*)GetDescriptorInfo(); }
 
 		VkImageView CreateImageViewSingleMip(uint32_t mip);
-
+		VkImage GetVulkanImage() const { return m_Image; }
 		virtual void GenerateMips(bool readonly = false) override;
 		virtual void GenerateMips(Ref<RenderCommandBuffer> renderCommandBuffer, bool readonly = false) override;
 

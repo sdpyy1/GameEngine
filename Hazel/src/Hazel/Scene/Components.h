@@ -218,7 +218,11 @@ namespace Hazel {
 		glm::vec3 Direction = { 0.0f, -1.0f, 0.0f };
 		glm::vec3 Position = { 0.0f, 0.0f, 0.0f };
 	};
-
+	struct SkyComponent {
+		bool DynamicSky = false;
+		std::vector<std::filesystem::path> iblPath;
+		int selectedIBL = 0;
+	};
 
 	struct SpriteRendererComponent
 	{
@@ -344,7 +348,7 @@ namespace Hazel {
 	using AllComponents = 
 		ComponentGroup<StaticMeshComponent,TransformComponent, SpriteRendererComponent,
 			CircleRendererComponent, CameraComponent, ScriptComponent, SpotLightComponent,
-			NativeScriptComponent, Rigidbody2DComponent, BoxCollider2DComponent,
+			NativeScriptComponent, Rigidbody2DComponent, BoxCollider2DComponent, SkyComponent,
 			CircleCollider2DComponent, TextComponent, RelationshipComponent, DirectionalLightComponent, SubmeshComponent,DynamicMeshComponent, AnimationComponent>;
 
 }

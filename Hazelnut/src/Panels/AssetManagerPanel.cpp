@@ -64,7 +64,7 @@ namespace Hazel {
 				if (ImGui::MenuItem("Create Spot Light"))
 					m_Context->CreateEntity("Spot Light").AddComponent<SpotLightComponent>();
 				if (ImGui::MenuItem("Create Sky Light"))
-					m_Context->CreateEntity("Sky Light"); // TODO: add component
+					m_Context->CreateEntity("Sky Light").AddComponent<SkyComponent>(); // TODO: add component
 				ImGui::EndPopup();
 			}
 		}
@@ -349,6 +349,35 @@ namespace Hazel {
 			{
                 ImGui::Text("SpotLight Add!");
 				return;
+			});
+		DrawComponent<SkyComponent>("Sky Light", entity, [](auto& component)
+			{
+				ImGui::Checkbox("DynamicSky", &component.DynamicSky);
+				if (component.selectedIBL > component.iblPath.size()) {
+                    component.selectedIBL = -1;
+				}
+				if (!component.iblPath.empty())
+				{
+					std::vector<std::string> itemStrings;
+					std::vector<const char*> items;
+
+					for (auto& path : component.iblPath)
+					{
+						std::filesystem::path relative = std::filesystem::relative(path, "Assets");
+						itemStrings.push_back(relative.u8string());
+					}
+
+					for (auto& str : itemStrings)
+						items.push_back(str.c_str());
+
+					ImGui::Text("Select HDR:");
+					ImGui::Combo("##HDRCombo", &component.selectedIBL, items.data(), (int)items.size());
+				}
+				else
+				{
+					ImGui::TextColored(ImVec4(1, 0, 0, 1), "No HDR found in Assets!");
+					component.selectedIBL = -1;
+				}
 			});
 		DrawComponent<AnimationComponent>("Animation", entity, [](auto& component)
 			{

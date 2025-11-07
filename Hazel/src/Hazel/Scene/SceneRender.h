@@ -2,6 +2,7 @@
 #include "Scene.h"
 #include "Hazel/Asset/Model/Mesh.h"
 #include <Hazel/Renderer/ComputePass.h>
+#include "Pass/EnvPass.h"
 namespace Hazel {
 
 	class SceneRender : public RefCounted
@@ -24,7 +25,7 @@ namespace Hazel {
 		void InitSpotShadowPass();
 		void InitHZBPass();
 		void InitLightPass();
-		void InitEnvNeed();
+		void InitEnvPass();
 		void InitSceneCompositePass();
 		void InitSkyPass();
 
@@ -39,7 +40,7 @@ namespace Hazel {
 		void uploadSceneData();
 
 	private: // Pass
-		void preComputeEnv();
+		void ComputeEnv(std::filesystem::path path, bool isInit);
 		void Draw();
 		void ShadowPass();
 		void GeoPass();
@@ -270,15 +271,10 @@ namespace Hazel {
 		// HierarchicalDepthPass
 		Ref<ComputePass> m_HierarchicalDepthPass;
 
-		// ‘§º∆À„Pass
-		Ref<ComputePass> m_EquirectangularPass;
-		Ref<TextureCube> m_EnvCubeMap;
-		Ref<TextureCube> m_EnvPreFilterMap;
-		Ref<TextureCube> m_EnvIrradianceMap;
-		Ref<Texture2D> m_EnvEquirect;
-		Ref<Texture2D> m_EnvLut;
-		Ref<ComputePass> m_EnvironmentIrradiancePass;
-		Ref<ComputePass> m_EnvironmentPreFilterPass;
+		// EnvPass
+		EnvPass m_EnvPass;
+		EnvTextures m_EnvTextures;
+
 
 		// LightPass
 		Ref<Framebuffer> m_LightPassFramebuffer;

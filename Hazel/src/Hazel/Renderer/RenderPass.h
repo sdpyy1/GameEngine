@@ -25,11 +25,13 @@ namespace Hazel {
 
 		virtual RenderPassSpecification& GetSpecification() = 0;
 		virtual const RenderPassSpecification& GetSpecification() const = 0;
-		virtual void SetInput(Ref<UniformBufferSet> UboSet, uint32_t Binding) = 0;
-		virtual void SetInput(Ref<StorageBufferSet> texture, uint32_t Binding, bool isInit = false) = 0;
-		virtual void SetInput(Ref<Texture2D> texture, uint32_t Binding) = 0;
-		virtual void SetInput(Ref<TextureCube> cubeMap, uint32_t Binding) = 0;
-		virtual void SetInput(Ref<Image2D> texture, uint32_t Binding, bool isInit = false) = 0;
+
+		virtual void SetInput(std::string name,Ref<UniformBufferSet> UboSet) = 0;
+		virtual void SetInput(std::string name, Ref<Texture2D> texture, bool isInit = false) = 0;
+		virtual void SetInput(std::string name, Ref<StorageBufferSet> SBSet) = 0;
+		virtual void SetInput(std::string name, Ref<TextureCube> cubeMap, bool isInit = false) = 0;
+		virtual void SetInput(std::string name,Ref<Image2D> image, bool isInit = false) = 0; 
+
 		virtual Ref<Image2D> GetDepthOutput() = 0;
 		virtual Ref<Pipeline> GetPipeline() const = 0;
 

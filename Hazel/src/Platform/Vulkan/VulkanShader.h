@@ -18,6 +18,18 @@ namespace Hazel {
 		std::vector<DescriptorBinding> bindings;
 		std::vector<PushConstantRange> pushConstantRanges;
 	};
+	struct SetBindingKey {
+		uint32_t set;
+		uint32_t binding;
+		bool operator==(SetBindingKey const& o) const { return set == o.set && binding == o.binding; }
+	};
+	struct SetBindingKeyHash {
+		std::size_t operator()(SetBindingKey const& k) const noexcept {
+			std::size_t h1 = std::hash<uint32_t>{}(k.set);
+			std::size_t h2 = std::hash<uint32_t>{}(k.binding);
+			return h1 ^ (h2 << 1);
+		}
+	};
 	class VulkanShader : public Shader
 	{
 	public:
@@ -36,19 +48,22 @@ namespace Hazel {
 		VkShaderModule GetFragShaderModule() { return m_FragShaderModule; }
 		VkShaderModule GetComputeShaderModule() { return m_ComputeShaderModule; }
 		const std::vector<VkDescriptorSetLayout>& GetDescriptorSetLayout() const { return m_DescriptorSetLayouts; }
+		std::vector<VkDescriptorSet> GetDescriptorSet(uint32_t set) { return m_DescriptorSets; }
 		std::vector<VkDescriptorSet> GetDescriptorSet() { return m_DescriptorSets; }
 		VkDescriptorPool GetDescriptorPool() { return m_DescriptorPool; }
 		virtual ~VulkanShader();
 		void Release();
 		const std::vector<PushConstantRange>& GetPushConstantRanges() const { return m_Spec.pushConstantRanges; }
-
+		SetBindingKey VulkanShader::getSetAndBinding(const std::string& name);
 		virtual const std::string& GetName() const override { return m_Name; }
 		void ReflectSPIRVAndPopulateSpec(const std::vector<char>& spirvCode, VkShaderStageFlagBits stage);
 	private:
+
 		std::string m_Name;
 		std::string m_VertFilePath;
 		std::string m_FragFilePath;
 		std::string m_ComputePath;
+		std::unordered_map<std::string, SetBindingKey> m_NameToBinding;
 		bool m_IsCompute = false;
 		VkShaderModule m_VertShaderModule;
 		VkShaderModule m_FragShaderModule;

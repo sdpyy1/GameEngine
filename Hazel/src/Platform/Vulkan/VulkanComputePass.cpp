@@ -53,7 +53,7 @@ namespace Hazel
 
 			std::array<VkWriteDescriptorSet, 1> descriptorWrites{};
 			descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			descriptorWrites[0].dstSet = GetSpecification().Pipeline->GetShader().As<VulkanShader>()->GetDescriptorSet()[Renderer::RT_GetCurrentFrameIndex()];
+			descriptorWrites[0].dstSet = GetSpecification().Pipeline->GetShader().As<VulkanShader>()->GetDescriptorSet(0)[Renderer::RT_GetCurrentFrameIndex()];
 			descriptorWrites[0].dstBinding = Binding;
 			descriptorWrites[0].dstArrayElement = 0;
 			descriptorWrites[0].descriptorType = type == InputType::sampler ? VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER : VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
@@ -78,7 +78,7 @@ namespace Hazel
 
 			std::array<VkWriteDescriptorSet, 1> descriptorWrites{};
 			descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			descriptorWrites[0].dstSet = GetSpecification().Pipeline->GetShader().As<VulkanShader>()->GetDescriptorSet()[Renderer::RT_GetCurrentFrameIndex()];
+			descriptorWrites[0].dstSet = GetSpecification().Pipeline->GetShader().As<VulkanShader>()->GetDescriptorSet(0)[Renderer::RT_GetCurrentFrameIndex()];
 			descriptorWrites[0].dstBinding = Binding;
 			descriptorWrites[0].dstArrayElement = 0;
 			descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -126,7 +126,7 @@ namespace Hazel
 
 			std::array<VkWriteDescriptorSet, 1> descriptorWrites{};
 			descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			descriptorWrites[0].dstSet = GetSpecification().Pipeline->GetShader().As<VulkanShader>()->GetDescriptorSet()[Renderer::RT_GetCurrentFrameIndex()];
+			descriptorWrites[0].dstSet = GetSpecification().Pipeline->GetShader().As<VulkanShader>()->GetDescriptorSet(0)[Renderer::RT_GetCurrentFrameIndex()];
 			descriptorWrites[0].dstBinding = Binding;
 			descriptorWrites[0].dstArrayElement = 0;
 			descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -151,7 +151,7 @@ namespace Hazel
 
 			std::array<VkWriteDescriptorSet, 1> descriptorWrites{};
 			descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			descriptorWrites[0].dstSet = GetSpecification().Pipeline->GetShader().As<VulkanShader>()->GetDescriptorSet()[Renderer::RT_GetCurrentFrameIndex()];
+			descriptorWrites[0].dstSet = GetSpecification().Pipeline->GetShader().As<VulkanShader>()->GetDescriptorSet(0)[Renderer::RT_GetCurrentFrameIndex()];
 			descriptorWrites[0].dstBinding = Binding;
 			descriptorWrites[0].dstArrayElement = index;
 			descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;

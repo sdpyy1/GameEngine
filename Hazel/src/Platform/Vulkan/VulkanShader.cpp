@@ -18,20 +18,8 @@ namespace Hazel {
 		return buffer;
 	}
 
-	// helper key for merging set+binding
-	struct SetBindingKey {
-		uint32_t set;
-		uint32_t binding;
-		bool operator==(SetBindingKey const& o) const { return set == o.set && binding == o.binding; }
-	};
-	struct SetBindingKeyHash {
-		std::size_t operator()(SetBindingKey const& k) const noexcept {
-			// combine set and binding into single size_t
-			return (static_cast<size_t>(k.set) << 32) ^ static_cast<size_t>(k.binding);
-		}
-	};
 
-	// 反射单个 SPIR-V 模块并合并到 m_Spec（不会创建 VkShaderModule）
+
 	void VulkanShader::ReflectSPIRVAndPopulateSpec(const std::vector<char>& spirvCode, VkShaderStageFlagBits stage)
 	{
 		if (spirvCode.empty())
@@ -44,20 +32,18 @@ namespace Hazel {
 			return;
 		}
 
-		// 临时 map 用于合并相同 set+binding
+		// 合并所有阶段 binding
 		std::unordered_map<SetBindingKey, DescriptorBinding, SetBindingKeyHash> mergedBindings;
-		// 先把当前 m_Spec 中已有的填入 mergedBindings（以便和新模块合并）
 		for (const auto& existing : m_Spec.bindings) {
 			SetBindingKey key{ existing.set, existing.binding };
 			mergedBindings.emplace(key, existing);
 		}
 
-		// 枚举 descriptor bindings
+		// 反射 descriptor bindings
 		uint32_t bindingCount = 0;
 		spvReflectEnumerateDescriptorBindings(&reflModule, &bindingCount, nullptr);
-		std::vector<SpvReflectDescriptorBinding*> bindings;
+		std::vector<SpvReflectDescriptorBinding*> bindings(bindingCount);
 		if (bindingCount > 0) {
-			bindings.resize(bindingCount);
 			spvReflectEnumerateDescriptorBindings(&reflModule, &bindingCount, bindings.data());
 		}
 
@@ -66,6 +52,16 @@ namespace Hazel {
 			if (!b) continue;
 
 			SetBindingKey key{ b->set, b->binding };
+
+			// 封装名称到 set/binding map，跨阶段累加，不覆盖已存在
+			std::string name = (b->name && strlen(b->name) > 0)
+				? std::string(b->name)
+				: ("unnamed_" + std::to_string(b->set) + "_" + std::to_string(b->binding));
+
+			if (m_NameToBinding.find(name) == m_NameToBinding.end())
+				m_NameToBinding[name] = key;
+
+			// 合并 binding
 			auto it = mergedBindings.find(key);
 			if (it == mergedBindings.end()) {
 				DescriptorBinding desc{};
@@ -77,9 +73,7 @@ namespace Hazel {
 				mergedBindings.emplace(key, desc);
 			}
 			else {
-				// 合并 stageFlags（OR）
 				it->second.stageFlags = static_cast<VkShaderStageFlags>(it->second.stageFlags | stage);
-				// 如果类型或 count 不一致，记录警告并保留第一次发现的类型/count
 				if (it->second.type != static_cast<VkDescriptorType>(b->descriptor_type)) {
 					HZ_CORE_WARN("Reflection: descriptor type mismatch at set={}, binding={} (kept first).", b->set, b->binding);
 				}
@@ -88,23 +82,19 @@ namespace Hazel {
 				}
 			}
 
-			// 打印信息便于调试
 			HZ_CORE_INFO("Reflect: stage={0}, set={1}, binding={2}, name={3}, type={4}, count={5}",
-				(uint32_t)stage, b->set, b->binding, (b->name ? b->name : "null"), b->descriptor_type, b->count);
+				(uint32_t)stage, b->set, b->binding, name, b->descriptor_type, b->count);
 		}
 
-		// 处理 push constants：合并相同 (offset,size) 的范围并 OR stageFlags
+		// 反射 Push Constants
 		uint32_t pcCount = 0;
 		spvReflectEnumeratePushConstantBlocks(&reflModule, &pcCount, nullptr);
-		std::vector<SpvReflectBlockVariable*> pcs;
+		std::vector<SpvReflectBlockVariable*> pcs(pcCount);
 		if (pcCount > 0) {
-			pcs.resize(pcCount);
 			spvReflectEnumeratePushConstantBlocks(&reflModule, &pcCount, pcs.data());
 		}
 
-		// 先把已有 push constants 存到临时 vector，便于合并
 		std::vector<PushConstantRange> mergedPCs = m_Spec.pushConstantRanges;
-
 		for (uint32_t i = 0; i < pcCount; ++i) {
 			const SpvReflectBlockVariable* p = pcs[i];
 			if (!p) continue;
@@ -117,6 +107,7 @@ namespace Hazel {
 					break;
 				}
 			}
+
 			if (!mergedExisting) {
 				PushConstantRange pc{};
 				pc.shaderStage = stage;
@@ -127,9 +118,8 @@ namespace Hazel {
 			}
 		}
 
-		// 把 mergedBindings 的结果写回 m_Spec.bindings，保持稳定顺序（按 set then binding 排序）
+		// 按 set/binding 排序并更新 m_Spec.bindings
 		m_Spec.bindings.clear();
-		// collect keys and sort for deterministic order
 		std::vector<std::pair<SetBindingKey, DescriptorBinding>> tmp;
 		tmp.reserve(mergedBindings.size());
 		for (auto& kv : mergedBindings) tmp.push_back(kv);
@@ -139,7 +129,7 @@ namespace Hazel {
 			});
 		for (auto& p : tmp) m_Spec.bindings.push_back(p.second);
 
-		// 更新 push constants
+		// 更新 Push Constants
 		m_Spec.pushConstantRanges = std::move(mergedPCs);
 
 		spvReflectDestroyShaderModule(&reflModule);
@@ -173,11 +163,9 @@ namespace Hazel {
 	{
 		VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 
-		// 先读取 SPIR-V 字节码并反射填充 m_Spec（反射与 VkShaderModule 创建解耦）
 		if (m_IsCompute) {
 			auto compCode = readFile(m_ComputePath);
 			ReflectSPIRVAndPopulateSpec(compCode, VK_SHADER_STAGE_COMPUTE_BIT);
-			// 创建 compute shader module（保留你原来行为）
 			VkShaderModuleCreateInfo computCreateInfo{};
 			computCreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
 			computCreateInfo.codeSize = compCode.size();
@@ -190,11 +178,9 @@ namespace Hazel {
 			auto vertCode = readFile(m_VertFilePath);
 			auto fragCode = readFile(m_FragFilePath);
 
-			// 只做反射来填充 m_Spec（分别对 vert 和 frag）
 			ReflectSPIRVAndPopulateSpec(vertCode, VK_SHADER_STAGE_VERTEX_BIT);
 			ReflectSPIRVAndPopulateSpec(fragCode, VK_SHADER_STAGE_FRAGMENT_BIT);
 
-			// 再创建 shader module（保留原逻辑）
 			VkShaderModuleCreateInfo vertCreateInfo{};
 			vertCreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
 			vertCreateInfo.codeSize = vertCode.size();
@@ -211,7 +197,6 @@ namespace Hazel {
 			}
 		}
 
-		// 使用 m_Spec 创建描述符布局/池/集（维持你原有行为）
 		if (!m_Spec.bindings.empty()) {
 			createDescriptorSetLayout();
 			createDescriptorPool({ {0,100},{1,100} });
@@ -379,4 +364,17 @@ namespace Hazel {
 	{
 		Release();
 	}
+
+	SetBindingKey VulkanShader::getSetAndBinding(const std::string& name)
+	{
+		auto it = m_NameToBinding.find(name);
+		if (it == m_NameToBinding.end())
+		{
+			HZ_CORE_ASSERT("Binding name '{}' not found!", name);
+			HZ_CORE_ERROR("Binding name '{}' not found!", name);
+            return { 0, 0 };
+		}
+		return it->second;
+	}
+
 }
