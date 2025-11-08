@@ -44,11 +44,35 @@ namespace Hazel {
 		m_TransmittanceLutImage = Texture2D::Create(spec);
 
 		Ref<Shader> TransmittanceLutShader = Renderer::GetShaderLibrary()->Get("TransmittanceLut");
-		ComputePassSpecification equirectangularSpec;
-		equirectangularSpec.DebugName = "TransmittanceLutPass";
-		equirectangularSpec.Pipeline = PipelineCompute::Create(TransmittanceLutShader);
-		m_TransmittanceLutPass = ComputePass::Create(equirectangularSpec);
+		ComputePassSpecification TransmittanceLutSpec;
+		TransmittanceLutSpec.DebugName = "TransmittanceLutPass";
+		TransmittanceLutSpec.Pipeline = PipelineCompute::Create(TransmittanceLutShader);
+		m_TransmittanceLutPass = ComputePass::Create(TransmittanceLutSpec);
+
+		// MultiScatteringLut Pass
+		spec.Width = MultiScatteringLutResolution;
+		spec.Height = MultiScatteringLutResolution;
+		spec.DebugName = "MultiScatteringLutTexture";
+		spec.Storage = true;
+		spec.GenerateMips = false;
+		m_MultiScatteringLutImage = Texture2D::Create(spec);
+		Ref<Shader> MultiScatteringLutShader = Renderer::GetShaderLibrary()->Get("MultiScatteringLut");
+		ComputePassSpecification MultiScatteringLutSpec;
+		MultiScatteringLutSpec.DebugName = "MultiScatteringLutPass";
+		MultiScatteringLutSpec.Pipeline = PipelineCompute::Create(MultiScatteringLutShader);
+		m_MultiScatteringLutPass = ComputePass::Create(MultiScatteringLutSpec);
+
+
+
 	}
+	void SceneRender::MultiScatteringLutPass() {
+		m_MultiScatteringLutPass->SetInput(m_MultiScatteringLutImage, 0, InputType::stoage);
+		m_MultiScatteringLutPass->SetInput(m_TransmittanceLutImage, 1);
+		Renderer::BeginComputePass(m_CommandBuffer, m_MultiScatteringLutPass);
+		Renderer::DispatchCompute(m_CommandBuffer, m_MultiScatteringLutPass, nullptr, glm::ivec3(MultiScatteringLutResolution / 8, MultiScatteringLutResolution / 8, 1));
+		Renderer::EndComputePass(m_CommandBuffer, m_MultiScatteringLutPass);
+	}
+
 	void SceneRender::TransmiitanceLutPass() {
 		m_TransmittanceLutPass->SetInput(m_TransmittanceLutImage, 0, InputType::stoage);
 
@@ -970,7 +994,7 @@ namespace Hazel {
 		m_CommandBuffer->Begin();
 		m_EnvTextures = m_EnvPass.compute("", m_CommandBuffer);
 		TransmiitanceLutPass();
-
+		MultiScatteringLutPass();
 
 		m_CommandBuffer->End();
 		m_CommandBuffer->Submit();

@@ -5,19 +5,12 @@
 
 layout(rgba32f, binding = 0) uniform writeonly image2D transmittanceLut;
 
-
 layout(local_size_x = LOCAL_SIZE, local_size_y = LOCAL_SIZE, local_size_z = 1) in;
 void main()
 {
     ivec2 texelCoord = ivec2(gl_GlobalInvocationID.xy);
 
-	AtmosphereParameter Atmosphere;  // TODO: AtmosphereUniform
-    Atmosphere.PlanetRadius = 6360000.0;
-    Atmosphere.AtmosphereHeight = 60000.0;
-    Atmosphere.RayleighScatteringScalarHeight = 8000.0;
-    Atmosphere.MieScatteringScalarHeight = 1200.0;
-    Atmosphere.OzoneLevelCenterHeight = 25000.0;
-    Atmosphere.OzoneLevelWidth = 15000.0;
+	AtmosphereParameter Atmosphere = BuildAtmosphereParameter();
 
 
 	float bottomRadius = Atmosphere.PlanetRadius;

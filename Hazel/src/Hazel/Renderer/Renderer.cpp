@@ -90,6 +90,7 @@ namespace Hazel {
 
 		// Transmittance Lut
 		s_Data->m_ShaderLibrary->LoadCommonShader("TransmittanceLut", true);
+		s_Data->m_ShaderLibrary->LoadCommonShader("MultiScatteringLut", true);
 
 
 

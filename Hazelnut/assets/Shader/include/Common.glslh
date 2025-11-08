@@ -23,5 +23,6 @@ struct AtmosphereParameter {
 	float MieScatteringScalarHeight;
 	float OzoneLevelCenterHeight;
 	float OzoneLevelWidth;
+	float MieAnisotropy;
 };
 #endif

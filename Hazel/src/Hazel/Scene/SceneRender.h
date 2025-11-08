@@ -9,7 +9,7 @@ namespace Hazel {
 	{
 	public: // open
 		SceneRender();
-		Ref<Image2D> GetTextureWhichNeedDebug() { return m_TransmittanceLutImage->GetImage(); };
+		Ref<Image2D> GetTextureWhichNeedDebug() { return m_MultiScatteringLutImage->GetImage(); };
 		Ref<Image2D> GetFinalImage() { return m_GridFrameBuffer->GetImage(0); }
 		void PreRender(SceneInfo sceneData);
 		void EndRender();
@@ -42,6 +42,8 @@ namespace Hazel {
 
 	private: // Pass
 		void TransmiitanceLutPass();
+		void MultiScatteringLutPass();
+
 		void preCompute();
 
 		void Draw();
@@ -200,6 +202,7 @@ namespace Hazel {
 		uint32_t NumShadowCascades = 4;
 		uint32_t TrasmittanceLutWidth = 256;
 		uint32_t TrasmittanceLutHeight = 64;
+		uint32_t MultiScatteringLutResolution = 32;
 		Ref<RenderCommandBuffer> m_CommandBuffer;
 		glm::vec4 CascadeSplits;
 		// 收集来自场景的数据
@@ -298,6 +301,8 @@ namespace Hazel {
 		Ref<RenderPass> m_SkyPass;
 
 		Ref<Texture2D> m_TransmittanceLutImage;
+		Ref<Texture2D> m_MultiScatteringLutImage;
 		Ref<ComputePass> m_TransmittanceLutPass;
+		Ref<ComputePass> m_MultiScatteringLutPass;
 	};
 }
