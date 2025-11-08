@@ -13,7 +13,7 @@ namespace Hazel{
     { 
 	public:
 		void Init();
-		EnvTextures compute(std::filesystem::path path, Ref<RenderCommandBuffer> m_CommandBuffer, bool isInit = false);
+		EnvTextures compute(std::filesystem::path path, Ref<RenderCommandBuffer> m_CommandBuffer);
 
 
 	private:

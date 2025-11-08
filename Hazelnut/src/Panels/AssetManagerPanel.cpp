@@ -24,8 +24,10 @@ namespace Hazel {
 		m_EntityIcon = Texture2D::Create(spec, dirIcon);
 		dirIcon = "Assets/Icon/Sun.png";
 		m_DirLightIcon = Texture2D::Create(spec, dirIcon);
-		dirIcon = "Assets/Icon/post.png";
+		dirIcon = "Assets/Icon/Spotlight.png";
 		m_SpotLightIcon = Texture2D::Create(spec, dirIcon);
+		dirIcon = "Assets/Icon/img.png";
+		m_SkyLightIcon = Texture2D::Create(spec, dirIcon);
 	}
 
 	void AssetManagerPanel::SetContext(Ref<Scene>& context)
@@ -86,41 +88,44 @@ namespace Hazel {
 		auto& relationship = entity.GetComponent<RelationshipComponent>();
 		bool hasChildren = !relationship.Children.empty();
 
-		// 设置 TreeNodeFlags
+		// 调整标志位：增加NoTreePushOnOpen，避免自动推送节点
 		ImGuiTreeNodeFlags flags = ((m_SelectionContext == entity) ? ImGuiTreeNodeFlags_Selected : 0) |
 			ImGuiTreeNodeFlags_OpenOnArrow |
 			ImGuiTreeNodeFlags_SpanAvailWidth |
-			ImGuiTreeNodeFlags_AllowItemOverlap;
+			ImGuiTreeNodeFlags_AllowItemOverlap |
+			ImGuiTreeNodeFlags_NoTreePushOnOpen;  // 关键：不自动推送树节点
 
 		if (!hasChildren)
 			flags |= ImGuiTreeNodeFlags_Leaf;
 
 		float iconSize = 16.0f;
-		float iconSpacing = 2.0f;
+		float iconSpacing = 5.0f;
 
 		ImGui::PushID((void*)(uint64_t)(uint32_t)entity);
 
-		// ---------------- 绘制箭头（TreeNode） ----------------
+		// 绘制箭头（TreeNodeEx），获取展开状态
 		bool opened = ImGui::TreeNodeEx((void*)(uint64_t)(uint32_t)entity, flags, "");
 
 		ImGui::SameLine(0.0f, iconSpacing);
 
-		// ---------------- 绘制图标 ----------------
+		// 绘制图标（保持不变）
 		Ref<Texture2D> icon = m_EntityIcon;
 		if (entity.HasComponent<DirectionalLightComponent>())
 			icon = m_DirLightIcon;
 		if (entity.HasComponent<SpotLightComponent>())
 			icon = m_SpotLightIcon;
+		if (entity.HasComponent<SkyComponent>())
+			icon = m_SkyLightIcon;
 		if (icon)
 			ImGui::Image(UI::GetImageId(icon->GetImage()), { iconSize, iconSize });
 
 		ImGui::SameLine(0.0f, iconSpacing);
 
-		// ---------------- 绘制可选文字 ----------------
-		if (ImGui::Selectable(tag.c_str(), m_SelectionContext == entity, ImGuiSelectableFlags_SpanAllColumns))
+		// 调整Selectable标志位：不跨列，避免覆盖箭头
+		if (ImGui::Selectable(tag.c_str(), m_SelectionContext == entity, ImGuiSelectableFlags_None))
 			m_SelectionContext = entity;
 
-		// ---------------- 右键菜单 ----------------
+		// 右键菜单（保持不变）
 		bool entityDeleted = false;
 		if (ImGui::BeginPopupContextItem(("EntityPopup_" + std::to_string((uint64_t)(uint32_t)entity)).c_str()))
 		{
@@ -129,9 +134,10 @@ namespace Hazel {
 			ImGui::EndPopup();
 		}
 
-		// ---------------- 递归绘制子实体 ----------------
+		// 递归绘制子实体（手动处理TreePush/TreePop，因为前面用了NoTreePushOnOpen）
 		if (opened)
 		{
+			ImGui::TreePush((void*)(uint64_t)(uint32_t)entity);  // 手动推送
 			for (const UUID& childId : relationship.Children)
 			{
 				Entity child = m_Context->GetEntityByUUID(childId);
@@ -141,7 +147,7 @@ namespace Hazel {
 			ImGui::TreePop();
 		}
 
-		// ---------------- 删除实体 ----------------
+		// 删除实体（保持不变）
 		if (entityDeleted)
 		{
 			m_Context->DestroyEntity(entity);
@@ -151,7 +157,6 @@ namespace Hazel {
 
 		ImGui::PopID();
 	}
-
 
 	static void DrawVec3Control(const std::string& label, glm::vec3& values, float resetValue = 0.0f, float columnWidth = 100.0f)
 	{

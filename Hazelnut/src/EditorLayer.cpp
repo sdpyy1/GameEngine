@@ -287,6 +287,11 @@ namespace Hazel {
 	void EditorLayer::SettingGUI()
 	{
 		ImGui::Begin("Setting");
+		if (ImGui::CollapsingHeader("Test", ImGuiTreeNodeFlags_DefaultOpen)) {
+			if (ImGui::Button("Hit Me!")) {
+				m_Scene->testButton();
+			}
+		}
 
 		// 阴影设置栏目
 		if (ImGui::CollapsingHeader("Shadow", ImGuiTreeNodeFlags_DefaultOpen))

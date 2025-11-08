@@ -85,7 +85,7 @@ namespace Hazel {
 		Scene();
 		void PackupSceneInfo(EditorCamera& editorCamera);
 		~Scene();
-
+		void testButton() { HZ_CORE_INFO("Test");};
 		void OnEditorRender(Timestep ts, EditorCamera& editorCamera);
 		void UpdateAnimation(Timestep ts);
 		void OutputViewport();

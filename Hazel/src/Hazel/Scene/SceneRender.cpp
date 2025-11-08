@@ -14,10 +14,14 @@ namespace Hazel {
 	{
 		m_CommandBuffer = RenderCommandBuffer::Create("PassCommandBuffer");
 		InitBuffers();
+
+		// ‘§º∆À„Pass
 		InitEnvPass();
+		InitAtmospherePass();
 
-		m_EnvTextures = m_EnvPass.compute("", m_CommandBuffer, true);
+		preCompute(); // ‘§º∆À„
 
+		// ‰÷»æPass
 		InitDirShadowPass();
 		InitSpotShadowPass();
 		InitPreDepthPass();
@@ -25,17 +29,43 @@ namespace Hazel {
 		InitGeoPass();
 		InitLightPass();
 		InitSkyPass();
-
 		InitSceneCompositePass();
-		InitGridPass();
+		InitGridPass();	
+	}	
+	void SceneRender::InitAtmospherePass()
+	{
+		// TransmittanceLut Pass
+		TextureSpecification spec;
+		spec.Width = TrasmittanceLutResolution;
+		spec.Height = TrasmittanceLutResolution;
+		spec.DebugName = "TransmittanceLutTexture";
+		spec.Storage = true;
+		spec.GenerateMips = false;
+		m_TransmittanceLutImage = Texture2D::Create(spec);
+
+		Ref<Shader> TransmittanceLutShader = Renderer::GetShaderLibrary()->Get("TransmittanceLut");
+		ComputePassSpecification equirectangularSpec;
+		equirectangularSpec.DebugName = "TransmittanceLutPass";
+		equirectangularSpec.Pipeline = PipelineCompute::Create(TransmittanceLutShader);
+		m_TransmittanceLutPass = ComputePass::Create(equirectangularSpec);
 	}
+	void SceneRender::TransmiitanceLutPass() {
+		m_TransmittanceLutPass->SetInput(m_TransmittanceLutImage, 0, InputType::stoage);
+
+		Renderer::BeginComputePass(m_CommandBuffer, m_TransmittanceLutPass);
+		Renderer::DispatchCompute(m_CommandBuffer, m_TransmittanceLutPass, nullptr, glm::ivec3(TrasmittanceLutResolution / 8, TrasmittanceLutResolution / 8, 1));
+		Renderer::EndComputePass(m_CommandBuffer, m_TransmittanceLutPass);
+	}
+
+
+	
 
 	void SceneRender::Draw() {
 		m_EnvTextures = m_EnvPass.compute(m_SceneDataFromScene.SceneLightEnvironment.SkyLightSetting.selelctEnvPath, m_CommandBuffer);
 		ShadowPass();
 		SpotShadowPass();
 		PreDepthPass();
-		HZBComputePass();
+		//HZBComputePass();
 		GeoPass();
 		LightPass();
 		SkyPass();
@@ -930,5 +960,17 @@ namespace Hazel {
 		Renderer::BeginRenderPass(m_CommandBuffer, m_SkyPass, false);
 		Renderer::DrawPrueVertex(m_CommandBuffer, 3);
 		Renderer::EndRenderPass(m_CommandBuffer);
+	}
+
+
+	void SceneRender::preCompute()
+	{
+		m_CommandBuffer->Begin();
+		m_EnvTextures = m_EnvPass.compute("", m_CommandBuffer);
+		TransmiitanceLutPass();
+
+
+		m_CommandBuffer->End();
+		m_CommandBuffer->Submit();
 	}
 }

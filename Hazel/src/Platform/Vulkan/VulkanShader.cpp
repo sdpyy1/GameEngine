@@ -199,7 +199,7 @@ namespace Hazel {
 
 		if (!m_Spec.bindings.empty()) {
 			createDescriptorSetLayout();
-			createDescriptorPool({ {0,100},{1,100} });
+			createDescriptorPool({ {0,100},{1,500} });
 			createDescriptorSet();
 		}
 		else {

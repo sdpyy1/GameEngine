@@ -88,6 +88,9 @@ namespace Hazel {
 		// Sky
 		s_Data->m_ShaderLibrary->LoadCommonShader("Sky");
 
+		// Transmittance Lut
+		s_Data->m_ShaderLibrary->LoadCommonShader("TransmittanceLut", true);
+
 
 
 		// 加载纹理
@@ -97,10 +100,13 @@ namespace Hazel {
 			spec.Format = ImageFormat::RGBA;
 			spec.Width = 1;
 			spec.Height = 1;
+			spec.DebugName = "DefaultWhiteTexture";
 			s_Data->WhiteTexture = Texture2D::Create(spec, Buffer(&whiteTextureData, sizeof(uint32_t)));
 
 			constexpr uint32_t blackTextureData = 0xff000000;
+			spec.DebugName = "DefaultBlackTexture";
 			s_Data->BlackTexture = Texture2D::Create(spec, Buffer(&blackTextureData, sizeof(uint32_t)));
+			spec.DebugName = "DefaultBlackCubeTexture";
 
 			constexpr uint32_t blackCubeTextureData[6] = { 0xff000000, 0xff000000, 0xff000000, 0xff000000, 0xff000000, 0xff000000 };
 			s_Data->BlackCubeTexture = TextureCube::Create(spec, Buffer(&blackTextureData, sizeof(blackCubeTextureData)));
@@ -108,6 +114,8 @@ namespace Hazel {
 				TextureSpecification spec;
 				spec.SamplerWrap = TextureWrap::Clamp;
 				spec.needYFlip = false;
+				spec.DebugName = "BRDFLutTexture";
+
 				s_Data->BRDFLutTexture = Texture2D::Create(spec, std::filesystem::path("Assets/Texture/BRDF_LUT.png"));
 			}
 		}

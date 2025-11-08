@@ -25,12 +25,12 @@ namespace Hazel{
 		ComputePassSpecification preFilterSpec;
 		preFilterSpec.DebugName = "EnvironmentMipFilter";
 		preFilterSpec.Pipeline = PipelineCompute::Create(preFilterShader);
-		preFilterSpec.moreDescriptors = 11;
+		preFilterSpec.moreDescriptors = 12;
 		m_EnvironmentPreFilterPass = ComputePass::Create(preFilterSpec);
 
 	}
 
-	EnvTextures EnvPass::compute(std::filesystem::path path,Ref<RenderCommandBuffer> m_CommandBuffer, bool isInit)
+	EnvTextures EnvPass::compute(std::filesystem::path path,Ref<RenderCommandBuffer> m_CommandBuffer)
 	{
 		if (Envs.find(path) != Envs.end())
 		{
@@ -65,9 +65,9 @@ namespace Hazel{
 				env.m_EnvEquirect = Texture2D::Create(TextureSpecification(), path);
 				HZ_CORE_ASSERT(env.m_EnvEquirect->GetFormat() == ImageFormat::RGBA32F, "Texture is not HDR!");
 			}
-			if (isInit) {
-				m_CommandBuffer->Begin();
-			}
+			//if (isInit) {
+			//	m_CommandBuffer->Begin();
+			//}
 
 			// HDRתCubemapPass
 			Renderer::BeginComputePass(m_CommandBuffer, m_EquirectangularPass);
@@ -111,10 +111,10 @@ namespace Hazel{
 				Renderer::DispatchCompute(m_CommandBuffer, m_EnvironmentPreFilterPass, nullptr, glm::ivec3(numGroups, numGroups, 6), i, { &roughness, sizeof(float) });
 			}
 			Renderer::EndComputePass(m_CommandBuffer, m_EnvironmentPreFilterPass);
-			if (isInit) {
+	/*		if (isInit) {
 				m_CommandBuffer->End();
 				m_CommandBuffer->Submit();
-			}
+			}*/
 
 
             Envs[path] = env;

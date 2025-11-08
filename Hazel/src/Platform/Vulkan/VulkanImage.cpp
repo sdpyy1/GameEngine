@@ -102,7 +102,7 @@ namespace Hazel {
 		}
 		if (m_Specification.Usage == ImageUsage::Storage)
 		{
-			usage |= VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+			usage |= VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT| VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 		}
 
 		// 指定图片是操作 颜色 还是 深度、模板

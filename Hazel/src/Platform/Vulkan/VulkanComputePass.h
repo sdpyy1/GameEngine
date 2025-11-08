@@ -15,7 +15,7 @@ namespace Hazel
 		Ref<PipelineCompute> GetPipeline() const override;
 		virtual void SetInput(Ref<Image2D> texture, uint32_t Binding) override;
 		virtual void SetInputOneLayer(Ref<ImageView> imageView, uint32_t Binding, int index) override;
-		virtual void SetInput(Ref<Texture2D> texture, uint32_t Binding) override;
+		virtual void SetInput(Ref<Texture2D> texture, uint32_t Binding, InputType type) override;
 		virtual void SetInput(Ref<TextureCube> texture, uint32_t Binding, InputType type) override;
 		virtual void SetInput(Ref<TextureCube> texture, uint32_t Binding, InputType type, uint32_t descriptorIndex) override;
 		virtual void SetInput(Ref<TextureCube> texture, uint32_t Binding, InputType type, uint32_t levelIndex, uint32_t descriptorIndex) override;

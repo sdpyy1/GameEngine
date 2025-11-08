@@ -1,0 +1,51 @@
+#ifndef SKY_COMMON_GLSL
+#define SKY_COMMON_GLSL
+struct AtmosphereParameters {
+
+	float BottomRadius;
+    float TopRadius;
+
+
+
+
+
+
+
+
+
+
+};
+
+
+////////////////////////////////////////////////////////////
+// LUT functions
+////////////////////////////////////////////////////////////
+
+// Transmittance LUT function parameterisation from Bruneton 2017 https://github.com/ebruneton/precomputed_atmospheric_scattering
+// uv in [0,1]
+// viewZenithCosAngle in [-1,1]
+// viewHeight in [bottomRAdius, topRadius]
+
+// We should precompute those terms from resolutions (Or set resolution as #defined constants)
+float fromUnitToSubUvs(float u, float resolution) { return (u + 0.5f / resolution) * (resolution / (resolution + 1.0f)); }
+float fromSubUvsToUnit(float u, float resolution) { return (u - 0.5f / resolution) * (resolution / (resolution - 1.0f)); }
+
+void UvToLutTransmittanceParams(AtmosphereParameters Atmosphere, out float viewHeight, out float viewZenithCosAngle, in vec2 uv)
+{
+	//uv = float2(fromSubUvsToUnit(uv.x, TRANSMITTANCE_TEXTURE_WIDTH), fromSubUvsToUnit(uv.y, TRANSMITTANCE_TEXTURE_HEIGHT)); // No real impact so off
+	float x_mu = uv.x;
+	float x_r = uv.y;
+
+	float H = sqrt(Atmosphere.TopRadius * Atmosphere.TopRadius - Atmosphere.BottomRadius * Atmosphere.BottomRadius);
+	float rho = H * x_r;
+	viewHeight = sqrt(rho * rho + Atmosphere.BottomRadius * Atmosphere.BottomRadius);
+
+	float d_min = Atmosphere.TopRadius - viewHeight;
+	float d_max = rho + H;
+	float d = d_min + x_mu * (d_max - d_min);
+	viewZenithCosAngle = d == 0.0 ? 1.0f : (H * H - rho * rho - d * d) / (2.0 * viewHeight * d);
+	viewZenithCosAngle = clamp(viewZenithCosAngle, -1.0, 1.0);
+}
+
+
+#endif
