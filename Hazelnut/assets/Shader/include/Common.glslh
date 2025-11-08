@@ -15,4 +15,13 @@ struct DirectionalLight
 	vec3 Radiance;  
 	float Multiplier;
 };
+
+struct AtmosphereParameter {
+	float AtmosphereHeight;
+	float PlanetRadius;
+	float RayleighScatteringScalarHeight;
+	float MieScatteringScalarHeight;
+	float OzoneLevelCenterHeight;
+	float OzoneLevelWidth;
+};
 #endif

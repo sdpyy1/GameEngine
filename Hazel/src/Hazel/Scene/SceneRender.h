@@ -186,6 +186,7 @@ namespace Hazel {
 		struct SceneDataForShader {
 			DirectionalLight DirectionalLight;
 			float EnvironmentMapIntensity;
+			AtmosphereParameter AtmosphereParameter;
 		};
 
 	private: // Utils which need struct
@@ -197,7 +198,8 @@ namespace Hazel {
 		float m_ViewportWidth = 1216.0f, m_ViewportHeight = 849.0f;
 		uint32_t shadowMapResolution = 4096;
 		uint32_t NumShadowCascades = 4;
-		uint32_t TrasmittanceLutResolution = 512;
+		uint32_t TrasmittanceLutWidth = 256;
+		uint32_t TrasmittanceLutHeight = 64;
 		Ref<RenderCommandBuffer> m_CommandBuffer;
 		glm::vec4 CascadeSplits;
 		// 收集来自场景的数据
@@ -234,7 +236,7 @@ namespace Hazel {
 		Ref<UniformBufferSet> m_UBSRenderSetting;
 
 		// Shader需要的场景数据
-		std::vector <SceneDataForShader> m_SceneDataForShader;
+		std::vector<SceneDataForShader> m_SceneDataForShader;
         Ref<UniformBufferSet> m_UBSSceneDataForShader;
 
 	private: // Pass

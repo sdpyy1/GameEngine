@@ -72,12 +72,16 @@ namespace Hazel {
 		[[nodiscard]] uint32_t GetPointLightsSize() const { return (uint32_t)(PointLights.size() * sizeof(PointLight)); }
 		[[nodiscard]] uint32_t GetSpotLightsSize() const { return (uint32_t)(SpotLights.size() * sizeof(SpotLight)); }
 	};
-
+	struct AtmosphereParameter {
+		float BottomRadius = 100;
+		float TopRadius = 500;
+	};
 	struct SceneInfo
 	{
 		EditorCamera camera;
 		LightEnvironment SceneLightEnvironment;
 		RenderSettingData RenderSettingData;
+		AtmosphereParameter AtmosphereParameter;
 	};
 	class Scene : public RefCounted
 	{

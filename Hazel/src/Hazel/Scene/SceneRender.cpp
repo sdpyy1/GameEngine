@@ -36,8 +36,8 @@ namespace Hazel {
 	{
 		// TransmittanceLut Pass
 		TextureSpecification spec;
-		spec.Width = TrasmittanceLutResolution;
-		spec.Height = TrasmittanceLutResolution;
+		spec.Width = TrasmittanceLutWidth;
+		spec.Height = TrasmittanceLutHeight;
 		spec.DebugName = "TransmittanceLutTexture";
 		spec.Storage = true;
 		spec.GenerateMips = false;
@@ -52,8 +52,9 @@ namespace Hazel {
 	void SceneRender::TransmiitanceLutPass() {
 		m_TransmittanceLutPass->SetInput(m_TransmittanceLutImage, 0, InputType::stoage);
 
+
 		Renderer::BeginComputePass(m_CommandBuffer, m_TransmittanceLutPass);
-		Renderer::DispatchCompute(m_CommandBuffer, m_TransmittanceLutPass, nullptr, glm::ivec3(TrasmittanceLutResolution / 8, TrasmittanceLutResolution / 8, 1));
+		Renderer::DispatchCompute(m_CommandBuffer, m_TransmittanceLutPass, nullptr, glm::ivec3(TrasmittanceLutWidth / 8, TrasmittanceLutHeight / 8, 1));
 		Renderer::EndComputePass(m_CommandBuffer, m_TransmittanceLutPass);
 	}
 
@@ -910,6 +911,7 @@ namespace Hazel {
 		uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
 		m_SceneDataForShader[frameIndex].DirectionalLight = m_SceneDataFromScene.SceneLightEnvironment.DirectionalLights[0];
 		m_SceneDataForShader[frameIndex].EnvironmentMapIntensity = 1.f;
+		m_SceneDataForShader[frameIndex].AtmosphereParameter = m_SceneDataFromScene.AtmosphereParameter;
 		m_UBSSceneDataForShader->Get()->SetData(&m_SceneDataForShader[frameIndex], sizeof(SceneDataForShader));
 	}
 

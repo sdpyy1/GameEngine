@@ -1,27 +1,44 @@
 #version 450 core
 #ifdef COMPUTE_SHADER
 #define LOCAL_SIZE 8
-
 #include "include/SkyCommon.glslh"
+
 layout(rgba32f, binding = 0) uniform writeonly image2D transmittanceLut;
+
+
 layout(local_size_x = LOCAL_SIZE, local_size_y = LOCAL_SIZE, local_size_z = 1) in;
 void main()
 {
- // 计算当前线程对应的图像坐标（确保不超出图像范围）
     ivec2 texelCoord = ivec2(gl_GlobalInvocationID.xy);
-    
-    // 获取图像的实际尺寸
+
+	AtmosphereParameter Atmosphere;  // TODO: AtmosphereUniform
+    Atmosphere.PlanetRadius = 6360000.0;
+    Atmosphere.AtmosphereHeight = 60000.0;
+    Atmosphere.RayleighScatteringScalarHeight = 8000.0;
+    Atmosphere.MieScatteringScalarHeight = 1200.0;
+    Atmosphere.OzoneLevelCenterHeight = 25000.0;
+    Atmosphere.OzoneLevelWidth = 15000.0;
+
+
+	float bottomRadius = Atmosphere.PlanetRadius;
+	float topRadius = Atmosphere.PlanetRadius + Atmosphere.AtmosphereHeight;
+
+
     ivec2 lutSize = imageSize(transmittanceLut);
-    
-    // 边界检查：如果当前坐标超出图像范围则直接返回
-    if (texelCoord.x >= lutSize.x || texelCoord.y >= lutSize.y)
-        return;
-    
-    // 定义粉色（RGBA格式，范围0.0-1.0）
-    vec4 pinkColor = vec4(1.0, 0.75, 0.8, 1.0);  // 调整RGB值可改变粉色深浅
-    
-    // 写入颜色到图像
-    imageStore(transmittanceLut, texelCoord, pinkColor);
+    float viewHeight;
+    float viewZenithCosAngle;
+    vec2 uv = vec2(texelCoord) / vec2(lutSize);
+	float r = 0.0;
+
+    UvToTransmittanceLutParams(bottomRadius, topRadius, uv, viewZenithCosAngle, r);
+	float sin_theta = sqrt(1.0 - viewZenithCosAngle * viewZenithCosAngle);
+	vec3 CameraPosition = vec3(0.0, r, 0.0);
+	vec3 viewDir = vec3(sin_theta, viewZenithCosAngle, 0);
+
+	float dis = RayIntersectSphere(vec3(0,0,0), topRadius, CameraPosition, viewDir);
+	vec3 hitPoint = CameraPosition + viewDir * dis;
+	vec3 color = Transmittance(Atmosphere, CameraPosition, hitPoint);
+    imageStore(transmittanceLut, texelCoord, vec4(color, 1.0));
 }
 
 #endif
