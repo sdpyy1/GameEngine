@@ -886,6 +886,7 @@ namespace Hazel {
 		uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
 		m_SceneDataForShader[frameIndex].DirectionalLight = m_SceneDataFromScene.SceneLightEnvironment.DirectionalLights[0];
 		m_SceneDataForShader[frameIndex].EnvironmentMapIntensity = 1.f;
+		m_SceneDataForShader[frameIndex].isDynamic = m_SceneDataFromScene.SceneLightEnvironment.SkyLightSetting.isDynamicSky;
 		m_UBSSceneDataForShader->Get()->SetData(&m_SceneDataForShader[frameIndex], sizeof(SceneDataForShader));
 	}
 

@@ -194,6 +194,7 @@ namespace Hazel {
 		struct SceneDataForShader {
 			DirectionalLight DirectionalLight;
 			float EnvironmentMapIntensity;
+			uint32_t isDynamic;
 		};
 
 	private: // Utils which need struct

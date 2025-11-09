@@ -40,6 +40,7 @@ layout(std140, set = 0, binding = 5) uniform SceneData
 {
 	DirectionalLight DirectionalLights;
 	float EnvironmentMapIntensity;
+	uint isDynamicSky;
 } u_Scene;
 
 vec3 GetSunDisk(in AtmosphereParameter param, vec3 eyePos, vec3 viewDir, vec3 lightDir)
@@ -66,7 +67,7 @@ vec3 GetSunDisk(in AtmosphereParameter param, vec3 eyePos, vec3 viewDir, vec3 li
 void main(){
 	vec4 color = vec4(0,0,0,1);
 	vec3 v_dir = normalize(worldPosition);
-	if(false){
+	if(u_Scene.isDynamicSky == 0){
 		out_color = texture(SkyTexture, v_dir);
 	}else{
 		AtmosphereParameter Atmosphere = BuildAtmosphereParameter();
@@ -75,7 +76,8 @@ void main(){
 		vec3 eyePos = vec3(0, h, 0);
 		color.rgb += texture(u_SkyViewLut, ViewDirToUV(v_dir)).rgb;
 		color.rgb += GetSunDisk(Atmosphere, eyePos, v_dir, lightDir);
+		out_color = color;
+
 	}
-    out_color = color;
 }
 #endif

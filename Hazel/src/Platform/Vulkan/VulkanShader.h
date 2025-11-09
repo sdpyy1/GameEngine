@@ -3,16 +3,16 @@
 #include <vulkan/vulkan.h>
 namespace Hazel {
 	struct DescriptorBinding {
-		uint32_t binding;               // 绑定点索引
-		VkDescriptorType type;          // 资源类型（UBO、采样器等）
-		VkShaderStageFlags stageFlags;  // 可见的着色器阶段
-		uint32_t count = 1;             // 数组长度（默认1，非数组资源）
+		uint32_t binding; 
+		VkDescriptorType type; 
+		VkShaderStageFlags stageFlags; 
+		uint32_t count = 1;  
 		uint32_t set;
 	};
 	struct PushConstantRange {
-		VkShaderStageFlags shaderStage;  // 作用的着色器阶段（顶点、片段等）
-		uint32_t offset = 0;             // 数据起始偏移量（字节）
-		uint32_t size = 0;               // 数据总大小（字节）
+		VkShaderStageFlags shaderStage; 
+		uint32_t offset = 0; 
+		uint32_t size = 0; 
 	};
 	struct ShaderSpecification {
 		std::vector<DescriptorBinding> bindings;

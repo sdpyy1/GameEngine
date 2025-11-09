@@ -10,6 +10,16 @@ namespace Hazel
 
 
 
+		void SetInput();
+
+
+
+
+		SetBindingKey GetSetAndBinding(const std::string& name)
+		{
+			return m_Shader->getSetAndBinding(name);
+		}
+
 
 
 	private:
