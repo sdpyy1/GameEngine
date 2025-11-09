@@ -11,7 +11,7 @@
 
 namespace Hazel {
 	struct Vertex {
-		glm::vec3 Position;  // 所有分量为 0
+		glm::vec3 Position;
 		glm::vec3 Normal;
 		glm::vec3 Tangent;
 		glm::vec3 Binormal;
@@ -39,8 +39,8 @@ namespace Hazel {
 	};
 	struct BoneInfluence
 	{
-		uint32_t BoneInfoIndices[4] = { 0, 0, 0, 0 };  // 影响当前顶点的骨骼索引（最多4个）
-		float Weights[4] = { 0.0f, 0.0f, 0.0f, 0.0f }; // 对应骨骼的影响权重（最多4个）
+		uint32_t BoneInfoIndices[4] = { 0, 0, 0, 0 };
+		float Weights[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
 
 		void AddBoneData(uint32_t boneInfoIndex, float weight)
 		{

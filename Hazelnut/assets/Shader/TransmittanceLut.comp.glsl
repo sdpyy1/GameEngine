@@ -18,15 +18,15 @@ void main()
 
 
     ivec2 lutSize = imageSize(transmittanceLut);
-    float viewHeight;
-    float viewZenithCosAngle;
+    float cos_theta;
     vec2 uv = vec2(texelCoord) / vec2(lutSize);
 	float r = 0.0;
 
-    UvToTransmittanceLutParams(bottomRadius, topRadius, uv, viewZenithCosAngle, r);
-	float sin_theta = sqrt(1.0 - viewZenithCosAngle * viewZenithCosAngle);
+	// u方向：cos从1到-1，v方向：高度从0到1
+    UvToTransmittanceLutParams(bottomRadius, topRadius, uv, cos_theta, r);
+	float sin_theta = sqrt(1.0 - cos_theta * cos_theta);
 	vec3 CameraPosition = vec3(0.0, r, 0.0);
-	vec3 viewDir = vec3(sin_theta, viewZenithCosAngle, 0);
+	vec3 viewDir = vec3(sin_theta, cos_theta, 0);
 
 	float dis = RayIntersectSphere(vec3(0,0,0), topRadius, CameraPosition, viewDir);
 	vec3 hitPoint = CameraPosition + viewDir * dis;

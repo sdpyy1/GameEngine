@@ -1,6 +1,7 @@
 #pragma once
 #include "PipelineCompute.h"
 #include "Texture.h"
+#include "UniformBufferSet.h"
 namespace Hazel
 {
 	struct ComputePassSpecification
@@ -35,8 +36,7 @@ namespace Hazel
 		
 		
 		// v2 °æ±¾
-
-		// virtual void SetInput(std::string name, Ref<UniformBufferSet> ubSet) = 0;
+		virtual void SetInput(std::string name, Ref<UniformBufferSet> uboSet) = 0;
 
 		
 		

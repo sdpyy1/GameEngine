@@ -29,7 +29,6 @@ layout(std140, set = 0, binding = 3) uniform SceneData
 {
 	DirectionalLight DirectionalLights;
 	float EnvironmentMapIntensity;
-	AtmosphereParameter Atmosphere;
 } u_Scene;
 
 layout (std140, set = 0, binding = 4) uniform ShadowData 

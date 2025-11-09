@@ -1,5 +1,6 @@
 #pragma once
 #include "Hazel/Renderer/ComputePass.h"
+#include "VulkanShader.h"
 namespace Hazel
 {
 	class VulkanComputePass : public ComputePass
@@ -20,7 +21,15 @@ namespace Hazel
 		virtual void SetInput(Ref<TextureCube> texture, uint32_t Binding, InputType type, uint32_t descriptorIndex) override;
 		virtual void SetInput(Ref<TextureCube> texture, uint32_t Binding, InputType type, uint32_t levelIndex, uint32_t descriptorIndex) override;
 		virtual void SetInput(Ref<Image2D> texture, uint32_t Binding, uint32_t descriptorSetIndex) override;
+
+		// v2
+		virtual void SetInput(std::string name, Ref<UniformBufferSet> ubSet) override;
+
+
+
+
 		VkDescriptorSet GetMoreDescriptorSet(uint32_t index) { return moreDescriptorSets[index][0]; };
+		SetBindingKey GetBinding(std::string name) const;
 	private:
 		ComputePassSpecification m_Specification;
 		std::vector<std::vector<VkDescriptorSet>> moreDescriptorSets;

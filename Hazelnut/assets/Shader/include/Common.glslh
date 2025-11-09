@@ -24,5 +24,9 @@ struct AtmosphereParameter {
 	float OzoneLevelCenterHeight;
 	float OzoneLevelWidth;
 	float MieAnisotropy;
+	float SeaLevel;
+	vec3 SunLightColor;
+	float SunLightIntensity;
+	float SunDiskAngle;
 };
 #endif

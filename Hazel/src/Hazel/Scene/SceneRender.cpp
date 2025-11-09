@@ -32,61 +32,11 @@ namespace Hazel {
 		InitSceneCompositePass();
 		InitGridPass();	
 	}	
-	void SceneRender::InitAtmospherePass()
-	{
-		// TransmittanceLut Pass
-		TextureSpecification spec;
-		spec.Width = TrasmittanceLutWidth;
-		spec.Height = TrasmittanceLutHeight;
-		spec.DebugName = "TransmittanceLutTexture";
-		spec.Storage = true;
-		spec.GenerateMips = false;
-		m_TransmittanceLutImage = Texture2D::Create(spec);
-
-		Ref<Shader> TransmittanceLutShader = Renderer::GetShaderLibrary()->Get("TransmittanceLut");
-		ComputePassSpecification TransmittanceLutSpec;
-		TransmittanceLutSpec.DebugName = "TransmittanceLutPass";
-		TransmittanceLutSpec.Pipeline = PipelineCompute::Create(TransmittanceLutShader);
-		m_TransmittanceLutPass = ComputePass::Create(TransmittanceLutSpec);
-
-		// MultiScatteringLut Pass
-		spec.Width = MultiScatteringLutResolution;
-		spec.Height = MultiScatteringLutResolution;
-		spec.DebugName = "MultiScatteringLutTexture";
-		spec.Storage = true;
-		spec.GenerateMips = false;
-		m_MultiScatteringLutImage = Texture2D::Create(spec);
-		Ref<Shader> MultiScatteringLutShader = Renderer::GetShaderLibrary()->Get("MultiScatteringLut");
-		ComputePassSpecification MultiScatteringLutSpec;
-		MultiScatteringLutSpec.DebugName = "MultiScatteringLutPass";
-		MultiScatteringLutSpec.Pipeline = PipelineCompute::Create(MultiScatteringLutShader);
-		m_MultiScatteringLutPass = ComputePass::Create(MultiScatteringLutSpec);
-
-
-
-	}
-	void SceneRender::MultiScatteringLutPass() {
-		m_MultiScatteringLutPass->SetInput(m_MultiScatteringLutImage, 0, InputType::stoage);
-		m_MultiScatteringLutPass->SetInput(m_TransmittanceLutImage, 1);
-		Renderer::BeginComputePass(m_CommandBuffer, m_MultiScatteringLutPass);
-		Renderer::DispatchCompute(m_CommandBuffer, m_MultiScatteringLutPass, nullptr, glm::ivec3(MultiScatteringLutResolution / 8, MultiScatteringLutResolution / 8, 1));
-		Renderer::EndComputePass(m_CommandBuffer, m_MultiScatteringLutPass);
-	}
-
-	void SceneRender::TransmiitanceLutPass() {
-		m_TransmittanceLutPass->SetInput(m_TransmittanceLutImage, 0, InputType::stoage);
-
-
-		Renderer::BeginComputePass(m_CommandBuffer, m_TransmittanceLutPass);
-		Renderer::DispatchCompute(m_CommandBuffer, m_TransmittanceLutPass, nullptr, glm::ivec3(TrasmittanceLutWidth / 8, TrasmittanceLutHeight / 8, 1));
-		Renderer::EndComputePass(m_CommandBuffer, m_TransmittanceLutPass);
-	}
-
-
-	
 
 	void SceneRender::Draw() {
 		m_EnvTextures = m_EnvPass.compute(m_SceneDataFromScene.SceneLightEnvironment.SkyLightSetting.selelctEnvPath, m_CommandBuffer);
+		MultiScatteringLutPass();
+		SkyViewLutPass();
 		ShadowPass();
 		SpotShadowPass();
 		PreDepthPass();
@@ -484,6 +434,7 @@ namespace Hazel {
 		m_CameraData[frameIndex].Width = m_SceneDataFromScene.camera.GetViewportWidth();
 		m_CameraData[frameIndex].Height = m_SceneDataFromScene.camera.GetViewportHeight();
 		m_CameraData[frameIndex].Position = m_SceneDataFromScene.camera.GetPosition();
+		m_CameraData[frameIndex].InverseViewProj = glm::inverse(m_CameraData[frameIndex].viewproj);
 		m_UBSCameraData->Get()->SetData(&m_CameraData[frameIndex], sizeof(CameraData));
 	}
 	void SceneRender::SubmitStaticMesh(Ref<MeshSource> meshSource, const glm::mat4& transform) {
@@ -935,7 +886,6 @@ namespace Hazel {
 		uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
 		m_SceneDataForShader[frameIndex].DirectionalLight = m_SceneDataFromScene.SceneLightEnvironment.DirectionalLights[0];
 		m_SceneDataForShader[frameIndex].EnvironmentMapIntensity = 1.f;
-		m_SceneDataForShader[frameIndex].AtmosphereParameter = m_SceneDataFromScene.AtmosphereParameter;
 		m_UBSSceneDataForShader->Get()->SetData(&m_SceneDataForShader[frameIndex], sizeof(SceneDataForShader));
 	}
 
@@ -980,9 +930,15 @@ namespace Hazel {
 		m_SkyPass = RenderPass::Create(passSpec);
 
 		m_SkyPass->SetInput("u_CameraData", m_UBSCameraData);
+
+		m_SkyPass->SetInput("u_Scene", m_UBSSceneDataForShader);
 	}
 	void SceneRender::SkyPass() {
 		m_SkyPass->SetInput("SkyTexture", m_EnvTextures.m_EnvPreFilterMap);
+		m_SkyPass->SetInput("u_SkyViewLut", m_SkyViewLutImage);
+		m_SkyPass->SetInput("u_TransmittanceLut", m_TransmittanceLutImage);
+		m_SkyPass->SetInput("u_MultiScatteringLut", m_MultiScatteringLutImage);
+
 		Renderer::BeginRenderPass(m_CommandBuffer, m_SkyPass, false);
 		Renderer::DrawPrueVertex(m_CommandBuffer, 3);
 		Renderer::EndRenderPass(m_CommandBuffer);
@@ -994,9 +950,81 @@ namespace Hazel {
 		m_CommandBuffer->Begin();
 		m_EnvTextures = m_EnvPass.compute("", m_CommandBuffer);
 		TransmiitanceLutPass();
-		MultiScatteringLutPass();
 
 		m_CommandBuffer->End();
 		m_CommandBuffer->Submit();
 	}
+
+	void SceneRender::SkyViewLutPass()
+	{
+		m_SkyViewLutPass->SetInput(m_SkyViewLutImage, 0, InputType::stoage);
+		m_SkyViewLutPass->SetInput(m_TransmittanceLutImage, 1);
+		m_SkyViewLutPass->SetInput(m_MultiScatteringLutImage, 2);
+
+		Renderer::BeginComputePass(m_CommandBuffer, m_SkyViewLutPass);
+		Renderer::DispatchCompute(m_CommandBuffer, m_SkyViewLutPass, nullptr, glm::ivec3(SkyViewLutWidth / 8, SkyViewLutHeight / 8, 1));
+		Renderer::EndComputePass(m_CommandBuffer, m_SkyViewLutPass);
+	}
+	void SceneRender::InitAtmospherePass()
+	{
+		// TransmittanceLut Pass
+		TextureSpecification spec;
+		spec.Width = TrasmittanceLutWidth;
+		spec.Height = TrasmittanceLutHeight;
+		spec.DebugName = "TransmittanceLutTexture";
+		spec.Storage = true;
+		spec.GenerateMips = false;
+		spec.SamplerWrap = TextureWrap::Clamp;
+		m_TransmittanceLutImage = Texture2D::Create(spec);
+
+		Ref<Shader> TransmittanceLutShader = Renderer::GetShaderLibrary()->Get("TransmittanceLut");
+		ComputePassSpecification TransmittanceLutSpec;
+		TransmittanceLutSpec.DebugName = "TransmittanceLutPass";
+		TransmittanceLutSpec.Pipeline = PipelineCompute::Create(TransmittanceLutShader);
+		m_TransmittanceLutPass = ComputePass::Create(TransmittanceLutSpec);
+
+		// MultiScatteringLut Pass
+		spec.Width = MultiScatteringLutResolution;
+		spec.Height = MultiScatteringLutResolution;
+		spec.DebugName = "MultiScatteringLutTexture";
+		spec.Storage = true;
+		spec.GenerateMips = false;
+		m_MultiScatteringLutImage = Texture2D::Create(spec);
+		Ref<Shader> MultiScatteringLutShader = Renderer::GetShaderLibrary()->Get("MultiScatteringLut");
+		ComputePassSpecification MultiScatteringLutSpec;
+		MultiScatteringLutSpec.DebugName = "MultiScatteringLutPass";
+		MultiScatteringLutSpec.Pipeline = PipelineCompute::Create(MultiScatteringLutShader);
+		m_MultiScatteringLutPass = ComputePass::Create(MultiScatteringLutSpec);
+
+		// SkyView Pass
+		spec.Width = SkyViewLutWidth;
+		spec.Height = SkyViewLutHeight;
+		spec.DebugName = "SkyViewLutTexture";
+		spec.Storage = true;
+		spec.GenerateMips = false;
+		spec.GenerateMips = false;
+		m_SkyViewLutImage = Texture2D::Create(spec);
+		Ref<Shader> SkyViewLutShader = Renderer::GetShaderLibrary()->Get("SkyViewLut");
+		ComputePassSpecification SkyViewLutSpec;
+		SkyViewLutSpec.DebugName = "SkyViewLutPass";
+		SkyViewLutSpec.Pipeline = PipelineCompute::Create(SkyViewLutShader);
+		m_SkyViewLutPass = ComputePass::Create(SkyViewLutSpec);
+		m_SkyViewLutPass->SetInput("u_Scene", m_UBSSceneDataForShader);
+		m_SkyViewLutPass->SetInput("u_CameraData", m_UBSCameraData);
+	}
+	void SceneRender::MultiScatteringLutPass() {
+		m_MultiScatteringLutPass->SetInput(m_MultiScatteringLutImage, 0, InputType::stoage);
+		m_MultiScatteringLutPass->SetInput(m_TransmittanceLutImage, 1);
+		Renderer::BeginComputePass(m_CommandBuffer, m_MultiScatteringLutPass);
+		Renderer::DispatchCompute(m_CommandBuffer, m_MultiScatteringLutPass, nullptr, glm::ivec3(MultiScatteringLutResolution / 8, MultiScatteringLutResolution / 8, 1));
+		Renderer::EndComputePass(m_CommandBuffer, m_MultiScatteringLutPass);
+	}
+
+	void SceneRender::TransmiitanceLutPass() {
+		m_TransmittanceLutPass->SetInput(m_TransmittanceLutImage, 0, InputType::stoage);
+		Renderer::BeginComputePass(m_CommandBuffer, m_TransmittanceLutPass);
+		Renderer::DispatchCompute(m_CommandBuffer, m_TransmittanceLutPass, nullptr, glm::ivec3(TrasmittanceLutWidth / 8, TrasmittanceLutHeight / 8, 1));
+		Renderer::EndComputePass(m_CommandBuffer, m_TransmittanceLutPass);
+	}
+
 }

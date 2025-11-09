@@ -11,6 +11,11 @@ AtmosphereParameter BuildAtmosphereParameter(){
 	Atmosphere.OzoneLevelCenterHeight = 25000.0;
 	Atmosphere.OzoneLevelWidth = 15000.0;
     Atmosphere.MieAnisotropy = 0.8;
+    Atmosphere.SeaLevel = 0;
+    Atmosphere.SunLightColor = vec3(1);
+    Atmosphere.SunLightIntensity = 1;
+    Atmosphere.SunDiskAngle = 3.0;
+
 	return Atmosphere;
 }
 
@@ -29,23 +34,35 @@ AtmosphereParameter BuildAtmosphereParameter(){
 float fromUnitToSubUvs(float u, float resolution) { return (u + 0.5f / resolution) * (resolution / (resolution + 1.0f)); }
 float fromSubUvsToUnit(float u, float resolution) { return (u - 0.5f / resolution) * (resolution / (resolution - 1.0f)); }
 
-// UV转LUT参数（高度、天顶角的余弦值）
-void UvToTransmittanceLutParams(float bottomRadius, float topRadius, vec2 uv, out float mu, out float r)
+// UV 转 透射率LUT参数（高度、天顶角的余弦值）
+	void UvToTransmittanceLutParams(float bottomRadius, float topRadius, vec2 uv, out float mu, out float r)
+	{
+		float x_mu = uv.x;
+		float x_r = uv.y;
+
+		float H = sqrt(max(0.0f, topRadius * topRadius - bottomRadius * bottomRadius));
+		float rho = H * x_r;
+		r = sqrt(max(0.0f, rho * rho + bottomRadius * bottomRadius));
+
+		float d_min = topRadius - r;
+		float d_max = rho + H;
+		float d = d_min + x_mu * (d_max - d_min);
+		mu = d == 0.0f ? 1.0f : (H * H - rho * rho - d * d) / (2.0f * r * d);
+		mu = clamp(mu, -1.0f, 1.0f);
+	}
+
+// 二维 UV 坐标当作球面坐标 (θ, φ) 映射到单位球方向向量。
+vec3 UVToViewDir(vec2 uv)
 {
-    float x_mu = uv.x;
-    float x_r = uv.y;
+    float theta = (1.0 - uv.y) * PI;
+    float phi = (uv.x * 2 - 1) * PI;
+    
+    float x = sin(theta) * cos(phi);
+    float z = sin(theta) * sin(phi);
+    float y = cos(theta);
 
-    float H = sqrt(max(0.0f, topRadius * topRadius - bottomRadius * bottomRadius));
-    float rho = H * x_r;
-    r = sqrt(max(0.0f, rho * rho + bottomRadius * bottomRadius));
-
-    float d_min = topRadius - r;
-    float d_max = rho + H;
-    float d = d_min + x_mu * (d_max - d_min);
-    mu = d == 0.0f ? 1.0f : (H * H - rho * rho - d * d) / (2.0f * r * d);
-    mu = clamp(mu, -1.0f, 1.0f);
+    return vec3(x, y, z);
 }
-
 float RayIntersectSphere(vec3 center, float radius, vec3 rayStart, vec3 rayDir)
 {
     float OS = length(center - rayStart);
@@ -59,7 +76,7 @@ float RayIntersectSphere(vec3 center, float radius, vec3 rayStart, vec3 rayDir)
     // use min distance
     float t1 = SH - PH;
     float t2 = SH + PH;
-    float t = (t1 < 0) ? t2 : t1;
+    float t = (t1 < 0) ? t2 : t1;  // 只返回正射线Dis，未命中返回-1
 
     return t;
 }
@@ -291,4 +308,73 @@ vec3 IntegralMultiScattering(
 
     return G_2 * (1.0 / (1.0 - f_ms));
 }
+
+// 读取多重散射查找表
+vec3 GetMultiScattering(in AtmosphereParameter param, vec3 p, vec3 lightDir, sampler2D lut)
+{
+    float h = length(p) - param.PlanetRadius;
+    vec3 sigma_s = RayleighCoefficient(param, h) + MieCoefficient(param, h); 
+    
+    float cosSunZenithAngle = dot(normalize(p), lightDir);
+    vec2 uv = vec2(cosSunZenithAngle * 0.5 + 0.5, h / param.AtmosphereHeight);
+    vec3 G_ALL = textureLod(lut, uv, 0).rgb;
+
+    return G_ALL * sigma_s;
+}
+vec3 GetSkyView(
+    in AtmosphereParameter param, vec3 eyePos, vec3 viewDir, vec3 lightDir, float maxDis, 
+    sampler2D _transmittanceLut, sampler2D _multiScatteringLut)
+{
+    const int N_SAMPLE = 32;
+    vec3 color = vec3(0, 0, 0);
+
+    // 光线和大气层求交
+    float dis = RayIntersectSphere(vec3(0,0,0), param.PlanetRadius + param.AtmosphereHeight, eyePos, viewDir);
+	// 光线与星球求交
+    float d = RayIntersectSphere(vec3(0,0,0), param.PlanetRadius, eyePos, viewDir);
+    if(dis < 0) return vec3(0.75, 0.75, 0.75); 
+    if(d > 0) dis = min(dis, d);
+    if(maxDis > 0) dis = min(dis, maxDis);  // 带最长距离 maxDis 限制, 方便 aerial perspective lut 部分复用代码
+
+    float ds = dis / float(N_SAMPLE);
+    vec3 p = eyePos + (viewDir * ds) * 0.5;
+    vec3 sunLuminance = param.SunLightColor * param.SunLightIntensity;
+    vec3 opticalDepth = vec3(0, 0, 0);
+
+    for(int i=0; i<N_SAMPLE; i++)
+    {
+        // 积累沿途的湮灭系数
+        float h = length(p) - param.PlanetRadius;
+        vec3 extinction = RayleighCoefficient(param, h) + MieCoefficient(param, h) +  // scattering
+                            OzoneAbsorption(param, h) + MieAbsorption(param, h);        // absorption
+        opticalDepth += extinction * ds;
+
+        vec3 t1 = TransmittanceToAtmosphere(param, p, lightDir, _transmittanceLut);
+        vec3 s  = Scattering(param, p, lightDir, viewDir);
+        vec3 t2 = exp(-opticalDepth);
+        
+        // 单次散射
+        vec3 inScattering = t1 * s * t2 * ds * sunLuminance * 16;  // TODO: 为什么原始很暗
+        color += inScattering;
+
+        // 多重散射
+        vec3 multiScattering = GetMultiScattering(param, p, lightDir, _multiScatteringLut);
+        color += multiScattering * t2 * ds * sunLuminance;
+
+        p += viewDir * ds;
+    }
+
+    return color;
+}
+
+
+vec2 ViewDirToUV(vec3 v)
+{
+	vec2 uv = vec2(atan(v.z, v.x), asin(v.y));
+    uv /= vec2(2.0 * PI, PI);
+    uv += vec2(0.5, 0.5);
+
+    return uv; 
+}
+
 #endif
