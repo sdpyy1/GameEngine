@@ -8,11 +8,18 @@ namespace Hazel {
 		: m_Shader(shader.As<VulkanShader>()), m_Name(name), m_DescriptorManager(m_Shader)
 	{
 		m_Device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-		m_DescriptorManager.SetManagedDescriptorSet(1);
 
-		// 旧接口
-		CreateDescriptorSet();
-		UpdateDescriptorSet(true);// 如果一个模型没有材质，也需要先初始化一次 DescriptorSet
+		if (m_Shader->GetComputeFilePath() == "")
+		{
+			// 旧接口
+			CreateDescriptorSet();
+			UpdateDescriptorSet(true);// 如果一个模型没有材质，也需要先初始化一次 DescriptorSet
+		}
+		else {
+			m_DescriptorManager.SetManagedDescriptorSet(1);
+		}
+
+		
 	}
 	void VulkanMaterial::CreateDescriptorSet()
 	{

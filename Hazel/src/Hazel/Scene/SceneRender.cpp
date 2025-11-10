@@ -30,9 +30,34 @@ namespace Hazel {
 		InitLightPass();
 		InitSkyPass();
 		InitSceneCompositePass();
+		InitBloomPass();
 		InitGridPass();	
 	}	
+	void SceneRender::InitBloomPass()
+	{
 
+		Ref<Shader> bloomShader = Renderer::GetShaderLibrary()->Get("Bloom");
+		ComputePassSpecification bloomPassSpecification;
+        bloomPassSpecification.DebugName = "BloomPass";
+        bloomPassSpecification.Pipeline = PipelineCompute::Create(bloomShader);
+		m_BloomPass = ComputePass::Create(bloomPassSpecification);
+		m_BloomMaterial = Material::Create(bloomShader);
+		TextureSpecification spec;
+		spec.Format = ImageFormat::RGBA;
+		spec.DebugName = "BloomImage";
+		spec.Storage = true;
+		m_BloomImage = Texture2D::Create(spec);
+		m_BloomPass->SetInput("u_CameraData", m_UBSCameraData);
+
+	}
+	void SceneRender::BloomPass()
+	{
+		m_BloomMaterial->SetInput("o_Texture", m_BloomImage);
+		m_BloomMaterial->SetInput("u_InputTexture", m_SceneCompositeFrameBuffer->GetImage(0));
+		Renderer::BeginComputePass(m_CommandBuffer, m_BloomPass);
+		Renderer::DispatchCompute(m_CommandBuffer, m_BloomPass, m_BloomMaterial, glm::ivec3(m_ViewportWidth / 8 + 8, m_ViewportHeight/8 + 8, 1));
+		Renderer::EndComputePass(m_CommandBuffer, m_BloomPass);
+	}
 	void SceneRender::Draw() {
 		m_EnvTextures = m_EnvPass.compute(m_SceneDataFromScene.SceneLightEnvironment.SkyLightSetting.selelctEnvPath, m_CommandBuffer);
 		MultiScatteringLutPass();
@@ -45,6 +70,7 @@ namespace Hazel {
 		LightPass();
 		SkyPass();
 		SceneCompositePass();
+		BloomPass();
 		GridPass();
 	}
 	void SceneRender::PreRender(SceneInfo sceneData)
@@ -746,6 +772,7 @@ namespace Hazel {
 			m_LightPassFramebuffer->Resize(m_SceneDataFromScene.camera.GetViewportWidth(), m_SceneDataFromScene.camera.GetViewportHeight()); 
 			m_SkyFrameBuffer->Resize(m_SceneDataFromScene.camera.GetViewportWidth(), m_SceneDataFromScene.camera.GetViewportHeight());
 			m_SceneCompositeFrameBuffer->Resize(m_SceneDataFromScene.camera.GetViewportWidth(), m_SceneDataFromScene.camera.GetViewportHeight());
+			m_BloomImage->Resize(m_SceneDataFromScene.camera.GetViewportWidth(), m_SceneDataFromScene.camera.GetViewportHeight());
 			m_GridFrameBuffer->Resize(m_SceneDataFromScene.camera.GetViewportWidth(), m_SceneDataFromScene.camera.GetViewportHeight());
 			HandleHZBResize();
 			NeedResize = false;
@@ -1028,5 +1055,8 @@ namespace Hazel {
 		Renderer::DispatchCompute(m_CommandBuffer, m_TransmittanceLutPass, nullptr, glm::ivec3(TrasmittanceLutWidth / 8, TrasmittanceLutHeight / 8, 1));
 		Renderer::EndComputePass(m_CommandBuffer, m_TransmittanceLutPass);
 	}
+
+
+
 
 }

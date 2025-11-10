@@ -27,7 +27,7 @@ namespace Hazel {
 		virtual void SetInput(std::string name, Ref<TextureCube> cubeMap, bool isInit = false) override;
 		virtual void SetInput(std::string name, Ref<Image2D> image, bool isInit = false) override;
 
-
+		VkDescriptorSet RT_GetDescriptorSet() { return m_DescriptorManager.GetDescriptorSet();}
 
 		const std::vector<VkDescriptorSet>& GetDescriptorSets() const { return m_DescriptorSets; }
 		virtual ~VulkanMaterial() override;

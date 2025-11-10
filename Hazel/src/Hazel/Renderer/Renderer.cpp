@@ -52,6 +52,8 @@ namespace Hazel {
 		s_Data->m_ShaderLibrary->LoadCommonShader("MultiScatteringLut", true);
 		s_Data->m_ShaderLibrary->LoadCommonShader("TransmittanceLut", true);
 		s_Data->m_ShaderLibrary->LoadCommonShader("SkyViewLut", true);
+		// Bloom
+		s_Data->m_ShaderLibrary->LoadCommonShader("Bloom", true);
 		// GBuffer Pass
 		s_Data->m_ShaderLibrary->LoadCommonShader("gBuffer");
 		s_Data->m_ShaderLibrary->LoadCommonShader("gBufferAnim");

@@ -329,16 +329,20 @@ namespace Hazel {
 			poolSizes.push_back(poolSize);
 		}
 		m_DescriptorSets.resize(maxSets);
-		std::vector<VkDescriptorSetLayout> layouts(maxSets, m_DescriptorSetLayouts[0]);
-		VkDescriptorSetAllocateInfo allocInfo{};
-		allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-		allocInfo.descriptorPool = m_DescriptorPool;
-		allocInfo.descriptorSetCount = maxSets;
-		allocInfo.pSetLayouts = layouts.data();
 
-		VkResult allocateResult = vkAllocateDescriptorSets(
-			device, &allocInfo, m_DescriptorSets.data());
-		assert(allocateResult == VK_SUCCESS && "分配描述符集失败！");
+		if (m_DescriptorSetLayouts[0]) {
+			std::vector<VkDescriptorSetLayout> layouts(maxSets, m_DescriptorSetLayouts[0]);
+			VkDescriptorSetAllocateInfo allocInfo{};
+			allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+			allocInfo.descriptorPool = m_DescriptorPool;
+			allocInfo.descriptorSetCount = maxSets;
+			allocInfo.pSetLayouts = layouts.data();
+
+			VkResult allocateResult = vkAllocateDescriptorSets(
+				device, &allocInfo, m_DescriptorSets.data());
+			assert(allocateResult == VK_SUCCESS && "分配描述符集失败！");
+		}
+		
 	}
 
 	std::vector<VkDescriptorSet> VulkanShader::createDescriptorSet(uint32_t targetSet)

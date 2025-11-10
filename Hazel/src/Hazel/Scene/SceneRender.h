@@ -10,8 +10,8 @@ namespace Hazel {
 	public: // open
 		SceneRender();
 		Ref<Image2D> GetTextureWhichNeedDebug() { 
-			return m_SkyViewLutImage->GetImage();
-			//return m_TransmittanceLutImage->GetImage();
+			// return m_BloomImage->GetImage();
+			return m_TransmittanceLutImage->GetImage();
 		};
 		Ref<Image2D> GetFinalImage() { return m_GridFrameBuffer->GetImage(0); }
 		void PreRender(SceneInfo sceneData);
@@ -31,6 +31,7 @@ namespace Hazel {
 		void InitEnvPass();
 		void InitSceneCompositePass();
 		void InitSkyPass();
+		void InitBloomPass();
 		void InitAtmospherePass();
 
 	private: // Update Pre Frame
@@ -49,7 +50,7 @@ namespace Hazel {
 		void SkyViewLutPass();
 
 		void preCompute();
-
+		void BloomPass();
 		void Draw();
 		void ShadowPass();
 		void GeoPass();
@@ -315,5 +316,11 @@ namespace Hazel {
 		Ref<ComputePass> m_TransmittanceLutPass;
 		Ref<ComputePass> m_MultiScatteringLutPass;
 		Ref<ComputePass> m_SkyViewLutPass;
+
+
+		// Bloom
+		Ref<ComputePass> m_BloomPass;
+		Ref<Material> m_BloomMaterial;
+		Ref<Texture2D> m_BloomImage;
 	};
 }

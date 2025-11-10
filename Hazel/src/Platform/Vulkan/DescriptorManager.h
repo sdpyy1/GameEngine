@@ -14,7 +14,7 @@ namespace Hazel
 
 		void SetManagedDescriptorSet(uint32_t set)
 		{
-			AdditionDescriptorSets = m_Shader->GetDescriptorSet(set);
+			AdditionDescriptorSets = m_Shader->createDescriptorSet(set);
 		}
 
 		void SetInput(std::string name,Ref<Image2D> iamge,bool isInit);
@@ -37,7 +37,11 @@ namespace Hazel
 			return m_Shader->getSetAndBinding(name);
 		}
 
-
+		VkDescriptorSet GetDescriptorSet()
+		{
+            uint32_t frame = Renderer::RT_GetCurrentFrameIndex();
+			return AdditionDescriptorSets[frame];
+		}
 
 	private:
 		Ref<VulkanShader> m_Shader;

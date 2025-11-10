@@ -66,7 +66,7 @@ namespace Hazel {
 		std::string m_Name;
 		std::string m_VertFilePath;
 		std::string m_FragFilePath;
-		std::string m_ComputePath;
+		std::string m_ComputePath = "";
 		std::unordered_map<std::string, SetBindingKey> m_NameToBinding;
 		std::unordered_map<std::string, DescriptorBinding> m_NameToDescriptorDel;
 		bool m_IsCompute = false;

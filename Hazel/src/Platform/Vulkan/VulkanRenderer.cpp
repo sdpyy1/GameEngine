@@ -525,7 +525,14 @@ namespace Hazel {
 				auto descriptorSet = computePass->GetSpecification().Pipeline.As<VulkanComputePipeline>()->GetShader().As<VulkanShader>()->GetDescriptorSet();
 				if (!descriptorSet.empty())
 					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->GetLayout(), 0, 1, &descriptorSet[frameIndex], 0, nullptr);
-
+				// Bind material descriptor set if exists
+				if (material)
+				{
+					Ref<VulkanMaterial> vulkanMaterial = material.As<VulkanMaterial>();
+					VkDescriptorSet descriptorSet = vulkanMaterial->RT_GetDescriptorSet();
+					if (descriptorSet)
+						vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->GetLayout(), 1, 1, &descriptorSet, 0, nullptr);
+				}
 				if (constantsBuffer)
 				{
 					pipeline->SetPushConstants(constantsBuffer);
