@@ -57,6 +57,9 @@ namespace Hazel {
 		SetBindingKey VulkanShader::getSetAndBinding(const std::string& name);
 		virtual const std::string& GetName() const override { return m_Name; }
 		void ReflectSPIRVAndPopulateSpec(const std::vector<char>& spirvCode, VkShaderStageFlagBits stage);
+		std::string GetVertFilePath() const { return m_VertFilePath; }
+        std::string GetFragFilePath() const { return m_FragFilePath; }
+        std::string GetComputeFilePath() const { return m_ComputePath; }
 	private:
 
 		std::string m_Name;

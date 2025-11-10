@@ -10,7 +10,7 @@
 #include "VulkanUniformBuffer.h"
 namespace Hazel
 {
-	VulkanComputePass::VulkanComputePass(const ComputePassSpecification& spec) : m_Specification(spec)
+	VulkanComputePass::VulkanComputePass(const ComputePassSpecification& spec) : m_Specification(spec), m_DescriptorManager(spec.Pipeline.As<VulkanComputePipeline>()->GetShader())
 	{
 		HZ_CORE_VERIFY(spec.Pipeline);
 		if (spec.moreDescriptors != 0) {
@@ -218,41 +218,7 @@ namespace Hazel
 	}
 	void VulkanComputePass::SetInput(std::string name, Ref<UniformBufferSet> UboSet)
 	{
-		SetBindingKey setBinding = GetBinding(name);
-
-		Renderer::Submit([setBinding, UboSet, this]() mutable {
-			VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-			uint32_t frameCount = Renderer::GetConfig().FramesInFlight;
-
-			std::vector<VkWriteDescriptorSet> descriptorWrites;
-			descriptorWrites.reserve(frameCount);
-
-			std::vector<VkDescriptorBufferInfo> bufferInfos(frameCount);
-
-			auto vkUboSet = UboSet.As<VulkanUniformBufferSet>();
-			VkDeviceSize bufferRange = vkUboSet->Get_PreSize();
-
-			for (uint32_t i = 0; i < frameCount; i++) {
-				auto ubo = UboSet->Get(i).As<VulkanUniformBuffer>();
-
-				bufferInfos[i].buffer = ubo->GetVkBuffer();
-				bufferInfos[i].offset = 0;
-				bufferInfos[i].range = bufferRange;
-
-				VkWriteDescriptorSet write{};
-				write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-				write.dstSet = GetSpecification().Pipeline->GetShader().As<VulkanShader>()->GetDescriptorSet(setBinding.set)[i];
-				write.dstBinding = setBinding.binding;
-				write.dstArrayElement = 0;
-				write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-				write.descriptorCount = 1;
-				write.pBufferInfo = &bufferInfos[i];
-
-				descriptorWrites.push_back(write);
-			}
-
-			vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
-			});
+		m_DescriptorManager.SetInput(name, UboSet);
 	}
 
 }

@@ -61,8 +61,8 @@ project "Hazel"
 
 	libdirs
 	{
-		"%{IncludeDir.VulkanSDK}/Lib",
-		"%{LibraryDir.assimp}"
+		"%{LibraryDir.VulkanSDK}",
+		"%{LibraryDir.assimp}",
 	}
 	links
 	{
@@ -76,7 +76,12 @@ project "Hazel"
 		"vulkan-1.lib",
 		"%{Library.mono}",
 		"NFD-Extended",
-		"assimp-vc143-mtd.lib"   -- assimp的dll需要复制到执行目录
+		"assimp-vc143-mtd.lib",
+		"shadercd", 
+        "shaderc_combinedd", 
+        "glslangd", 
+        "SPIRVd", 
+        "spirv-toolsd" 
 	}
 
 	filter "files:vendor/ImGuizmo/**.cpp"

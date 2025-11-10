@@ -4,6 +4,7 @@
 
 #include "vulkan/vulkan.h"
 #include "VulkanShader.h"
+#include "DescriptorManager.h"
 
 namespace Hazel {
 	class VulkanRenderPass : public RenderPass
@@ -26,11 +27,10 @@ namespace Hazel {
 		virtual void SetInput(std::string name, Ref<TextureCube> cubeMap,bool isInit = false) override;
 
 	private:
-		SetBindingKey GetBinding(std::string name) const;
 		Ref<VulkanShader> GetVulkanShader() { return GetSpecification().Pipeline->GetShader().As<VulkanShader>(); }
 	private:
 		RenderPassSpecification m_Specification;
-		std::vector<std::unordered_map<SetBindingKey, VkImage, SetBindingKeyHash>> m_BindImages; // 每个飞行帧的每个binding位置的图片缓存，为了避免重复Update
+		DescriptorManager m_DescriptorManager;
 	};
 
 }

@@ -3,6 +3,7 @@
 #include "Hazel/Renderer/Renderer.h"
 #include "VulkanContext.h"
 #include "spirv_reflect.h"
+#include "VulkanShaderCompiler.h"
 
 namespace Hazel {
 
@@ -17,8 +18,6 @@ namespace Hazel {
 		file.read(buffer.data(), fileSize);
 		return buffer;
 	}
-
-
 
 	void VulkanShader::ReflectSPIRVAndPopulateSpec(const std::vector<char>& spirvCode, VkShaderStageFlagBits stage)
 	{
@@ -177,7 +176,6 @@ namespace Hazel {
 		else {
 			auto vertCode = readFile(m_VertFilePath);
 			auto fragCode = readFile(m_FragFilePath);
-
 			ReflectSPIRVAndPopulateSpec(vertCode, VK_SHADER_STAGE_VERTEX_BIT);
 			ReflectSPIRVAndPopulateSpec(fragCode, VK_SHADER_STAGE_FRAGMENT_BIT);
 

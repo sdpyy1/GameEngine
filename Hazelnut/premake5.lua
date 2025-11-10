@@ -59,6 +59,7 @@ project "Hazelnut"
 	{
 		"Hazel"
 	}
+
     filter "configurations:Debug"
 		postbuildcommands {
 			'{COPY} "../Hazel/vendor/assimp/bin/windows/Debug/assimp-vc143-mtd.dll" "%{cfg.targetdir}"',

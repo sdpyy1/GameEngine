@@ -1,6 +1,7 @@
 #pragma once
 #include "Hazel/Renderer/ComputePass.h"
 #include "VulkanShader.h"
+#include "DescriptorManager.h"
 namespace Hazel
 {
 	class VulkanComputePass : public ComputePass
@@ -32,6 +33,7 @@ namespace Hazel
 		SetBindingKey GetBinding(std::string name) const;
 	private:
 		ComputePassSpecification m_Specification;
+		DescriptorManager m_DescriptorManager;
 		std::vector<std::vector<VkDescriptorSet>> moreDescriptorSets;
 	};
 }
