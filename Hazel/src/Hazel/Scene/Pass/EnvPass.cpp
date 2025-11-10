@@ -71,8 +71,8 @@ namespace Hazel{
 
 			// HDR×ªCubemapPass
 			Renderer::BeginComputePass(m_CommandBuffer, m_EquirectangularPass);
-			m_EquirectangularPass->SetInput(env.m_EnvEquirect, 1);
-			m_EquirectangularPass->SetInput(env.m_EnvCubeMap, 0, InputType::stoage);
+			m_EquirectangularPass->SetInput("u_EquirectangularTex",env.m_EnvEquirect);
+			m_EquirectangularPass->SetInput("o_CubeMap",env.m_EnvCubeMap);
 			Renderer::DispatchCompute(m_CommandBuffer, m_EquirectangularPass, nullptr, glm::ivec3(cubemapSize / 32, cubemapSize / 32, 6));
 			Renderer::EndComputePass(m_CommandBuffer, m_EquirectangularPass);
 
@@ -88,8 +88,8 @@ namespace Hazel{
 
 			// »·¾³Irradiance
 			Renderer::BeginComputePass(m_CommandBuffer, m_EnvironmentIrradiancePass);
-			m_EnvironmentIrradiancePass->SetInput(env.m_EnvCubeMap, 1, InputType::sampler);
-			m_EnvironmentIrradiancePass->SetInput(env.m_EnvIrradianceMap, 0, InputType::stoage);
+			m_EnvironmentIrradiancePass->SetInput("u_RadianceMap",env.m_EnvCubeMap);
+			m_EnvironmentIrradiancePass->SetInput("o_IrradianceMap",env.m_EnvIrradianceMap);
 			Renderer::DispatchCompute(m_CommandBuffer, m_EnvironmentIrradiancePass, nullptr, glm::ivec3(irradianceMapSize / 32, irradianceMapSize / 32, 6), Buffer(&Renderer::GetConfig().IrradianceMapComputeSamples, sizeof(uint32_t)));
 			Renderer::Submit([=]() mutable{
 				env.m_EnvIrradianceMap->GenerateMips(m_CommandBuffer);

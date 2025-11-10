@@ -127,18 +127,18 @@ namespace Hazel {
 		{
 			switch (format)
 			{
-			case ImageFormat::RED8UN:  return 1;
-			case ImageFormat::RED8UI:  return 1;
-			case ImageFormat::RED16UI: return 2;
-			case ImageFormat::RED32UI: return 4;
-			case ImageFormat::RED32F:  return 4;
-			case ImageFormat::RGB:
-			case ImageFormat::SRGB:    return 3;
-			case ImageFormat::RGBA:    return 4;
-			case ImageFormat::SRGBA:   return 4;
-			case ImageFormat::RGBA16F: return 2 * 4;
-			case ImageFormat::RGBA32F: return 4 * 4;
-			case ImageFormat::B10R11G11UF: return 4;
+				case ImageFormat::RED8UN:  return 1;
+				case ImageFormat::RED8UI:  return 1;
+				case ImageFormat::RED16UI: return 2;
+				case ImageFormat::RED32UI: return 4;
+				case ImageFormat::RED32F:  return 4;
+				case ImageFormat::RGB:
+				case ImageFormat::SRGB:    return 3;
+				case ImageFormat::RGBA:    return 4;
+				case ImageFormat::SRGBA:   return 4;
+				case ImageFormat::RGBA16F: return 2 * 4;
+				case ImageFormat::RGBA32F: return 4 * 4;
+				case ImageFormat::B10R11G11UF: return 4;
 			}
 			HZ_CORE_ASSERT(false);
 			return 0;

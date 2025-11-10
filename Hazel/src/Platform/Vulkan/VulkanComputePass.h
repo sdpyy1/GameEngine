@@ -15,16 +15,18 @@ namespace Hazel
 		Ref<Image2D> GetOutput(uint32_t index) override;
 		Ref<Image2D> GetDepthOutput() override;
 		Ref<PipelineCompute> GetPipeline() const override;
-		virtual void SetInput(Ref<Image2D> texture, uint32_t Binding) override;
 		virtual void SetInputOneLayer(Ref<ImageView> imageView, uint32_t Binding, int index) override;
-		virtual void SetInput(Ref<Texture2D> texture, uint32_t Binding, InputType type) override;
-		virtual void SetInput(Ref<TextureCube> texture, uint32_t Binding, InputType type) override;
 		virtual void SetInput(Ref<TextureCube> texture, uint32_t Binding, InputType type, uint32_t descriptorIndex) override;
 		virtual void SetInput(Ref<TextureCube> texture, uint32_t Binding, InputType type, uint32_t levelIndex, uint32_t descriptorIndex) override;
 		virtual void SetInput(Ref<Image2D> texture, uint32_t Binding, uint32_t descriptorSetIndex) override;
 
 		// v2
-		virtual void SetInput(std::string name, Ref<UniformBufferSet> ubSet) override;
+		virtual void SetInput(std::string name, Ref<UniformBufferSet> UboSet) override;
+		virtual void SetInput(std::string name, Ref<Texture2D> texture, bool isInit = false) override;
+		virtual void SetInput(std::string name, Ref<StorageBufferSet> SBSet) override;
+		virtual void SetInput(std::string name, Ref<TextureCube> cubeMap, bool isInit = false) override;
+		virtual void SetInput(std::string name, Ref<Image2D> image, bool isInit = false) override;
+		virtual void SetInput(std::string name, Ref<ImageView> image) override;
 
 
 

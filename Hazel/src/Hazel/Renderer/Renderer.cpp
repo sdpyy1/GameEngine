@@ -48,6 +48,10 @@ namespace Hazel {
 		// 创建具体的渲染API对象
 		s_RendererAPI = RendererAPI::CreateAPI();
 
+		// Transmittance Lut
+		s_Data->m_ShaderLibrary->LoadCommonShader("MultiScatteringLut", true);
+		s_Data->m_ShaderLibrary->LoadCommonShader("TransmittanceLut", true);
+		s_Data->m_ShaderLibrary->LoadCommonShader("SkyViewLut", true);
 		// GBuffer Pass
 		s_Data->m_ShaderLibrary->LoadCommonShader("gBuffer");
 		s_Data->m_ShaderLibrary->LoadCommonShader("gBufferAnim");
@@ -88,10 +92,6 @@ namespace Hazel {
 		// Sky
 		s_Data->m_ShaderLibrary->LoadCommonShader("Sky");
 
-		// Transmittance Lut
-		s_Data->m_ShaderLibrary->LoadCommonShader("TransmittanceLut", true);
-		s_Data->m_ShaderLibrary->LoadCommonShader("MultiScatteringLut", true);
-		s_Data->m_ShaderLibrary->LoadCommonShader("SkyViewLut", true);
 
 
 

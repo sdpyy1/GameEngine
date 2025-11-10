@@ -106,6 +106,7 @@ namespace Hazel {
 		Ref<Image> GetImage() const { return m_Specification.Image; }
 		virtual ResourceDescriptorInfo GetDescriptorInfo() const override { return (ResourceDescriptorInfo)&m_DescriptorImageInfo; }
 		const VkDescriptorImageInfo& GetDescriptorInfoVulkan() const { return *(VkDescriptorImageInfo*)GetDescriptorInfo(); }
+		ImageViewSpecification GetSpecification() const { return m_Specification; }
 	private:
 		ImageViewSpecification m_Specification;
 		VkImageView m_ImageView = nullptr;

@@ -5,9 +5,12 @@
 #include "VulkanTexture.h"
 namespace Hazel {
 	VulkanMaterial::VulkanMaterial(const Ref<Shader>& shader, const std::string& name)
-		: m_Shader(shader.As<VulkanShader>()), m_Name(name)
+		: m_Shader(shader.As<VulkanShader>()), m_Name(name), m_DescriptorManager(m_Shader)
 	{
 		m_Device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+		m_DescriptorManager.SetManagedDescriptorSet(1);
+
+		// 旧接口
 		CreateDescriptorSet();
 		UpdateDescriptorSet(true);// 如果一个模型没有材质，也需要先初始化一次 DescriptorSet
 	}
@@ -136,4 +139,30 @@ namespace Hazel {
 	VulkanMaterial::~VulkanMaterial()
 	{
 	}
+
+	void VulkanMaterial::SetInput(std::string name, Ref<UniformBufferSet> UboSet)
+	{
+		m_DescriptorManager.SetInput2Addition(name,UboSet);
+	}
+
+	void VulkanMaterial::SetInput(std::string name, Ref<Texture2D> texture, bool isInit)
+	{
+		m_DescriptorManager.SetInput2Addition(name, texture, isInit);
+	}
+
+	void VulkanMaterial::SetInput(std::string name, Ref<StorageBufferSet> SBSet)
+	{
+		m_DescriptorManager.SetInput2Addition(name, SBSet);
+	}
+
+	void VulkanMaterial::SetInput(std::string name, Ref<TextureCube> cubeMap, bool isInit)
+	{
+		m_DescriptorManager.SetInput2Addition(name, cubeMap, isInit);
+	}
+
+	void VulkanMaterial::SetInput(std::string name, Ref<Image2D> image, bool isInit)
+	{
+		m_DescriptorManager.SetInput2Addition(name, image, isInit);
+	}
+
 }

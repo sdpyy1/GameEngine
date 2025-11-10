@@ -31,14 +31,14 @@ namespace Hazel {
 			return;
 		}
 
-		// 合并所有阶段 binding
+		// 合并所有阶段的binding（保留已有数据）
 		std::unordered_map<SetBindingKey, DescriptorBinding, SetBindingKeyHash> mergedBindings;
 		for (const auto& existing : m_Spec.bindings) {
 			SetBindingKey key{ existing.set, existing.binding };
 			mergedBindings.emplace(key, existing);
 		}
 
-		// 反射 descriptor bindings
+		// 反射descriptor bindings
 		uint32_t bindingCount = 0;
 		spvReflectEnumerateDescriptorBindings(&reflModule, &bindingCount, nullptr);
 		std::vector<SpvReflectDescriptorBinding*> bindings(bindingCount);
@@ -52,17 +52,38 @@ namespace Hazel {
 
 			SetBindingKey key{ b->set, b->binding };
 
-			// 封装名称到 set/binding map，跨阶段累加，不覆盖已存在
+			// 生成描述符名称（优先使用SPIR-V中的名称，无名时自动生成）
 			std::string name = (b->name && strlen(b->name) > 0)
 				? std::string(b->name)
 				: ("unnamed_" + std::to_string(b->set) + "_" + std::to_string(b->binding));
 
-			if (m_NameToBinding.find(name) == m_NameToBinding.end())
+			// 填充名称到set/binding的映射（不覆盖已存在项）
+			if (m_NameToBinding.find(name) == m_NameToBinding.end()) {
 				m_NameToBinding[name] = key;
+			}
 
-			// 合并 binding
+			// 填充名称到完整DescriptorBinding的映射（m_NameToDescriptorDel）
+			if (m_NameToDescriptorDel.find(name) == m_NameToDescriptorDel.end()) {
+				// 首次出现：创建完整DescriptorBinding并存储
+				DescriptorBinding desc{};
+				desc.binding = b->binding;
+				desc.set = b->set;
+				desc.type = static_cast<VkDescriptorType>(b->descriptor_type);
+				desc.count = b->count;
+				desc.stageFlags = stage;
+				m_NameToDescriptorDel[name] = desc;
+			}
+			else {
+				// 已存在：合并阶段标志（多阶段共用时累加）
+				m_NameToDescriptorDel[name].stageFlags = static_cast<VkShaderStageFlags>(
+					m_NameToDescriptorDel[name].stageFlags | stage
+					);
+			}
+
+			// 合并binding到全局集合（处理跨阶段冲突）
 			auto it = mergedBindings.find(key);
 			if (it == mergedBindings.end()) {
+				// 新binding：直接添加
 				DescriptorBinding desc{};
 				desc.binding = b->binding;
 				desc.set = b->set;
@@ -72,6 +93,7 @@ namespace Hazel {
 				mergedBindings.emplace(key, desc);
 			}
 			else {
+				// 已有binding：合并阶段，检查冲突
 				it->second.stageFlags = static_cast<VkShaderStageFlags>(it->second.stageFlags | stage);
 				if (it->second.type != static_cast<VkDescriptorType>(b->descriptor_type)) {
 					HZ_CORE_WARN("Reflection: descriptor type mismatch at set={}, binding={} (kept first).", b->set, b->binding);
@@ -81,11 +103,12 @@ namespace Hazel {
 				}
 			}
 
+			// 输出反射信息
 			HZ_CORE_INFO("Reflect: stage={0}, set={1}, binding={2}, name={3}, type={4}, count={5}",
 				(uint32_t)stage, b->set, b->binding, name, b->descriptor_type, b->count);
 		}
 
-		// 反射 Push Constants
+		// 反射Push Constants
 		uint32_t pcCount = 0;
 		spvReflectEnumeratePushConstantBlocks(&reflModule, &pcCount, nullptr);
 		std::vector<SpvReflectBlockVariable*> pcs(pcCount);
@@ -93,6 +116,7 @@ namespace Hazel {
 			spvReflectEnumeratePushConstantBlocks(&reflModule, &pcCount, pcs.data());
 		}
 
+		// 合并Push Constants（保留已有数据并累加阶段）
 		std::vector<PushConstantRange> mergedPCs = m_Spec.pushConstantRanges;
 		for (uint32_t i = 0; i < pcCount; ++i) {
 			const SpvReflectBlockVariable* p = pcs[i];
@@ -117,23 +141,27 @@ namespace Hazel {
 			}
 		}
 
-		// 按 set/binding 排序并更新 m_Spec.bindings
+		// 按set/binding排序并更新m_Spec.bindings
 		m_Spec.bindings.clear();
 		std::vector<std::pair<SetBindingKey, DescriptorBinding>> tmp;
 		tmp.reserve(mergedBindings.size());
-		for (auto& kv : mergedBindings) tmp.push_back(kv);
-		std::sort(tmp.begin(), tmp.end(), [](auto const& a, auto const& b) {
+		for (auto& kv : mergedBindings) {
+			tmp.push_back(kv);
+		}
+		std::sort(tmp.begin(), tmp.end(), [](const auto& a, const auto& b) {
 			if (a.first.set != b.first.set) return a.first.set < b.first.set;
 			return a.first.binding < b.first.binding;
 			});
-		for (auto& p : tmp) m_Spec.bindings.push_back(p.second);
+		for (auto& p : tmp) {
+			m_Spec.bindings.push_back(p.second);
+		}
 
-		// 更新 Push Constants
+		// 更新Push Constants
 		m_Spec.pushConstantRanges = std::move(mergedPCs);
 
+		// 清理反射资源
 		spvReflectDestroyShaderModule(&reflModule);
 	}
-
 	VulkanShader::VulkanShader(const std::string& name, const std::string& vertFilePath, const std::string& fragFilePath)
 	{
 		m_Name = name;

@@ -40,7 +40,7 @@ namespace Hazel {
 		ShadowPass();
 		SpotShadowPass();
 		PreDepthPass();
-		//HZBComputePass();
+		// HZBComputePass();
 		GeoPass();
 		LightPass();
 		SkyPass();
@@ -810,7 +810,7 @@ namespace Hazel {
 
 		// 绑定资源：输入深度图（采样器）+ HZB数组（存储图像）
 		Renderer::BeginComputePass(m_CommandBuffer, m_HierarchicalDepthPass);
-		m_HierarchicalDepthPass->SetInput(m_PreDepthLoadFramebuffer->GetDepthImage(), 0);
+		m_HierarchicalDepthPass->SetInput("u_InputDepth",m_PreDepthLoadFramebuffer->GetDepthImage());
 		uint32_t mipLevels = 0;
 		for (mipLevels = 0; mipLevels < m_HierarchicalDepthTexture.ImageViews.size(); mipLevels++) {
 			m_HierarchicalDepthPass->SetInputOneLayer(m_HierarchicalDepthTexture.ImageViews[mipLevels], 1, mipLevels);
@@ -958,9 +958,9 @@ namespace Hazel {
 
 	void SceneRender::SkyViewLutPass()
 	{
-		m_SkyViewLutPass->SetInput(m_SkyViewLutImage, 0, InputType::stoage);
-		m_SkyViewLutPass->SetInput(m_TransmittanceLutImage, 1);
-		m_SkyViewLutPass->SetInput(m_MultiScatteringLutImage, 2);
+		m_SkyViewLutPass->SetInput("SkyViewLut",m_SkyViewLutImage);
+		m_SkyViewLutPass->SetInput("u_TransmittanceLut",m_TransmittanceLutImage);
+		m_SkyViewLutPass->SetInput("u_MultiScatteringLut",m_MultiScatteringLutImage);
 
 		Renderer::BeginComputePass(m_CommandBuffer, m_SkyViewLutPass);
 		Renderer::DispatchCompute(m_CommandBuffer, m_SkyViewLutPass, nullptr, glm::ivec3(SkyViewLutWidth / 8, SkyViewLutHeight / 8, 1));
@@ -1014,15 +1014,16 @@ namespace Hazel {
 		m_SkyViewLutPass->SetInput("u_CameraData", m_UBSCameraData);
 	}
 	void SceneRender::MultiScatteringLutPass() {
-		m_MultiScatteringLutPass->SetInput(m_MultiScatteringLutImage, 0, InputType::stoage);
-		m_MultiScatteringLutPass->SetInput(m_TransmittanceLutImage, 1);
+		// m_MultiScatteringLutPass->SetInput(m_MultiScatteringLutImage, 0, InputType::stoage);
+		m_MultiScatteringLutPass->SetInput("MultiScatteringLut",m_MultiScatteringLutImage);
+		m_MultiScatteringLutPass->SetInput("u_TransmittanceLut",m_TransmittanceLutImage);
 		Renderer::BeginComputePass(m_CommandBuffer, m_MultiScatteringLutPass);
 		Renderer::DispatchCompute(m_CommandBuffer, m_MultiScatteringLutPass, nullptr, glm::ivec3(MultiScatteringLutResolution / 8, MultiScatteringLutResolution / 8, 1));
 		Renderer::EndComputePass(m_CommandBuffer, m_MultiScatteringLutPass);
 	}
 
 	void SceneRender::TransmiitanceLutPass() {
-		m_TransmittanceLutPass->SetInput(m_TransmittanceLutImage, 0, InputType::stoage);
+		m_TransmittanceLutPass->SetInput("transmittanceLut",m_TransmittanceLutImage);
 		Renderer::BeginComputePass(m_CommandBuffer, m_TransmittanceLutPass);
 		Renderer::DispatchCompute(m_CommandBuffer, m_TransmittanceLutPass, nullptr, glm::ivec3(TrasmittanceLutWidth / 8, TrasmittanceLutHeight / 8, 1));
 		Renderer::EndComputePass(m_CommandBuffer, m_TransmittanceLutPass);

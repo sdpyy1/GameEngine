@@ -1,6 +1,7 @@
 #pragma once
 #include "VulkanShader.h"
 #include "Hazel/Asset/Model/Material.h"
+#include "DescriptorManager.h"
 namespace Hazel {
 	// 关于材质的资源描述符全部放在Set=1
 	class VulkanMaterial : public Material
@@ -19,6 +20,15 @@ namespace Hazel {
 		virtual void SetEmissionColor(glm::vec3 color) override;
 		virtual void SetEmissionTexture(Ref<Texture2D> texture)override;
 
+
+		virtual void SetInput(std::string name, Ref<UniformBufferSet> UboSet) override;
+		virtual void SetInput(std::string name, Ref<Texture2D> texture, bool isInit = false) override;
+		virtual void SetInput(std::string name, Ref<StorageBufferSet> SBSet) override;
+		virtual void SetInput(std::string name, Ref<TextureCube> cubeMap, bool isInit = false) override;
+		virtual void SetInput(std::string name, Ref<Image2D> image, bool isInit = false) override;
+
+
+
 		const std::vector<VkDescriptorSet>& GetDescriptorSets() const { return m_DescriptorSets; }
 		virtual ~VulkanMaterial() override;
 
@@ -28,5 +38,6 @@ namespace Hazel {
 		VkDevice  m_Device;
 		std::vector<VkDescriptorSet> m_DescriptorSets;
 		Buffer m_UniformBuffer;
+		DescriptorManager m_DescriptorManager;
 	};
 }

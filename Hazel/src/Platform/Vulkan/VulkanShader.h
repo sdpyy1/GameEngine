@@ -52,7 +52,6 @@ namespace Hazel {
 		std::vector<VkDescriptorSet> GetDescriptorSet() { return m_DescriptorSets; }
 		VkDescriptorPool GetDescriptorPool() { return m_DescriptorPool; }
 		virtual ~VulkanShader();
-		void Release();
 		const std::vector<PushConstantRange>& GetPushConstantRanges() const { return m_Spec.pushConstantRanges; }
 		SetBindingKey VulkanShader::getSetAndBinding(const std::string& name);
 		virtual const std::string& GetName() const override { return m_Name; }
@@ -60,6 +59,8 @@ namespace Hazel {
 		std::string GetVertFilePath() const { return m_VertFilePath; }
         std::string GetFragFilePath() const { return m_FragFilePath; }
         std::string GetComputeFilePath() const { return m_ComputePath; }
+		VkDescriptorType GetDescriptorType(const std::string& name){return m_NameToDescriptorDel[name].type;}
+		void Release();
 	private:
 
 		std::string m_Name;
@@ -67,6 +68,7 @@ namespace Hazel {
 		std::string m_FragFilePath;
 		std::string m_ComputePath;
 		std::unordered_map<std::string, SetBindingKey> m_NameToBinding;
+		std::unordered_map<std::string, DescriptorBinding> m_NameToDescriptorDel;
 		bool m_IsCompute = false;
 		VkShaderModule m_VertShaderModule;
 		VkShaderModule m_FragShaderModule;
