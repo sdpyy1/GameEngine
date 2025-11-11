@@ -222,6 +222,7 @@ namespace Hazel {
 		bool DynamicSky = false;
 		std::vector<std::filesystem::path> iblPath;
 		int selectedIBL = 0;
+		float bloomScale = 1.0f; // TODO:临时放在这里，等待整合设置流转架构
 	};
 
 	struct SpriteRendererComponent

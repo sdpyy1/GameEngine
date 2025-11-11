@@ -300,7 +300,14 @@ namespace Hazel {
 			ImGui::RadioButton("Hard Shadow", &m_Scene->GetRenderSettingData().ShadowType, 0);
 			ImGui::RadioButton("PCF", &m_Scene->GetRenderSettingData().ShadowType, 1);
 			ImGui::RadioButton("PCSS", &m_Scene->GetRenderSettingData().ShadowType, 2);
-			ImGui::Checkbox("Show Cascade", &m_Scene->GetRenderSettingData().deBugCSM);
+			int& deBugCSM = m_Scene->GetRenderSettingData().deBugCSM;
+
+			// 临时 bool
+			bool tmp = (deBugCSM != 0);
+			if (ImGui::Checkbox("Show Cascade", &tmp))
+			{
+				deBugCSM = tmp ? 1 : 0; // 用户点击后更新 int
+			}
 		}
 
 		ImGui::End();

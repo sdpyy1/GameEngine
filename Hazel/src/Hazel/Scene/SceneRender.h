@@ -10,8 +10,8 @@ namespace Hazel {
 	public: // open
 		SceneRender();
 		Ref<Image2D> GetTextureWhichNeedDebug() { 
-			// return m_BloomImage->GetImage();
-			return m_TransmittanceLutImage->GetImage();
+			return m_BloomImage->GetImage();
+			// return m_TransmittanceLutImage->GetImage();
 		};
 		Ref<Image2D> GetFinalImage() { return m_GridFrameBuffer->GetImage(0); }
 		void PreRender(SceneInfo sceneData);
@@ -320,7 +320,11 @@ namespace Hazel {
 
 		// Bloom
 		Ref<ComputePass> m_BloomPass;
-		Ref<Material> m_BloomMaterial;
+		Ref<Shader> m_BloomShader;
+		Ref<Material> m_BloomPreFilterMaterial;
+		std::vector<Ref<Material>> m_BloomPreDownSamplerMaterials;
+		std::vector<Ref<Material>> m_BloomPreUpSamplerMaterials;
 		Ref<Texture2D> m_BloomImage;
+		std::vector<Ref<ImageView>> m_BloomImageViews;
 	};
 }

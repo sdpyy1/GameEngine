@@ -42,6 +42,7 @@ namespace Hazel {
 		virtual void SetInput(std::string name, Ref<Texture2D> texture, bool isInit = false) = 0;
 		virtual void SetInput(std::string name, Ref<StorageBufferSet> SBSet) = 0;
 		virtual void SetInput(std::string name, Ref<TextureCube> cubeMap, bool isInit = false) = 0;
+		virtual void SetInput(std::string name, Ref<ImageView> cubeMap) = 0;
 		virtual void SetInput(std::string name, Ref<Image2D> image, bool isInit = false) = 0;
 
 

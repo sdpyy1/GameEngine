@@ -26,6 +26,7 @@ namespace Hazel {
 		virtual void SetInput(std::string name, Ref<StorageBufferSet> SBSet) override;
 		virtual void SetInput(std::string name, Ref<TextureCube> cubeMap, bool isInit = false) override;
 		virtual void SetInput(std::string name, Ref<Image2D> image, bool isInit = false) override;
+		virtual void SetInput(std::string name, Ref<ImageView> image) override;
 
 		VkDescriptorSet RT_GetDescriptorSet() { return m_DescriptorManager.GetDescriptorSet();}
 

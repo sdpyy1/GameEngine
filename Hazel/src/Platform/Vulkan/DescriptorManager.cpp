@@ -539,7 +539,7 @@ namespace Hazel
 			auto vulkanImageView = imageView.As<VulkanImageView>();
 			auto image = vulkanImageView->GetImage().As<VulkanImage2D>();
 			VkDescriptorImageInfo imageInfo{};
-			imageInfo.sampler = VK_NULL_HANDLE;
+			imageInfo.sampler = image->GetDescriptorInfoVulkan().sampler;
 			imageInfo.imageView = vulkanImageView->GetImageView();
 			imageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 
@@ -547,13 +547,13 @@ namespace Hazel
 			descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 			descriptorWrites[0].dstSet = AdditionDescriptorSets[Renderer::RT_GetCurrentFrameIndex()];
 			descriptorWrites[0].dstBinding = setBinding.binding;
-			descriptorWrites[0].dstArrayElement = imageView.As<VulkanImageView>()->GetSpecification().Mip;
-			descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+			descriptorWrites[0].dstArrayElement = 0;
+			descriptorWrites[0].descriptorType = m_Shader->GetDescriptorType(name);
 			descriptorWrites[0].descriptorCount = 1;
 			descriptorWrites[0].pImageInfo = &imageInfo;
 
 			vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
-			});
+		});
 	}
 
 }

@@ -83,6 +83,7 @@ namespace Hazel {
 				skyComponent.DynamicSky,
 				skyComponent.iblPath[skyComponent.selectedIBL]
 			};
+			m_SceneInfo.RenderSettingData.bloomScale = skyComponent.bloomScale;
         }
 	}
 

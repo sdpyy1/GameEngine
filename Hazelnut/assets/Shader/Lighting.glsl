@@ -82,7 +82,7 @@ void main()
 
 	o_Color = vec4(finalColor,1);
 	// Debug
-	if(u_RendererData.debugCSM)
+	if(u_RendererData.debugCSM == 1)
 	{
 		vec3 cascadeColor;
 			switch(cascadeIndex) {

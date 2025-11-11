@@ -361,6 +361,7 @@ namespace Hazel {
 				if (component.selectedIBL > component.iblPath.size()) {
                     component.selectedIBL = -1;
 				}
+				ImGui::SliderFloat("Bloom Scale", &component.bloomScale, 0.0f, 3.0f);
 				if (!component.iblPath.empty())
 				{
 					std::vector<std::string> itemStrings;

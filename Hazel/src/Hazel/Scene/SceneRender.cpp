@@ -1,4 +1,5 @@
 #include "hzpch.h"
+#include <algorithm>
 #include "SceneRender.h"
 #include "Components.h"
 #include "Hazel/Asset/AssetManager.h"
@@ -29,35 +30,11 @@ namespace Hazel {
 		InitGeoPass();
 		InitLightPass();
 		InitSkyPass();
-		InitSceneCompositePass();
 		InitBloomPass();
+		InitSceneCompositePass();
 		InitGridPass();	
 	}	
-	void SceneRender::InitBloomPass()
-	{
-
-		Ref<Shader> bloomShader = Renderer::GetShaderLibrary()->Get("Bloom");
-		ComputePassSpecification bloomPassSpecification;
-        bloomPassSpecification.DebugName = "BloomPass";
-        bloomPassSpecification.Pipeline = PipelineCompute::Create(bloomShader);
-		m_BloomPass = ComputePass::Create(bloomPassSpecification);
-		m_BloomMaterial = Material::Create(bloomShader);
-		TextureSpecification spec;
-		spec.Format = ImageFormat::RGBA;
-		spec.DebugName = "BloomImage";
-		spec.Storage = true;
-		m_BloomImage = Texture2D::Create(spec);
-		m_BloomPass->SetInput("u_CameraData", m_UBSCameraData);
-
-	}
-	void SceneRender::BloomPass()
-	{
-		m_BloomMaterial->SetInput("o_Texture", m_BloomImage);
-		m_BloomMaterial->SetInput("u_InputTexture", m_SceneCompositeFrameBuffer->GetImage(0));
-		Renderer::BeginComputePass(m_CommandBuffer, m_BloomPass);
-		Renderer::DispatchCompute(m_CommandBuffer, m_BloomPass, m_BloomMaterial, glm::ivec3(m_ViewportWidth / 8 + 8, m_ViewportHeight/8 + 8, 1));
-		Renderer::EndComputePass(m_CommandBuffer, m_BloomPass);
-	}
+	
 	void SceneRender::Draw() {
 		m_EnvTextures = m_EnvPass.compute(m_SceneDataFromScene.SceneLightEnvironment.SkyLightSetting.selelctEnvPath, m_CommandBuffer);
 		MultiScatteringLutPass();
@@ -69,8 +46,8 @@ namespace Hazel {
 		GeoPass();
 		LightPass();
 		SkyPass();
-		SceneCompositePass();
 		BloomPass();
+		SceneCompositePass();
 		GridPass();
 	}
 	void SceneRender::PreRender(SceneInfo sceneData)
@@ -321,7 +298,6 @@ namespace Hazel {
 			}
 			Renderer::EndRenderPass(m_CommandBuffer);
 		}
-
 	}
 	void SceneRender::UploadCSMShadowData() {
         uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
@@ -444,6 +420,7 @@ namespace Hazel {
 	void SceneRender::SceneCompositePass()
 	{
 		m_SceneCompositePass->SetInput("lightRes",m_LightPassFramebuffer->GetImage(0));
+		m_SceneCompositePass->SetInput("BloomRes",m_BloomImage->GetImage());
 		Renderer::BeginRenderPass(m_CommandBuffer, m_SceneCompositePass, false);
 		Renderer::DrawPrueVertex(m_CommandBuffer, 3);
 		Renderer::EndRenderPass(m_CommandBuffer);
@@ -771,10 +748,30 @@ namespace Hazel {
 			m_GeoAnimFrameBuffer->Resize(m_SceneDataFromScene.camera.GetViewportWidth(), m_SceneDataFromScene.camera.GetViewportHeight());
 			m_LightPassFramebuffer->Resize(m_SceneDataFromScene.camera.GetViewportWidth(), m_SceneDataFromScene.camera.GetViewportHeight()); 
 			m_SkyFrameBuffer->Resize(m_SceneDataFromScene.camera.GetViewportWidth(), m_SceneDataFromScene.camera.GetViewportHeight());
-			m_SceneCompositeFrameBuffer->Resize(m_SceneDataFromScene.camera.GetViewportWidth(), m_SceneDataFromScene.camera.GetViewportHeight());
 			m_BloomImage->Resize(m_SceneDataFromScene.camera.GetViewportWidth(), m_SceneDataFromScene.camera.GetViewportHeight());
+			m_SceneCompositeFrameBuffer->Resize(m_SceneDataFromScene.camera.GetViewportWidth(), m_SceneDataFromScene.camera.GetViewportHeight());
 			m_GridFrameBuffer->Resize(m_SceneDataFromScene.camera.GetViewportWidth(), m_SceneDataFromScene.camera.GetViewportHeight());
 			HandleHZBResize();
+
+			// Bloom Resize
+			m_BloomImageViews.clear();
+			m_BloomImageViews.resize(m_BloomImage->GetMipLevelCount());
+			ImageViewSpecification imageViewSpec;
+			m_BloomPreDownSamplerMaterials.clear();
+			m_BloomPreUpSamplerMaterials.clear();
+			m_BloomPreDownSamplerMaterials.resize(m_BloomImage->GetMipLevelCount());
+			m_BloomPreUpSamplerMaterials.resize(m_BloomImage->GetMipLevelCount());
+			for (int i = 0; i < m_BloomImage->GetMipLevelCount(); i++) {
+				imageViewSpec.DebugName = "BloomImageView" + std::to_string(i);
+				imageViewSpec.Image = m_BloomImage->GetImage();
+				imageViewSpec.Mip = i;
+				m_BloomImageViews[i] = ImageView::Create(imageViewSpec);
+				m_BloomPreDownSamplerMaterials[i] = Material::Create(m_BloomShader);
+				m_BloomPreUpSamplerMaterials[i] = Material::Create(m_BloomShader);
+			}
+
+
+
 			NeedResize = false;
 		}
 	}
@@ -905,6 +902,7 @@ namespace Hazel {
 		m_RenderSettingData[frameIndex].CascadeSplits = CascadeSplits;
 		m_RenderSettingData[frameIndex].ShadowType = m_SceneDataFromScene.RenderSettingData.ShadowType;
 		m_RenderSettingData[frameIndex].deBugCSM = m_SceneDataFromScene.RenderSettingData.deBugCSM;
+		m_RenderSettingData[frameIndex].bloomScale = m_SceneDataFromScene.RenderSettingData.bloomScale;
 		m_UBSRenderSetting->Get()->SetData(&m_RenderSettingData[frameIndex], sizeof(RenderSettingData));
 	}
 
@@ -934,6 +932,7 @@ namespace Hazel {
 		sceneCompositePassSpec.Pipeline = m_SceneCompositePipeline;
 		sceneCompositePassSpec.DebugName = "FinalColorPass";
 		m_SceneCompositePass = RenderPass::Create(sceneCompositePassSpec);
+        m_SceneCompositePass->SetInput("u_RendererData", m_UBSRenderSetting);
 	}
 
 	void SceneRender::InitSkyPass()
@@ -1041,7 +1040,6 @@ namespace Hazel {
 		m_SkyViewLutPass->SetInput("u_CameraData", m_UBSCameraData);
 	}
 	void SceneRender::MultiScatteringLutPass() {
-		// m_MultiScatteringLutPass->SetInput(m_MultiScatteringLutImage, 0, InputType::stoage);
 		m_MultiScatteringLutPass->SetInput("MultiScatteringLut",m_MultiScatteringLutImage);
 		m_MultiScatteringLutPass->SetInput("u_TransmittanceLut",m_TransmittanceLutImage);
 		Renderer::BeginComputePass(m_CommandBuffer, m_MultiScatteringLutPass);
@@ -1057,6 +1055,103 @@ namespace Hazel {
 	}
 
 
+	void SceneRender::InitBloomPass()
+	{
+		m_BloomShader = Renderer::GetShaderLibrary()->Get("Bloom");
+		ComputePassSpecification bloomPassSpecification;
+		bloomPassSpecification.DebugName = "BloomPass";
+		bloomPassSpecification.Pipeline = PipelineCompute::Create(m_BloomShader);
+		m_BloomPass = ComputePass::Create(bloomPassSpecification);
+		m_BloomPreFilterMaterial = Material::Create(m_BloomShader);
+		TextureSpecification spec;
+		spec.Format = ImageFormat::RGBA32F;
+		spec.DebugName = "BloomImage";
+		spec.SamplerWrap = TextureWrap::Clamp;  // 为了处理边界采样
+		spec.Storage = true;
+		spec.GenerateMips = true;
+		m_BloomImage = Texture2D::Create(spec);
+		m_BloomImageViews.clear();
+		m_BloomImageViews.resize(m_BloomImage->GetMipLevelCount());
+		ImageViewSpecification imageViewSpec;
+		m_BloomPreDownSamplerMaterials.clear();
+		m_BloomPreUpSamplerMaterials.clear();
+		m_BloomPreDownSamplerMaterials.resize(m_BloomImage->GetMipLevelCount());
+		m_BloomPreUpSamplerMaterials.resize(m_BloomImage->GetMipLevelCount());
+		for (int i = 0; i < m_BloomImage->GetMipLevelCount(); i++) {
+			imageViewSpec.DebugName = "BloomImageView" + std::to_string(i);
+			imageViewSpec.Image = m_BloomImage->GetImage();
+			imageViewSpec.Mip = i;
+			m_BloomImageViews[i] = ImageView::Create(imageViewSpec);
+			m_BloomPreDownSamplerMaterials[i] = Material::Create(m_BloomShader);
+			m_BloomPreUpSamplerMaterials[i] = Material::Create(m_BloomShader);
+		}
+		m_BloomPass->SetInput("u_CameraData", m_UBSCameraData);
 
+	}
+	void SceneRender::BloomPass()
+	{
+		uint32_t m_BloomComputeWorkgroupSize = 8;
+		struct BloomComputePushConstants
+		{
+			glm::vec4 Params;
+			float LOD = 0.0f;
+			int Mode = 0; // 0 = prefilter, 1 = downsample, 2 = firstUpsample, 3 = upsample
+		} bloomComputePushConstants;
+		struct BloomSettings
+		{
+			bool Enabled = true;
+			float Threshold = 1.0f;
+			float Knee = 0.1f;
+			float UpsampleScale = 1.0f;
+			float Intensity = 1.0f;
+			float DirtIntensity = 1.0f;
+		}m_BloomSettings;
+		bloomComputePushConstants.Params = { m_BloomSettings.Threshold, m_BloomSettings.Threshold - m_BloomSettings.Knee, m_BloomSettings.Knee * 2.0f, 0.25f / m_BloomSettings.Knee };
+
+		// 提取高亮
+		bloomComputePushConstants.Mode = 0;
+		glm::uvec3 workGroups(0);
+		Renderer::BeginComputePass(m_CommandBuffer, m_BloomPass);
+		m_BloomPreFilterMaterial->SetInput("o_Texture", m_BloomImage);
+		m_BloomPreFilterMaterial->SetInput("u_InputTexture", m_SkyFrameBuffer->GetImage(0));
+		workGroups = { (m_BloomImage->GetWidth() + m_BloomComputeWorkgroupSize + 1) / m_BloomComputeWorkgroupSize, (m_BloomImage->GetHeight() + m_BloomComputeWorkgroupSize + 1) / m_BloomComputeWorkgroupSize, 1 };
+		Renderer::DispatchCompute(m_CommandBuffer, m_BloomPass, m_BloomPreFilterMaterial, workGroups, Buffer(&bloomComputePushConstants, sizeof(bloomComputePushConstants)));
+		m_BloomPass->GetPipeline()->ImageMemoryBarrier(m_CommandBuffer, m_BloomImage->GetImage(), ResourceAccessFlags::ShaderWrite, ResourceAccessFlags::ShaderRead);
+
+		// 下采样
+		bloomComputePushConstants.Mode = 1;
+		uint32_t mipCount = m_BloomImage->GetMipLevelCount();
+		uint32_t width = m_BloomImage->GetWidth();
+		uint32_t height = m_BloomImage->GetHeight();
+		for (uint32_t i = 1; i < mipCount; i++) {
+			bloomComputePushConstants.LOD = i - 1;// 读取i-1层mip来模糊，写入第i层
+			m_BloomPreDownSamplerMaterials[i]->SetInput("o_Texture", m_BloomImageViews[i]); // 写第i个mip
+			m_BloomPreDownSamplerMaterials[i]->SetInput("u_InputTexture", m_BloomImage);
+			auto [mipWidth, mipHeight] = m_BloomImage->GetMipSize(i);
+			workGroups = { (uint32_t)glm::ceil((float)mipWidth / (float)m_BloomComputeWorkgroupSize) ,(uint32_t)glm::ceil((float)mipHeight / (float)m_BloomComputeWorkgroupSize), 1 };
+			Renderer::DispatchCompute(m_CommandBuffer, m_BloomPass, m_BloomPreDownSamplerMaterials[i], workGroups, Buffer(&bloomComputePushConstants, sizeof(bloomComputePushConstants)));
+			m_BloomPass->GetPipeline()->ImageMemoryBarrier(m_CommandBuffer, m_BloomImage->GetImage(), ResourceAccessFlags::ShaderWrite, ResourceAccessFlags::ShaderRead);
+		}
+
+		// 上采样
+		width = 1;
+		height = 1;
+		bloomComputePushConstants.Mode = 3;
+		mipCount = m_BloomImage->GetMipLevelCount();
+		for (int i = mipCount - 2; i >= 0; i--) {
+			bloomComputePushConstants.LOD = i;
+			auto [mipWidth, mipHeight] = m_BloomImage->GetMipSize(i);
+			workGroups.x = (uint32_t)glm::ceil((float)mipWidth / (float)m_BloomComputeWorkgroupSize);
+			workGroups.y = (uint32_t)glm::ceil((float)mipHeight / (float)m_BloomComputeWorkgroupSize);
+			m_BloomPreUpSamplerMaterials[i]->SetInput("o_Texture", m_BloomImageViews[i]);
+			m_BloomPreUpSamplerMaterials[i]->SetInput("u_InputTexture", m_BloomImage);
+			Renderer::DispatchCompute(m_CommandBuffer, m_BloomPass, m_BloomPreUpSamplerMaterials[i], workGroups, Buffer(&bloomComputePushConstants, sizeof(bloomComputePushConstants)));
+			m_BloomPass->GetPipeline()->ImageMemoryBarrier(m_CommandBuffer, m_BloomImage->GetImage(), ResourceAccessFlags::ShaderWrite, ResourceAccessFlags::ShaderRead);
+		}
+
+
+
+		Renderer::EndComputePass(m_CommandBuffer, m_BloomPass);
+	}
 
 }

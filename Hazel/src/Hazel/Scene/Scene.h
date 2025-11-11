@@ -56,7 +56,8 @@ namespace Hazel {
 		glm::vec4 CascadeSplits;
 		float LightSize = 0.5;
 		int ShadowType = 2;  // 0=Hard 1=PCF 2=PCSS
-		bool deBugCSM = false;
+		int deBugCSM = 0;
+		float bloomScale = 1.0f;
 	};
 	struct SkyLightSetting {
 		bool isDynamicSky;

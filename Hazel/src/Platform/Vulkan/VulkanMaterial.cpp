@@ -156,7 +156,10 @@ namespace Hazel {
 	{
 		m_DescriptorManager.SetInput2Addition(name, texture, isInit);
 	}
-
+	void VulkanMaterial::SetInput(std::string name, Ref<ImageView> texture)
+	{
+		m_DescriptorManager.SetInput2Addition(name, texture);
+	}
 	void VulkanMaterial::SetInput(std::string name, Ref<StorageBufferSet> SBSet)
 	{
 		m_DescriptorManager.SetInput2Addition(name, SBSet);
