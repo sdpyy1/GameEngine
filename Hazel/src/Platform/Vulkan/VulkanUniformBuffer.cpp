@@ -45,7 +45,7 @@ namespace Hazel {
 
 	void VulkanUniformBuffer::RT_Invalidate()
 	{
-		HZ_CORE_TRACE("Main: VulkanUniformBuffer [{0}] Create! size = {1}", m_DebugName,m_Size);
+		LOG_TRACE("Main: VulkanUniformBuffer [{0}] Create! size = {1}", m_DebugName,m_Size);
 		Release();
 
 		VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();

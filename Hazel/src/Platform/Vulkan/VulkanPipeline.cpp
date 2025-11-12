@@ -22,7 +22,7 @@ namespace Hazel {
 			case PrimitiveTopology::TriangleFan:	return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_FAN;
 			}
 
-			HZ_CORE_ASSERT(false, "Unknown toplogy");
+			ASSERT(false, "Unknown toplogy");
 			return VK_PRIMITIVE_TOPOLOGY_MAX_ENUM;
 		}
 
@@ -39,7 +39,7 @@ namespace Hazel {
 			case DepthCompareOperator::Equal:			return VK_COMPARE_OP_EQUAL;
 			case DepthCompareOperator::Always:			return VK_COMPARE_OP_ALWAYS;
 			}
-			HZ_CORE_ASSERT(false, "Unknown Operator");
+			ASSERT(false, "Unknown Operator");
 			return VK_COMPARE_OP_MAX_ENUM;
 		}
 	}
@@ -57,15 +57,15 @@ namespace Hazel {
 		case ShaderDataType::Int3:      return VK_FORMAT_R32G32B32_SINT;
 		case ShaderDataType::Int4:      return VK_FORMAT_R32G32B32A32_SINT;
 		}
-		HZ_CORE_ASSERT(false);
+		ASSERT(false);
 		return VK_FORMAT_UNDEFINED;
 	}
 
 	VulkanPipeline::VulkanPipeline(const PipelineSpecification& spec)
 		: m_Specification(spec)
 	{
-		HZ_CORE_ASSERT(spec.Shader);
-		HZ_CORE_ASSERT(spec.TargetFramebuffer);
+		ASSERT(spec.Shader);
+		ASSERT(spec.TargetFramebuffer);
 		Invalidate();
 		//Renderer::RegisterShaderDependency(spec.Shader, this);
 	}
@@ -84,10 +84,10 @@ namespace Hazel {
 		Ref<VulkanPipeline> instance = this;
 		Renderer::Submit([instance]() mutable
 			{
-				// HZ_CORE_WARN("[VulkanPipeline] Creating pipeline {0}", instance->m_Specification.DebugName);
-				HZ_CORE_TRACE("RT: VulkanPipeline [{0}] Create!", instance->m_Specification.DebugName);
+				// LOG_WARN("[VulkanPipeline] Creating pipeline {0}", instance->m_Specification.DebugName);
+				LOG_TRACE("RT: VulkanPipeline [{0}] Create!", instance->m_Specification.DebugName);
 				VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-				HZ_CORE_ASSERT(instance->m_Specification.Shader);
+				ASSERT(instance->m_Specification.Shader);
 				Ref<VulkanShader> vulkanShader = Ref<VulkanShader>(instance->m_Specification.Shader);
 				Ref<VulkanFramebuffer> framebuffer = instance->m_Specification.TargetFramebuffer.As<VulkanFramebuffer>();
 
@@ -205,7 +205,7 @@ namespace Hazel {
 							break;
 
 						default:
-							HZ_CORE_VERIFY(false);
+							VERIFY(false);
 						}
 					}
 				}

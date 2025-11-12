@@ -23,7 +23,7 @@ namespace Hazel {
 
 		const char* operator[](int index) const
 		{
-			HZ_CORE_ASSERT(index < Count);
+			ASSERT(index < Count);
 			return Args[index];
 		}
 	};

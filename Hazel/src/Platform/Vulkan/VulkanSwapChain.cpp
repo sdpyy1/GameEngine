@@ -101,10 +101,10 @@ namespace Hazel
 			}
 		}
 
-		//HZ_CORE_WARN("第{}帧渲染完成", m_CurrentFrameIndex);
+		//LOG_WARN("第{}帧渲染完成", m_CurrentFrameIndex);
 		m_CurrentFrameIndex = (m_CurrentFrameIndex + 1) % Renderer::GetConfig().FramesInFlight;
 		// Resource release queue
-		//HZ_CORE_WARN("第{}帧资源释放", m_CurrentFrameIndex);
+		//LOG_WARN("第{}帧资源释放", m_CurrentFrameIndex);
 		auto& queue = Renderer::GetRenderResourceReleaseQueue(m_CurrentFrameIndex);
 		queue.Execute();
 	}
@@ -118,7 +118,7 @@ namespace Hazel
 		// Get available queue family properties
 		uint32_t queueCount;
 		vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueCount, NULL);
-		HZ_CORE_ASSERT(queueCount >= 1);
+		ASSERT(queueCount >= 1);
 
 		std::vector<VkQueueFamilyProperties> queueProps(queueCount);
 		vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueCount, queueProps.data());
@@ -167,8 +167,8 @@ namespace Hazel
 			}
 		}
 
-		HZ_CORE_ASSERT(graphicsQueueNodeIndex != UINT32_MAX);
-		HZ_CORE_ASSERT(presentQueueNodeIndex != UINT32_MAX);
+		ASSERT(graphicsQueueNodeIndex != UINT32_MAX);
+		ASSERT(presentQueueNodeIndex != UINT32_MAX);
 
 		m_QueueNodeIndex = graphicsQueueNodeIndex;
 
@@ -190,7 +190,7 @@ namespace Hazel
 		// Get available present modes
 		uint32_t presentModeCount;
 		VK_CHECK_RESULT(fpGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, m_Surface, &presentModeCount, NULL));
-		HZ_CORE_ASSERT(presentModeCount > 0);
+		ASSERT(presentModeCount > 0);
 		std::vector<VkPresentModeKHR> presentModes(presentModeCount);
 		VK_CHECK_RESULT(fpGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, m_Surface, &presentModeCount, presentModes.data()));
 
@@ -474,7 +474,7 @@ namespace Hazel
 
 	void VulkanSwapChain::Destroy()
 	{
-		HZ_CORE_WARN_TAG("Renderer", "VulkanSwapChain::OnDestroy");
+		LOG_WARN_TAG("Renderer", "VulkanSwapChain::OnDestroy");
 
 		auto device = m_Device->GetVulkanDevice();
 		vkDeviceWaitIdle(device);
@@ -528,7 +528,7 @@ namespace Hazel
 		// Get list of supported surface formats
 		uint32_t formatCount;
 		VK_CHECK_RESULT(fpGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, m_Surface, &formatCount, NULL));
-		HZ_CORE_ASSERT(formatCount > 0);
+		ASSERT(formatCount > 0);
 
 		std::vector<VkSurfaceFormatKHR> surfaceFormats(formatCount);
 		VK_CHECK_RESULT(fpGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, m_Surface, &formatCount, surfaceFormats.data()));
@@ -571,7 +571,6 @@ namespace Hazel
 	{
 		// Make sure the frame we're requesting has finished rendering (from previous iterations)
 		{
-			HZ_PROFILE_SCOPE("VulkanSwapChain::AcquireNextImage - WaitForFences");
 			VK_CHECK_RESULT(vkWaitForFences(m_Device->GetVulkanDevice(), 1, &m_WaitFences[m_CurrentFrameIndex], VK_TRUE, UINT64_MAX));
 		}
 

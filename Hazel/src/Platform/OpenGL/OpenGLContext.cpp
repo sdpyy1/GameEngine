@@ -8,19 +8,19 @@ namespace Hazel {
 	OpenGLContext::OpenGLContext(void* windowHandle)
 		: m_WindowHandle(windowHandle)
 	{
-		HZ_CORE_ASSERT(windowHandle, "Window handle is null!")
+		ASSERT(windowHandle, "Window handle is null!");
 	}
 	void OpenGLContext::Init()
 	{
 		glfwMakeContextCurrent((GLFWwindow*)m_WindowHandle);
 		int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
-		HZ_CORE_ASSERT(status, "Failed to initialize Glad!");
+		ASSERT(status, "Failed to initialize Glad!");
 
-		HZ_CORE_INFO("OpenGL Info:");
-		HZ_CORE_INFO("  Vendor: {0}", glGetString(GL_VENDOR));
-		HZ_CORE_INFO("  Renderer: {0}", glGetString(GL_RENDERER));
-		HZ_CORE_INFO("  Version: {0}", glGetString(GL_VERSION));
+		LOG_INFO("OpenGL info:");
+		LOG_INFO("  Vendor: {0}", glGetString(GL_VENDOR));
+		LOG_INFO("  Renderer: {0}", glGetString(GL_RENDERER));
+		LOG_INFO("  Version: {0}", glGetString(GL_VERSION));
 
-		HZ_CORE_ASSERT(GLVersion.major > 4 || (GLVersion.major == 4 && GLVersion.minor >= 5), "Hazel requires at least OpenGL version 4.5!");
+		ASSERT(GLVersion.major > 4 || (GLVersion.major == 4 && GLVersion.minor >= 5), "Hazel requires at least OpenGL version 4.5!");
 	}
 }

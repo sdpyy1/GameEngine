@@ -3,8 +3,6 @@
 
 #include "VulkanContext.h"
 
-#include "Hazel/Debug/Profiler.h"
-
 namespace Hazel {
 
 #define NO_STAGING 1
@@ -16,7 +14,7 @@ namespace Hazel {
 
 		Renderer::Submit([instance]() mutable
 			{
-				HZ_CORE_TRACE("RT: VulkanStorageBuffer [{0}] Create! size = {1}", instance->m_Specification.DebugName, instance->m_Size);
+				LOG_TRACE("RT: VulkanStorageBuffer [{0}] Create! size = {1}", instance->m_Specification.DebugName, instance->m_Size);
 				instance->RT_Invalidate();
 			});
 	}
@@ -82,7 +80,7 @@ namespace Hazel {
 	void VulkanStorageBuffer::RT_SetData(const void* data, uint32_t size, uint32_t offset)
 	{
 		// Cannot call SetData if GPU only
-		HZ_CORE_VERIFY(!m_Specification.GPUOnly);
+		VERIFY(!m_Specification.GPUOnly);
 
 #if NO_STAGING
 		VulkanAllocator allocator("StorageBuffer");

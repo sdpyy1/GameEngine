@@ -33,7 +33,7 @@ namespace Hazel {
 
 	void ShaderLibrary::Add(const std::string& name, const Ref<Shader>& shader)
 	{
-		HZ_CORE_ASSERT(m_Shaders.find(name) == m_Shaders.end());
+		ASSERT(m_Shaders.find(name) == m_Shaders.end());
 		m_Shaders[name] = shader;
 	}
 
@@ -59,7 +59,7 @@ namespace Hazel {
 
 	Ref<Shader> ShaderLibrary::Get(const std::string& name)
 	{
-		HZ_CORE_ASSERT(m_Shaders.find(name) != m_Shaders.end());
+		ASSERT(m_Shaders.find(name) != m_Shaders.end());
 		return m_Shaders[name];
 	}
 }

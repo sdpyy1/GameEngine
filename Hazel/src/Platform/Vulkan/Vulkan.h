@@ -49,21 +49,21 @@ namespace Hazel {
 		case VK_OPERATION_NOT_DEFERRED_KHR: return "VK_OPERATION_NOT_DEFERRED_KHR";
 		case VK_PIPELINE_COMPILE_REQUIRED_EXT: return "VK_PIPELINE_COMPILE_REQUIRED_EXT";
 		}
-		HZ_CORE_ASSERT(false);
+		ASSERT(false);
 		return nullptr;
 	}
 	inline void VulkanCheckResult(VkResult result, const char* file, int line)
 	{
 		if (result != VK_SUCCESS)
 		{
-			HZ_CORE_ERROR("VkResult is '{0}' in {1}:{2}", VKResultToString(result), file, line);
+			LOG_ERROR("VkResult is '{0}' in {1}:{2}", VKResultToString(result), file, line);
 			if (result == VK_ERROR_DEVICE_LOST)
 			{
 				using namespace std::chrono_literals;
 				std::this_thread::sleep_for(3s);
 
 			}			
-			HZ_CORE_ASSERT(result == VK_SUCCESS);
+			ASSERT(result == VK_SUCCESS);
 		}
 	}
 
@@ -71,14 +71,14 @@ namespace Hazel {
 #define GET_INSTANCE_PROC_ADDR(inst, entrypoint)                        \
 {                                                                       \
 	fp##entrypoint = reinterpret_cast<PFN_vk##entrypoint>(vkGetInstanceProcAddr(inst, "vk"#entrypoint)); \
-	HZ_CORE_ASSERT(fp##entrypoint);                                     \
+	ASSERT(fp##entrypoint);                                     \
 }
 
 // Macro to get a procedure address based on a vulkan device
 #define GET_DEVICE_PROC_ADDR(dev, entrypoint)                           \
 {                                                                       \
 	fp##entrypoint = reinterpret_cast<PFN_vk##entrypoint>(vkGetDeviceProcAddr(dev, "vk"#entrypoint));   \
-	HZ_CORE_ASSERT(fp##entrypoint);                                     \
+	ASSERT(fp##entrypoint);                                     \
 }
 
 }

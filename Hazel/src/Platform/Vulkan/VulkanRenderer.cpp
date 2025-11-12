@@ -82,10 +82,10 @@ namespace Hazel {
 		caps.Vendor = Utils::VulkanVendorIDToString(properties.vendorID);
 		caps.Device = properties.deviceName;
 		caps.Version = std::to_string(properties.driverVersion);
-		HZ_CORE_INFO_TAG("Renderer", "GPU Info:");
-		HZ_CORE_INFO_TAG("Renderer", "  Vendor: {0}", caps.Vendor);
-		HZ_CORE_INFO_TAG("Renderer", "  Device: {0}", caps.Device);
-		HZ_CORE_INFO_TAG("Renderer", "  Version: {0}", caps.Version);
+		LOG_INFO_TAG("Renderer", "GPU info:");
+		LOG_INFO_TAG("Renderer", "  Vendor: {0}", caps.Vendor);
+		LOG_INFO_TAG("Renderer", "  Device: {0}", caps.Device);
+		LOG_INFO_TAG("Renderer", "  Version: {0}", caps.Version);
 		// 创建 descriptor pools
 		Renderer::Submit([]() mutable
 			{
@@ -151,7 +151,7 @@ namespace Hazel {
 	{
 		Renderer::Submit([]()
 			{
-				//HZ_CORE_WARN("开始执行第{0}帧渲染命令缓冲", Renderer::RT_GetCurrentFrameIndex());
+				//LOG_WARN("开始执行第{0}帧渲染命令缓冲", Renderer::RT_GetCurrentFrameIndex());
 				VulkanSwapChain& swapChain = Application::Get().GetWindow()->GetSwapChain();
 				// 清空命令缓冲区、获取下一帧图片索引
 				swapChain.BeginFrame();
@@ -202,7 +202,7 @@ namespace Hazel {
 	{
 		Renderer::Submit([renderCommandBuffer, renderPass, explicitClear]()
 			{
-				//HZ_CORE_TRACE(" Pass Begin [{}]", renderPass->GetSpecification().DebugName);
+				//LOG_TRACE(" Pass Begin [{}]", renderPass->GetSpecification().DebugName);
 				uint32_t frameIndex = Renderer::RT_GetCurrentFrameIndex();
 				VkCommandBuffer commandBuffer = renderCommandBuffer.As<VulkanRenderCommandBuffer>()->GetActiveCommandBuffer();
 
@@ -280,7 +280,7 @@ namespace Hazel {
 				{
 					const uint32_t colorAttachmentCount = (uint32_t)framebuffer->GetColorAttachmentCount();
 					const uint32_t totalAttachmentCount = colorAttachmentCount + (framebuffer->HasDepthAttachment() ? 1 : 0);
-					HZ_CORE_ASSERT(clearValues.size() == totalAttachmentCount);
+					ASSERT(clearValues.size() == totalAttachmentCount);
 
 					std::vector<VkClearAttachment> attachments(totalAttachmentCount);
 					std::vector<VkClearRect> clearRects(totalAttachmentCount);
@@ -351,7 +351,7 @@ namespace Hazel {
 	}
 	void VulkanRenderer::RenderStaticMeshWithMaterial(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<Pipeline> pipeline, Ref<MeshSource> meshSource, uint32_t submeshIndex, Ref<Material> material, Ref<VertexBuffer> transformBuffer, uint32_t transformOffset, uint32_t instanceCount, Buffer additionalUniforms)
 	{
-		HZ_CORE_ASSERT(meshSource);
+		ASSERT(meshSource);
 		Buffer pushConstantBuffer;
 		if (additionalUniforms.Size)
 		{
@@ -395,7 +395,7 @@ namespace Hazel {
 
 			if (pushConstantBuffer.Size > 0)
 			{
-				// HZ_CORE_INFO("Pass{}", pipeline->GetSpecification().DebugName);
+				// LOG_INFO("Pass{}", pipeline->GetSpecification().DebugName);
 				vkCmdPushConstants(commandBuffer, layout, VK_SHADER_STAGE_VERTEX_BIT, pushConstantOffset, pushConstantBuffer.Size, pushConstantBuffer.Data);
 			}
 
@@ -405,7 +405,7 @@ namespace Hazel {
 
 	void VulkanRenderer::RenderSkeletonMeshWithMaterial(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<Pipeline> pipeline, Ref<MeshSource> meshSource, uint32_t submeshIndex, Ref<Material> material, Ref<VertexBuffer> transformBuffer, uint32_t transformOffset, uint32_t boneTransformsOffset, uint32_t instanceCount, Buffer additionalUniforms)
 	{
-		HZ_CORE_VERIFY(meshSource);
+		VERIFY(meshSource);
 
 		Buffer pushConstantBuffer;
 		bool isRigged = meshSource->IsSubmeshRigged(submeshIndex);

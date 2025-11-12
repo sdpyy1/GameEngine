@@ -446,7 +446,7 @@ namespace Hazel {
 			glm::mat4 submeshTransform = transform * submeshData[submeshIndex].Transform;  // subMesh的全局变换
 			AssetHandle materialHandle = meshSource->GetMaterialHandle(submeshData[submeshIndex].MaterialIndex);
 			Ref<MaterialAsset> material = AssetManager::GetAsset<MaterialAsset>(materialHandle);// subMesh的材质索引;
-			HZ_CORE_VERIFY(material);
+			VERIFY(material);
 			MeshKey meshKey = { meshSource->Handle, materialHandle, submeshIndex, false };
 			// 缓存变换矩阵
 			auto& transformStorage = m_MeshTransformMap[meshKey].Transforms.emplace_back(); // 对于每一种MeshKey，都存储多个Transforms矩阵，表示多个实例
@@ -741,7 +741,7 @@ namespace Hazel {
 		SetViewprotSize(m_SceneDataFromScene.camera.GetViewportWidth(), m_SceneDataFromScene.camera.GetViewportHeight());
 		if (NeedResize) {
 			// 更新FBO尺寸（需要按顺序Resize）
-			HZ_CORE_WARN("SceneRender::PreRender Resize FBO to {0}x{1}", m_SceneDataFromScene.camera.GetViewportWidth(), m_SceneDataFromScene.camera.GetViewportHeight());
+			LOG_WARN("SceneRender::PreRender Resize FBO to {0}x{1}", m_SceneDataFromScene.camera.GetViewportWidth(), m_SceneDataFromScene.camera.GetViewportHeight());
 			m_PreDepthClearFramebuffer->Resize(m_SceneDataFromScene.camera.GetViewportWidth(), m_SceneDataFromScene.camera.GetViewportHeight());
 			m_PreDepthLoadFramebuffer->Resize(m_SceneDataFromScene.camera.GetViewportWidth(), m_SceneDataFromScene.camera.GetViewportHeight());
 			m_GeoFrameBuffer->Resize(m_SceneDataFromScene.camera.GetViewportWidth(), m_SceneDataFromScene.camera.GetViewportHeight());

@@ -20,7 +20,7 @@ namespace Hazel {
 			case TextureWrap::Clamp:   return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
 			case TextureWrap::Repeat:  return VK_SAMPLER_ADDRESS_MODE_REPEAT;
 			}
-			HZ_CORE_ASSERT(false, "Unknown wrap mode");
+			ASSERT(false, "Unknown wrap mode");
 			return (VkSamplerAddressMode)0;
 		}
 
@@ -32,7 +32,7 @@ namespace Hazel {
 			case TextureFilter::Nearest:  return VK_FILTER_NEAREST;
 			case TextureFilter::Cubic:   return VK_FILTER_CUBIC_IMG;
 			}
-			HZ_CORE_ASSERT(false, "Unknown filter");
+			ASSERT(false, "Unknown filter");
 			return (VkFilter)0;
 		}
 
@@ -51,7 +51,7 @@ namespace Hazel {
 			case ImageFormat::RGBA32F: return width * height * 4 * sizeof(float);
 			case ImageFormat::B10R11G11UF: return width * height * sizeof(float);
 			}
-			HZ_CORE_ASSERT(false);
+			ASSERT(false);
 			return 0;
 		}
 
@@ -60,7 +60,7 @@ namespace Hazel {
 			bool result = true;
 
 			result = specification.Width > 0 && specification.Height > 0 && specification.Width < 65536 && specification.Height < 65536;
-			HZ_CORE_VERIFY(result);
+			VERIFY(result);
 
 			return result;
 		}
@@ -97,7 +97,7 @@ namespace Hazel {
 		m_ImageData = TextureImporter::ToBufferFromFile(filepath, m_Specification.Format, m_Specification.Width, m_Specification.Height, m_Specification.needYFlip);
 		if (!m_ImageData)
 		{
-			HZ_CORE_ERROR("Failed to load texture from file: {}", filepath);
+			LOG_ERROR("Failed to load texture from file: {}", filepath);
 			m_ImageData = TextureImporter::ToBufferFromFile("Resources/Textures/ErrorTexture.png", m_Specification.Format, m_Specification.Width, m_Specification.Height ,m_Specification.needYFlip);
 		}
 
@@ -110,7 +110,7 @@ namespace Hazel {
 		imageSpec.CreateSampler = false;
 		m_Image = Image2D::Create(imageSpec);
 
-		HZ_CORE_ASSERT(m_Specification.Format != ImageFormat::None);
+		ASSERT(m_Specification.Format != ImageFormat::None);
 
 		Invalidate();
 	}
@@ -123,7 +123,7 @@ namespace Hazel {
 		if (!m_ImageData)
 		{
 			// TODO(Yan): move this to asset manager
-			HZ_CORE_ERROR("Failed to load texture from file: {}", filepath);
+			LOG_ERROR("Failed to load texture from file: {}", filepath);
 			m_ImageData = TextureImporter::ToBufferFromFile("Resources/Textures/ErrorTexture.png", m_Specification.Format, m_Specification.Width, m_Specification.Height,m_Specification.needYFlip);
 		}
 
@@ -136,7 +136,7 @@ namespace Hazel {
 		imageSpec.CreateSampler = false;
 		m_Image = Image2D::Create(imageSpec);
 
-		HZ_CORE_ASSERT(m_Specification.Format != ImageFormat::None);
+		ASSERT(m_Specification.Format != ImageFormat::None);
 
 		Ref<VulkanTexture2D> instance = this;
 		Renderer::Submit([instance]() mutable
@@ -328,7 +328,7 @@ namespace Hazel {
 
 		// Copy data to staging buffer
 		uint8_t* destData = allocator.MapMemory<uint8_t>(stagingBufferAllocation);
-		HZ_CORE_ASSERT(m_ImageData.Data);
+		ASSERT(m_ImageData.Data);
 		memcpy(destData, m_ImageData.Data, size);
 		allocator.UnmapMemory(stagingBufferAllocation);
 
@@ -579,7 +579,7 @@ namespace Hazel {
 
 		Renderer::SubmitResourceFree([image = m_Image, allocation = m_MemoryAlloc, texInfo = m_DescriptorImageInfo]()
 			{
-				HZ_CORE_TRACE_TAG("Renderer", "Destroying VulkanTextureCube");
+				LOG_TRACE_TAG("Renderer", "Destroying VulkanTextureCube");
 				auto vulkanDevice = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 				vkDestroyImageView(vulkanDevice, texInfo.imageView, nullptr);
 				Vulkan::DestroySampler(texInfo.sampler);
@@ -1210,7 +1210,7 @@ namespace Hazel {
 
 	void VulkanTextureCube::CopyFromBuffer(const Buffer& buffer, uint32_t mips)
 	{
-		// HZ_CORE_VERIFY(buffer.Size == m_GPUAllocationSize);
+		// VERIFY(buffer.Size == m_GPUAllocationSize);
 
 		auto device = VulkanContext::GetCurrentDevice();
 		auto vulkanDevice = device->GetVulkanDevice();

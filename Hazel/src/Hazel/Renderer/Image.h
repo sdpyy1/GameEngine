@@ -140,7 +140,7 @@ namespace Hazel {
 				case ImageFormat::RGBA32F: return 4 * 4;
 				case ImageFormat::B10R11G11UF: return 4;
 			}
-			HZ_CORE_ASSERT(false);
+			ASSERT(false);
 			return 0;
 		}
 
@@ -169,7 +169,7 @@ namespace Hazel {
 			case ImageFormat::DEPTH24STENCIL8:
 				return false;
 			}
-			HZ_CORE_ASSERT(false);
+			ASSERT(false);
 			return false;
 		}
 

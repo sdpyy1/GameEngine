@@ -12,7 +12,7 @@ namespace Hazel {
 		case RendererAPI::Type::None: return nullptr;
 		case RendererAPI::Type::Vulkan: return Ref<VulkanMaterial>::Create(shader, name);
 		}
-		HZ_CORE_ASSERT(false, "Unknown RendererAPI");
+		ASSERT(false, "Unknown RendererAPI");
 		return nullptr;
 	}
 

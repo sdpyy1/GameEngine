@@ -121,10 +121,10 @@ namespace Hazel {
 		, m_AnimationName(animationName)
 		, m_IsMaskedRootMotion(isMaskedRootMotion)
 	{
-		HZ_CORE_ASSERT(rootRotationMask == 0.0f || rootRotationMask == 1.0f);
-		HZ_CORE_ASSERT(rootTranslationMask.x == 0.0f || rootTranslationMask.x == 1.0f);
-		HZ_CORE_ASSERT(rootTranslationMask.y == 0.0f || rootTranslationMask.y == 1.0f);
-		HZ_CORE_ASSERT(rootTranslationMask.z == 0.0f || rootTranslationMask.z == 1.0f);
+		ASSERT(rootRotationMask == 0.0f || rootRotationMask == 1.0f);
+		ASSERT(rootTranslationMask.x == 0.0f || rootTranslationMask.x == 1.0f);
+		ASSERT(rootTranslationMask.y == 0.0f || rootTranslationMask.y == 1.0f);
+		ASSERT(rootTranslationMask.z == 0.0f || rootTranslationMask.z == 1.0f);
 		AssetManager::RegisterDependency(skeletonSource, Handle);
 		AssetManager::RegisterDependency(animationSource, Handle);
 	}

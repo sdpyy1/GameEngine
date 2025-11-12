@@ -22,7 +22,7 @@ namespace Hazel {
 
 	private:
 		static void DrawMaterial(AssetHandle meshSourceHandle);
-		
+
 	private:
 		Ref<Scene> m_Context;
 		Entity m_SelectionContext;

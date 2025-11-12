@@ -122,7 +122,7 @@ namespace Hazel {
 
 	void VulkanComputePipeline::RT_Begin(Ref<RenderCommandBuffer> renderCommandBuffer)
 	{
-		HZ_CORE_ASSERT(!m_ActiveComputeCommandBuffer);
+		ASSERT(!m_ActiveComputeCommandBuffer);
 		if (renderCommandBuffer)
 		{
 			uint32_t frameIndex = Renderer::RT_GetCurrentFrameIndex();
@@ -138,13 +138,13 @@ namespace Hazel {
 	}
 	void VulkanComputePipeline::Dispatch(const glm::uvec3& workGroups) const
 	{
-		HZ_CORE_ASSERT(m_ActiveComputeCommandBuffer);
+		ASSERT(m_ActiveComputeCommandBuffer);
 
 		vkCmdDispatch(m_ActiveComputeCommandBuffer, workGroups.x, workGroups.y, workGroups.z);
 	}
 	void VulkanComputePipeline::End()
 	{
-		HZ_CORE_ASSERT(m_ActiveComputeCommandBuffer);
+		ASSERT(m_ActiveComputeCommandBuffer);
 
 		VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 		if (!m_UsingGraphicsQueue)

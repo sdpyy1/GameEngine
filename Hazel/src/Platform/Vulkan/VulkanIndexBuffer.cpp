@@ -88,7 +88,7 @@ namespace Hazel {
 
 	void VulkanIndexBuffer::SetData(void* buffer, uint64_t size, uint64_t offset)
 	{
-		HZ_CORE_VERIFY(false, "Not implemented!");
+		VERIFY(false, "Not implemented!");
 	}
 
 	void VulkanIndexBuffer::Bind() const

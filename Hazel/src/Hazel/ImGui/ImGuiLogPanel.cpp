@@ -17,10 +17,10 @@ namespace Hazel {
 	{
 		switch (level)
 		{
-		case LogLevel::Trace: return m_ShowTrace;
-		case LogLevel::Info: return m_ShowInfo;
-		case LogLevel::Warn: return m_ShowWarn;
-		case LogLevel::Error: return m_ShowError;
+		case LogLevel::trace: return m_ShowTrace;
+		case LogLevel::info: return m_ShowInfo;
+		case LogLevel::warn: return m_ShowWarn;
+		case LogLevel::error: return m_ShowError;
 		default: return true;
 		}
 	}
@@ -33,10 +33,10 @@ namespace Hazel {
 		ImGui::Begin("Log Panel", &isOpen);
 
 		// 日志级别过滤
-		ImGui::Checkbox("Trace", &m_ShowTrace); ImGui::SameLine();
-		ImGui::Checkbox("Info", &m_ShowInfo); ImGui::SameLine();
-		ImGui::Checkbox("Warn", &m_ShowWarn); ImGui::SameLine();
-		ImGui::Checkbox("Error", &m_ShowError); ImGui::SameLine();
+		ImGui::Checkbox("trace", &m_ShowTrace); ImGui::SameLine();
+		ImGui::Checkbox("info", &m_ShowInfo); ImGui::SameLine();
+		ImGui::Checkbox("warn", &m_ShowWarn); ImGui::SameLine();
+		ImGui::Checkbox("error", &m_ShowError); ImGui::SameLine();
 
 		ImGui::Separator();
 
@@ -58,19 +58,19 @@ namespace Hazel {
 			ImVec4 color;
 			switch (log.Level)
 			{
-			case LogLevel::Trace:    color = ImVec4(0.6f, 0.6f, 0.6f, 1.0f); break; // 灰色
-			case LogLevel::Info:     color = ImVec4(0.0f, 1.0f, 0.0f, 1.0f); break; // 绿色
-			case LogLevel::Warn:     color = ImVec4(1.0f, 1.0f, 0.0f, 1.0f); break; // 黄色
-			case LogLevel::Error:    color = ImVec4(1.0f, 0.0f, 0.0f, 1.0f); break; // 红色
+			case LogLevel::trace:    color = ImVec4(0.6f, 0.6f, 0.6f, 1.0f); break; // 灰色
+			case LogLevel::info:     color = ImVec4(0.0f, 1.0f, 0.0f, 1.0f); break; // 绿色
+			case LogLevel::warn:     color = ImVec4(1.0f, 1.0f, 0.0f, 1.0f); break; // 黄色
+			case LogLevel::error:    color = ImVec4(1.0f, 0.0f, 0.0f, 1.0f); break; // 红色
 			default:                 color = ImVec4(1.0f, 1.0f, 1.0f, 1.0f); break; // 默认白色
 			}
 
 			ImGui::PushStyleColor(ImGuiCol_Text, color);
 
 			// 判断是否是 Vulkan Validation Error
-			if (log.Level == LogLevel::Error && log.Message.find("[Validation]") != std::string::npos)
+			if (log.Level == LogLevel::error && log.Message.find("[Validation]") != std::string::npos)
 			{
-				ImGui::TextUnformatted("Vulkan Validation ERROR"); // 替换显示内容
+				ImGui::TextUnformatted("Vulkan Validation LOG_ERROR"); // 替换显示内容
 			}
 			else
 			{

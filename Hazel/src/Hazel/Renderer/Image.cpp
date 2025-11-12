@@ -5,14 +5,14 @@
 namespace Hazel {
 	Ref<Image2D> Image2D::Create(const ImageSpecification& specification, Buffer buffer)
 	{
-		HZ_CORE_ASSERT(!buffer);
+		ASSERT(!buffer);
 
 		switch (RendererAPI::Current())
 		{
 		case RendererAPI::Type::None: return nullptr;
 		case RendererAPI::Type::Vulkan: return Ref<VulkanImage2D>::Create(specification);
 		}
-		HZ_CORE_ASSERT(false, "Unknown RendererAPI");
+		ASSERT(false, "Unknown RendererAPI");
 		return nullptr;
 	}
 
@@ -23,7 +23,7 @@ namespace Hazel {
 		case RendererAPI::Type::None: return nullptr;
 		case RendererAPI::Type::Vulkan: return Ref<VulkanImageView>::Create(specification);
 		}
-		HZ_CORE_ASSERT(false, "Unknown RendererAPI");
+		ASSERT(false, "Unknown RendererAPI");
 		return nullptr;
 	}
 }

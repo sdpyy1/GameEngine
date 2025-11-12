@@ -63,7 +63,7 @@ namespace Hazel{
 			}
 			else {
 				env.m_EnvEquirect = Texture2D::Create(TextureSpecification(), path);
-				HZ_CORE_ASSERT(env.m_EnvEquirect->GetFormat() == ImageFormat::RGBA32F, "Texture is not HDR!");
+				ASSERT(env.m_EnvEquirect->GetFormat() == ImageFormat::RGBA32F, "Texture is not HDR!");
 			}
 			//if (isInit) {
 			//	m_CommandBuffer->Begin();
@@ -118,7 +118,7 @@ namespace Hazel{
 
 
             Envs[path] = env;
-			HZ_CORE_INFO("Compute Env Success");
+			LOG_INFO("Compute Env Success");
             return Envs[path];
 		}
 		

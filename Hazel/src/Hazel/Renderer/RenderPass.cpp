@@ -12,11 +12,11 @@ namespace Hazel {
 	{
 		switch (RendererAPI::Current())
 		{
-		case RendererAPI::Type::None:    HZ_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
+		case RendererAPI::Type::None:    ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
 		case RendererAPI::Type::Vulkan:  return Ref<VulkanRenderPass>::Create(spec);
 		}
 
-		HZ_CORE_ASSERT(false, "Unknown RendererAPI!");
+		ASSERT(false, "Unknown RendererAPI!");
 		return nullptr;
 	}
 }

@@ -1,4 +1,5 @@
 #pragma once
+#include "Hazel/Core/Base.h"
 #include "Vulkan.h"
 #include "VulkanDevice.h"
 #include "VulkanShader.h"
@@ -39,12 +40,12 @@ namespace Hazel {
 		VkExtent2D GetExtent() { return swapchainExtent; }
 		VkCommandBuffer GetDrawCommandBuffer(uint32_t index)
 		{
-			HZ_CORE_ASSERT(index < m_CommandBuffers.size());
+			ASSERT(index < m_CommandBuffers.size());
 			return m_CommandBuffers[index].CommandBuffer;
 		}
 		VkFramebuffer GetFramebuffer(uint32_t index)
 		{
-			HZ_CORE_ASSERT(index < m_Framebuffers.size());
+			ASSERT(index < m_Framebuffers.size());
 			return m_Framebuffers[index];
 		}
 

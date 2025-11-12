@@ -191,7 +191,7 @@ namespace Hazel {
 
 	uint64_t FileSystem::GetLastWriteTime(const std::filesystem::path& filepath)
 	{
-		HZ_CORE_ASSERT(FileSystem::Exists(filepath));
+		ASSERT(FileSystem::Exists(filepath));
 
 		if (TryOpenFileAndWait(filepath) == FileStatus::Success)
 		{
@@ -199,7 +199,7 @@ namespace Hazel {
 			return std::chrono::duration_cast<std::chrono::seconds>(lastWriteTime.time_since_epoch()).count();
 		}
 
-		HZ_CORE_ERROR("FileSystem::GetLastWriteTime - could not open file: {}", filepath.string());
+		LOG_ERROR("FileSystem::GetLastWriteTime - could not open file: {}", filepath.string());
 		return 0;
 	}
 
@@ -214,7 +214,7 @@ namespace Hazel {
 		case NFD_CANCEL: return "";
 		case NFD_ERROR:
 		{
-			HZ_CORE_VERFIY(false, "NFD-Extended threw an error: {}", NFD::GetError());
+			VERIFY(false, "NFD-Extended threw an error");
 			return "";
 		}
 		}
@@ -231,7 +231,7 @@ namespace Hazel {
 		case NFD_CANCEL: return "";
 		case NFD_ERROR:
 		{
-			HZ_CORE_VERFIY(false, "NFD-Extended threw an error: {}", NFD::GetError());
+			VERIFY(false, "NFD-Extended threw an error: {}");
 			return "";
 		}
 		}
@@ -248,7 +248,7 @@ namespace Hazel {
 		case NFD_CANCEL: return "";
 		case NFD_ERROR:
 		{
-			HZ_CORE_VERFIY(false, "NFD-Extended threw an error: {}", NFD::GetError());
+			VERIFY(false, "NFD-Extended threw an error: {}");
 			return "";
 		}
 		}

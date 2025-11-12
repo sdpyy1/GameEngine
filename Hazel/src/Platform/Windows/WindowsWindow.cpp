@@ -19,44 +19,42 @@ namespace Hazel {
 
 	static void GLFWErrorCallback(int error, const char* description)
 	{
-		HZ_CORE_ERROR("GLFW Error ({0}): {1}", error, description);
+		LOG_ERROR("GLFW error ({0}): {1}", error, description);
 	}
 
 	WindowsWindow::WindowsWindow(const WindowProps& props)
 	{
-		HZ_PROFILE_FUNCTION();
+		 
 
 		Init(props);
 	}
 
 	WindowsWindow::~WindowsWindow()
 	{
-		HZ_PROFILE_FUNCTION();
+		 
 
 		Shutdown();
 	}
 
 	void WindowsWindow::Init(const WindowProps& props)
 	{
-		HZ_PROFILE_FUNCTION();
+		 
 
 		m_Data.Title = props.Title;
 		m_Data.Width = props.Width;
 		m_Data.Height = props.Height;
 		m_Data.VSync = props.VSync;
 
-		HZ_CORE_INFO("Creating window {0} ({1}, {2})", props.Title, props.Width, props.Height);
+		LOG_INFO("Creating window {0} ({1}, {2})", props.Title, props.Width, props.Height);
 
 		if (s_GLFWWindowCount == 0)
 		{
-			HZ_PROFILE_SCOPE("glfwInit");
 			int success = glfwInit();
-			HZ_CORE_ASSERT(success, "Could not initialize GLFW!");
+			ASSERT(success, "Could not initialize GLFW!");
 			glfwSetErrorCallback(GLFWErrorCallback);
 		}
 
 		{
-			HZ_PROFILE_SCOPE("glfwCreateWindow");
 		#if defined(HZ_DEBUG)
 			if (Renderer::Current() == RendererAPI::Type::OpenGL)
 				glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
@@ -68,12 +66,12 @@ namespace Hazel {
 			++s_GLFWWindowCount;
 		}
 	
-		HZ_CORE_INFO("Create GLFW Window Done!");
+		LOG_INFO("Create GLFW Window Done!");
 
 		// RenderContext
 		m_RenderContext = RenderContext::Create(m_Window);
 		m_RenderContext->Init(); 
-		HZ_CORE_INFO("RenderContext Init Done!");
+		LOG_INFO("RenderContext Init Done!");
 
 		// SwapChain For Vulkan
 		if (Renderer::Current() == RendererAPI::Type::Vulkan) {
@@ -83,7 +81,7 @@ namespace Hazel {
 			m_SwapChain->InitSurface(m_Window);
 
 			m_SwapChain->Create(&m_Data.Width, &m_Data.Height, m_Data.VSync);
-			HZ_CORE_INFO("Create Vulkan SwapChain Done!");
+			LOG_INFO("Create Vulkan SwapChain Done!");
 		}
 
 		glfwSetWindowUserPointer(m_Window, &m_Data);
@@ -209,7 +207,7 @@ namespace Hazel {
 	}
 	void WindowsWindow::Shutdown()
 	{
-		HZ_PROFILE_FUNCTION();
+		 
 
 		glfwDestroyWindow(m_Window);
 		--s_GLFWWindowCount;
@@ -222,13 +220,13 @@ namespace Hazel {
 
 	void WindowsWindow::OnUpdate()
 	{
-		HZ_PROFILE_FUNCTION();
+		 
 		glfwPollEvents();
 	}
 
 	void WindowsWindow::SetVSync(bool enabled)
 	{
-		HZ_PROFILE_FUNCTION();
+		 
 		if (Renderer::Current() == RendererAPI::Type::OpenGL) {
 			if (enabled)
 				glfwSwapInterval(1);

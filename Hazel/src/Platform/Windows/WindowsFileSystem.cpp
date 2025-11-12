@@ -57,12 +57,12 @@ namespace Hazel {
 		Buffer buffer;
 
 		std::ifstream stream(filepath, std::ios::binary | std::ios::ate);
-		HZ_CORE_ASSERT(stream);
+		ASSERT(stream);
 
 		auto end = stream.tellg();
 		stream.seekg(0, std::ios::beg);
 		auto size = end - stream.tellg();
-		HZ_CORE_ASSERT(size != 0);
+		ASSERT(size != 0);
 
 		buffer.Allocate((uint32_t)size);
 		stream.read((char*)buffer.Data, buffer.Size);
@@ -78,7 +78,7 @@ namespace Hazel {
 
 		PWSTR roamingFilePath;
 		HRESULT result = SHGetKnownFolderPath(FOLDERID_RoamingAppData, KF_FLAG_DEFAULT, NULL, &roamingFilePath);
-		HZ_CORE_VERIFY(result == S_OK);
+		VERIFY(result == S_OK);
 		s_PersistentStoragePath = roamingFilePath;
 		s_PersistentStoragePath /= "Hazelnut";
 

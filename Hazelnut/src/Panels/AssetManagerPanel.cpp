@@ -6,7 +6,7 @@
 #include <imgui/misc/cpp/imgui_stdlib.h>
 #include <glm/gtc/type_ptr.hpp>
 #include <cstring>
-#include <filesystem> 
+#include <filesystem>
 #include <Hazel/Utils/UIUtils.h>
 #ifdef _MSVC_LANG
 #define _CRT_SECURE_NO_WARNINGS
@@ -336,7 +336,6 @@ namespace Hazel {
 				ImGui::Checkbox("Visible", &component.Visible);
 
 				DrawMaterial(component.StaticMesh);
-
 			});
 
 		DrawComponent<DirectionalLightComponent>("DirectionalLight", entity, [](auto& component)
@@ -352,14 +351,14 @@ namespace Hazel {
 
 		DrawComponent<SpotLightComponent>("Spot Light", entity, [](auto& component)
 			{
-                ImGui::Text("SpotLight Add!");
+				ImGui::Text("SpotLight Add!");
 				return;
 			});
 		DrawComponent<SkyComponent>("Sky Light", entity, [](auto& component)
 			{
 				ImGui::Checkbox("DynamicSky", &component.DynamicSky);
 				if (component.selectedIBL > component.iblPath.size()) {
-                    component.selectedIBL = -1;
+					component.selectedIBL = -1;
 				}
 				ImGui::SliderFloat("Bloom Scale", &component.bloomScale, 0.0f, 3.0f);
 				if (!component.iblPath.empty())
@@ -529,12 +528,12 @@ namespace Hazel {
 						{
 							IM_ASSERT(payload->DataSize > 0);
 							const char* droppedPath = (const char*)payload->Data;
-							HZ_CORE_INFO("Dropped File: {0} for texture: {1}", droppedPath, texItem.Name);
+							LOG_INFO("Dropped File: {0} for texture: {1}", droppedPath, texItem.Name);
 
 							// 判断是否为图片
 							if (IsImageFile(droppedPath))
 							{
-								HZ_CORE_INFO("Dropped image: {0}", droppedPath);
+								LOG_INFO("Dropped image: {0}", droppedPath);
 
 								// ---------------- 加载纹理逻辑由你实现 ----------------
 								TextureSpecification spec;
@@ -546,10 +545,10 @@ namespace Hazel {
 								// 设置到对应纹理
 								if (newTex)
 									texItem.SetFunc(newTex);
-							}	
+							}
 							else
 							{
-								HZ_CORE_WARN("Dropped file is not an image: {0}", droppedPath);
+								LOG_WARN("Dropped file is not an image: {0}", droppedPath);
 							}
 						}
 						ImGui::EndDragDropTarget();
@@ -568,7 +567,4 @@ namespace Hazel {
 			}
 		}
 	}
-
-
-
 } // namespace Hazel

@@ -68,7 +68,7 @@ namespace Hazel {
 
 	VmaAllocation VulkanAllocator::AllocateBuffer(VkBufferCreateInfo bufferCreateInfo, VmaMemoryUsage usage, VkBuffer& outBuffer)
 	{
-		HZ_CORE_ASSERT(bufferCreateInfo.size > 0);
+		ASSERT(bufferCreateInfo.size > 0);
 
 		VmaAllocationCreateInfo allocCreateInfo = {};
 		allocCreateInfo.usage = usage;
@@ -77,10 +77,10 @@ namespace Hazel {
 		vmaCreateBuffer(s_Data->Allocator, &bufferCreateInfo, &allocCreateInfo, &outBuffer, &allocation, nullptr);
 		if (allocation == nullptr)
 		{
-			HZ_CORE_ERROR_TAG("Renderer", "Failed to allocate GPU buffer!");
-			HZ_CORE_ERROR_TAG("Renderer", "  Requested size: {}", Utils::BytesToString(bufferCreateInfo.size));
+			LOG_ERROR_TAG("Renderer", "Failed to allocate GPU buffer!");
+			LOG_ERROR_TAG("Renderer", "  Requested size: {}", Utils::BytesToString(bufferCreateInfo.size));
 			auto stats = GetStats();
-			HZ_CORE_ERROR_TAG("Renderer", "  GPU mem usage: {}/{}", Utils::BytesToString(stats.Used), Utils::BytesToString(stats.TotalAvailable));
+			LOG_ERROR_TAG("Renderer", "  GPU mem usage: {}/{}", Utils::BytesToString(stats.Used), Utils::BytesToString(stats.TotalAvailable));
 		}
 
 		// TODO: Tracking
@@ -112,12 +112,12 @@ namespace Hazel {
 		vmaCreateImage(s_Data->Allocator, &imageCreateInfo, &allocCreateInfo, &outImage, &allocation, nullptr);
 		if (allocation == nullptr)
 		{
-			HZ_CORE_ERROR_TAG("Renderer", "Failed to allocate GPU image!");
-			HZ_CORE_ERROR_TAG("Renderer", "  Requested size: {}x{}x{}", imageCreateInfo.extent.width, imageCreateInfo.extent.height, imageCreateInfo.extent.depth);
-			HZ_CORE_ERROR_TAG("Renderer", "  Mips: {}", imageCreateInfo.mipLevels);
-			HZ_CORE_ERROR_TAG("Renderer", "  Layers: {}", imageCreateInfo.arrayLayers);
+			LOG_ERROR_TAG("Renderer", "Failed to allocate GPU image!");
+			LOG_ERROR_TAG("Renderer", "  Requested size: {}x{}x{}", imageCreateInfo.extent.width, imageCreateInfo.extent.height, imageCreateInfo.extent.depth);
+			LOG_ERROR_TAG("Renderer", "  Mips: {}", imageCreateInfo.mipLevels);
+			LOG_ERROR_TAG("Renderer", "  Layers: {}", imageCreateInfo.arrayLayers);
 			auto stats = GetStats();
-			HZ_CORE_ERROR_TAG("Renderer", "  GPU mem usage: {}/{}", Utils::BytesToString(stats.Used), Utils::BytesToString(stats.TotalAvailable));
+			LOG_ERROR_TAG("Renderer", "  GPU mem usage: {}/{}", Utils::BytesToString(stats.Used), Utils::BytesToString(stats.TotalAvailable));
 		}
 
 		// TODO: Tracking
@@ -155,15 +155,15 @@ namespace Hazel {
 		}
 		else
 		{
-			HZ_CORE_ERROR("Could not find GPU memory allocation: {}", (void*)allocation);
+			LOG_ERROR("Could not find GPU memory allocation: {}", (void*)allocation);
 		}
 #endif
 	}
 
 	void VulkanAllocator::DestroyImage(VkImage image, VmaAllocation allocation)
 	{
-		HZ_CORE_ASSERT(image);
-		HZ_CORE_ASSERT(allocation);
+		ASSERT(image);
+		ASSERT(allocation);
 		vmaDestroyImage(s_Data->Allocator, image, allocation);
 
 #if HZ_GPU_TRACK_MEMORY_ALLOCATION
@@ -175,15 +175,15 @@ namespace Hazel {
 		}
 		else
 		{
-			HZ_CORE_ERROR("Could not find GPU memory allocation: {}", (void*)allocation);
+			LOG_ERROR("Could not find GPU memory allocation: {}", (void*)allocation);
 		}
 #endif
 	}
 
 	void VulkanAllocator::DestroyBuffer(VkBuffer buffer, VmaAllocation allocation)
 	{
-		HZ_CORE_ASSERT(buffer);
-		HZ_CORE_ASSERT(allocation);
+		ASSERT(buffer);
+		ASSERT(allocation);
 		vmaDestroyBuffer(s_Data->Allocator, buffer, allocation);
 
 #if HZ_GPU_TRACK_MEMORY_ALLOCATION
@@ -195,7 +195,7 @@ namespace Hazel {
 		}
 		else
 		{
-			HZ_CORE_ERROR("Could not find GPU memory allocation: {}", (void*)allocation);
+			LOG_ERROR("Could not find GPU memory allocation: {}", (void*)allocation);
 		}
 #endif
 	}
@@ -211,15 +211,15 @@ namespace Hazel {
 		std::vector<VmaBudget> budgets(memoryProps.memoryHeapCount);
 		vmaGetBudget(s_Data->Allocator, budgets.data());
 
-		HZ_CORE_WARN("-----------------------------------");
+		LOG_WARN("-----------------------------------");
 		for (VmaBudget& b : budgets)
 		{
-			HZ_CORE_WARN("VmaBudget.allocationBytes = {0}", Utils::BytesToString(b.allocationBytes));
-			HZ_CORE_WARN("VmaBudget.blockBytes = {0}", Utils::BytesToString(b.blockBytes));
-			HZ_CORE_WARN("VmaBudget.usage = {0}", Utils::BytesToString(b.usage));
-			HZ_CORE_WARN("VmaBudget.budget = {0}", Utils::BytesToString(b.budget));
+			LOG_WARN("VmaBudget.allocationBytes = {0}", Utils::BytesToString(b.allocationBytes));
+			LOG_WARN("VmaBudget.blockBytes = {0}", Utils::BytesToString(b.blockBytes));
+			LOG_WARN("VmaBudget.usage = {0}", Utils::BytesToString(b.usage));
+			LOG_WARN("VmaBudget.budget = {0}", Utils::BytesToString(b.budget));
 		}
-		HZ_CORE_WARN("-----------------------------------");
+		LOG_WARN("-----------------------------------");
 	}
 
 	GPUMemoryStats VulkanAllocator::GetStats()

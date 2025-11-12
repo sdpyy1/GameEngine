@@ -125,8 +125,8 @@ namespace Hazel {
 		if (m_AssetManagerPanel.isOpen)
 			m_AssetManagerPanel.OnImGuiRender();
 
-		if(m_LogPanel.isOpen)
-            m_LogPanel.OnImGuiRender();
+		if (m_LogPanel.isOpen)
+			m_LogPanel.OnImGuiRender();
 	}
 
 	void EditorLayer::OnEvent(Event& e)
@@ -134,7 +134,6 @@ namespace Hazel {
 		EventDispatcher dispatcher(e);
 
 		dispatcher.Dispatch<MouseButtonPressedEvent>([this](MouseButtonPressedEvent& event) { return OnMouseButtonPressed(event); });
-
 	}
 	bool EditorLayer::OpenScene()
 	{
@@ -152,7 +151,7 @@ namespace Hazel {
 		}
 		if (!FileSystem::Exists(filepath))
 		{
-			HZ_CORE_ERROR("Tried loading a non-existing scene: {0}", filepath);
+			LOG_ERROR("Tried loading a non-existing scene: {0}", filepath);
 			return false;
 		}
 
@@ -391,11 +390,10 @@ namespace Hazel {
 			}
 			if (selectionData.size() > 0) {
 				std::sort(selectionData.begin(), selectionData.end(), [](auto& a, auto& b) { return a.Distance < b.Distance; });
-				HZ_CORE_TRACE("Selected Entity: {}", selectionData[0].Entity.GetComponent<TagComponent>().Tag);
+				LOG_TRACE("Selected Entity: {}", selectionData[0].Entity.GetComponent<TagComponent>().Tag);
 				m_SelectedEntity = selectionData[0].Entity;
 				m_AssetManagerPanel.SetSelectedEntity(selectionData[0].Entity);
 			}
-
 		}
 
 		return false;
@@ -427,9 +425,8 @@ namespace Hazel {
 
 	void EditorLayer::DebugTexture()
 	{
-        ImGui::Begin("Debug Texture");
+		ImGui::Begin("Debug Texture");
 		m_Scene->ShowDebugTexture();
 		ImGui::End();
 	}
-
 }

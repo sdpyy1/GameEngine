@@ -13,7 +13,6 @@
 #include "Hazel/Scene/Entity.h"
 
 namespace Hazel {
-
 	FolderPreviewPanel::FolderPreviewPanel(const std::filesystem::path& assetsDir)
 		: m_AssetsDir(assetsDir), m_CurrentDir(assetsDir)
 	{
@@ -53,7 +52,7 @@ namespace Hazel {
 
 		if (ext == ".scene" || ext == ".hscene")
 		{
-			HZ_CORE_WARN("Double-click to open Scene is not yet supported. Please drag the file into the scene to use it.");
+			LOG_WARN("Double-click to open Scene is not yet supported. Please drag the file into the scene to use it.");
 		}
 		else if (ext == ".fbx" || ext == ".gltf" || ext == ".obj")
 		{
@@ -61,7 +60,7 @@ namespace Hazel {
 			Entity meshRoot = m_Context->CreateEntity(path.string());
 			if (!meshSource)
 			{
-				HZ_CORE_WARN("Failed to load mesh source for: {}", path.string());
+				LOG_WARN("Failed to load mesh source for: {}", path.string());
 				return;
 			}
 
@@ -75,7 +74,7 @@ namespace Hazel {
 		}
 		else if (ext == ".png" || ext == ".jpg" || ext == ".jpeg")
 		{
-			HZ_CORE_INFO("Preview texture: {}", path.string());
+			LOG_INFO("Preview texture: {}", path.string());
 			TextureSpecification spec;
 			spec.DebugName = "PreviewImage";
 			m_PreviewTexture = Texture2D::Create(spec, path);
@@ -280,7 +279,7 @@ namespace Hazel {
 			Renderer::SubmitResourceFree([texture = m_PreviewTexture]() mutable {
 				texture = nullptr;
 				});
-			HZ_CORE_INFO("Closed preview window, texture destroyed.");
+			LOG_INFO("Closed preview window, texture destroyed.");
 		}
 	}
 
@@ -429,5 +428,4 @@ namespace Hazel {
 			ImGui::PopID();
 		}
 	}
-
 } // namespace Hazel

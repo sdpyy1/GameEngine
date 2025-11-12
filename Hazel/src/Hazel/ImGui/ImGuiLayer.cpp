@@ -49,7 +49,7 @@ namespace Hazel {
 		case RendererAPI::Type::None:    return nullptr;
 		case RendererAPI::Type::Vulkan:  return new VulkanImGuiLayer();
 		}
-		HZ_CORE_ASSERT(false, "Unknown RendererAPI");
+		ASSERT(false, "Unknown RendererAPI");
 		return nullptr;
 	}
 

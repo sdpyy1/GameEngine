@@ -141,10 +141,10 @@ namespace Hazel
 	}
 	void Skeleton::SetBones(std::vector<std::string> boneNames, std::vector<uint32_t> parentBoneIndices, std::vector<glm::vec3> boneTranslations, std::vector<glm::quat> boneRotations, std::vector<glm::vec3> boneScales)
 	{
-		HZ_CORE_ASSERT(parentBoneIndices.size() == boneNames.size());
-		HZ_CORE_ASSERT(boneTranslations.size() == boneNames.size());
-		HZ_CORE_ASSERT(boneRotations.size() == boneNames.size());
-		HZ_CORE_ASSERT(boneScales.size() == boneNames.size());
+		ASSERT(parentBoneIndices.size() == boneNames.size());
+		ASSERT(boneTranslations.size() == boneNames.size());
+		ASSERT(boneRotations.size() == boneNames.size());
+		ASSERT(boneScales.size() == boneNames.size());
 		m_BoneNames = std::move(boneNames);
 		m_ParentBoneIndices = std::move(parentBoneIndices);
 		m_BoneTranslations = std::move(boneTranslations);

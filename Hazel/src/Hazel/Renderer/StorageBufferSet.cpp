@@ -19,7 +19,7 @@ namespace Hazel {
 		case RendererAPI::Type::Vulkan: return Ref<VulkanStorageBufferSet>::Create(specification, size, framesInFlight);
 		}
 
-		HZ_CORE_ASSERT(false, "Unknown RendererAPI!");
+		ASSERT(false, "Unknown RendererAPI!");
 		return nullptr;
 	}
 

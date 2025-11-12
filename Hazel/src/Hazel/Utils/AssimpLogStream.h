@@ -13,7 +13,7 @@ namespace Hazel {
 			if (Assimp::DefaultLogger::isNullLogger())
 			{
 				Assimp::DefaultLogger::create("", Assimp::Logger::VERBOSE);
-				Assimp::DefaultLogger::get()->attachStream(new AssimpLogStream, /*Assimp::Logger::Debugging | Assimp::Logger::Info |*/ Assimp::Logger::Warn | Assimp::Logger::Err);
+				Assimp::DefaultLogger::get()->attachStream(new AssimpLogStream, /*Assimp::Logger::Debugging | Assimp::Logger::info |*/ Assimp::Logger::Warn | Assimp::Logger::Err);
 			}
 		}
 
@@ -26,19 +26,19 @@ namespace Hazel {
 			}
 			if (strncmp(message, "Debug", 5) == 0)
 			{
-				HZ_CORE_TRACE_TAG("Assimp", msg);
+				LOG_TRACE_TAG("Assimp", msg);
 			}
-			else if (strncmp(message, "Info", 4) == 0)
+			else if (strncmp(message, "info", 4) == 0)
 			{
-				HZ_CORE_INFO_TAG("Assimp", msg);
+				LOG_INFO_TAG("Assimp", msg);
 			}
-			else if (strncmp(message, "Warn", 4) == 0)
+			else if (strncmp(message, "warn", 4) == 0)
 			{
-				HZ_CORE_WARN_TAG("Assimp", msg);
+				LOG_WARN_TAG("Assimp", msg);
 			}
 			else
 			{
-				HZ_CORE_ERROR_TAG("Assimp", msg);
+				LOG_ERROR_TAG("Assimp", msg);
 			}
 		}
 	};

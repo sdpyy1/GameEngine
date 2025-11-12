@@ -9,6 +9,7 @@
 #include "Platform/Vulkan/VulkanContext.h"
 #include <Hazel/Renderer/IndexBuffer.h>
 #include <Hazel/Asset/Model/Mesh.h>
+
 class b2World;
 
 namespace Hazel {
@@ -90,7 +91,7 @@ namespace Hazel {
 		Scene();
 		void PackupSceneInfo(EditorCamera& editorCamera);
 		~Scene();
-		void testButton() { HZ_CORE_INFO("Test");};
+		void testButton() { LOG_INFO("Test");};
 		void OnEditorRender(Timestep ts, EditorCamera& editorCamera);
 		void UpdateAnimation(Timestep ts);
 		void OutputViewport();

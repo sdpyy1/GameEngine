@@ -132,7 +132,7 @@ namespace Hazel {
 	bool RenderThread::IsCurrentThreadRT()
 	{
 		// NOTE(Yan): for debugging
-		// HZ_CORE_VERIFY(s_RenderThreadID != std::thread::id());
+		// VERIFY(s_RenderThreadID != std::thread::id());
 		return s_RenderThreadID == std::this_thread::get_id();
 	}
 

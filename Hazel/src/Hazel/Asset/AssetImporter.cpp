@@ -13,7 +13,7 @@ namespace Hazel {
 	{
 		if (s_Serializers.find(metadata.Type) == s_Serializers.end())
 		{
-			HZ_CORE_WARN("There's currently no importer for assets of type {0}", metadata.FilePath.stem().string());
+			LOG_WARN("There's currently no importer for assets of type {0}", metadata.FilePath.stem().string());
 			return;
 		}
 
@@ -25,11 +25,11 @@ namespace Hazel {
 	{
 		if (s_Serializers.find(metadata.Type) == s_Serializers.end())
 		{
-			HZ_CORE_WARN("There's currently no importer for assets of type {0}", metadata.FilePath.stem().string());
+			LOG_WARN("There's currently no importer for assets of type {0}", metadata.FilePath.stem().string());
 			return false;
 		}
 
-		 HZ_CORE_TRACE("AssetImporter::TryLoadData - {}", metadata.FilePath);
+		 LOG_TRACE("AssetImporter::TryLoadData - {}", metadata.FilePath);
 		return s_Serializers[metadata.Type]->TryLoadData(metadata, asset);
 	}
 }

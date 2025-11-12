@@ -65,7 +65,7 @@ namespace Hazel {
 		const aiScene* scene = importer.ReadFile(m_Path.string(), s_MeshImportFlags);
 		if (!scene)
 		{
-			HZ_CORE_ERROR_TAG("Animation", "Failed to load mesh source file: {0}", m_Path.string());
+			LOG_ERROR_TAG("Animation", "Failed to load mesh source file: {0}", m_Path.string());
 			return false;
 		}
 		// 只加载指定动画
@@ -73,7 +73,7 @@ namespace Hazel {
 
 		if (animationIndex == ~0)
 		{
-			HZ_CORE_ERROR_TAG("Animation", "Animation '{0}' not found in mesh source file: {1}", animationName, m_Path.string());
+			LOG_ERROR_TAG("Animation", "Animation '{0}' not found in mesh source file: {1}", animationName, m_Path.string());
 			return false;
 		}
 
@@ -86,7 +86,7 @@ namespace Hazel {
 	{
 		Ref<MeshSource> meshSource = Ref<MeshSource>::Create();
 		meshSource->m_FilePath = m_Path;
-		HZ_CORE_INFO_TAG("Mesh", "Loading mesh: {0}", m_Path.string());
+		LOG_INFO_TAG("Mesh", "Loading mesh: {0}", m_Path.string());
 
 		Assimp::Importer importer;
 		importer.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, false);
@@ -94,12 +94,12 @@ namespace Hazel {
 		const aiScene* scene = importer.ReadFile(m_Path.string(), s_MeshImportFlags);
 		if (!scene /* || !scene->HasMeshes()*/)  // note: scene can legit contain no meshes (e.g. it could contain an armature, an animation, and no skin (mesh)))
 		{
-			HZ_CORE_ERROR_TAG("Mesh", "Failed to load mesh file: {0}", m_Path.string());
+			LOG_ERROR_TAG("Mesh", "Failed to load mesh file: {0}", m_Path.string());
 			meshSource->SetFlag(AssetFlag::Invalid);
 			return nullptr;
 		}
 
-		HZ_CORE_TRACE_TAG("Skeletion","Skeleton {0} found in mesh file '{1}'", meshSource->HasSkeleton() ? "" : "Not found Skeleton", m_Path.string());
+		LOG_TRACE_TAG("Skeletion","Skeleton {0} found in mesh file '{1}'", meshSource->HasSkeleton() ? "" : "Not found Skeleton", m_Path.string());
 
 		meshSource->m_AnimationNames = AssimpAnimationImporter::GetAnimationNames(scene);
 		meshSource->m_Animations = std::vector<Scope<Animation>>(meshSource->m_AnimationNames.size());
@@ -113,19 +113,19 @@ namespace Hazel {
 			meshSource->m_BoundingBox.Max = { -FLT_MAX, -FLT_MAX, -FLT_MAX };
 
 			meshSource->m_Submeshes.reserve(scene->mNumMeshes);
-			HZ_CORE_WARN("模型共 [{}] 个 subMesh", scene->mNumMeshes);
+			LOG_WARN("模型共 [{}] 个 subMesh", scene->mNumMeshes);
 			for (unsigned m = 0; m < scene->mNumMeshes; m++)
 			{
-				HZ_CORE_TRACE("开始加载subMesh{}", m);
+				LOG_TRACE("开始加载subMesh{}", m);
 				aiMesh* mesh = scene->mMeshes[m];
 
 				if (!mesh->HasPositions())
 				{
-					HZ_CORE_ERROR("Mesh index {0} with name '{1}' has no vertex positions - skipping import!", m, mesh->mName.C_Str());
+					LOG_ERROR("Mesh index {0} with name '{1}' has no vertex positions - skipping import!", m, mesh->mName.C_Str());
 				}
 				if (!mesh->HasNormals())
 				{
-					HZ_CORE_ERROR("Mesh index {0} with name '{1}' has no vertex normals, and they could not be computed - skipping import!", m, mesh->mName.C_Str());
+					LOG_ERROR("Mesh index {0} with name '{1}' has no vertex normals, and they could not be computed - skipping import!", m, mesh->mName.C_Str());
 				}
 
 				bool skip = !mesh->HasPositions() || !mesh->HasNormals();
@@ -148,7 +148,7 @@ namespace Hazel {
 				auto& aabb = submesh.BoundingBox;
 				aabb.Min = { FLT_MAX, FLT_MAX, FLT_MAX };
 				aabb.Max = { -FLT_MAX, -FLT_MAX, -FLT_MAX };
-				HZ_CORE_TRACE("加载顶点数 = {}", mesh->mNumVertices);
+				LOG_TRACE("加载顶点数 = {}", mesh->mNumVertices);
 				for (size_t i = 0; i < mesh->mNumVertices; i++)
 				{
 					Vertex vertex;
@@ -176,21 +176,21 @@ namespace Hazel {
 				for (size_t i = 0; i < mesh->mNumFaces; i++)
 				{
 					// we're using aiProcess_Triangulate so this should always be true
-					HZ_CORE_ASSERT(mesh->mFaces[i].mNumIndices == 3, "Must have 3 indices.");
+					ASSERT(mesh->mFaces[i].mNumIndices == 3, "Must have 3 indices.");
 					Index index = { mesh->mFaces[i].mIndices[0], mesh->mFaces[i].mIndices[1], mesh->mFaces[i].mIndices[2] };
 					meshSource->m_Indices.push_back(index);
 
 					meshSource->m_TriangleCache[m].emplace_back(meshSource->m_Vertices[index.V1 + submesh.BaseVertex], meshSource->m_Vertices[index.V2 + submesh.BaseVertex], meshSource->m_Vertices[index.V3 + submesh.BaseVertex]);
 				}
-				HZ_CORE_TRACE("加载索引数 = {}", mesh->mNumFaces * 3);
+				LOG_TRACE("加载索引数 = {}", mesh->mNumFaces * 3);
 
 			}
-			HZ_CORE_INFO("顶点数据加载完成，共 [{0}] 顶点，共[{1}] 索引", vertexCount,indexCount);
+			LOG_INFO("顶点数据加载完成，共 [{0}] 顶点，共[{1}] 索引", vertexCount,indexCount);
 
-			HZ_CORE_TRACE("开始处理SubMesh变换信息");
+			LOG_TRACE("开始处理SubMesh变换信息");
 			MeshNode& rootNode = meshSource->m_Nodes.emplace_back();
 			TraverseNodes(meshSource, scene->mRootNode, 0);
-			HZ_CORE_TRACE("开始计算Mesh的AABB包围盒");
+			LOG_TRACE("开始计算Mesh的AABB包围盒");
 			for (const auto& submesh : meshSource->m_Submeshes)
 			{
 				AABB transformedSubmeshAABB = submesh.BoundingBox;
@@ -209,7 +209,7 @@ namespace Hazel {
 		meshSource->m_Skeleton = AssimpAnimationImporter::ImportSkeleton(scene);
 		if (meshSource->HasSkeleton())
 		{
-			HZ_CORE_INFO_TAG("Mesh", "开始处理骨骼信息");
+			LOG_INFO_TAG("Mesh", "开始处理骨骼信息");
 			meshSource->m_BoneInfluences.resize(meshSource->m_Vertices.size());
 			for (uint32_t m = 0; m < scene->mNumMeshes; m++)
 			{
@@ -238,7 +238,7 @@ namespace Hazel {
 						uint32_t boneIndex = meshSource->m_Skeleton->GetBoneIndex(bone->mName.C_Str());
 						if (boneIndex == Skeleton::NullIndex)
 						{
-							HZ_CORE_ERROR_TAG("Animation", "Could not find mesh bone '{}' in skeleton!", bone->mName.C_Str());
+							LOG_ERROR_TAG("Animation", "Could not find mesh bone '{}' in skeleton!", bone->mName.C_Str());
 						}
 
 						uint32_t boneInfoIndex = ~0;
@@ -254,19 +254,19 @@ namespace Hazel {
 						{
 							boneInfoIndex = static_cast<uint32_t>(meshSource->m_BoneInfo.size());
 							const auto& boneInfo = meshSource->m_BoneInfo.emplace_back(Utils::Mat4FromAIMatrix4x4(bone->mOffsetMatrix), boneIndex);
-	/*						HZ_CORE_INFO_TAG("Mesh", "BoneInfo for bone '{0}'", bone->mName.C_Str());
-							HZ_CORE_INFO_TAG("Mesh", "  SubMeshIndex = {0}", m);
-							HZ_CORE_INFO_TAG("Mesh", "  BoneIndex = {0}", boneIndex);*/
+	/*						LOG_INFO_TAG("Mesh", "BoneInfo for bone '{0}'", bone->mName.C_Str());
+							LOG_INFO_TAG("Mesh", "  SubMeshIndex = {0}", m);
+							LOG_INFO_TAG("Mesh", "  BoneIndex = {0}", boneIndex);*/
 							glm::vec3 translation;
 							glm::quat rotationQuat;
 							glm::vec3 scale;
 							Math::DecomposeTransform(boneInfo.InverseBindPose, translation, rotationQuat, scale);
 							glm::vec3 rotation = glm::degrees(glm::eulerAngles(rotationQuat));
-							//HZ_CORE_INFO_TAG("Mesh", "  Inverse Bind Pose = {");
-							//HZ_CORE_INFO("    translation: ({0:8.4f}, {1:8.4f}, {2:8.4f})", translation.x, translation.y, translation.z);
-							//HZ_CORE_INFO("    rotation:    ({0:8.4f}, {1:8.4f}, {2:8.4f})", rotation.x, rotation.y, rotation.z);
-							//HZ_CORE_INFO("    scale:       ({0:8.4f}, {1:8.4f}, {2:8.4f})", scale.x, scale.y, scale.z);
-							//HZ_CORE_INFO("  }");
+							//LOG_INFO_TAG("Mesh", "  Inverse Bind Pose = {");
+							//LOG_INFO("    translation: ({0:8.4f}, {1:8.4f}, {2:8.4f})", translation.x, translation.y, translation.z);
+							//LOG_INFO("    rotation:    ({0:8.4f}, {1:8.4f}, {2:8.4f})", rotation.x, rotation.y, rotation.z);
+							//LOG_INFO("    scale:       ({0:8.4f}, {1:8.4f}, {2:8.4f})", scale.x, scale.y, scale.z);
+							//LOG_INFO("  }");
 						}
 
 						for (size_t j = 0; j < bone->mNumWeights; j++)
@@ -283,21 +283,21 @@ namespace Hazel {
 			{
 				boneInfluence.NormalizeWeights();
 			}
-			HZ_CORE_TRACE("共[{}]个骨骼", meshSource->m_BoneInfo.size());
+			LOG_TRACE("共[{}]个骨骼", meshSource->m_BoneInfo.size());
 		}
 
 		// Materials
 		Ref<Texture2D> whiteTexture = Renderer::GetWhiteTexture();
 		if (scene->HasMaterials())
 		{
-			HZ_CORE_INFO("共有[{}]种材质", scene->mNumMaterials);
+			LOG_INFO("共有[{}]种材质", scene->mNumMaterials);
 			meshSource->m_Materials.resize(scene->mNumMaterials);
 			// 处理每种材质（每种材质都包含各种贴图或数据）
 			for (uint32_t i = 0; i < scene->mNumMaterials; i++)
 			{
 				auto aiMaterial = scene->mMaterials[i];
 				auto aiMaterialName = aiMaterial->GetName();
-				HZ_CORE_TRACE("开始处理材质[{}]", aiMaterialName.data);
+				LOG_TRACE("开始处理材质[{}]", aiMaterialName.data);
 
 				// 创建材质对象，需要一个Shader和名称
 				Ref<Material> material = Material::Create(Renderer::GetShaderLibrary()->Get("gBuffer"), aiMaterialName.data);
@@ -335,9 +335,9 @@ namespace Hazel {
 				ma->SetRoughness(roughness);
 				ma->SetMetalness(metalness);
 
-				HZ_CORE_INFO("    COLOR = {0}, {1}, {2}", aiColor.r, aiColor.g, aiColor.b);
-				HZ_CORE_INFO("    ROUGHNESS = {0}", roughness);
-				HZ_CORE_INFO("    METALNESS = {0}", metalness);
+				LOG_INFO("    COLOR = {0}, {1}, {2}", aiColor.r, aiColor.g, aiColor.b);
+				LOG_INFO("    ROUGHNESS = {0}", roughness);
+				LOG_INFO("    METALNESS = {0}", metalness);
 				// 材质某个属性是贴图
 				bool hasAlbedoMap = aiMaterial->GetTexture(AI_MATKEY_BASE_COLOR_TEXTURE, &aiTexPath) == AI_SUCCESS;
 				if (!hasAlbedoMap)
@@ -366,10 +366,10 @@ namespace Hazel {
 						auto texturePath = parentPath / aiTexPath.C_Str();
 						if (!std::filesystem::exists(texturePath))
 						{
-							HZ_CORE_INFO("    Albedo map path = {0} --> NOT FOUND", texturePath);
+							LOG_INFO("    Albedo map path = {0} --> NOT FOUND", texturePath);
 							texturePath = parentPath / texturePath.filename();
 						}
-						HZ_CORE_INFO("创建Albedo贴图 path = {0}{1}", texturePath, std::filesystem::exists(texturePath) ? "" : " --> NOT FOUND");
+						LOG_INFO("创建Albedo贴图 path = {0}{1}", texturePath, std::filesystem::exists(texturePath) ? "" : " --> NOT FOUND");
 						textureHandle = AssetManager::AddMemoryOnlyAsset(Texture2D::Create(spec, texturePath));
 					}
 
@@ -400,10 +400,10 @@ namespace Hazel {
 						auto texturePath = parentPath / aiTexPath.C_Str();
 						if (!std::filesystem::exists(texturePath))
 						{
-							HZ_CORE_INFO("    Emissive map path = {0} --> NOT FOUND", texturePath);
+							LOG_INFO("    Emissive map path = {0} --> NOT FOUND", texturePath);
 							texturePath = parentPath / texturePath.filename();
 						}
-						HZ_CORE_INFO("加载 Emissive 贴图 path = {0}{1}", texturePath, std::filesystem::exists(texturePath) ? "" : " --> NOT FOUND");
+						LOG_INFO("加载 Emissive 贴图 path = {0}{1}", texturePath, std::filesystem::exists(texturePath) ? "" : " --> NOT FOUND");
 						textureHandle = AssetManager::AddMemoryOnlyAsset(Texture2D::Create(spec, texturePath));
 					}
 					ma->SetEmissiveMap(textureHandle);
@@ -432,10 +432,10 @@ namespace Hazel {
 						auto texturePath = parentPath / aiTexPath.C_Str();
 						if (!std::filesystem::exists(texturePath))
 						{
-							HZ_CORE_INFO("    Normal map path = {0} --> NOT FOUND", texturePath);
+							LOG_INFO("    Normal map path = {0} --> NOT FOUND", texturePath);
 							texturePath = parentPath / texturePath.filename();
 						}
-						HZ_CORE_INFO("加载 Normal 贴图 path = {0}{1}", texturePath, std::filesystem::exists(texturePath) ? "" : " --> NOT FOUND");
+						LOG_INFO("加载 Normal 贴图 path = {0}{1}", texturePath, std::filesystem::exists(texturePath) ? "" : " --> NOT FOUND");
 						textureHandle = AssetManager::AddMemoryOnlyAsset(Texture2D::Create(spec, texturePath));
 					}
 
@@ -490,10 +490,10 @@ namespace Hazel {
 						auto texturePath = parentPath / aiTexPath.C_Str();
 						if (!std::filesystem::exists(texturePath))
 						{
-							HZ_CORE_INFO("    Roughness map path = {0} --> NOT FOUND", texturePath);
+							LOG_INFO("    Roughness map path = {0} --> NOT FOUND", texturePath);
 							texturePath = parentPath / texturePath.filename();
 						}
-						HZ_CORE_INFO("加载Roughness 贴图 path = {0}{1}", texturePath, std::filesystem::exists(texturePath) ? "" : " --> NOT FOUND");
+						LOG_INFO("加载Roughness 贴图 path = {0}{1}", texturePath, std::filesystem::exists(texturePath) ? "" : " --> NOT FOUND");
 						auto buffer = TextureImporter::ToBufferFromFile(texturePath, spec.Format, spec.Width, spec.Height);
 						aiTexel* texels = (aiTexel*)buffer.Data;
 						if (invertRoughness)
@@ -533,10 +533,10 @@ namespace Hazel {
 						auto texturePath = parentPath / aiTexPath.C_Str();
 						if (!std::filesystem::exists(texturePath))
 						{
-							HZ_CORE_INFO("    Roughness map path = {0} --> NOT FOUND", texturePath);
+							LOG_INFO("    Roughness map path = {0} --> NOT FOUND", texturePath);
 							texturePath = parentPath / texturePath.filename();
 						}
-						HZ_CORE_INFO("加载Metalness贴图 path = {0}{1}", texturePath, std::filesystem::exists(texturePath) ? "" : " --> NOT FOUND");
+						LOG_INFO("加载Metalness贴图 path = {0}{1}", texturePath, std::filesystem::exists(texturePath) ? "" : " --> NOT FOUND");
 						metalnessTextureHandle = AssetManager::AddMemoryOnlyAsset(Texture2D::Create(spec, texturePath));
 					}
 
@@ -567,7 +567,7 @@ namespace Hazel {
 
 		if (meshSource->m_Vertices.size())
 		{
-			HZ_CORE_INFO("模型共{}顶点", meshSource->m_Vertices.size());
+			LOG_INFO("模型共{}顶点", meshSource->m_Vertices.size());
 			meshSource->m_VertexBuffer = VertexBuffer::Create(meshSource->m_Vertices.data(), (uint32_t)(meshSource->m_Vertices.size() * sizeof(Vertex)),"VertexBuffer");
 		}
 		if (meshSource->m_BoneInfluences.size() > 0)
@@ -576,7 +576,7 @@ namespace Hazel {
 		}
 
 		if (meshSource->m_Indices.size())
-			HZ_CORE_INFO("模型共{}索引", meshSource->m_Indices.size()*3);
+			LOG_INFO("模型共{}索引", meshSource->m_Indices.size()*3);
 			meshSource->m_IndexBuffer = IndexBuffer::Create(meshSource->m_Indices.data(), (uint32_t)(meshSource->m_Indices.size() * sizeof(Index)));
 
 		return meshSource;

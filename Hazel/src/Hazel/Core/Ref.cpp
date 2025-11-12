@@ -13,21 +13,21 @@ namespace Hazel {
 		void AddToLiveReferences(void* instance)
 		{
 			std::scoped_lock<std::mutex> lock(s_LiveReferenceMutex);
-			HZ_CORE_ASSERT(instance);
+			ASSERT(instance);
 			s_LiveReferences.insert(instance);
 		}
 
 		void RemoveFromLiveReferences(void* instance)
 		{
 			std::scoped_lock<std::mutex> lock(s_LiveReferenceMutex);
-			HZ_CORE_ASSERT(instance);
-			HZ_CORE_ASSERT(s_LiveReferences.find(instance) != s_LiveReferences.end());
+			ASSERT(instance);
+			ASSERT(s_LiveReferences.find(instance) != s_LiveReferences.end());
 			s_LiveReferences.erase(instance);
 		}
 
 		bool IsLive(void* instance)
 		{
-			HZ_CORE_ASSERT(instance);
+			ASSERT(instance);
 			return s_LiveReferences.find(instance) != s_LiveReferences.end();
 		}
 	}

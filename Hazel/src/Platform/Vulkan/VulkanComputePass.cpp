@@ -12,7 +12,7 @@ namespace Hazel
 {
 	VulkanComputePass::VulkanComputePass(const ComputePassSpecification& spec) : m_Specification(spec), m_DescriptorManager(spec.Pipeline.As<VulkanComputePipeline>()->GetShader())
 	{
-		HZ_CORE_VERIFY(spec.Pipeline);
+		VERIFY(spec.Pipeline);
 		if (spec.moreDescriptors != 0) {
 			moreDescriptorSets.resize(spec.moreDescriptors);
 			for (int i = 0; i < spec.moreDescriptors; i++) {
@@ -23,13 +23,13 @@ namespace Hazel
 
 	Ref<Image2D> VulkanComputePass::GetOutput(uint32_t index)
 	{
-		HZ_CORE_VERIFY(false, "Not implemented");
+		VERIFY(false, "Not implemented");
 		return nullptr;
 	}
 
 	Ref<Image2D> VulkanComputePass::GetDepthOutput()
 	{
-		HZ_CORE_VERIFY(false, "Not implemented");
+		VERIFY(false, "Not implemented");
 		return nullptr;
 	}
 	Ref<PipelineCompute> VulkanComputePass::GetPipeline() const
@@ -45,7 +45,7 @@ namespace Hazel
 	void VulkanComputePass::SetInput(Ref<Image2D> texture, uint32_t Binding, uint32_t descriptorSetIndex)
 	{
 		Renderer::Submit([=]() {
-			//HZ_CORE_TRACE("RT: VulkanRenderPass [{0}]::SetInput texture Binding {1}", m_Specification.DebugName, Binding);
+			//LOG_TRACE("RT: VulkanRenderPass [{0}]::SetInput texture Binding {1}", m_Specification.DebugName, Binding);
 			VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 			auto vulkanTexture = texture.As<VulkanImage2D>();
 
@@ -70,7 +70,7 @@ namespace Hazel
 	void VulkanComputePass::SetInputOneLayer(Ref<ImageView> imageView, uint32_t Binding, int index)
 	{
 		Renderer::Submit([=]() {
-			//HZ_CORE_TRACE("RT: VulkanRenderPass [{0}]::SetInput imageView[{2}] Binding {1}", m_Specification.DebugName, Binding, arrayIndex);
+			//LOG_TRACE("RT: VulkanRenderPass [{0}]::SetInput imageView[{2}] Binding {1}", m_Specification.DebugName, Binding, arrayIndex);
 			VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 			auto vulkanImageView = imageView.As<VulkanImageView>();
 			auto image = vulkanImageView->GetImage().As<VulkanImage2D>();
@@ -93,7 +93,7 @@ namespace Hazel
 	}
 	void VulkanComputePass::SetInput(Ref<TextureCube> texture, uint32_t Binding, InputType type, uint32_t levelIndex, uint32_t descriptorIndex) {
 		Renderer::Submit([=]() {
-			//HZ_CORE_TRACE("RT: VulkanRenderPass [{0}]::SetInput texture Binding {1}", m_Specification.DebugName, Binding);
+			//LOG_TRACE("RT: VulkanRenderPass [{0}]::SetInput texture Binding {1}", m_Specification.DebugName, Binding);
 			VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 			auto vulkanTexture = texture.As<VulkanTextureCube>();
 
@@ -119,7 +119,7 @@ namespace Hazel
 	{
 		Renderer::Submit([=]() {
 
-			//HZ_CORE_TRACE("RT: VulkanRenderPass [{0}]::SetInput texture Binding {1}", m_Specification.DebugName, Binding);
+			//LOG_TRACE("RT: VulkanRenderPass [{0}]::SetInput texture Binding {1}", m_Specification.DebugName, Binding);
 			VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 			auto vulkanTexture = texture.As<VulkanTextureCube>();
 			VkDescriptorImageInfo imageInfo{};

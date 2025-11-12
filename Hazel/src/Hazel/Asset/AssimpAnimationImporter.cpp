@@ -57,7 +57,7 @@ namespace Hazel {
 			animationNames.reserve(scene->mNumAnimations);
 			for (size_t i = 0; i < scene->mNumAnimations; ++i)
 			{
-				HZ_CORE_INFO("找到动画: {}", scene->mAnimations[i]->mName.C_Str());
+				LOG_INFO("找到动画: {}", scene->mAnimations[i]->mName.C_Str());
 				animationNames.emplace_back(SanitiseAnimationName(scene->mAnimations[i]->mName.C_Str()));
 			}
 		}
@@ -161,7 +161,7 @@ namespace Hazel {
 				}
 				if (channel.Translations.empty())
 				{
-					HZ_CORE_WARN_TAG("Animation", "No translation track found for bone '{}'", skeleton.GetBoneName(boneIndex - 1));
+					LOG_WARN_TAG("Animation", "No translation track found for bone '{}'", skeleton.GetBoneName(boneIndex - 1));
 					channel.Translations = { {0.0f, glm::vec3{0.0f}}, {1.0f, glm::vec3{0.0f}} };
 				}
 				else if (channel.Translations.back().FrameTime < 1.0f)
@@ -178,11 +178,11 @@ namespace Hazel {
 						channel.Rotations.emplace_back(0.0f, glm::quat{ static_cast<float>(key.mValue.w), static_cast<float>(key.mValue.x), static_cast<float>(key.mValue.y), static_cast<float>(key.mValue.z) });
 					}
 					channel.Rotations.emplace_back(frameTime, glm::quat{ static_cast<float>(key.mValue.w), static_cast<float>(key.mValue.x), static_cast<float>(key.mValue.y), static_cast<float>(key.mValue.z) });
-					HZ_CORE_ASSERT(fabs(glm::length(channels[boneIndex].Rotations.back().Value) - 1.0f) < 0.00001f);   // check rotations are normalized (I think assimp ensures this, but not 100% sure)
+					ASSERT(fabs(glm::length(channels[boneIndex].Rotations.back().Value) - 1.0f) < 0.00001f);   // check rotations are normalized (I think assimp ensures this, but not 100% sure)
 				}
 				if (channel.Rotations.empty())
 				{
-					HZ_CORE_WARN_TAG("Animation", "No rotation track found for bone '{}'", skeleton.GetBoneName(boneIndex - 1));
+					LOG_WARN_TAG("Animation", "No rotation track found for bone '{}'", skeleton.GetBoneName(boneIndex - 1));
 					channel.Rotations = { {0.0f, glm::quat{1.0f, 0.0f, 0.0f, 0.0f}}, {1.0f, glm::quat{1.0f, 0.0f, 0.0f, 0.0f}} };
 				}
 				else if (channel.Rotations.back().FrameTime < 1.0f)
@@ -201,7 +201,7 @@ namespace Hazel {
 				}
 				if (channel.Scales.empty())
 				{
-					HZ_CORE_WARN_TAG("Animation", "No scale track found for bone '{}'", skeleton.GetBoneName(boneIndex - 1));
+					LOG_WARN_TAG("Animation", "No scale track found for bone '{}'", skeleton.GetBoneName(boneIndex - 1));
 					channel.Scales = { {0.0f, glm::vec3{1.0f}}, {1.0f, glm::vec3{1.0f}} };
 				}
 				else if (channel.Scales.back().FrameTime < 1.0f)
@@ -211,7 +211,7 @@ namespace Hazel {
 			}
 			else
 			{
-				HZ_CORE_WARN_TAG("Animation", "No animation tracks found for bone '{}'", skeleton.GetBoneName(boneIndex - 1));
+				LOG_WARN_TAG("Animation", "No animation tracks found for bone '{}'", skeleton.GetBoneName(boneIndex - 1));
 
 				auto translation = skeleton.GetBoneTranslations().at(boneIndex - 1);
 				auto rotation = skeleton.GetBoneRotations().at(boneIndex - 1);
@@ -229,8 +229,8 @@ namespace Hazel {
 		//
 		// Root motion is then removed from all "root" channels (so it doesn't get applied twice)
 
-		HZ_CORE_ASSERT(!rootBoneIndices.empty()); // Can't see how this would ever be false!
-		HZ_CORE_ASSERT(rootBoneIndices.find(1) != rootBoneIndices.end()); // First bone must be a root!
+		ASSERT(!rootBoneIndices.empty()); // Can't see how this would ever be false!
+		ASSERT(rootBoneIndices.find(1) != rootBoneIndices.end()); // First bone must be a root!
 
 		Channel& root = channels[0];
 		root.Index = 0;
@@ -452,7 +452,7 @@ namespace Hazel {
 		acl::error_result result = CompressChannels(channels, fps, skeleton, compressedTracks);
 		if (result.any())
 		{
-			HZ_CORE_ERROR("Failed to compress animation '{0}' with error code {1}", anim->mName.C_Str(), result.c_str());
+			LOG_ERROR("Failed to compress animation '{0}' with error code {1}", anim->mName.C_Str(), result.c_str());
 			return nullptr;
 		}
 

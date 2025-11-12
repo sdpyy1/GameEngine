@@ -27,7 +27,7 @@ namespace Hazel {
 		SpvReflectShaderModule reflModule;
 		SpvReflectResult r = spvReflectCreateShaderModule(spirvCode.size(), spirvCode.data(), &reflModule);
 		if (r != SPV_REFLECT_RESULT_SUCCESS) {
-			HZ_CORE_ERROR("SPIRV-Reflect failed to create module: result={0}", static_cast<int>(r));
+			LOG_ERROR("SPIRV-Reflect failed to create module: result={0}", static_cast<int>(r));
 			return;
 		}
 
@@ -96,15 +96,15 @@ namespace Hazel {
 				// 已有binding：合并阶段，检查冲突
 				it->second.stageFlags = static_cast<VkShaderStageFlags>(it->second.stageFlags | stage);
 				if (it->second.type != static_cast<VkDescriptorType>(b->descriptor_type)) {
-					HZ_CORE_WARN("Reflection: descriptor type mismatch at set={}, binding={} (kept first).", b->set, b->binding);
+					LOG_WARN("Reflection: descriptor type mismatch at set={}, binding={} (kept first).", b->set, b->binding);
 				}
 				if (it->second.count != b->count) {
-					HZ_CORE_WARN("Reflection: descriptor count mismatch at set={}, binding={} (kept first).", b->set, b->binding);
+					LOG_WARN("Reflection: descriptor count mismatch at set={}, binding={} (kept first).", b->set, b->binding);
 				}
 			}
 
 			// 输出反射信息
-			HZ_CORE_INFO("Reflect: stage={0}, set={1}, binding={2}, name={3}, type={4}, count={5}",
+			LOG_INFO("Reflect: stage={0}, set={1}, binding={2}, name={3}, type={4}, count={5}",
 				(uint32_t)stage, b->set, b->binding, name, b->descriptor_type, b->count);
 		}
 
@@ -137,7 +137,7 @@ namespace Hazel {
 				pc.offset = p->offset;
 				pc.size = p->size;
 				mergedPCs.push_back(pc);
-				HZ_CORE_INFO("Reflect PushConstant: offset={0}, size={1}, stage={2}", pc.offset, pc.size, (uint32_t)stage);
+				LOG_INFO("Reflect PushConstant: offset={0}, size={1}, stage={2}", pc.offset, pc.size, (uint32_t)stage);
 			}
 		}
 
@@ -181,7 +181,7 @@ namespace Hazel {
 	void VulkanShader::Reload()
 	{
 		Renderer::Submit([instance = Ref(this)]() mutable {
-			HZ_CORE_INFO("RT: Create Shader :{0}", instance->m_Name);
+			LOG_INFO("RT: Create Shader :{0}", instance->m_Name);
 			instance->RT_Reload();
 			});
 	}
@@ -229,7 +229,7 @@ namespace Hazel {
 			createDescriptorSet();
 		}
 		else {
-			HZ_CORE_WARN("RT: Shader Has No Descriptor :{0}", m_Name);
+			LOG_WARN("RT: Shader Has No Descriptor :{0}", m_Name);
 		}
 	}
 
@@ -400,8 +400,8 @@ namespace Hazel {
 		auto it = m_NameToBinding.find(name);
 		if (it == m_NameToBinding.end())
 		{
-			HZ_CORE_ASSERT("Binding name '{}' not found!", name);
-			HZ_CORE_ERROR("Binding name '{}' not found!", name);
+			ASSERT("Binding name '{}' not found!", name);
+			LOG_ERROR("Binding name '{}' not found!", name);
             return { 0, 0 };
 		}
 		return it->second;

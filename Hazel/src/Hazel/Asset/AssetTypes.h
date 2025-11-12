@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Hazel/Core/Assert.h"
 // 定义资产类型
 namespace Hazel {
 
@@ -89,7 +88,7 @@ namespace Hazel {
 			case AssetType::AnimationGraph:      return "AnimationGraph";
 			}
 
-			HZ_CORE_ASSERT(false, "Unknown Asset Type");
+			ASSERT(false, "Unknown Asset Type");
 			return "None";
 		}
 

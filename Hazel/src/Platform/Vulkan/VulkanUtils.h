@@ -21,16 +21,16 @@ namespace Hazel {
 		inline void DumpGPUInfo()
 		{
 			auto& caps = Renderer::GetCapabilities();
-			HZ_CORE_TRACE_TAG("Renderer", "GPU Info:");
-			HZ_CORE_TRACE_TAG("Renderer", "  Vendor: {0}", caps.Vendor);
-			HZ_CORE_TRACE_TAG("Renderer", "  Device: {0}", caps.Device);
-			HZ_CORE_TRACE_TAG("Renderer", "  Version: {0}", caps.Version);
+			LOG_TRACE_TAG("Renderer", "GPU info:");
+			LOG_TRACE_TAG("Renderer", "  Vendor: {0}", caps.Vendor);
+			LOG_TRACE_TAG("Renderer", "  Device: {0}", caps.Device);
+			LOG_TRACE_TAG("Renderer", "  Version: {0}", caps.Version);
 		}
 		inline void VulkanCheckResult(VkResult result)
 		{
 			if (result != VK_SUCCESS)
 			{
-				HZ_CORE_ERROR("VkResult is '1'");
+				LOG_ERROR("VkResult is '1'");
 				if (result == VK_ERROR_DEVICE_LOST)
 				{
 					using namespace std::chrono_literals;
@@ -38,7 +38,7 @@ namespace Hazel {
 					//Utils::RetrieveDiagnosticCheckpoints();
 					Utils::DumpGPUInfo();
 				}
-				HZ_CORE_ASSERT(result == VK_SUCCESS);
+				ASSERT(result == VK_SUCCESS);
 			}
 		}
 	}

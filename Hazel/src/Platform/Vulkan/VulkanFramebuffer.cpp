@@ -26,7 +26,7 @@ namespace Hazel {
 	VulkanFramebuffer::VulkanFramebuffer(const FramebufferSpecification& specification)
 		: m_Specification(specification)
 	{
-		HZ_CORE_TRACE("Main: FrameBuffer [{}] Create! [Only Submit,Depth Ref already attach]", m_Specification.DebugName);
+		LOG_TRACE("Main: FrameBuffer [{}] Create! [Only Submit,Depth Ref already attach]", m_Specification.DebugName);
 		if (specification.Width == 0)
 		{
 			m_Width = Application::Get().GetWindow()->GetWidth();
@@ -37,7 +37,7 @@ namespace Hazel {
 			m_Width = (uint32_t)(specification.Width * m_Specification.Scale);
 			m_Height = (uint32_t)(specification.Height * m_Specification.Scale);
 		}
-		HZ_CORE_ASSERT(specification.Attachments.Attachments.size());
+		ASSERT(specification.Attachments.Attachments.size());
 
 		// Create all image objects immediately so we can start referencing them
 		// elsewhere
@@ -103,7 +103,7 @@ namespace Hazel {
 			VkFramebuffer framebuffer = m_Framebuffer;
 			Renderer::SubmitResourceFree([framebuffer, name]()
 				{
-					HZ_CORE_TRACE("RT: FrameBuffer [{}] Release!", name);
+					LOG_TRACE("RT: FrameBuffer [{}] Release!", name);
 					const auto device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 					vkDestroyFramebuffer(device, framebuffer, nullptr);
 				});
@@ -140,7 +140,7 @@ namespace Hazel {
 		Ref<VulkanFramebuffer> instance = this;
 		Renderer::Submit([instance, width, height]() mutable
 			{
-				HZ_CORE_TRACE("RT: FrameBuffer [{}] Create! [Start To Create Image Or Attach Ref And Create RenderPass]", instance->m_Specification.DebugName);
+				LOG_TRACE("RT: FrameBuffer [{}] Create! [Start To Create Image Or Attach Ref And Create RenderPass]", instance->m_Specification.DebugName);
 				instance->m_Width = (uint32_t)(width * instance->m_Specification.Scale);
 				instance->m_Height = (uint32_t)(height * instance->m_Specification.Scale);
 				if (!instance->m_Specification.SwapChainTarget)
@@ -213,7 +213,7 @@ namespace Hazel {
 				else if (m_Specification.ExistingImages.find(attachmentIndex) != m_Specification.ExistingImages.end())
 				{
 					Ref<Image2D> existingImage = m_Specification.ExistingImages.at(attachmentIndex);
-					HZ_CORE_ASSERT(Utils::IsDepthFormat(existingImage->GetSpecification().Format), "Trying to attach non-depth image as depth attachment");
+					ASSERT(Utils::IsDepthFormat(existingImage->GetSpecification().Format), "Trying to attach non-depth image as depth attachment");
 					m_DepthAttachmentImage = existingImage;
 				}
 				else
@@ -260,7 +260,7 @@ namespace Hazel {
 				else if (m_Specification.ExistingImages.find(attachmentIndex) != m_Specification.ExistingImages.end())
 				{
 					Ref<Image2D> existingImage = m_Specification.ExistingImages[attachmentIndex];
-					HZ_CORE_ASSERT(!Utils::IsDepthFormat(existingImage->GetSpecification().Format), "Trying to attach depth image as color attachment");
+					ASSERT(!Utils::IsDepthFormat(existingImage->GetSpecification().Format), "Trying to attach depth image as color attachment");
 					colorAttachment = existingImage.As<VulkanImage2D>();
 					m_AttachmentImages[attachmentIndex] = existingImage;
 				}
@@ -275,7 +275,7 @@ namespace Hazel {
 						spec.Width = (uint32_t)(m_Width * m_Specification.Scale);
 						spec.Height = (uint32_t)(m_Height * m_Specification.Scale);
 						colorAttachment = m_AttachmentImages.emplace_back(Image2D::Create(spec)).As<VulkanImage2D>();
-						HZ_CORE_VERIFY(false);
+						VERIFY(false);
 
 					}
 					else
@@ -400,7 +400,7 @@ namespace Hazel {
 				attachments[i] = image->GetLayerImageView(m_Specification.ExistingImageLayers[i]);
 			else
 				attachments[i] = image->GetImageInfo().ImageView;
-			HZ_CORE_ASSERT(attachments[i]);
+			ASSERT(attachments[i]);
 		}
 
 		if (m_DepthAttachmentImage)
@@ -408,13 +408,13 @@ namespace Hazel {
 			Ref<VulkanImage2D> image = m_DepthAttachmentImage.As<VulkanImage2D>();
 			if (m_Specification.ExistingImage && image->GetSpecification().Layers > 1)
 			{
-				HZ_CORE_ASSERT(m_Specification.ExistingImageLayers.size() == 1, "Depth attachments do not support deinterleaving");
+				ASSERT(m_Specification.ExistingImageLayers.size() == 1, "Depth attachments do not support deinterleaving");
 				attachments.emplace_back(image->GetLayerImageView(m_Specification.ExistingImageLayers[0]));
 			}
 			else
 				attachments.emplace_back(image->GetImageInfo().ImageView);
 
-			HZ_CORE_ASSERT(attachments.back());
+			ASSERT(attachments.back());
 		}
 
 		VkFramebufferCreateInfo framebufferCreateInfo = {};

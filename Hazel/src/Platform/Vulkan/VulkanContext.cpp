@@ -13,13 +13,13 @@ namespace Hazel {
 	VulkanContext::VulkanContext(void* window)
 		: window(window)
 	{
-		HZ_CORE_ASSERT(window, "Window handle is null!")
+		ASSERT(window, "Window handle is null!");
 	}
 
 	void VulkanContext::Init()
 	{
 		CheckVersion();
-		HZ_CORE_INFO("Vulkan初始化开始！");
+		LOG_INFO("Vulkan初始化开始！");
 		createInstance();
 		CreateDevice();
 		createPipelineCache();
@@ -31,7 +31,7 @@ namespace Hazel {
 	void VulkanContext::CreateDevice()
 	{
 		m_PhysicalDevice = VulkanPhysicalDevice::Select(m_Instance);
-		HZ_CORE_INFO("Select PhysicalDevice: {0}", m_PhysicalDevice->getDeviceName());
+		LOG_INFO("Select PhysicalDevice: {0}", m_PhysicalDevice->getDeviceName());
 		VkPhysicalDeviceFeatures enabledFeatures;
 		memset(&enabledFeatures, 0, sizeof(VkPhysicalDeviceFeatures));
 		enabledFeatures.samplerAnisotropy = true;
@@ -41,12 +41,12 @@ namespace Hazel {
 		enabledFeatures.pipelineStatisticsQuery = true;
 		enabledFeatures.shaderStorageImageReadWithoutFormat = true;
 		m_Device = VulkanDevice::Create(m_PhysicalDevice, enabledFeatures);
-		HZ_CORE_INFO("Create LogicDevice");
+		LOG_INFO("Create LogicDevice");
 	}
 
 	void VulkanContext::createInstance() {
 		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-				// Application Info
+				// Application info
 				/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		VkApplicationInfo appInfo = {};
 		appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -94,10 +94,10 @@ namespace Hazel {
 			std::vector<VkLayerProperties> instanceLayerProperties(instanceLayerCount);
 			vkEnumerateInstanceLayerProperties(&instanceLayerCount, instanceLayerProperties.data());
 			bool validationLayerPresent = false;
-			HZ_CORE_INFO_TAG("Renderer", "Vulkan Instance Layers:");
+			LOG_INFO_TAG("Renderer", "Vulkan Instance Layers:");
 			for (const VkLayerProperties& layer : instanceLayerProperties)
 			{
-				HZ_CORE_INFO_TAG("Renderer", "  {0}", layer.layerName);
+				LOG_INFO_TAG("Renderer", "  {0}", layer.layerName);
 				if (strcmp(layer.layerName, validationLayerName) == 0)
 				{
 					validationLayerPresent = true;
@@ -111,7 +111,7 @@ namespace Hazel {
 			}
 			else
 			{
-				HZ_CORE_ERROR_TAG("Renderer", "Validation layer VK_LAYER_KHRONOS_validation not present, validation is disabled");
+				LOG_ERROR_TAG("Renderer", "Validation layer VK_LAYER_KHRONOS_validation not present, validation is disabled");
 			}
 		}
 
@@ -145,15 +145,15 @@ namespace Hazel {
 		VkPipelineCacheCreateInfo pipelineCacheCreateInfo = {};
 		pipelineCacheCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
 		VK_CHECK_RESULT(vkCreatePipelineCache(m_Device->GetVulkanDevice(), &pipelineCacheCreateInfo, nullptr, &m_PipelineCache));
-		HZ_CORE_INFO("Pipeline Cache");
+		LOG_INFO("Pipeline Cache");
 	}
 
 	void VulkanContext::CheckVersion() {
-		HZ_CORE_ASSERT(glfwVulkanSupported(), "GLFW must support Vulkan!");
+		ASSERT(glfwVulkanSupported(), "GLFW must support Vulkan!");
 		if (!VKUtils::CheckDriverAPIVersionSupport(VK_API_VERSION_1_2))
 		{
 #ifdef HZ_PLATFORM_WINDOWS
-			MessageBox(nullptr, L"Incompatible Vulkan driver version.\nUpdate your GPU drivers!", L"Hazel Error", MB_OK | MB_ICONERROR);
+			MessageBox(nullptr, L"Incompatible Vulkan driver version.\nUpdate your GPU drivers!", L"Hazel error", MB_OK | MB_ICONERROR);
 #else
 			HZ_CORE_ERROR("Incompatible Vulkan driver version.\nUpdate your GPU drivers!");
 #endif

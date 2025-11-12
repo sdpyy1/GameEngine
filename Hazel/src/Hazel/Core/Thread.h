@@ -15,7 +15,7 @@ namespace Hazel {
 		{
 			m_Thread = std::thread(func, std::forward<Args>(args)...); // 这行会立即新线程执行传入的函数
 			SetName(m_Name);
-			HZ_CORE_INFO("Thread [{0}] Dispatch and Run!", m_Name);
+			LOG_INFO("Thread [{0}] Dispatch and Run!", m_Name);
 		}
 
 		void SetName(const std::string& name);

@@ -10,7 +10,7 @@ namespace Hazel {
 		case RendererAPI::Type::None: return nullptr;
 		case RendererAPI::Type::Vulkan: return Ref<VulkanComputePipeline>::Create(computeShader);
 		}
-		HZ_CORE_ASSERT(false, "Unknown RendererAPI");
+		ASSERT(false, "Unknown RendererAPI");
 		return nullptr;
 	}
 }

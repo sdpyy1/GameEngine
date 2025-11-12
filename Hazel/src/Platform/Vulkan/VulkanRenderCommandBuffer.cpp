@@ -18,7 +18,7 @@ namespace Hazel {
 			commandBufferCount = Renderer::GetConfig().FramesInFlight;
 		}
 
-		HZ_CORE_VERIFY(commandBufferCount > 0);
+		VERIFY(commandBufferCount > 0);
 
 		VkCommandPoolCreateInfo cmdPoolInfo = {};
 		cmdPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -228,7 +228,7 @@ namespace Hazel {
 				VK_CHECK_RESULT(vkWaitForFences(device->GetVulkanDevice(), 1, &instance->m_WaitFences[commandBufferIndex], VK_TRUE, UINT64_MAX));
 				VK_CHECK_RESULT(vkResetFences(device->GetVulkanDevice(), 1, &instance->m_WaitFences[commandBufferIndex]));
 
-				//HZ_CORE_TRACE_TAG("Renderer", "Submitting Render Command Buffer {}", instance->m_DebugName);
+				//LOG_TRACE_TAG("Renderer", "Submitting Render Command Buffer {}", instance->m_DebugName);
 
 				device->LockQueue();
 				VK_CHECK_RESULT(vkQueueSubmit(device->GetGraphicsQueue(), 1, &submitInfo, instance->m_WaitFences[commandBufferIndex]));

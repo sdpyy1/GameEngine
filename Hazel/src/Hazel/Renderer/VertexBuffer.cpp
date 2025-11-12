@@ -18,7 +18,7 @@ namespace Hazel {
 		case RendererAPI::Type::None:    return nullptr;
 		case RendererAPI::Type::Vulkan:  return Ref<VulkanVertexBuffer>::Create(data, size, debugeName,usage);
 		}
-		HZ_CORE_ASSERT(false, "Unknown RendererAPI");
+		ASSERT(false, "Unknown RendererAPI");
 		return nullptr;
 	}
 
@@ -29,7 +29,7 @@ namespace Hazel {
 		case RendererAPI::Type::None:    return nullptr;
 		case RendererAPI::Type::Vulkan:  return Ref<VulkanVertexBuffer>::Create(size,debugeName, usage);
 		}
-		HZ_CORE_ASSERT(false, "Unknown RendererAPI");
+		ASSERT(false, "Unknown RendererAPI");
 		return nullptr;
 	}
 

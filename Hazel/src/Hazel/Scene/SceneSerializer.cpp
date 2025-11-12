@@ -147,7 +147,7 @@ namespace Hazel {
 		case Rigidbody2DComponent::BodyType::Kinematic: return "Kinematic";
 		}
 
-		HZ_CORE_ASSERT(false, "Unknown body type");
+		ASSERT(false, "Unknown body type");
 		return {};
 	}
 
@@ -157,7 +157,7 @@ namespace Hazel {
 		if (bodyTypeString == "Dynamic")   return Rigidbody2DComponent::BodyType::Dynamic;
 		if (bodyTypeString == "Kinematic") return Rigidbody2DComponent::BodyType::Kinematic;
 
-		HZ_CORE_ASSERT(false, "Unknown body type");
+		ASSERT(false, "Unknown body type");
 		return Rigidbody2DComponent::BodyType::Static;
 	}
 
@@ -168,7 +168,7 @@ namespace Hazel {
 
 	static void SerializeEntity(YAML::Emitter& out, Entity entity, Ref<Scene> scene)
 	{
-		HZ_CORE_ASSERT(entity.HasComponent<IDComponent>());
+		ASSERT(entity.HasComponent<IDComponent>());
 
 		out << YAML::BeginMap; // Entity
 		out << YAML::Key << "Entity" << YAML::Value << entity.GetUUID();
@@ -301,7 +301,7 @@ namespace Hazel {
 		}
 		catch (YAML::ParserException e)
 		{
-			HZ_CORE_ERROR("Failed to load .hazel file '{0}'\n     {1}", filepath, e.what());
+			LOG_ERROR("Failed to load .hazel file '{0}'\n     {1}", filepath, e.what());
 			return false;
 		}
 
@@ -309,7 +309,7 @@ namespace Hazel {
 			return false;
 
 		std::string sceneName = data["Scene"].as<std::string>();
-		HZ_CORE_TRACE("Deserializing scene '{0}'", sceneName);
+		LOG_TRACE("Deserializing scene '{0}'", sceneName);
 
 		auto entities = data["Entities"];
 		if (entities)
@@ -323,7 +323,7 @@ namespace Hazel {
 				if (tagComponent)
 					name = tagComponent["Tag"].as<std::string>();
 
-				HZ_CORE_TRACE("Deserialized entity with ID = {0}, name = {1}", uuid, name);
+				LOG_TRACE("Deserialized entity with ID = {0}, name = {1}", uuid, name);
 
 				Entity deserializedEntity = m_Scene->CreateEntity(name);
 				auto& relationshipComponent = deserializedEntity.GetComponent<RelationshipComponent>();

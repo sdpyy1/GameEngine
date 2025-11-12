@@ -3,7 +3,7 @@
 #include "Hazel/Core/RenderThread.h"
 #include "Hazel/Core/Application.h"
 
-#define HZ_RENDER_TRACE(...) HZ_CORE_TRACE(__VA_ARGS__)
+#define HZ_RENDER_TRACE(...) LOG_TRACE(__VA_ARGS__)
 
 namespace Hazel {
 	RenderCommandQueue::RenderCommandQueue()
@@ -22,7 +22,7 @@ namespace Hazel {
 	void* RenderCommandQueue::Allocate(RenderCommandFn fn, uint32_t size)
 	{
 		// NOTE(Yan): for debugging
-		// HZ_CORE_VERIFY(!RenderThread::IsCurrentThreadRT());
+		// VERIFY(!RenderThread::IsCurrentThreadRT());
 
 		// TODO: alignment
 		*(RenderCommandFn*)m_CommandBufferPtr = fn;

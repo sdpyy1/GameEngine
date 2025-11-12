@@ -4,7 +4,6 @@
 #include "Hazel/Core/Application.h"
 #include "Components.h"
 #include "ScriptableEntity.h"
-#include "Hazel/Physics/Physics2D.h"
 #include "Hazel/Renderer/Renderer.h"
 #define GLM_FORCE_DEPTH_ZERO_TO_FE
 #include <glm/glm.hpp>
@@ -47,7 +46,7 @@ namespace Hazel {
 
 				glm::vec3 direction = glm::normalize(-transformComponent.Translation);
 
-				HZ_CORE_ASSERT(directionalLightIndex < LightEnvironment::MaxDirectionalLights);
+				ASSERT(directionalLightIndex < LightEnvironment::MaxDirectionalLights);
 				light.DirectionalLights[directionalLightIndex++] =
 				{
 					direction,
@@ -146,7 +145,6 @@ namespace Hazel {
 		auto allEntityOwnSubmesh = GetAllEntitiesWith<SubmeshComponent>();
 		for (auto entity : allEntityOwnSubmesh)
 		{
-			HZ_PROFILE_SCOPE("Scene-SubmitDynamicMesh");
 			auto meshComponent = allEntityOwnSubmesh.get<SubmeshComponent>(entity);
 			if (!meshComponent.Visible) continue;
 
@@ -168,7 +166,7 @@ namespace Hazel {
 			{
 				// Can get mismatches if user changes which mesh an entity refers to after the bone entities have been set up
 				// TODO(0x): need a better way to handle the bone entities
-				//HZ_CORE_ASSERT(boneEntityIds.size() == skeleton.GetNumBones(), "Wrong number of boneEntityIds for mesh skeleton!");
+				//ASSERT(boneEntityIds.size() == skeleton.GetNumBones(), "Wrong number of boneEntityIds for mesh skeleton!");
 				for (uint32_t i = 0; i < std::min(skeleton->GetNumBones(), (uint32_t)boneEntityIds.size()); ++i)
 				{
 					auto boneEntity = GetEntityByUUID(boneEntityIds[i]);

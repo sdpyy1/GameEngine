@@ -13,7 +13,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL Hazel::VKUtils::debugCallback(VkDebugUtilsMessage
 	if (msg.find("shader validation cache") != std::string::npos)
 		return VK_FALSE; 
 
-	HZ_CORE_ERROR("[Validation] {}\n\n", msg);
+	LOG_ERROR("[Validation] {}\n\n", msg);
 
 	return VK_FALSE;
 }
@@ -63,9 +63,9 @@ bool Hazel::VKUtils::CheckDriverAPIVersionSupport(uint32_t minimumSupportedVersi
 
 		if (instanceVersion < minimumSupportedVersion)
 		{
-			HZ_CORE_CRITICAL("Incompatible Vulkan driver version!");
-			HZ_CORE_CRITICAL("  You have {}.{}.{}", VK_API_VERSION_MAJOR(instanceVersion), VK_API_VERSION_MINOR(instanceVersion), VK_API_VERSION_PATCH(instanceVersion));
-			HZ_CORE_CRITICAL("  You need at least {}.{}.{}", VK_API_VERSION_MAJOR(minimumSupportedVersion), VK_API_VERSION_MINOR(minimumSupportedVersion), VK_API_VERSION_PATCH(minimumSupportedVersion));
+			LOG_CRITICAL("Incompatible Vulkan driver version!");
+			LOG_CRITICAL("  You have {}.{}.{}", VK_API_VERSION_MAJOR(instanceVersion), VK_API_VERSION_MINOR(instanceVersion), VK_API_VERSION_PATCH(instanceVersion));
+			LOG_CRITICAL("  You need at least {}.{}.{}", VK_API_VERSION_MAJOR(minimumSupportedVersion), VK_API_VERSION_MINOR(minimumSupportedVersion), VK_API_VERSION_PATCH(minimumSupportedVersion));
 			return false;
 		}
 		return true;

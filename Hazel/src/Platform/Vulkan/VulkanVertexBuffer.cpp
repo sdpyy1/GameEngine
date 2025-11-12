@@ -4,7 +4,6 @@
 #include "VulkanContext.h"
 
 #include "Hazel/Renderer/Renderer.h"
-#include "Hazel/Debug/Profiler.h"
 
 namespace Hazel {
 
@@ -16,7 +15,7 @@ namespace Hazel {
 		Ref<VulkanVertexBuffer> instance = this;
 		Renderer::Submit([instance]() mutable
 			{
-				HZ_CORE_TRACE("RT: VulkanVertexBuffer [{0}] Create!  size {1} bytes", instance->m_DebugName, instance->m_Size);
+				LOG_TRACE("RT: VulkanVertexBuffer [{0}] Create!  size {1} bytes", instance->m_DebugName, instance->m_Size);
 				auto device = VulkanContext::GetCurrentDevice();
 				VulkanAllocator allocator("VertexBuffer");
 
@@ -37,7 +36,7 @@ namespace Hazel {
 		Ref<VulkanVertexBuffer> instance = this;
 		Renderer::Submit([instance]() mutable
 			{
-				HZ_CORE_TRACE("RT: VulkanVertexBuffer [{0}] Create!  size {1} bytes", instance->m_DebugName, instance->m_Size);
+				LOG_TRACE("RT: VulkanVertexBuffer [{0}] Create!  size {1} bytes", instance->m_DebugName, instance->m_Size);
 				auto device = VulkanContext::GetCurrentDevice();
 				VulkanAllocator allocator("VertexBuffer");
 
@@ -109,7 +108,7 @@ namespace Hazel {
 	void VulkanVertexBuffer::SetData(void* buffer, uint64_t size, uint64_t offset)
 	{
 
-		HZ_CORE_ASSERT(size <= m_LocalData.Size);
+		ASSERT(size <= m_LocalData.Size);
 		memcpy(m_LocalData.Data, (uint8_t*)buffer + offset, size);;
 		Ref<VulkanVertexBuffer> instance = this;
 		Renderer::Submit([instance, size, offset]() mutable

@@ -16,7 +16,7 @@ namespace Hazel {
 	VulkanRenderPass::VulkanRenderPass(const RenderPassSpecification& spec) :m_DescriptorManager(m_Specification.Pipeline->GetShader())
 		,m_Specification(spec)
 	{
-		HZ_CORE_VERIFY(spec.Pipeline);  // RenderPass must have Pipeline Info
+		VERIFY(spec.Pipeline);  // RenderPass must have Pipeline info
 	}
 	VulkanRenderPass::~VulkanRenderPass()
 	{

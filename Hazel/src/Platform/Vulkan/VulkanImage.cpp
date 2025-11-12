@@ -13,7 +13,7 @@ namespace Hazel {
 	VulkanImage2D::VulkanImage2D(const ImageSpecification& specification)
 		: m_Specification(specification)
 	{
-		HZ_CORE_ASSERT(m_Specification.Width > 0 && m_Specification.Height > 0);
+		ASSERT(m_Specification.Width > 0 && m_Specification.Height > 0);
 	}
 
 	VulkanImage2D::~VulkanImage2D()
@@ -35,7 +35,7 @@ namespace Hazel {
 		std::string name = m_Specification.DebugName;
 		Renderer::SubmitResourceFree([info, mipViews = m_PerMipImageViews, layerViews = m_PerLayerImageViews, name]() mutable
 			{
-				HZ_CORE_TRACE("RT: VulkanImage2D [{0}] Release!", name);
+				LOG_TRACE("RT: VulkanImage2D [{0}] Release!", name);
 				const auto vulkanDevice = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 				vkDestroyImageView(vulkanDevice, info.ImageView, nullptr);
 				Vulkan::DestroySampler(info.Sampler);
@@ -80,8 +80,8 @@ namespace Hazel {
 
 	void VulkanImage2D::RT_Invalidate()
 	{
-		HZ_CORE_ASSERT(m_Specification.Width > 0 && m_Specification.Height > 0);
-		HZ_CORE_TRACE("RT: VulkanImage2D [{0}] Create!", m_Specification.DebugName);
+		ASSERT(m_Specification.Width > 0 && m_Specification.Height > 0);
+		LOG_TRACE("RT: VulkanImage2D [{0}] Create!", m_Specification.DebugName);
 		Release();
 
 		VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
@@ -263,7 +263,7 @@ namespace Hazel {
 
 	void VulkanImage2D::RT_CreatePerLayerImageViews()
 	{
-		HZ_CORE_ASSERT(m_Specification.Layers > 1);
+		ASSERT(m_Specification.Layers > 1);
 
 		VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 
@@ -342,7 +342,7 @@ namespace Hazel {
 
 	void VulkanImage2D::RT_CreatePerSpecificLayerImageViews(const std::vector<uint32_t>& layerIndices)
 	{	
-		HZ_CORE_ASSERT(m_Specification.Layers > 1);
+		ASSERT(m_Specification.Layers > 1);
 
 		VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 
@@ -352,7 +352,7 @@ namespace Hazel {
 
 		const VkFormat vulkanFormat = Utils::VulkanImageFormat(m_Specification.Format);
 
-		//HZ_CORE_ASSERT(m_PerLayerImageViews.size() == m_Specification.Layers);
+		//ASSERT(m_PerLayerImageViews.size() == m_Specification.Layers);
 		if (m_PerLayerImageViews.empty())
 			m_PerLayerImageViews.resize(m_Specification.Layers);
 
@@ -399,7 +399,7 @@ namespace Hazel {
 
 	void VulkanImage2D::SetData(Buffer buffer)
 	{
-		HZ_CORE_ASSERT(m_Specification.Transfer, "Image must be created with ImageSpecification::Transfer enabled!");
+		ASSERT(m_Specification.Transfer, "Image must be created with ImageSpecification::Transfer enabled!");
 
 		if (buffer)
 		{
@@ -423,7 +423,7 @@ namespace Hazel {
 
 			// Copy data to staging buffer
 			uint8_t* destData = allocator.MapMemory<uint8_t>(stagingBufferAllocation);
-			HZ_CORE_ASSERT(buffer.Data);
+			ASSERT(buffer.Data);
 			memcpy(destData, buffer.Data, size);
 			allocator.UnmapMemory(stagingBufferAllocation);
 

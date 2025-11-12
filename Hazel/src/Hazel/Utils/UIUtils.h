@@ -5,7 +5,7 @@ namespace Hazel {
 	namespace UI {
 		static void Image(const Ref<Image2D>& image, const ImVec2& size, const ImVec2& uv0, const ImVec2& uv1, const ImVec4& tint_col = { 1,1,1,1 }, const ImVec4& border_col = { 0,0,0,0 })
 		{
-			HZ_CORE_VERIFY(image, "Image is null");
+			VERIFY(image, "Image is null");
 			if (RendererAPI::Current() == RendererAPI::Type::Vulkan)
 			{
 				Ref<VulkanImage2D> vulkanImage = image.As<VulkanImage2D>();
@@ -18,7 +18,7 @@ namespace Hazel {
 		}
 		static ImTextureID GetImageId(const Ref<Image2D>& image)
 		{
-			HZ_CORE_VERIFY(image, "Image is null");
+			VERIFY(image, "Image is null");
 			if (RendererAPI::Current() == RendererAPI::Type::Vulkan)
 			{
 				Ref<VulkanImage2D> vulkanImage = image.As<VulkanImage2D>();

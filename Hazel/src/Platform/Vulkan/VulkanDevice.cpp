@@ -10,7 +10,7 @@ namespace Hazel
 		uint32_t gpuCount = 0;
 		// Get number of available physical devices
 		vkEnumeratePhysicalDevices(vkInstance, &gpuCount, nullptr);
-		HZ_CORE_ASSERT(gpuCount > 0, "No physical devices found!");
+		ASSERT(gpuCount > 0, "No physical devices found!");
 		// Enumerate devices
 		std::vector<VkPhysicalDevice> physicalDevices(gpuCount);
 		VK_CHECK_RESULT(vkEnumeratePhysicalDevices(vkInstance, &gpuCount, physicalDevices.data()));
@@ -27,11 +27,11 @@ namespace Hazel
 
 		if (!selectedPhysicalDevice)
 		{
-			HZ_CORE_INFO_TAG("Renderer", "Could not find discrete GPU. Using integrated GPU.");
+			LOG_INFO_TAG("Renderer", "Could not find discrete GPU. Using integrated GPU.");
 			selectedPhysicalDevice = physicalDevices.back();
 		}
 
-		HZ_CORE_ASSERT(selectedPhysicalDevice, "Could not find any physical devices!");
+		ASSERT(selectedPhysicalDevice, "Could not find any physical devices!");
 		m_PhysicalDevice = selectedPhysicalDevice;
 
 		// 扩展：查询基础特性和 Vulkan 1.2 特性
@@ -49,7 +49,7 @@ namespace Hazel
 		vkGetPhysicalDeviceMemoryProperties(m_PhysicalDevice, &m_MemoryProperties);
 		uint32_t queueFamilyCount;
 		vkGetPhysicalDeviceQueueFamilyProperties(m_PhysicalDevice, &queueFamilyCount, nullptr);
-		HZ_CORE_ASSERT(queueFamilyCount > 0, "No queue families found!");
+		ASSERT(queueFamilyCount > 0, "No queue families found!");
 		m_QueueFamilyProperties.resize(queueFamilyCount);
 		vkGetPhysicalDeviceQueueFamilyProperties(m_PhysicalDevice, &queueFamilyCount, m_QueueFamilyProperties.data());
 
@@ -113,7 +113,7 @@ namespace Hazel
 		}
 
 		m_DepthFormat = FindDepthFormat();
-		HZ_CORE_ASSERT(m_DepthFormat != VK_FORMAT_UNDEFINED, "No suitable depth format found!");
+		ASSERT(m_DepthFormat != VK_FORMAT_UNDEFINED, "No suitable depth format found!");
 	}
 
 	VulkanPhysicalDevice::~VulkanPhysicalDevice()
@@ -179,9 +179,9 @@ namespace Hazel
 			}
 		}
 
-		HZ_CORE_ASSERT(indices.Graphics != -1, "No graphics queue family found!");
-		HZ_CORE_ASSERT(indices.Compute != -1, "No compute queue family found!");
-		HZ_CORE_ASSERT(indices.Transfer != -1, "No transfer queue family found!");
+		ASSERT(indices.Graphics != -1, "No graphics queue family found!");
+		ASSERT(indices.Compute != -1, "No compute queue family found!");
+		ASSERT(indices.Transfer != -1, "No transfer queue family found!");
 
 		return indices;
 	}
@@ -238,7 +238,7 @@ namespace Hazel
 		// Do we need to enable any other extensions (eg. NV_RAYTRACING?)
 		std::vector<const char*> deviceExtensions;
 		// If the device will be used for presenting to a display via a swapchain we need to request the swapchain extension
-		HZ_CORE_ASSERT(m_PhysicalDevice->IsExtensionSupported(VK_KHR_SWAPCHAIN_EXTENSION_NAME), "Swapchain extension not supported!");
+		ASSERT(m_PhysicalDevice->IsExtensionSupported(VK_KHR_SWAPCHAIN_EXTENSION_NAME), "Swapchain extension not supported!");
 		deviceExtensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 		if (m_PhysicalDevice->IsExtensionSupported(VK_NV_DEVICE_DIAGNOSTIC_CHECKPOINTS_EXTENSION_NAME))
 			deviceExtensions.push_back(VK_NV_DEVICE_DIAGNOSTIC_CHECKPOINTS_EXTENSION_NAME);
@@ -305,7 +305,7 @@ namespace Hazel
 		}
 
 		VkResult result = vkCreateDevice(m_PhysicalDevice->GetVulkanPhysicalDevice(), &deviceCreateInfo, nullptr, &m_LogicalDevice);
-		HZ_CORE_ASSERT(result == VK_SUCCESS, "Failed to create logical device!");
+		ASSERT(result == VK_SUCCESS, "Failed to create logical device!");
 
 		// Get a graphics queue from the device
 		vkGetDeviceQueue(m_LogicalDevice, m_PhysicalDevice->m_QueueFamilyIndices.Graphics, 0, &m_GraphicsQueue);
@@ -423,7 +423,7 @@ namespace Hazel
 
 		const uint64_t DEFAULT_FENCE_TIMEOUT = 100000000000;
 
-		HZ_CORE_ASSERT(commandBuffer != VK_NULL_HANDLE, "Command buffer is null!");
+		ASSERT(commandBuffer != VK_NULL_HANDLE, "Command buffer is null!");
 
 		VK_CHECK_RESULT(vkEndCommandBuffer(commandBuffer));
 
@@ -472,7 +472,7 @@ namespace Hazel
 	Ref<VulkanCommandPool> VulkanDevice::GetThreadLocalCommandPool()
 	{
 		auto threadID = std::this_thread::get_id();
-		HZ_CORE_ASSERT(m_CommandPools.find(threadID) != m_CommandPools.end(), "Thread-local command pool not found!");
+		ASSERT(m_CommandPools.find(threadID) != m_CommandPools.end(), "Thread-local command pool not found!");
 
 		return m_CommandPools.at(threadID);
 	}

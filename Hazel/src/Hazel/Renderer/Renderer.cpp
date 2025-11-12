@@ -155,7 +155,7 @@ namespace Hazel {
 
 	void Renderer::BeginComputePass(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<ComputePass> computePass)
 	{
-		HZ_CORE_ASSERT(computePass, "ComputePass cannot be null!");
+		ASSERT(computePass, "ComputePass cannot be null!");
 
 		s_RendererAPI->BeginComputePass(renderCommandBuffer, computePass);
 	}
@@ -207,7 +207,6 @@ namespace Hazel {
 	{
 		// Wait for kick, then set render thread to busy
 		{
-			HZ_PROFILE_SCOPE("Wait");
 			// 渲染线程循环等待Kick信号，收到信号后，设置为Busy信号并开始工作
 			renderThread->WaitAndSet(RenderThread::State::Kick, RenderThread::State::Busy);
 		}

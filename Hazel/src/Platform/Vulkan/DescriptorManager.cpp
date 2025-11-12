@@ -262,7 +262,7 @@ namespace Hazel
 	{
         SetBindingKey setBinding = GetBinding(name);
 		Renderer::Submit([=]() {
-			//HZ_CORE_TRACE("RT: VulkanRenderPass [{0}]::SetInput imageView[{2}] Binding {1}", m_Specification.DebugName, Binding, arrayIndex);
+			//LOG_TRACE("RT: VulkanRenderPass [{0}]::SetInput imageView[{2}] Binding {1}", m_Specification.DebugName, Binding, arrayIndex);
 			VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 			auto vulkanImageView = imageView.As<VulkanImageView>();
 			auto image = vulkanImageView->GetImage().As<VulkanImage2D>();
@@ -534,7 +534,7 @@ namespace Hazel
 	{
 		SetBindingKey setBinding = GetBinding(name);
 		Renderer::Submit([=]() {
-			//HZ_CORE_TRACE("RT: VulkanRenderPass [{0}]::SetInput imageView[{2}] Binding {1}", m_Specification.DebugName, Binding, arrayIndex);
+			//LOG_TRACE("RT: VulkanRenderPass [{0}]::SetInput imageView[{2}] Binding {1}", m_Specification.DebugName, Binding, arrayIndex);
 			VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 			auto vulkanImageView = imageView.As<VulkanImageView>();
 			auto image = vulkanImageView->GetImage().As<VulkanImage2D>();

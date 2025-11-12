@@ -19,9 +19,9 @@ namespace Hazel {
 	Application::Application(const ApplicationSpecification& specification)
 		: m_Specification(specification), m_RenderThread(ThreadingPolicy::SingleThreaded) // SingleThreaded MultiThreaded
 	{
-		HZ_PROFILE_FUNCTION();
+		 
 
-		HZ_CORE_ASSERT(!s_Instance, "Application already exists!");
+		ASSERT(!s_Instance, "Application already exists!");
 		s_Instance = this;
 		s_MainThreadID = std::this_thread::get_id();
 		m_RenderThread.Run();  // 如果是多线程，每次执行kick，线程就会被唤醒，把Renderer::submit的命令执行掉，同时主线程开始收集下一帧的命令
@@ -32,7 +32,7 @@ namespace Hazel {
 
 		m_Window = Window::Create(WindowProps(m_Specification.Name, 1950, 1300));  // 这里创建了GLFW窗口、也初始化了RenderContext和SwapChain
 		m_Window->SetEventCallback(HZ_BIND_EVENT_FN(Application::OnEvent));
-		HZ_CORE_ASSERT(NFD::Init() == NFD_OKAY);
+		ASSERT(NFD::Init() == NFD_OKAY);
 
 		Renderer::Init();
 		// 执行当前的Renderer命令
@@ -48,7 +48,7 @@ namespace Hazel {
 
 	void Application::Run()
 	{
-		HZ_PROFILE_FUNCTION();
+		 
 
 		while (m_Running)
 		{
@@ -98,7 +98,7 @@ namespace Hazel {
 
 	Application::~Application()
 	{
-		HZ_PROFILE_FUNCTION();
+		 
 		m_RenderThread.Terminate();
 
 		//ScriptEngine::Shutdown();
@@ -107,7 +107,7 @@ namespace Hazel {
 
 	void Application::PushLayer(Layer* layer)
 	{
-		HZ_PROFILE_FUNCTION();
+		 
 
 		m_LayerStack.PushLayer(layer);
 		layer->OnAttach();
@@ -115,7 +115,7 @@ namespace Hazel {
 
 	void Application::PushOverlay(Layer* layer)
 	{
-		HZ_PROFILE_FUNCTION();
+		 
 
 		m_LayerStack.PushOverlay(layer);
 		layer->OnAttach();
@@ -149,7 +149,7 @@ namespace Hazel {
 
 	void Application::OnEvent(Event& e)
 	{
-		HZ_PROFILE_FUNCTION();
+		 
 
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<WindowCloseEvent>(HZ_BIND_EVENT_FN(Application::OnWindowClose));
