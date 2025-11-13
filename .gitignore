@@ -5,7 +5,7 @@ Intermediates/
 
 # Hazel files
 *.log
-
+.idea
 # Visual Studio files and folder
 .vs/
 **.sln
