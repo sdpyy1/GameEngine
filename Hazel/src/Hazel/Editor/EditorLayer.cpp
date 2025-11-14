@@ -2,19 +2,13 @@
 
 #include "EditorLayer.h"
 #include "Hazel/Scene/SceneSerializer.h"
-#include "Hazel/Utils/PlatformUtils.h"
 #include "Hazel/Math/Math.h"
-#include "Hazel/Renderer/Font.h"
-
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
 #include "ImGuizmo.h"
-#include <Hazel/Asset/AssetMetadata.h>
-#include <Hazel/Asset/AssetImporter.h>
 #include <Hazel/Asset/Model/Mesh.h>
-#include "Hazel/Scene/SceneRender.h"
-#include <random>
-
+#include "Hazel/Math/Ray.h"
+#include "Hazel/Utils/FileSystem.h"
+#include "Hazel/Core/Input.h"
+#include <glm/gtc/type_ptr.hpp>
 namespace Hazel {
 	EditorLayer::EditorLayer()
 		: Layer("EditorLayer"), m_EditorCamera(45.0f, 1280.0f, 720.0f, 0.1f, 1000.0f), m_FolderPreviewPanel("assets")
@@ -316,7 +310,7 @@ namespace Hazel {
 
 	bool EditorLayer::OnMouseButtonPressed(MouseButtonPressedEvent& event)
 	{
-		if (event.GetMouseButton() != Mouse::ButtonLeft)
+		if (event.GetMouseButton() != HZ_MOUSE_BUTTON_LEFT)
 			return false;
 		if (ImGuizmo::IsOver())
 			return false;

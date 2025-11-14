@@ -1,8 +1,7 @@
 #pragma once
-#include "Hazel.h"
-#include "Hazel/Editor/EditorPanel.h"
+#include "EditorPanel.h"
 #include "Hazel/Scene/Scene.h"
-
+#include "Hazel/Scene/Entity.h"
 namespace Hazel {
 	class AssetManagerPanel : public EditorPanel
 	{

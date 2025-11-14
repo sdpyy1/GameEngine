@@ -4,11 +4,8 @@
 #include "Hazel/Core/Log.h"
 
 #include "Hazel/Renderer/Renderer.h"
-#include <Hazel/Platform/Vulkan/VulkanContext.h>
-#include "Hazel/ImGui/EditorLayer.h"
-#include "Hazel/Core/Input.h"
+#include "Hazel/Editor/EditorLayer.h"
 #include "Hazel/Utils/PlatformUtils.h"
-#include <Hazel/Platform/Windows/WindowsWindow.h>
 #include "Hazel/Asset/AssetImporter.h"
 #include <nfd.hpp>
 

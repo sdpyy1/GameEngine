@@ -3,10 +3,10 @@
 #include <imgui.h>
 #include "Hazel/Core/Base.h"
 #include "Hazel/Asset/AssetManager.h"
-#include "Hazel/Editor/EditorPanel.h"
+#include "EditorPanel.h"
+#include "Hazel/Scene/Scene.h"
 #include "Hazel/Utils/UIUtils.h"
 #include <Hazel/Platform/Vulkan/VulkanTexture.h>
-#include <Hazel.h>
 enum class BrowserMode
 {
 	Directory,

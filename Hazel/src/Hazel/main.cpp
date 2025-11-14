@@ -1,5 +1,4 @@
 #include "hzpch.h"
-#include <Hazel.h>
 #include "Hazel/Core/Application.h"
 
 int main(int argc, char** argv)

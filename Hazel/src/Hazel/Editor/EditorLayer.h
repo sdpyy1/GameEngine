@@ -1,12 +1,10 @@
 #pragma once
-
-#include "Hazel.h"
-
 #include "Hazel/Renderer/EditorCamera.h"
 #include "Panels/AssetManagerPanel.h"
 #include "imgui.h"
 #include "ImGuizmo.h"
 #include "Panels/FolderPreviewPanel.h"
+#include "Panels/LogPanel.h"
 
 namespace Hazel {
 	// ±à¼­Æ÷²ã

@@ -1,5 +1,5 @@
 #include "hzpch.h"
-#include "ImGuiLogPanel.h"
+#include "LogPanel.h"
 #include <imgui.h>
 
 namespace Hazel {
