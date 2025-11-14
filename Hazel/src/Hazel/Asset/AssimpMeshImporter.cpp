@@ -10,7 +10,7 @@
 #include "Model/MaterialAsset.h"
 #include "Hazel/Asset/AssetManager.h"
 #include "Hazel/Asset/TextureImporter.h"
-#include <Platform/Vulkan/VulkanMaterial.h>
+#include <Hazel/Platform/Vulkan/VulkanMaterial.h>
 #include "Hazel/Asset/AssimpAnimationImporter.h"
 #include "Hazel/Math/Math.h"
 namespace Hazel {
@@ -68,7 +68,7 @@ namespace Hazel {
 			LOG_ERROR_TAG("Animation", "Failed to load mesh source file: {0}", m_Path.string());
 			return false;
 		}
-		// Ö»¼ÓÔØÖ¸¶¨¶¯»­
+		// Ö»ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		uint32_t animationIndex = AssimpAnimationImporter::GetAnimationIndex(scene, animationName);
 
 		if (animationIndex == ~0)
@@ -113,10 +113,10 @@ namespace Hazel {
 			meshSource->m_BoundingBox.Max = { -FLT_MAX, -FLT_MAX, -FLT_MAX };
 
 			meshSource->m_Submeshes.reserve(scene->mNumMeshes);
-			LOG_WARN("Ä£ĞÍ¹² [{}] ¸ö subMesh", scene->mNumMeshes);
+			LOG_WARN("Ä£ï¿½Í¹ï¿½ [{}] ï¿½ï¿½ subMesh", scene->mNumMeshes);
 			for (unsigned m = 0; m < scene->mNumMeshes; m++)
 			{
-				LOG_TRACE("¿ªÊ¼¼ÓÔØsubMesh{}", m);
+				LOG_TRACE("ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½subMesh{}", m);
 				aiMesh* mesh = scene->mMeshes[m];
 
 				if (!mesh->HasPositions())
@@ -148,7 +148,7 @@ namespace Hazel {
 				auto& aabb = submesh.BoundingBox;
 				aabb.Min = { FLT_MAX, FLT_MAX, FLT_MAX };
 				aabb.Max = { -FLT_MAX, -FLT_MAX, -FLT_MAX };
-				LOG_TRACE("¼ÓÔØ¶¥µãÊı = {}", mesh->mNumVertices);
+				LOG_TRACE("ï¿½ï¿½ï¿½Ø¶ï¿½ï¿½ï¿½ï¿½ï¿½ = {}", mesh->mNumVertices);
 				for (size_t i = 0; i < mesh->mNumVertices; i++)
 				{
 					Vertex vertex;
@@ -182,15 +182,15 @@ namespace Hazel {
 
 					meshSource->m_TriangleCache[m].emplace_back(meshSource->m_Vertices[index.V1 + submesh.BaseVertex], meshSource->m_Vertices[index.V2 + submesh.BaseVertex], meshSource->m_Vertices[index.V3 + submesh.BaseVertex]);
 				}
-				LOG_TRACE("¼ÓÔØË÷ÒıÊı = {}", mesh->mNumFaces * 3);
+				LOG_TRACE("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ = {}", mesh->mNumFaces * 3);
 
 			}
-			LOG_INFO("¶¥µãÊı¾İ¼ÓÔØÍê³É£¬¹² [{0}] ¶¥µã£¬¹²[{1}] Ë÷Òı", vertexCount,indexCount);
+			LOG_INFO("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½İ¼ï¿½ï¿½ï¿½ï¿½ï¿½É£ï¿½ï¿½ï¿½ [{0}] ï¿½ï¿½ï¿½ã£¬ï¿½ï¿½[{1}] ï¿½ï¿½ï¿½ï¿½", vertexCount,indexCount);
 
-			LOG_TRACE("¿ªÊ¼´¦ÀíSubMesh±ä»»ĞÅÏ¢");
+			LOG_TRACE("ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½SubMeshï¿½ä»»ï¿½ï¿½Ï¢");
 			MeshNode& rootNode = meshSource->m_Nodes.emplace_back();
 			TraverseNodes(meshSource, scene->mRootNode, 0);
-			LOG_TRACE("¿ªÊ¼¼ÆËãMeshµÄAABB°üÎ§ºĞ");
+			LOG_TRACE("ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½Meshï¿½ï¿½AABBï¿½ï¿½Î§ï¿½ï¿½");
 			for (const auto& submesh : meshSource->m_Submeshes)
 			{
 				AABB transformedSubmeshAABB = submesh.BoundingBox;
@@ -209,7 +209,7 @@ namespace Hazel {
 		meshSource->m_Skeleton = AssimpAnimationImporter::ImportSkeleton(scene);
 		if (meshSource->HasSkeleton())
 		{
-			LOG_INFO_TAG("Mesh", "¿ªÊ¼´¦Àí¹Ç÷ÀĞÅÏ¢");
+			LOG_INFO_TAG("Mesh", "ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢");
 			meshSource->m_BoneInfluences.resize(meshSource->m_Vertices.size());
 			for (uint32_t m = 0; m < scene->mNumMeshes; m++)
 			{
@@ -283,28 +283,28 @@ namespace Hazel {
 			{
 				boneInfluence.NormalizeWeights();
 			}
-			LOG_TRACE("¹²[{}]¸ö¹Ç÷À", meshSource->m_BoneInfo.size());
+			LOG_TRACE("ï¿½ï¿½[{}]ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½", meshSource->m_BoneInfo.size());
 		}
 
 		// Materials
 		Ref<Texture2D> whiteTexture = Renderer::GetWhiteTexture();
 		if (scene->HasMaterials())
 		{
-			LOG_INFO("¹²ÓĞ[{}]ÖÖ²ÄÖÊ", scene->mNumMaterials);
+			LOG_INFO("ï¿½ï¿½ï¿½ï¿½[{}]ï¿½Ö²ï¿½ï¿½ï¿½", scene->mNumMaterials);
 			meshSource->m_Materials.resize(scene->mNumMaterials);
-			// ´¦ÀíÃ¿ÖÖ²ÄÖÊ£¨Ã¿ÖÖ²ÄÖÊ¶¼°üº¬¸÷ÖÖÌùÍ¼»òÊı¾İ£©
+			// ï¿½ï¿½ï¿½ï¿½Ã¿ï¿½Ö²ï¿½ï¿½Ê£ï¿½Ã¿ï¿½Ö²ï¿½ï¿½Ê¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¼ï¿½ï¿½ï¿½ï¿½ï¿½İ£ï¿½
 			for (uint32_t i = 0; i < scene->mNumMaterials; i++)
 			{
 				auto aiMaterial = scene->mMaterials[i];
 				auto aiMaterialName = aiMaterial->GetName();
-				LOG_TRACE("¿ªÊ¼´¦Àí²ÄÖÊ[{}]", aiMaterialName.data);
+				LOG_TRACE("ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½[{}]", aiMaterialName.data);
 
-				// ´´½¨²ÄÖÊ¶ÔÏó£¬ĞèÒªÒ»¸öShaderºÍÃû³Æ
+				// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¶ï¿½ï¿½ï¿½ï¿½ï¿½ÒªÒ»ï¿½ï¿½Shaderï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 				Ref<Material> material = Material::Create(Renderer::GetShaderLibrary()->Get("gBuffer"), aiMaterialName.data);
 				auto ma = Ref<MaterialAsset>::Create(material);
 
 				aiString aiTexPath;
-				// ²ÄÖÊÄ³¸öÊôĞÔÊÇ¹Ì¶¨Öµ
+				// ï¿½ï¿½ï¿½ï¿½Ä³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç¹Ì¶ï¿½Öµ
 				glm::vec3 albedoColor(0.8f);
 				glm::vec3 emission(0.0f);
 				aiColor3D aiColor(1.0f), aiEmission(0.0f);
@@ -338,7 +338,7 @@ namespace Hazel {
 				LOG_INFO("    COLOR = {0}, {1}, {2}", aiColor.r, aiColor.g, aiColor.b);
 				LOG_INFO("    ROUGHNESS = {0}", roughness);
 				LOG_INFO("    METALNESS = {0}", metalness);
-				// ²ÄÖÊÄ³¸öÊôĞÔÊÇÌùÍ¼
+				// ï¿½ï¿½ï¿½ï¿½Ä³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¼
 				bool hasAlbedoMap = aiMaterial->GetTexture(AI_MATKEY_BASE_COLOR_TEXTURE, &aiTexPath) == AI_SUCCESS;
 				if (!hasAlbedoMap)
 				{
@@ -369,7 +369,7 @@ namespace Hazel {
 							LOG_INFO("    Albedo map path = {0} --> NOT FOUND", texturePath);
 							texturePath = parentPath / texturePath.filename();
 						}
-						LOG_INFO("´´½¨AlbedoÌùÍ¼ path = {0}{1}", texturePath, std::filesystem::exists(texturePath) ? "" : " --> NOT FOUND");
+						LOG_INFO("ï¿½ï¿½ï¿½ï¿½Albedoï¿½ï¿½Í¼ path = {0}{1}", texturePath, std::filesystem::exists(texturePath) ? "" : " --> NOT FOUND");
 						textureHandle = AssetManager::AddMemoryOnlyAsset(Texture2D::Create(spec, texturePath));
 					}
 
@@ -403,7 +403,7 @@ namespace Hazel {
 							LOG_INFO("    Emissive map path = {0} --> NOT FOUND", texturePath);
 							texturePath = parentPath / texturePath.filename();
 						}
-						LOG_INFO("¼ÓÔØ Emissive ÌùÍ¼ path = {0}{1}", texturePath, std::filesystem::exists(texturePath) ? "" : " --> NOT FOUND");
+						LOG_INFO("ï¿½ï¿½ï¿½ï¿½ Emissive ï¿½ï¿½Í¼ path = {0}{1}", texturePath, std::filesystem::exists(texturePath) ? "" : " --> NOT FOUND");
 						textureHandle = AssetManager::AddMemoryOnlyAsset(Texture2D::Create(spec, texturePath));
 					}
 					ma->SetEmissiveMap(textureHandle);
@@ -435,7 +435,7 @@ namespace Hazel {
 							LOG_INFO("    Normal map path = {0} --> NOT FOUND", texturePath);
 							texturePath = parentPath / texturePath.filename();
 						}
-						LOG_INFO("¼ÓÔØ Normal ÌùÍ¼ path = {0}{1}", texturePath, std::filesystem::exists(texturePath) ? "" : " --> NOT FOUND");
+						LOG_INFO("ï¿½ï¿½ï¿½ï¿½ Normal ï¿½ï¿½Í¼ path = {0}{1}", texturePath, std::filesystem::exists(texturePath) ? "" : " --> NOT FOUND");
 						textureHandle = AssetManager::AddMemoryOnlyAsset(Texture2D::Create(spec, texturePath));
 					}
 
@@ -493,7 +493,7 @@ namespace Hazel {
 							LOG_INFO("    Roughness map path = {0} --> NOT FOUND", texturePath);
 							texturePath = parentPath / texturePath.filename();
 						}
-						LOG_INFO("¼ÓÔØRoughness ÌùÍ¼ path = {0}{1}", texturePath, std::filesystem::exists(texturePath) ? "" : " --> NOT FOUND");
+						LOG_INFO("ï¿½ï¿½ï¿½ï¿½Roughness ï¿½ï¿½Í¼ path = {0}{1}", texturePath, std::filesystem::exists(texturePath) ? "" : " --> NOT FOUND");
 						auto buffer = TextureImporter::ToBufferFromFile(texturePath, spec.Format, spec.Width, spec.Height);
 						aiTexel* texels = (aiTexel*)buffer.Data;
 						if (invertRoughness)
@@ -536,7 +536,7 @@ namespace Hazel {
 							LOG_INFO("    Roughness map path = {0} --> NOT FOUND", texturePath);
 							texturePath = parentPath / texturePath.filename();
 						}
-						LOG_INFO("¼ÓÔØMetalnessÌùÍ¼ path = {0}{1}", texturePath, std::filesystem::exists(texturePath) ? "" : " --> NOT FOUND");
+						LOG_INFO("ï¿½ï¿½ï¿½ï¿½Metalnessï¿½ï¿½Í¼ path = {0}{1}", texturePath, std::filesystem::exists(texturePath) ? "" : " --> NOT FOUND");
 						metalnessTextureHandle = AssetManager::AddMemoryOnlyAsset(Texture2D::Create(spec, texturePath));
 					}
 
@@ -556,7 +556,7 @@ namespace Hazel {
 		}
 		else
 		{
-			// Ã»ÓĞ²ÄÖÊ£¬¾ÍÓÃÄ¬ÈÏµÄ
+			// Ã»ï¿½Ğ²ï¿½ï¿½Ê£ï¿½ï¿½ï¿½ï¿½ï¿½Ä¬ï¿½Ïµï¿½
 			if (scene->HasMeshes())
 			{
 				Ref<Material> material = Material::Create(Renderer::GetShaderLibrary()->Get("gBuffer"), "Hazel-Default");
@@ -567,7 +567,7 @@ namespace Hazel {
 
 		if (meshSource->m_Vertices.size())
 		{
-			LOG_INFO("Ä£ĞÍ¹²{}¶¥µã", meshSource->m_Vertices.size());
+			LOG_INFO("Ä£ï¿½Í¹ï¿½{}ï¿½ï¿½ï¿½ï¿½", meshSource->m_Vertices.size());
 			meshSource->m_VertexBuffer = VertexBuffer::Create(meshSource->m_Vertices.data(), (uint32_t)(meshSource->m_Vertices.size() * sizeof(Vertex)),"VertexBuffer");
 		}
 		if (meshSource->m_BoneInfluences.size() > 0)
@@ -576,7 +576,7 @@ namespace Hazel {
 		}
 
 		if (meshSource->m_Indices.size())
-			LOG_INFO("Ä£ĞÍ¹²{}Ë÷Òı", meshSource->m_Indices.size()*3);
+			LOG_INFO("Ä£ï¿½Í¹ï¿½{}ï¿½ï¿½ï¿½ï¿½", meshSource->m_Indices.size()*3);
 			meshSource->m_IndexBuffer = IndexBuffer::Create(meshSource->m_Indices.data(), (uint32_t)(meshSource->m_Indices.size() * sizeof(Index)));
 
 		return meshSource;

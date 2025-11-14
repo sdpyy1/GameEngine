@@ -2,7 +2,7 @@
 #include "RenderCommandBuffer.h"
 
 #include "Hazel/Renderer/RendererAPI.h"
-#include <Platform/Vulkan/VulkanRenderCommandBuffer.h>
+#include <Hazel/Platform/Vulkan/VulkanRenderCommandBuffer.h>
 
 namespace Hazel {
 	Ref<RenderCommandBuffer> RenderCommandBuffer::Create(const std::string& debugName, uint32_t count)

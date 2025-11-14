@@ -1,5 +1,5 @@
 #pragma once
-#include <Platform/Vulkan/VulkanImage.h>
+#include <Hazel/Platform/Vulkan/VulkanImage.h>
 #include <examples/imgui_impl_vulkan_with_textures.h>
 namespace Hazel {
 	namespace UI {

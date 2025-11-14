@@ -1,6 +1,6 @@
 #include "hzpch.h"
 #include "Hazel/Renderer/RendererAPI.h"
-#include <Platform/Vulkan/VulkanRenderer.h>
+#include <Hazel/Platform/Vulkan/VulkanRenderer.h>
 
 namespace Hazel {
 	RendererAPI::Type RendererAPI::s_API = RendererAPI::Type::Vulkan;

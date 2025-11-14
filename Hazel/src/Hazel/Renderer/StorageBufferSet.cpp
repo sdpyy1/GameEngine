@@ -6,7 +6,7 @@
 
 #include "StorageBufferSet.h"
 
-#include "Platform/Vulkan/VulkanStorageBufferSet.h"
+#include "Hazel/Platform/Vulkan/VulkanStorageBufferSet.h"
 #include "Hazel/Renderer/RendererAPI.h"
 
 namespace Hazel {

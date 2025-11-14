@@ -5,7 +5,7 @@
 
 #include "Renderer.h"
 
-#include "Platform/Vulkan/VulkanVertexBuffer.h"
+#include "Hazel/Platform/Vulkan/VulkanVertexBuffer.h"
 
 #include "Hazel/Renderer/RendererAPI.h"
 

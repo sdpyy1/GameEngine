@@ -12,7 +12,7 @@ namespace Hazel {
 		AssetHandle Handle = 0;
 		uint16_t Flags = (uint16_t)AssetFlag::None; 
 
-		virtual ~Asset() {}
+		virtual ~Asset() = default;
 
 		static AssetType GetStaticType() { return AssetType::None; }
 		virtual AssetType GetAssetType() const { return AssetType::None; }

@@ -1,5 +1,5 @@
 project "Hazel"
-	kind "StaticLib"
+	kind "ConsoleApp"
 	language "C++"
 	cppdialect "C++17"
 	staticruntime "off"
@@ -23,7 +23,6 @@ project "Hazel"
 		"vendor/ImGuizmo/ImGuizmo.h",
 		"vendor/ImGuizmo/ImGuizmo.cpp",
 		"vendor/spirv_reflect/spirv_reflect.c"
-
 	}
 
 	defines
@@ -138,3 +137,7 @@ project "Hazel"
 			"%{Library.SPIRV_Cross_Release}",
 			"%{Library.SPIRV_Cross_GLSL_Release}"
 		}
+	filter "configurations:Debug"
+	postbuildcommands {
+		'{COPY} "../Hazel/vendor/assimp/bin/windows/Debug/assimp-vc143-mtd.dll" "%{cfg.targetdir}"',
+	}

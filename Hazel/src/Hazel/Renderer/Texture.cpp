@@ -2,7 +2,7 @@
 #include "Hazel/Renderer/Texture.h"
 
 #include "Hazel/Renderer/Renderer.h"
-#include "Platform/Vulkan/VulkanTexture.h"
+#include "Hazel/Platform/Vulkan/VulkanTexture.h"
 
 namespace Hazel {
 	Ref<Texture2D> Texture2D::Create(const TextureSpecification& specification)

@@ -11,7 +11,7 @@ namespace Hazel {
 		uint32_t UseNormalMap;
 		uint32_t padding[3];
 	};
-	class Material : public RefCounted
+	class Material : public Asset
 	{
 	public:
 		static Ref<Material> Create(const Ref<Shader>& shader, const std::string& name = "");
@@ -44,9 +44,6 @@ namespace Hazel {
 		virtual void SetInput(std::string name, Ref<TextureCube> cubeMap, bool isInit = false) = 0;
 		virtual void SetInput(std::string name, Ref<ImageView> cubeMap) = 0;
 		virtual void SetInput(std::string name, Ref<Image2D> image, bool isInit = false) = 0;
-
-
-		virtual ~Material() {}
 
 		MaterialPush BuildPush();
 

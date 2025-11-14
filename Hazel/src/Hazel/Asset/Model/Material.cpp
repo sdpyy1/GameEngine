@@ -1,6 +1,6 @@
 #include "hzpch.h"
 #include "Hazel/Asset/Model/Material.h"
-#include "Platform/Vulkan/VulkanMaterial.h"
+#include "Hazel/Platform/Vulkan/VulkanMaterial.h"
 
 #include "Hazel/Renderer/RendererAPI.h"
 

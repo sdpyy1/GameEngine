@@ -7,12 +7,8 @@
 #include "Hazel/Events/Event.h"
 #include "Hazel/Events/ApplicationEvent.h"
 #include "Hazel/core/RenderThread.h"
-
-#include "Hazel/Core/Timestep.h"
-
 #include "Hazel/ImGui/ImGuiLayer.h"
-#include <Platform/Windows/WindowsWindow.h>
-int main(int argc, char** argv);
+#include "Hazel/Platform/Windows/WindowsWindow.h"
 
 namespace Hazel {
 
@@ -33,12 +29,14 @@ namespace Hazel {
 		std::string Name = "Hazel Application";
 		std::string WorkingDirectory;
 		ApplicationCommandLineArgs CommandLineArgs;
-		bool EnableImGui = true; // TODO£ºÏÖÔÚÉèÖÃÎªFalse»á±¨´í
+		bool EnableImGui = true; // TODOï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÎªFalseï¿½á±¨ï¿½ï¿½
 	};
 	class VulkanContext;
 	class Application
 	{
 	public:
+		void Run();
+
 		Application(const ApplicationSpecification& specification);
 		virtual ~Application();
 
@@ -70,7 +68,6 @@ namespace Hazel {
 			return Get().GetSpecification().EnableImGui;
 		}
 	private:
-		void Run();
 		bool OnWindowClose(WindowCloseEvent& e);
 		bool OnWindowResize(WindowResizeEvent& e);
 
@@ -89,7 +86,6 @@ namespace Hazel {
 		std::mutex m_MainThreadQueueMutex;
 	private:
 		static Application* s_Instance;
-		friend int ::main(int argc, char** argv);
 		uint32_t m_CurrentFrameIndex = 0;
 		float m_ViewportWidth = 1200.0f, m_ViewportHeight = 720.0f;
 	};

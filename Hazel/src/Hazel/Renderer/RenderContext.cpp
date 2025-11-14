@@ -2,9 +2,9 @@
 #include "Hazel/Renderer/RenderContext.h"
 
 #include "Hazel/Renderer/Renderer.h"
-#include "Platform/Vulkan/VulkanContext.h"
+#include "Hazel/Platform/Vulkan/VulkanContext.h"
 #include <Hazel/Core/Application.h>
-#include <Platform/OpenGL/OpenGLContext.h>
+#include <Hazel/Platform/OpenGL/OpenGLContext.h>
 
 namespace Hazel {
 	Ref<RenderContext> RenderContext::Create(void* window)

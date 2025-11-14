@@ -1,7 +1,7 @@
 #include "hzpch.h"
 #include "Image.h"
 #include "Hazel/Renderer/RendererAPI.h"
-#include <Platform/Vulkan/VulkanImage.h>
+#include <Hazel/Platform/Vulkan/VulkanImage.h>
 namespace Hazel {
 	Ref<Image2D> Image2D::Create(const ImageSpecification& specification, Buffer buffer)
 	{

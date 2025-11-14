@@ -4,11 +4,11 @@
 #include "Hazel/Core/Log.h"
 
 #include "Hazel/Renderer/Renderer.h"
-#include <Platform/Vulkan/VulkanContext.h>
-
+#include <Hazel/Platform/Vulkan/VulkanContext.h>
+#include "Hazel/ImGui/EditorLayer.h"
 #include "Hazel/Core/Input.h"
 #include "Hazel/Utils/PlatformUtils.h"
-#include <Platform/Windows/WindowsWindow.h>
+#include <Hazel/Platform/Windows/WindowsWindow.h>
 #include "Hazel/Asset/AssetImporter.h"
 #include <nfd.hpp>
 
@@ -19,8 +19,6 @@ namespace Hazel {
 	Application::Application(const ApplicationSpecification& specification)
 		: m_Specification(specification), m_RenderThread(ThreadingPolicy::SingleThreaded) // SingleThreaded MultiThreaded
 	{
-		 
-
 		ASSERT(!s_Instance, "Application already exists!");
 		s_Instance = this;
 		s_MainThreadID = std::this_thread::get_id();
@@ -44,12 +42,12 @@ namespace Hazel {
 			m_ImGuiLayer = ImGuiLayer::Create();
 			PushOverlay(m_ImGuiLayer);
 		}
+
+		PushLayer(new EditorLayer());
 	}
 
 	void Application::Run()
 	{
-		 
-
 		while (m_Running)
 		{
 			// 阻塞等待渲染线程

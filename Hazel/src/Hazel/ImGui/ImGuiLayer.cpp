@@ -4,7 +4,7 @@
 
 #include "Hazel/Renderer/Renderer.h"
 
-#include "Platform/Vulkan/VulkanImGuiLayer.h"
+#include "Hazel/Platform/Vulkan/VulkanImGuiLayer.h"
 
 #include "Hazel/Renderer/RendererAPI.h"
 

@@ -11,6 +11,7 @@
     <mapping directory="$PROJECT_DIR$/Hazel/vendor/msdf-atlas-gen/msdfgen" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/Hazel/vendor/msdf-atlas-gen/msdfgen/freetype" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/Hazel/vendor/msdf-atlas-gen/msdfgen/freetype/subprojects/dlg" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Hazel/vendor/shaderc" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/Hazel/vendor/spdlog" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/Hazel/vendor/yaml-cpp" vcs="Git" />
   </component>

@@ -4,7 +4,7 @@
 #include "Hazel/Events/Event.h"
 #include "Hazel/Renderer/RenderContext.h"
 #include <sstream>
-#include "Platform/Vulkan/VulkanSwapChain.h"
+#include "Hazel/Platform/Vulkan/VulkanSwapChain.h"
 namespace Hazel {
 
 	struct WindowProps

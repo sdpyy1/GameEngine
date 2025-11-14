@@ -2,7 +2,7 @@
 #include "Framebuffer.h"
 
 #include "Hazel/Renderer/RendererAPI.h"
-#include <Platform/Vulkan/VulkanFramebuffer.h>
+#include <Hazel/Platform/Vulkan/VulkanFramebuffer.h>
 
 namespace Hazel {
 

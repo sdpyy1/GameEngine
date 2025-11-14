@@ -4,7 +4,7 @@
 #include "Renderer.h"
 
 #include "Hazel/Renderer/RendererAPI.h"
-#include <Platform/Vulkan/VulkanPipeline.h>
+#include <Hazel/Platform/Vulkan/VulkanPipeline.h>
 
 namespace Hazel {
 	Ref<Pipeline> Pipeline::Create(const PipelineSpecification& spec)

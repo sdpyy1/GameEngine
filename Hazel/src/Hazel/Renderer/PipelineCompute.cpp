@@ -1,7 +1,7 @@
 #include "hzpch.h"
 #include "PipelineCompute.h"
 #include "Hazel/Renderer/RendererAPI.h"
-#include <Platform/Vulkan/VulkanComputePipeline.h>
+#include <Hazel/Platform/Vulkan/VulkanComputePipeline.h>
 namespace Hazel {
 	Ref<PipelineCompute> PipelineCompute::Create(Ref<Shader> computeShader)
 	{

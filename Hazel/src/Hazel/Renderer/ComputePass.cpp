@@ -1,6 +1,6 @@
 #include "hzpch.h"
 #include "ComputePass.h"
-#include "Platform/Vulkan/VulkanComputePass.h"
+#include "Hazel/Platform/Vulkan/VulkanComputePass.h"
 #include "Hazel/Renderer/RendererAPI.h"
 
 namespace Hazel

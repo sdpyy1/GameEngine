@@ -3,7 +3,7 @@
 
 #include "Renderer.h"
 
-#include "Platform/Vulkan/VulkanRenderPass.h"
+#include "Hazel/Platform/Vulkan/VulkanRenderPass.h"
 
 #include "Hazel/Renderer/RendererAPI.h"
 

@@ -3,8 +3,8 @@ include "Dependencies.lua"
 
 workspace "AAA_GameEngine"
 	architecture "x86_64"
-	startproject "Hazelnut"
-
+	startproject "Hazel"
+	disablewarnings { "4828" }
 	configurations
 	{
 		"Debug",
@@ -35,11 +35,4 @@ group "Dependencies"
 	include "Hazel/vendor/NFD-Extended"
 group ""
 
-group "Misc"
-	include "Sandbox"
-	include "Hazel-ScriptCore"
-group ""
-
-
 include "Hazel"
-include "Hazelnut"

@@ -1,15 +1,8 @@
 #include "hzpch.h"
-#include <algorithm>
 #include "SceneRender.h"
-#include "Components.h"
 #include "Hazel/Asset/AssetManager.h"
-#include "Entity.h"
-#include <Hazel/Asset/AssetImporter.h>
-#include <glm/gtx/compatibility.hpp>
 #include <Hazel/Asset/Model/Mesh.h>
 #include <glm/gtc/matrix_transform.hpp>
-#include <Hazel/Math/Math.h>
-#include <Platform/Vulkan/VulkanRenderCommandBuffer.h>
 namespace Hazel {
 	void SceneRender::Init()
 	{

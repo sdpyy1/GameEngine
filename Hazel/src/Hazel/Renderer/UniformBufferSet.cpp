@@ -3,7 +3,7 @@
 
 #include "Hazel/Renderer/Renderer.h"
 
-#include "Platform/Vulkan/VulkanUniformBufferSet.h"
+#include "Hazel/Platform/Vulkan/VulkanUniformBufferSet.h"
 
 #include "Hazel/Renderer/RendererAPI.h"
 

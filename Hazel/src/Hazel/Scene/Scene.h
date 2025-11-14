@@ -3,10 +3,10 @@
 #include "Hazel/Core/Timestep.h"
 #include "Hazel/Core/UUID.h"
 #include "Hazel/Renderer/EditorCamera.h"
-#include "Platform/Vulkan/VulkanShader.h"
+#include "Hazel/Platform/Vulkan/VulkanShader.h"
 #include "entt.hpp"
 #include <Hazel/Renderer/RenderContext.h>
-#include "Platform/Vulkan/VulkanContext.h"
+#include "Hazel/Platform/Vulkan/VulkanContext.h"
 #include <Hazel/Renderer/IndexBuffer.h>
 #include <Hazel/Asset/Model/Mesh.h>
 

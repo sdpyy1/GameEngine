@@ -2,7 +2,7 @@
 #include "UniformBuffer.h"
 
 #include "Hazel/Renderer/Renderer.h"
-#include <Platform/Vulkan/VulkanUniformBuffer.h>
+#include <Hazel/Platform/Vulkan/VulkanUniformBuffer.h>
 
 namespace Hazel {
 

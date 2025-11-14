@@ -2,7 +2,7 @@
 #include "Hazel/Core/Window.h"
 
 #ifdef HZ_PLATFORM_WINDOWS
-	#include "Platform/Windows/WindowsWindow.h"
+	#include "Hazel/Platform/Windows/WindowsWindow.h"
 #endif
 
 namespace Hazel

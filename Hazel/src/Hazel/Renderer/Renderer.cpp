@@ -1,10 +1,10 @@
 ﻿#include "hzpch.h"
 #include "Hazel/Renderer/Renderer.h"
-#include "Platform/Vulkan/VulkanRenderer.h"
+#include "Hazel/Platform/Vulkan/VulkanRenderer.h"
 #include "Hazel/Renderer/RendererAPI.h"
 #include <glm/gtc/random.hpp>
 #include <imgui.h>
-#include <Platform/Vulkan/VulkanImage.h>
+#include <Hazel/Platform/Vulkan/VulkanImage.h>
 
 #include "Hazel/Asset/Model/Material.h"
 namespace Hazel {
