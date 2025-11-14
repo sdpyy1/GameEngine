@@ -10,14 +10,6 @@
 namespace Hazel {
 	bool Input::IsKeyDown(KeyCode keycode)
 	{
-		bool enableImGui = Application::Get().GetSpecification().EnableImGui;
-		if (!enableImGui)
-		{
-			auto& window = static_cast<Window&>(*Application::Get().GetWindow());
-			auto state = glfwGetKey(static_cast<GLFWwindow*>(window.GetNativeWindow()), static_cast<int32_t>(keycode));
-			return state == GLFW_PRESS || state == GLFW_REPEAT;
-		}
-
 		auto& window = static_cast<Window&>(*Application::Get().GetWindow());
 		GLFWwindow* win = static_cast<GLFWwindow*>(window.GetNativeWindow());
 		ImGuiContext* context = ImGui::GetCurrentContext();
@@ -43,14 +35,6 @@ namespace Hazel {
 
 	bool Input::IsMouseButtonDown(MouseButton button)
 	{
-		bool enableImGui = Application::Get().GetSpecification().EnableImGui;
-		if (!enableImGui)
-		{
-			auto& window = static_cast<Window&>(*Application::Get().GetWindow());
-			auto state = glfwGetMouseButton(static_cast<GLFWwindow*>(window.GetNativeWindow()), static_cast<int32_t>(button));
-			return state == GLFW_PRESS;
-		}
-
 		ImGuiContext* context = ImGui::GetCurrentContext();
 		bool pressed = false;
 		for (ImGuiViewport* viewport : context->Viewports)
@@ -101,9 +85,6 @@ namespace Hazel {
 	{
 		auto& window = static_cast<Window&>(*Application::Get().GetWindow());
 		glfwSetInputMode(static_cast<GLFWwindow*>(window.GetNativeWindow()), GLFW_CURSOR, GLFW_CURSOR_NORMAL + (int)mode);
-
-		if (Application::Get().GetSpecification().EnableImGui){}
-			//UI::SetInputEnabled(mode == CursorMode::Normal);
 	}
 
 	CursorMode Input::GetCursorMode()

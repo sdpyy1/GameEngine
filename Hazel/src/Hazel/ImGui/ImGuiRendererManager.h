@@ -9,18 +9,15 @@
 
 namespace Hazel {
 
-	class ImGuiLayer : public Layer
+	class ImGuiRendererManager
 	{
 	public:
 		virtual void Begin() = 0;
 		virtual void End() = 0;
-
-		void SetDarkThemeColors();
+		virtual void Init() = 0;
 		void SetDarkThemeV2Colors();
 
-		void AllowInputEvents(bool allowEvents);
-
-		static ImGuiLayer* Create();
+		static std::shared_ptr<ImGuiRendererManager> Create();
 	};
 
 }

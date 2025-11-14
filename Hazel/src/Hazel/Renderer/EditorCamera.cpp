@@ -33,24 +33,19 @@ namespace Hazel {
 
 	static void DisableMouse()
 	{
-
 		Input::SetCursorMode(CursorMode::Locked);
-		if (Application::isRenderImGUI()) {
-			// ImGUI
-			auto& io = ImGui::GetIO();
-			io.ConfigFlags |= ImGuiConfigFlags_NoMouse;
-			io.ConfigFlags |= ImGuiConfigFlags_NavNoCaptureKeyboard;
-		}
+		// ImGUI
+		auto& io = ImGui::GetIO();
+		io.ConfigFlags |= ImGuiConfigFlags_NoMouse;
+		io.ConfigFlags |= ImGuiConfigFlags_NavNoCaptureKeyboard;
 	}
 
 	static void EnableMouse()
 	{
 		Input::SetCursorMode(CursorMode::Normal);
-		if (Application::isRenderImGUI()) {
-			auto& io = ImGui::GetIO();
-			io.ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
-			io.ConfigFlags &= ~ImGuiConfigFlags_NavNoCaptureKeyboard;
-		}
+		auto& io = ImGui::GetIO();
+		io.ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
+		io.ConfigFlags &= ~ImGuiConfigFlags_NavNoCaptureKeyboard;
 	}
 
 	void EditorCamera::OnUpdate(const Timestep ts, bool isMouseInViewport)
@@ -76,11 +71,9 @@ namespace Hazel {
 			const glm::vec2 delta = (mouse - m_InitialMousePosition) * 0.002f;
 			if (!m_IsActive)
 			{
-				if (Application::isRenderImGUI()) {
-					auto& io = ImGui::GetIO();
-					io.ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
-					io.ConfigFlags &= ~ImGuiConfigFlags_NavNoCaptureKeyboard;
-				}
+				auto& io = ImGui::GetIO();
+				io.ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
+				io.ConfigFlags &= ~ImGuiConfigFlags_NavNoCaptureKeyboard;
 			}
 
 			if (Input::IsMouseButtonDown(MouseButton::Right) && !Input::IsKeyDown(KeyCode::LeftAlt))

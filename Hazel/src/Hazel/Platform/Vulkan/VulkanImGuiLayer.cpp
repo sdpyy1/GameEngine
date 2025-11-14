@@ -17,6 +17,7 @@ namespace Hazel {
 
 	VulkanImGuiLayer::VulkanImGuiLayer()
 	{
+		Init();
 	}
 
 	VulkanImGuiLayer::VulkanImGuiLayer(const std::string& name)
@@ -25,6 +26,15 @@ namespace Hazel {
 
 	VulkanImGuiLayer::~VulkanImGuiLayer()
 	{
+		Renderer::Submit([]()
+			{
+				auto device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+
+				VK_CHECK_RESULT(vkDeviceWaitIdle(device));
+				ImGui_ImplVulkan_Shutdown();
+				ImGui_ImplGlfw_Shutdown();
+				ImGui::DestroyContext();
+			});
 	}
 
 	void VulkanImGuiLayer::Begin()
@@ -121,7 +131,8 @@ namespace Hazel {
 		}
 	}
 
-	void VulkanImGuiLayer::OnAttach()
+
+	void VulkanImGuiLayer::Init()
 	{
 		// Setup Dear ImGui context
 		IMGUI_CHECKVERSION();
@@ -131,7 +142,7 @@ namespace Hazel {
 		//io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
 		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows  ����������ö��߳���Ⱦ�����⣬�޷�����������֮��Ĵ���
-	
+
 		io.ConfigWindowsMoveFromTitleBarOnly = true;
 
 		// Setup Dear ImGui style
@@ -216,23 +227,6 @@ namespace Hazel {
 				for (uint32_t i = 0; i < framesInFlight; i++)
 					s_ImGuiCommandBuffers[i] = VulkanContext::GetCurrentDevice()->CreateSecondaryCommandBuffer("ImGuiSecondaryCoommandBuffer");
 			});
-	}
-
-	void VulkanImGuiLayer::OnDetach()
-	{
-		Renderer::Submit([]()
-			{
-				auto device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-
-				VK_CHECK_RESULT(vkDeviceWaitIdle(device));
-				ImGui_ImplVulkan_Shutdown();
-				ImGui_ImplGlfw_Shutdown();
-				ImGui::DestroyContext();
-			});
-	}
-
-	void VulkanImGuiLayer::OnImGuiRender()
-	{
 	}
 
 }

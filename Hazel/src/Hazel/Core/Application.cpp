@@ -11,147 +11,67 @@
 
 namespace Hazel {
 	Application* Application::s_Instance = nullptr;
-	static std::thread::id s_MainThreadID;
 
 	Application::Application(const ApplicationSpecification& specification)
-		: m_Specification(specification), m_RenderThread(ThreadingPolicy::SingleThreaded) // SingleThreaded MultiThreaded
+		: m_Specification(specification)
 	{
+
 		ASSERT(!s_Instance, "Application already exists!");
 		s_Instance = this;
-		s_MainThreadID = std::this_thread::get_id();
-		m_RenderThread.Run();  // 如果是多线程，每次执行kick，线程就会被唤醒，把Renderer::submit的命令执行掉，同时主线程开始收集下一帧的命令
 
 		// Set working directory here
 		if (!m_Specification.WorkingDirectory.empty())
 			std::filesystem::current_path(m_Specification.WorkingDirectory);
 
-		m_Window = Window::Create(WindowProps(m_Specification.Name, 1950, 1300));  // 这里创建了GLFW窗口、也初始化了RenderContext和SwapChain
+		m_Window = Window::Create(WindowProps(m_Specification.Name, 1950, 1300)); 
 		m_Window->SetEventCallback(HZ_BIND_EVENT_FN(Application::OnEvent));
-		ASSERT(NFD::Init() == NFD_OKAY);
 
-		Renderer::Init();
-		// 执行当前的Renderer命令
-		m_RenderThread.Pump();
+
+		NFD::Init();
+		m_RendererManager = std::make_shared<RendererManager>();
 		AssetImporter::Init();
-		//ImGui初始化
-		if (m_Specification.EnableImGui)
-		{
-			m_ImGuiLayer = ImGuiLayer::Create();
-			PushOverlay(m_ImGuiLayer);
-		}
 
-		PushLayer(new EditorLayer());
 	}
 
 	void Application::Run()
 	{
 		while (m_Running)
 		{
-			// 阻塞等待渲染线程
-			m_RenderThread.BlockUntilRenderComplete();
+			m_RendererManager->ExecutePreFrame();
 
-			// -----------------同步点：到这里渲染线程和主线程同步----------------------
 			float time = Time::GetTime();
 			Timestep timestep = time - m_LastFrameTime;
 			m_LastFrameTime = time;
 
-			// 这里就做一件事：交换Submit用的命令缓冲区的Index，用下一个命令记录新命令。 这个切换只是用于多线程渲染的缓冲区，和渲染内部的Index无关
-			m_RenderThread.NextFrame();
 
-			// -----------------同步点结束------------------------------------------------
+			m_RendererManager->tick(timestep,m_Minimized);
+			m_Window->tick();
 
-			// 提醒渲染线程工作，渲染上一帧信息
-			m_RenderThread.Kick();
-
-			// 上一行和下一行表示GPU和渲染线程都开始工作了，在渲染线程渲染上一帧的时候,CPU开始收集下一帧渲染命令
-			if (!m_Minimized)
-			{
-				// 重置DrawCall=0，（交换链的Begin也写在这里了：获取下一帧图片索引、更新交换链FrameIndex、清空交换链的命令缓冲区)
-				Renderer::BeginFrame();
-
-				// 更新各层
-				{
-					for (Layer* layer : m_LayerStack)
-						layer->OnUpdate(timestep);
-				}
-
-				// GUI渲染 RT
-				if (m_Specification.EnableImGui)
-				{
-					RenderImGui();
-				}
-
-				// 提交命令缓冲区、呈现图片
-				Renderer::EndFrame();
-			}
 			// 主线程 FrameIndex 更新
 			m_CurrentFrameIndex = (m_CurrentFrameIndex + 1) % Renderer::GetConfig().FramesInFlight;
-			m_Window->OnUpdate();
-			ExecuteMainThreadQueue();
 		}
 	}
 
 	Application::~Application()
 	{
-		 
-		m_RenderThread.Terminate();
-
-		//ScriptEngine::Shutdown();
 		Renderer::Shutdown();
 	}
 
-	void Application::PushLayer(Layer* layer)
-	{
-		 
-
-		m_LayerStack.PushLayer(layer);
-		layer->OnAttach();
-	}
-
-	void Application::PushOverlay(Layer* layer)
-	{
-		 
-
-		m_LayerStack.PushOverlay(layer);
-		layer->OnAttach();
-	}
-
-	void Application::RenderImGui()
-	{
-		Renderer::Submit([this]()
-		{
-			m_ImGuiLayer->Begin();
-
-			for (Layer* layer : m_LayerStack)
-				layer->OnImGuiRender(); {
-			}
-
-			m_ImGuiLayer->End();
-		});
-	}
 
 	void Application::Close()
 	{
 		m_Running = false;
 	}
 
-	void Application::SubmitToMainThread(const std::function<void()>& function)
-	{
-		std::scoped_lock<std::mutex> lock(m_MainThreadQueueMutex);
-
-		m_MainThreadQueue.emplace_back(function);
-	}
 
 	void Application::OnEvent(Event& e)
 	{
-		 
-
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<WindowCloseEvent>(HZ_BIND_EVENT_FN(Application::OnWindowClose));
 		dispatcher.Dispatch<WindowResizeEvent>(HZ_BIND_EVENT_FN(Application::OnWindowResize));
 		dispatcher.Dispatch<WindowMinimizeEvent>(HZ_BIND_EVENT_FN(Application::OnWindowMinimize));
 
-		for (auto it = m_LayerStack.rbegin(); it != m_LayerStack.rend(); ++it)
+		for (auto it = m_RendererManager->GetLayerStatck().rbegin(); it != m_RendererManager->GetLayerStatck().rend(); ++it)
 		{
 			if (e.Handled)
 				break;
@@ -187,15 +107,5 @@ namespace Hazel {
 			});
 
 		return false;
-	}
-
-	void Application::ExecuteMainThreadQueue()
-	{
-		std::scoped_lock<std::mutex> lock(m_MainThreadQueueMutex);
-
-		for (auto& func : m_MainThreadQueue)
-			func();
-
-		m_MainThreadQueue.clear();
 	}
 }

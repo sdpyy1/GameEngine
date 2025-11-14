@@ -218,9 +218,8 @@ namespace Hazel {
 		}
 	}
 
-	void WindowsWindow::OnUpdate()
+	void WindowsWindow::tick()
 	{
-		 
 		glfwPollEvents();
 	}
 

@@ -1,23 +1,21 @@
 #pragma once
-#include "Hazel/ImGui/ImGuiLayer.h"
+#include "Hazel/ImGui/ImGuiRendererManager.h"
 #include "Hazel/Renderer/RenderCommandBuffer.h"
 
 
 namespace Hazel {
 
-	class VulkanImGuiLayer : public ImGuiLayer
+	class VulkanImGuiLayer : public ImGuiRendererManager
 	{
 	public:
 		VulkanImGuiLayer();
 		VulkanImGuiLayer(const std::string& name);
 		virtual ~VulkanImGuiLayer();
+		virtual void Init() override;
 
 		virtual void Begin() override;
 		virtual void End() override;
 
-		virtual void OnAttach() override;
-		virtual void OnDetach() override;
-		virtual void OnImGuiRender() override;
 	private:
 		Ref<RenderCommandBuffer> m_RenderCommandBuffer;
 		float m_Time = 0.0f;

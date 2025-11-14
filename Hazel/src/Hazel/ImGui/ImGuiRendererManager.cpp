@@ -1,13 +1,8 @@
 #include "hzpch.h"
-#include "ImGuiLayer.h"
-
-
+#include "ImGuiRendererManager.h"
 #include "Hazel/Renderer/Renderer.h"
-
 #include "Hazel/Platform/Vulkan/VulkanImGuiLayer.h"
-
 #include "Hazel/Renderer/RendererAPI.h"
-
 #include <imgui.h>
 namespace Hazel {
 	namespace Colors
@@ -42,22 +37,19 @@ namespace Hazel {
 			constexpr auto meshNotSet = IM_COL32(250, 101, 23, 255);
 		}
 	}
-	ImGuiLayer* ImGuiLayer::Create()
+	std::shared_ptr<ImGuiRendererManager> ImGuiRendererManager::Create()
 	{
 		switch (RendererAPI::Current())
 		{
-		case RendererAPI::Type::None:    return nullptr;
-		case RendererAPI::Type::Vulkan:  return new VulkanImGuiLayer();
+			case RendererAPI::Type::None:    return nullptr;
+			case RendererAPI::Type::Vulkan:  return std::make_shared<VulkanImGuiLayer>();
 		}
 		ASSERT(false, "Unknown RendererAPI");
 		return nullptr;
 	}
 
-	void ImGuiLayer::SetDarkThemeColors()
-	{
-	}
 
-	void ImGuiLayer::SetDarkThemeV2Colors()
+	void ImGuiRendererManager::SetDarkThemeV2Colors()
 	{
 		auto& style = ImGui::GetStyle();
 		auto& colors = ImGui::GetStyle().Colors;
@@ -139,11 +131,6 @@ namespace Hazel {
 		style.FrameRounding = 2.5f;
 		style.FrameBorderSize = 1.0f;
 		style.IndentSpacing = 11.0f;
-	}
-
-	void ImGuiLayer::AllowInputEvents(bool allowEvents)
-	{
-		
 	}
 
 }
