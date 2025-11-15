@@ -90,3 +90,10 @@
 */
 // 把一个成员函数声明成lambda
 #define HZ_BIND_EVENT_FN(fn) [this](auto&&... args) -> decltype(auto) { return this->fn(std::forward<decltype(args)>(args)...); }
+
+// #define RTDEBUG
+#ifdef RTDEBUG
+	#define RENDER_SUBMIT(...) Renderer::Submit(__VA_ARGS__, __FILE__, __LINE__, __FUNCTION__)
+#else
+	#define RENDER_SUBMIT(...) Renderer::Submit(__VA_ARGS__)
+#endif

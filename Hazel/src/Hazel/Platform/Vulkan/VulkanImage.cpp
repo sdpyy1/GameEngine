@@ -9,7 +9,7 @@
 #include "Hazel/Renderer/Renderer.h"
 
 namespace Hazel {
-	// ´´½¨Ê±Ö»»á±£´æ¹æ¸ñ£¬Ã»ÓÐÊµ¼Ê´´½¨
+	// ï¿½ï¿½ï¿½ï¿½Ê±Ö»ï¿½á±£ï¿½ï¿½ï¿½ï¿½Ã»ï¿½ï¿½Êµï¿½Ê´ï¿½ï¿½ï¿½
 	VulkanImage2D::VulkanImage2D(const ImageSpecification& specification)
 		: m_Specification(specification)
 	{
@@ -23,7 +23,7 @@ namespace Hazel {
 
 	void VulkanImage2D::Invalidate()
 	{
-		RT_Invalidate();  // ´´½¨ÁËÂíÉÏ¾ÍÒªÓÃ£¬²»ÄÜÑÓ³Ù´´½¨
+		RT_Invalidate();  // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¾ï¿½Òªï¿½Ã£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó³Ù´ï¿½ï¿½ï¿½
 	}
 
 	void VulkanImage2D::Release()
@@ -87,7 +87,7 @@ namespace Hazel {
 		VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 		VulkanAllocator allocator("Image2D");
 
-		// ´¦ÀíÍ¼Æ¬µÄÓÃÍ¾
+		// ï¿½ï¿½ï¿½ï¿½Í¼Æ¬ï¿½ï¿½ï¿½ï¿½Í¾
 		VkImageUsageFlags usage = VK_IMAGE_USAGE_SAMPLED_BIT;
 		if (m_Specification.Usage == ImageUsage::Attachment)
 		{
@@ -105,13 +105,13 @@ namespace Hazel {
 			usage |= VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT| VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 		}
 
-		// Ö¸¶¨Í¼Æ¬ÊÇ²Ù×÷ ÑÕÉ« »¹ÊÇ Éî¶È¡¢Ä£°å
-		// ÊÇÉî¶È»¹ÊÇÑÕÉ«²Ù×÷
+		// Ö¸ï¿½ï¿½Í¼Æ¬ï¿½Ç²ï¿½ï¿½ï¿½ ï¿½ï¿½É« ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È¡ï¿½Ä£ï¿½ï¿½
+		// ï¿½ï¿½ï¿½ï¿½È»ï¿½ï¿½ï¿½ï¿½ï¿½É«ï¿½ï¿½ï¿½ï¿½
 		VkImageAspectFlags aspectMask = Utils::IsDepthFormat(m_Specification.Format) ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
 		if (m_Specification.Format == ImageFormat::DEPTH24STENCIL8 || m_Specification.Format == ImageFormat::DEPTH32FSTENCIL8UINT)
 			aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
 
-		// °Ñ³éÏóµÄ¸ñÊ½×ªÎªVulkanµÄ¸ñÊ½
+		// ï¿½Ñ³ï¿½ï¿½ï¿½Ä¸ï¿½Ê½×ªÎªVulkanï¿½Ä¸ï¿½Ê½
 		VkFormat vulkanFormat = Utils::VulkanImageFormat(m_Specification.Format);
 
 		VmaMemoryUsage memoryUsage = m_Specification.Usage == ImageUsage::HostRead ? VMA_MEMORY_USAGE_GPU_TO_CPU : VMA_MEMORY_USAGE_GPU_ONLY;
@@ -126,7 +126,7 @@ namespace Hazel {
 		imageCreateInfo.mipLevels = m_Specification.Mips;
 		imageCreateInfo.arrayLayers = m_Specification.Layers;
 		imageCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-		imageCreateInfo.tiling = m_Specification.Usage == ImageUsage::HostRead ? VK_IMAGE_TILING_LINEAR : VK_IMAGE_TILING_OPTIMAL; // ÄÚ´æ²¼¾Ö
+		imageCreateInfo.tiling = m_Specification.Usage == ImageUsage::HostRead ? VK_IMAGE_TILING_LINEAR : VK_IMAGE_TILING_OPTIMAL; // ï¿½Ú´æ²¼ï¿½ï¿½
 		imageCreateInfo.usage = usage;
 		m_Info.MemoryAlloc = allocator.AllocateImage(imageCreateInfo, memoryUsage, m_Info.Image, &m_GPUAllocationSize);
 		// s_ImageReferences[m_Info.Image] = this;
@@ -148,7 +148,7 @@ namespace Hazel {
 		VK_CHECK_RESULT(vkCreateImageView(device, &imageViewCreateInfo, nullptr, &m_Info.ImageView));
 		VKUtils::SetDebugUtilsObjectName(device, VK_OBJECT_TYPE_IMAGE_VIEW, fmt::format("{} default image view", m_Specification.DebugName), m_Info.ImageView);
 
-		// TODO: ÕâÀïµÄÉèÖÃÏàµ±ÓÚÃ¿ÕÅÍ¼Æ¬¶¼´´½¨Ò»¸ö²ÉÑùÆ÷£¬²»ºÏÀí
+		// TODO: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½àµ±ï¿½ï¿½Ã¿ï¿½ï¿½Í¼Æ¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		if (m_Specification.CreateSampler)
 		{
 			VkSamplerCreateInfo samplerCreateInfo = {};
@@ -178,7 +178,7 @@ namespace Hazel {
 			VKUtils::SetDebugUtilsObjectName(device, VK_OBJECT_TYPE_SAMPLER, fmt::format("{} default sampler", m_Specification.DebugName), m_Info.Sampler);
 		}
 
-		// ¸ù¾Ý²»Í¬µÄÓÃÍ¾£¬ÉèÖÃ²»Í¬µÄÍ¼Æ¬ÄÚ´æ²¼¾Ö
+		// ï¿½ï¿½ï¿½Ý²ï¿½Í¬ï¿½ï¿½ï¿½ï¿½Í¾ï¿½ï¿½ï¿½ï¿½ï¿½Ã²ï¿½Í¬ï¿½ï¿½Í¼Æ¬ï¿½Ú´æ²¼ï¿½ï¿½
 		if (m_Specification.Usage == ImageUsage::Storage) // General
 		{
 			// Transition image to GENERAL layout
@@ -215,9 +215,9 @@ namespace Hazel {
 				VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
 				subresourceRange);
 
-			VulkanContext::GetCurrentDevice()->FlushCommandBuffer(commandBuffer); // »á°ÑÃüÁîÌá½»²¢µÈ´ýÍê³É
+			VulkanContext::GetCurrentDevice()->FlushCommandBuffer(commandBuffer); // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½á½»ï¿½ï¿½ï¿½È´ï¿½ï¿½ï¿½ï¿½
 		}
-		else // Ä¬ÈÏÊÇÖ»¶Á²¼¾Ö
+		else // Ä¬ï¿½ï¿½ï¿½ï¿½Ö»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		{
 			VkCommandBuffer commandBuffer = VulkanContext::GetCurrentDevice()->GetCommandBuffer(true);
 
@@ -243,7 +243,7 @@ namespace Hazel {
 			Utils::InsertImageMemoryBarrier(commandBuffer, m_Info.Image,
 				0, VK_ACCESS_SHADER_READ_BIT, 
 				VK_IMAGE_LAYOUT_UNDEFINED, targetLayout,
-				VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_VERTEX_SHADER_BIT, // ×ÅÉ«Æ÷½×¶Î
+				VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_VERTEX_SHADER_BIT, // ï¿½ï¿½É«ï¿½ï¿½ï¿½×¶ï¿½
 				subresourceRange);
 
 			VulkanContext::GetCurrentDevice()->FlushCommandBuffer(commandBuffer);
@@ -255,7 +255,7 @@ namespace Hazel {
 	void VulkanImage2D::CreatePerLayerImageViews()
 	{
 		Ref<VulkanImage2D> instance = this;
-		Renderer::Submit([instance]() mutable
+		RENDER_SUBMIT([instance]() mutable
 			{
 				instance->RT_CreatePerLayerImageViews();
 			});
@@ -298,7 +298,7 @@ namespace Hazel {
 		if (m_PerMipImageViews.find(mip) == m_PerMipImageViews.end())
 		{
 			Ref<VulkanImage2D> instance = this;
-			Renderer::Submit([instance, mip]() mutable
+			RENDER_SUBMIT([instance, mip]() mutable
 				{
 					instance->RT_GetMipImageView(mip);
 				});
@@ -627,7 +627,7 @@ namespace Hazel {
 	void VulkanImageView::Invalidate()
 	{
 		Ref<VulkanImageView> instance = this;
-		Renderer::Submit([instance]() mutable
+		RENDER_SUBMIT([instance]() mutable
 			{
 				instance->RT_Invalidate();
 			});

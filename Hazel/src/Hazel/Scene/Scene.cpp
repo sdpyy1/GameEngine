@@ -9,7 +9,7 @@
 #include <glm/glm.hpp>
 
 #include "Hazel/Utils/UIUtils.h"
-
+#include "Hazel/Renderer/RendererManager.h"
 #include <imgui.h>
 #include <Hazel/Asset/AssetImporter.h>
 #include <Hazel/Asset/Model/Mesh.h>
@@ -18,19 +18,12 @@
 namespace Hazel {
 	Scene::Scene()
 	{
-		m_SceneRender = Ref<SceneRender>::Create();
 	}
 	void Scene::ShowDebugTexture()
 	{
-		UI::Image(m_SceneRender->GetTextureWhichNeedDebug(), ImGui::GetContentRegionAvail(), { 0, 0 }, { 1, 1 });
+		UI::Image(Application::GetRendererManager()->GetTextureWhichNeedDebug(), ImGui::GetContentRegionAvail(), {0, 0}, {1, 1});
 	}
-	void Scene::OnEditorRender(Timestep ts, EditorCamera& editorCamera) {
-		PackupSceneInfo(editorCamera);
-		UpdateAnimation(ts); // 动画更新
-		CollectRenderableEntities();
-		m_SceneRender->PreRender(m_SceneInfo);
-		m_SceneRender->EndRender();
-	};
+
 	// 打包一帧的场景数据
 	void Scene::PackupSceneInfo(EditorCamera& editorCamera) {
 		m_SceneInfo.camera = editorCamera;
@@ -125,10 +118,10 @@ namespace Hazel {
 
 	void Scene::OutputViewport()
 	{
-		UI::Image(m_SceneRender->GetFinalImage(), ImGui::GetContentRegionAvail(), { 0, 0 }, { 1, 1 });
+		UI::Image(Application::GetRendererManager()->GetFinalImage(), ImGui::GetContentRegionAvail(), { 0, 0 }, { 1, 1 });
 	}
 
-	void Scene::CollectRenderableEntities()
+	void Scene::CollectRenderableEntities(std::shared_ptr<SceneRender>& SceneRender)
 	{
 		// 收集StaticMesh
 		auto allEntityOwnMesh = GetAllEntitiesWith<StaticMeshComponent>();
@@ -139,7 +132,7 @@ namespace Hazel {
 			if (mesh == nullptr) continue;
 			Entity e = Entity(entity, this);
 			glm::mat4 transform = GetWorldSpaceTransformMatrix(e);
-			m_SceneRender->SubmitStaticMesh(mesh, transform);
+			SceneRender->SubmitStaticMesh(mesh, transform);
 		}
 		// 收集SkeletalMesh
 		auto allEntityOwnSubmesh = GetAllEntitiesWith<SubmeshComponent>();
@@ -153,7 +146,7 @@ namespace Hazel {
 				Entity e = Entity(entity, this);
 				glm::mat4 transform = GetWorldSpaceTransformMatrix(e);
 				// 在这里就把骨骼信息转换为了模型空间的变换
-				m_SceneRender->SubmitDynamicMesh(meshSource, meshComponent.SubmeshIndex, transform, GetModelSpaceBoneTransforms(meshComponent.BoneEntityIds, meshSource));
+				SceneRender->SubmitDynamicMesh(meshSource, meshComponent.SubmeshIndex, transform, GetModelSpaceBoneTransforms(meshComponent.BoneEntityIds, meshSource));
 			}
 		}
 	}

@@ -18,13 +18,10 @@ namespace Hazel {
 		m_LocalData = Buffer::Copy(data, size);
 
 		Ref<VulkanIndexBuffer> instance = this;
-		Renderer::Submit([instance]() mutable
+		RENDER_SUBMIT([instance]() mutable
 			{
 				auto device = VulkanContext::GetCurrentDevice();
 				VulkanAllocator allocator("IndexBuffer");
-
-#define USE_STAGING 1
-#if USE_STAGING
 				VkBufferCreateInfo bufferCreateInfo{};
 				bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 				bufferCreateInfo.size = instance->m_Size;
@@ -58,18 +55,6 @@ namespace Hazel {
 				device->FlushCommandBuffer(copyCmd);
 
 				allocator.DestroyBuffer(stagingBuffer, stagingBufferAllocation);
-#else
-				VkBufferCreateInfo indexbufferCreateInfo = {};
-				indexbufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-				indexbufferCreateInfo.size = instance->m_Size;
-				indexbufferCreateInfo.usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
-
-				auto bufferAlloc = allocator.AllocateBuffer(indexbufferCreateInfo, VMA_MEMORY_USAGE_CPU_TO_GPU, instance->m_VulkanBuffer);
-
-				void* dstBuffer = allocator.MapMemory<void>(bufferAlloc);
-				memcpy(dstBuffer, instance->m_LocalData.Data, instance->m_Size);
-				allocator.UnmapMemory(bufferAlloc);
-#endif
 			});
 	}
 

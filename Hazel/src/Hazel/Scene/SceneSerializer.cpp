@@ -6,9 +6,9 @@
 #include "Hazel/Core/UUID.h"
 
 #include <fstream>
-
+#include "Hazel/Asset/AssetManager.h"
 #include <yaml-cpp/yaml.h>
-
+#include "Hazel/Asset/Model/Mesh.h"
 namespace YAML {
 	template<>
 	struct convert<glm::vec2>
@@ -161,12 +161,12 @@ namespace Hazel {
 		return Rigidbody2DComponent::BodyType::Static;
 	}
 
-	SceneSerializer::SceneSerializer(const Ref<Scene>& scene)
+	SceneSerializer::SceneSerializer(const std::shared_ptr<Scene> scene)
 		: m_Scene(scene)
 	{
 	}
 
-	static void SerializeEntity(YAML::Emitter& out, Entity entity, Ref<Scene> scene)
+	static void SerializeEntity(YAML::Emitter& out, Entity entity, std::shared_ptr<Scene> scene)
 	{
 		ASSERT(entity.HasComponent<IDComponent>());
 
@@ -283,7 +283,7 @@ namespace Hazel {
 		// Serialize sorted entities
 		for (auto [id, entity] : sortedEntityMap)
 		{
-			SerializeEntity(out, { entity, m_Scene.Raw() }, m_Scene);
+			SerializeEntity(out, { entity, m_Scene.get() }, m_Scene);
 		}
 		out << YAML::EndSeq;
 		out << YAML::EndMap;

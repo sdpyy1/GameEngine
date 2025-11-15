@@ -82,7 +82,7 @@ namespace Hazel {
 
 	void VulkanPipeline::Invalidate() {
 		Ref<VulkanPipeline> instance = this;
-		Renderer::Submit([instance]() mutable
+		RENDER_SUBMIT([instance]() mutable
 			{
 				// LOG_WARN("[VulkanPipeline] Creating pipeline {0}", instance->m_Specification.DebugName);
 				LOG_TRACE("RT: VulkanPipeline [{0}] Create!", instance->m_Specification.DebugName);
@@ -95,15 +95,15 @@ namespace Hazel {
 
 				const auto& pushConstantRanges = vulkanShader->GetPushConstantRanges();
 
-				// ×ª»»Îª Vulkan Ô­ÉúµÄ VkPushConstantRange ½á¹¹
+				// ×ªï¿½ï¿½Îª Vulkan Ô­ï¿½ï¿½ï¿½ï¿½ VkPushConstantRange ï¿½á¹¹
 				std::vector<VkPushConstantRange> vulkanPushConstantRanges(pushConstantRanges.size());
 				for (uint32_t i = 0; i < pushConstantRanges.size(); i++) {
 					const auto& pushConstantRange = pushConstantRanges[i];
 					auto& vulkanPushConstantRange = vulkanPushConstantRanges[i];
 
-					vulkanPushConstantRange.stageFlags = pushConstantRange.shaderStage;  // ×÷ÓÃ½×¶Î
-					vulkanPushConstantRange.offset = pushConstantRange.offset;            // Æ«ÒÆÁ¿
-					vulkanPushConstantRange.size = pushConstantRange.size;                // ´óÐ¡
+					vulkanPushConstantRange.stageFlags = pushConstantRange.shaderStage;  // ï¿½ï¿½ï¿½Ã½×¶ï¿½
+					vulkanPushConstantRange.offset = pushConstantRange.offset;            // Æ«ï¿½ï¿½ï¿½ï¿½
+					vulkanPushConstantRange.size = pushConstantRange.size;                // ï¿½ï¿½Ð¡
 				}
 
 				// Create the pipeline layout that is used to generate the rendering pipelines that are based on this descriptor set layout
@@ -143,7 +143,7 @@ namespace Hazel {
 				rasterizationState.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
 				rasterizationState.polygonMode = instance->m_Specification.Wireframe ? VK_POLYGON_MODE_LINE : VK_POLYGON_MODE_FILL;
 				rasterizationState.cullMode = instance->m_Specification.BackfaceCulling ? VK_CULL_MODE_BACK_BIT : VK_CULL_MODE_NONE;
-				rasterizationState.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;   // ±³ÃæÌÞ³ýµÄ¶¥µãË³ÐòÊÇÄæÊ±Õë
+				rasterizationState.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;   // ï¿½ï¿½ï¿½ï¿½ï¿½Þ³ï¿½ï¿½Ä¶ï¿½ï¿½ï¿½Ë³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½
 				rasterizationState.depthClampEnable = VK_FALSE;
 				rasterizationState.rasterizerDiscardEnable = VK_FALSE;
 				rasterizationState.depthBiasEnable = VK_FALSE;
@@ -311,9 +311,9 @@ namespace Hazel {
 				vertexInputState.vertexAttributeDescriptionCount = (uint32_t)vertexInputAttributes.size();
 				vertexInputState.pVertexAttributeDescriptions = vertexInputAttributes.data();
 
-				// TODO: Shader°ó¶¨ÏÈÐ´ËÀ
+				// TODO: Shaderï¿½ï¿½ï¿½ï¿½Ð´ï¿½ï¿½
 				//const auto& shaderStages = vulkanShader->GetPipelineShaderStageCreateInfos();
-				// ShaderÐÅÏ¢
+				// Shaderï¿½ï¿½Ï¢
 				VkShaderModule vertShaderModule = vulkanShader->GetVertShaderModule();
 				VkShaderModule fragShaderModule = vulkanShader->GetFragShaderModule();
 				VkPipelineShaderStageCreateInfo vertShaderStageInfo{};

@@ -12,7 +12,7 @@ namespace Hazel {
 	{
 		Ref<VulkanStorageBuffer> instance = this;
 
-		Renderer::Submit([instance]() mutable
+		RENDER_SUBMIT([instance]() mutable
 			{
 				LOG_TRACE("RT: VulkanStorageBuffer [{0}] Create! size = {1}", instance->m_Specification.DebugName, instance->m_Size);
 				instance->RT_Invalidate();
@@ -71,7 +71,7 @@ namespace Hazel {
 	{
 		memcpy(m_LocalStorage, data, size);
 		Ref<VulkanStorageBuffer> instance = this;
-		Renderer::Submit([instance, size, offset]() mutable
+		RENDER_SUBMIT([instance, size, offset]() mutable
 			{
 				instance->RT_SetData(instance->m_LocalStorage, size, offset);
 			});
@@ -117,7 +117,7 @@ namespace Hazel {
 	{
 		m_Size = newSize;
 		Ref<VulkanStorageBuffer> instance = this;
-		Renderer::Submit([instance]() mutable
+		RENDER_SUBMIT([instance]() mutable
 			{
 				instance->RT_Invalidate();
 			});

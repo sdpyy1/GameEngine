@@ -76,27 +76,27 @@ namespace Hazel{
 			Renderer::DispatchCompute(m_CommandBuffer, m_EquirectangularPass, nullptr, glm::ivec3(cubemapSize / 32, cubemapSize / 32, 6));
 			Renderer::EndComputePass(m_CommandBuffer, m_EquirectangularPass);
 
-			Renderer::Submit([=]() mutable{
-				env.m_EnvCubeMap->GenerateMips(m_CommandBuffer); // DispatchComputeÎÞ·¨×Ô¶¯Éú³Émipmap£¬ËùÒÔÕâÀïÊÖ¶¯Éú³É£¬ÔÚMipFilter¼ÆËãÖÐ»áÊ¹ÓÃ
+			RENDER_SUBMIT([=]() mutable{
+				env.m_EnvCubeMap->GenerateMips(m_CommandBuffer); // DispatchComputeï¿½Þ·ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ï¿½mipmapï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¶ï¿½ï¿½ï¿½ï¿½É£ï¿½ï¿½ï¿½MipFilterï¿½ï¿½ï¿½ï¿½ï¿½Ð»ï¿½Ê¹ï¿½ï¿½
 				});
-			// PreFilterCubeMapµÚÒ»²ãÓÃHDR
+			// PreFilterCubeMapï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½HDR
 			Renderer::BeginComputePass(m_CommandBuffer, m_EquirectangularPass);
 			m_EquirectangularPass->SetInput(env.m_EnvEquirect, 1, 0);
 			m_EquirectangularPass->SetInput(env.m_EnvPreFilterMap, 0, InputType::stoage, 0);
 			Renderer::DispatchCompute(m_CommandBuffer, m_EquirectangularPass, nullptr, glm::ivec3(cubemapSize / 32, cubemapSize / 32, 6), 0);
 			Renderer::EndComputePass(m_CommandBuffer, m_EquirectangularPass);
 
-			// »·¾³Irradiance
+			// ï¿½ï¿½ï¿½ï¿½Irradiance
 			Renderer::BeginComputePass(m_CommandBuffer, m_EnvironmentIrradiancePass);
 			m_EnvironmentIrradiancePass->SetInput("u_RadianceMap",env.m_EnvCubeMap);
 			m_EnvironmentIrradiancePass->SetInput("o_IrradianceMap",env.m_EnvIrradianceMap);
 			Renderer::DispatchCompute(m_CommandBuffer, m_EnvironmentIrradiancePass, nullptr, glm::ivec3(irradianceMapSize / 32, irradianceMapSize / 32, 6), Buffer(&Renderer::GetConfig().IrradianceMapComputeSamples, sizeof(uint32_t)));
-			Renderer::Submit([=]() mutable{
+			RENDER_SUBMIT([=]() mutable{
 				env.m_EnvIrradianceMap->GenerateMips(m_CommandBuffer);
 				});
 			Renderer::EndComputePass(m_CommandBuffer, m_EnvironmentIrradiancePass);
 
-			// »·¾³MipFilter
+			// ï¿½ï¿½ï¿½ï¿½MipFilter
 			Renderer::BeginComputePass(m_CommandBuffer, m_EnvironmentPreFilterPass);
 			uint32_t mipCount = env.m_EnvCubeMap->GetMipLevelCount();
 			for (uint32_t i = 1; i < mipCount; i++) {

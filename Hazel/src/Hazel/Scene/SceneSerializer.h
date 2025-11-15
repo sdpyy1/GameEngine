@@ -7,7 +7,7 @@ namespace Hazel {
 	class SceneSerializer
 	{
 	public:
-		SceneSerializer(const Ref<Scene>& scene);
+		SceneSerializer(const std::shared_ptr<Scene> scene);
 
 		void Serialize(const std::string& filepath);
 
@@ -15,7 +15,7 @@ namespace Hazel {
 		inline static std::string_view DefaultExtension = ".hscene";
 
 	private:
-		Ref<Scene> m_Scene;
+		std::shared_ptr<Scene> m_Scene;
 	};
 
 }

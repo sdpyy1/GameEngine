@@ -18,6 +18,7 @@
 #include "VulkanMaterial.h"
 #include "VulkanComputePass.h"
 #include "VulkanComputePipeline.h"
+#include "Hazel/Platform/Windows/WindowsWindow.h"
 
 namespace Hazel {
 	struct VulkanRendererData
@@ -71,10 +72,8 @@ namespace Hazel {
 	}
 	void VulkanRenderer::Init()
 	{
-		// 初始化一些资源
 		s_Data = new VulkanRendererData();
 		const auto& config = Renderer::GetConfig();
-		// 为并发帧都创建DescriptorPool
 		s_Data->DescriptorPools.resize(config.FramesInFlight);
 		s_Data->DescriptorPoolAllocationCount.resize(config.FramesInFlight);
 		auto& caps = s_Data->RenderCaps;
@@ -86,8 +85,7 @@ namespace Hazel {
 		LOG_INFO_TAG("Renderer", "  Vendor: {0}", caps.Vendor);
 		LOG_INFO_TAG("Renderer", "  Device: {0}", caps.Device);
 		LOG_INFO_TAG("Renderer", "  Version: {0}", caps.Version);
-		// 创建 descriptor pools
-		Renderer::Submit([]() mutable
+		RENDER_SUBMIT([]() mutable
 			{
 				VkDescriptorPoolSize pool_sizes[] =
 				{
@@ -149,11 +147,9 @@ namespace Hazel {
 	}
 	void VulkanRenderer::BeginFrame()
 	{
-		Renderer::Submit([]()
+		RENDER_SUBMIT([]()
 			{
-				//LOG_WARN("开始执行第{0}帧渲染命令缓冲", Renderer::RT_GetCurrentFrameIndex());
 				VulkanSwapChain& swapChain = Application::Get().GetWindow()->GetSwapChain();
-				// 清空命令缓冲区、获取下一帧图片索引
 				swapChain.BeginFrame();
 				VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 				uint32_t bufferIndex = swapChain.GetCurrentBufferIndex();
@@ -165,7 +161,7 @@ namespace Hazel {
 			});
 	}
 	void VulkanRenderer::BindVertData(Ref<RenderCommandBuffer> commandBuffer, Ref<VertexBuffer> testVertexBuffer) {
-		Renderer::Submit([commandBuffer, testVertexBuffer] {
+		RENDER_SUBMIT([commandBuffer, testVertexBuffer] {
 			uint32_t frameIndex = Renderer::RT_GetCurrentFrameIndex();
 			VkCommandBuffer vkCommandBuffer = commandBuffer.As<VulkanRenderCommandBuffer>()->GetActiveCommandBuffer();
 			VkDeviceSize offsets[] = { 0 };
@@ -175,7 +171,7 @@ namespace Hazel {
 	}
 	void VulkanRenderer::DrawPrueVertex(Ref<RenderCommandBuffer> commandBuffer, uint32_t count)
 	{
-		Renderer::Submit([commandBuffer, count] {
+		RENDER_SUBMIT([commandBuffer, count] {
 			uint32_t frameIndex = Renderer::RT_GetCurrentFrameIndex();
 			VkCommandBuffer vkCommandBuffer = commandBuffer.As<VulkanRenderCommandBuffer>()->GetActiveCommandBuffer();
 			vkCmdDraw(vkCommandBuffer, count, 1, 0, 0);
@@ -183,14 +179,13 @@ namespace Hazel {
 	}
 	void VulkanRenderer::EndFrame()
 	{
-		Renderer::Submit([]() {
+		RENDER_SUBMIT([]() {
 			Ref<WindowsWindow> m_Window = Application::Get().GetWindow();
-			// 提交命令缓冲区、呈现图片
 			m_Window->SwapBuffers();
 			});
 #if 0
 
-		Renderer::Submit([]()
+		RENDER_SUBMIT([]()
 			{
 				VK_CHECK_RESULT(vkEndCommandBuffer(commandBuffer));
 				commandBuffer = nullptr;
@@ -200,7 +195,7 @@ namespace Hazel {
 
 	void VulkanRenderer::BeginRenderPass(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<RenderPass> renderPass, bool explicitClear)
 	{
-		Renderer::Submit([renderCommandBuffer, renderPass, explicitClear]()
+		RENDER_SUBMIT([renderCommandBuffer, renderPass, explicitClear]()
 			{
 				//LOG_TRACE(" Pass Begin [{}]", renderPass->GetSpecification().DebugName);
 				uint32_t frameIndex = Renderer::RT_GetCurrentFrameIndex();
@@ -336,11 +331,11 @@ namespace Hazel {
 					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderPass->GetPipeline().As<VulkanPipeline>()->GetVulkanPipelineLayout(), 0, 1, &renderPass->GetPipeline()->GetShader().As<VulkanShader>()->GetDescriptorSet()[frameIndex], 0, nullptr);
 
 				}
-		});
+			});
 	}
 	void VulkanRenderer::EndRenderPass(Ref<RenderCommandBuffer> renderCommandBuffer)
 	{
-		Renderer::Submit([renderCommandBuffer]()
+		RENDER_SUBMIT([renderCommandBuffer]()
 			{
 				uint32_t frameIndex = Renderer::RT_GetCurrentFrameIndex();
 				VkCommandBuffer commandBuffer = renderCommandBuffer.As<VulkanRenderCommandBuffer>()->GetActiveCommandBuffer();
@@ -358,24 +353,23 @@ namespace Hazel {
 			pushConstantBuffer.Allocate(additionalUniforms.Size);
 			pushConstantBuffer.Write(additionalUniforms.Data, additionalUniforms.Size);
 		}
-		Renderer::Submit([renderCommandBuffer, pipeline, meshSource, submeshIndex, material, pushConstantBuffer, transformBuffer, transformOffset, instanceCount]() mutable {
+		RENDER_SUBMIT([renderCommandBuffer, pipeline, meshSource, submeshIndex, material, pushConstantBuffer, transformBuffer, transformOffset, instanceCount]() mutable {
 			uint32_t frameIndex = Renderer::RT_GetCurrentFrameIndex();
 			VkCommandBuffer commandBuffer = renderCommandBuffer.As<VulkanRenderCommandBuffer>()->GetActiveCommandBuffer();
 			Ref<VulkanVertexBuffer> meshVertBuffer = meshSource->GetVertexBuffer().As<VulkanVertexBuffer>();
 			VkBuffer vkMeshVertBuffer = meshVertBuffer->GetVulkanBuffer();
 			VkDeviceSize vertexOffsets[1] = { 0 };
-			vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vkMeshVertBuffer, vertexOffsets);  // 把整个Mesh的顶点都绑定
+			vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vkMeshVertBuffer, vertexOffsets);  // 锟斤拷锟斤拷锟斤拷Mesh锟侥讹拷锟姐都锟斤拷
 			Ref<VulkanVertexBuffer> vulkanTransformBuffer = transformBuffer.As<VulkanVertexBuffer>();
 			VkBuffer vkTransformBuffer = vulkanTransformBuffer->GetVulkanBuffer();
 			VkDeviceSize instanceOffsets[1] = { transformOffset };
-			vkCmdBindVertexBuffers(commandBuffer, 1, 1, &vkTransformBuffer, instanceOffsets); // 第二个顶点缓冲区绑定当前SubMesh的变换矩阵数据
+			vkCmdBindVertexBuffers(commandBuffer, 1, 1, &vkTransformBuffer, instanceOffsets); // 锟节讹拷锟斤拷锟斤拷锟姐缓锟斤拷锟斤拷锟襟定碉拷前SubMesh锟侥变换锟斤拷锟斤拷锟斤拷锟斤拷
 
 			auto vulkanMeshIB = Ref<VulkanIndexBuffer>(meshSource->GetIndexBuffer());
 			VkBuffer ibBuffer = vulkanMeshIB->GetVulkanBuffer();
-			vkCmdBindIndexBuffer(commandBuffer, ibBuffer, 0, VK_INDEX_TYPE_UINT32); // 索引缓冲区全绑定
+			vkCmdBindIndexBuffer(commandBuffer, ibBuffer, 0, VK_INDEX_TYPE_UINT32); // 锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷全锟斤拷
 			VkPipelineLayout layout = pipeline.As<VulkanPipeline>()->GetVulkanPipelineLayout();
 			uint32_t pushConstantOffset = 0;
-			// 每个材质绑定自己的 Set=1
 			if (material) {
 				Ref<VulkanMaterial> vulkanMaterial = material.As<VulkanMaterial>();
 				VkDescriptorSet matSet = vulkanMaterial->GetDescriptorSets()[frameIndex];
@@ -399,7 +393,7 @@ namespace Hazel {
 				vkCmdPushConstants(commandBuffer, layout, VK_SHADER_STAGE_VERTEX_BIT, pushConstantOffset, pushConstantBuffer.Size, pushConstantBuffer.Data);
 			}
 
-			vkCmdDrawIndexed(commandBuffer, submesh.IndexCount/*索引数量*/, instanceCount/*实例数量*/, submesh.BaseIndex/*索引缓冲区的偏移*/, submesh.BaseVertex/*顶点偏移*/, 0/*实例化ID开始的编号*/);
+			vkCmdDrawIndexed(commandBuffer, submesh.IndexCount, instanceCount, submesh.BaseIndex, submesh.BaseVertex, 0);
 			});
 	}
 
@@ -420,7 +414,7 @@ namespace Hazel {
 				pushConstantBuffer.Write(&boneTransformsOffset, sizeof(uint32_t), additionalUniforms.Size);
 		}
 
-		Renderer::Submit([additionalUniforms,renderCommandBuffer, pipeline, meshSource, submeshIndex, material, transformBuffer, transformOffset, instanceCount, pushConstantBuffer]() mutable
+		RENDER_SUBMIT([additionalUniforms, renderCommandBuffer, pipeline, meshSource, submeshIndex, material, transformBuffer, transformOffset, instanceCount, pushConstantBuffer]() mutable
 			{
 				uint32_t frameIndex = Renderer::RT_GetCurrentFrameIndex();
 				VkCommandBuffer commandBuffer = renderCommandBuffer.As<VulkanRenderCommandBuffer>()->GetActiveCommandBuffer();
@@ -442,7 +436,7 @@ namespace Hazel {
 				const auto& submeshes = meshSource->GetSubmeshes();
 				const auto& submesh = submeshes[submeshIndex];
 
-				if (submesh.IsRigged) // 设置4个骨骼Id和权重作为顶点信息
+				if (submesh.IsRigged)
 				{
 					Ref<VulkanVertexBuffer> vulkanBoneInfluencesVB = meshSource->GetBoneInfluenceBuffer().As<VulkanVertexBuffer>();
 					VkBuffer vbBoneInfluencesBuffer = vulkanBoneInfluencesVB->GetVulkanBuffer();
@@ -450,7 +444,7 @@ namespace Hazel {
 				}
 				uint32_t pushConstantOffset = 0;
 				VkPipelineLayout layout = vulkanPipeline->GetVulkanPipelineLayout();
-				// 每个材质绑定自己的 Set=1
+
 				if (material) {
 					Ref<VulkanMaterial> vulkanMaterial = material.As<VulkanMaterial>();
 
@@ -460,7 +454,7 @@ namespace Hazel {
 						1, // Set=1
 						1, &matSet,
 						0, nullptr);
-					
+
 					Buffer mB = Buffer(&material->BuildPush(), sizeof(MaterialPush));
 
 					vkCmdPushConstants(commandBuffer, layout, VK_SHADER_STAGE_FRAGMENT_BIT, pushConstantOffset, mB.Size, mB.Data);
@@ -472,7 +466,7 @@ namespace Hazel {
 					vkCmdPushConstants(commandBuffer, layout, VK_SHADER_STAGE_VERTEX_BIT, pushConstantOffset, pushConstantBuffer.Size, pushConstantBuffer.Data);
 				}
 
-	
+
 
 				vkCmdDrawIndexed(commandBuffer, submesh.IndexCount, instanceCount, submesh.BaseIndex, submesh.BaseVertex, 0);
 
@@ -482,7 +476,7 @@ namespace Hazel {
 
 	void VulkanRenderer::BeginComputePass(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<ComputePass> computePass)
 	{
-		Renderer::Submit([renderCommandBuffer, computePass]() mutable {
+		RENDER_SUBMIT([renderCommandBuffer, computePass]() mutable {
 			Ref<VulkanComputePass> vulkanComputePass = computePass.As<VulkanComputePass>();
 			Ref<VulkanComputePipeline> pipeline = computePass->GetSpecification().Pipeline.As<VulkanComputePipeline>();
 			const uint32_t frameIndex = Renderer::RT_GetCurrentFrameIndex();
@@ -498,7 +492,7 @@ namespace Hazel {
 
 	void VulkanRenderer::EndComputePass(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<ComputePass> computePass)
 	{
-		Renderer::Submit([renderCommandBuffer, computePass]() mutable
+		RENDER_SUBMIT([renderCommandBuffer, computePass]() mutable
 			{
 				Ref<VulkanComputePass> vulkanComputePass = computePass.As<VulkanComputePass>();
 				Ref<VulkanComputePipeline> pipeline = computePass->GetSpecification().Pipeline.As<VulkanComputePipeline>();
@@ -513,7 +507,7 @@ namespace Hazel {
 		if (constants)
 			constantsBuffer = Buffer::Copy(constants);
 
-		Renderer::Submit([renderCommandBuffer, computePass, material, workGroups, constantsBuffer]() mutable
+		RENDER_SUBMIT([renderCommandBuffer, computePass, material, workGroups, constantsBuffer]() mutable
 			{
 				Ref<VulkanComputePass> vulkanComputePass = computePass.As<VulkanComputePass>();
 				Ref<VulkanComputePipeline> pipeline = computePass->GetSpecification().Pipeline.As<VulkanComputePipeline>();
@@ -549,7 +543,7 @@ namespace Hazel {
 		if (constants)
 			constantsBuffer = Buffer::Copy(constants);
 
-		Renderer::Submit([renderCommandBuffer, computePass, material, workGroups, constantsBuffer, descriptorIndex]() mutable
+		RENDER_SUBMIT([renderCommandBuffer, computePass, material, workGroups, constantsBuffer, descriptorIndex]() mutable
 			{
 				Ref<VulkanComputePass> vulkanComputePass = computePass.As<VulkanComputePass>();
 				Ref<VulkanComputePipeline> pipeline = computePass->GetSpecification().Pipeline.As<VulkanComputePipeline>();

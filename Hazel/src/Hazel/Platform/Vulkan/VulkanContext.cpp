@@ -4,6 +4,8 @@
 #include <stb_image.h>
 #include "VulkanUtils.h"
 #include "VulkanAllocator.h"
+#include <Hazel/Core/Application.h>
+
 namespace Hazel {
 #if defined(HZ_DEBUG) || defined(HZ_RELEASE)
 	static bool s_Validation = true;
@@ -159,4 +161,20 @@ namespace Hazel {
 #endif
 		}
 	}
+
+	Hazel::Ref<Hazel::VulkanContext> VulkanContext::Get()
+	{
+		return Application::Get().GetRenderContext().As<VulkanContext>();
+	}
+
+	VkInstance VulkanContext::GetInstance()
+	{
+		return Get()->GetInstanceNative();
+	}
+
+	Hazel::Ref<Hazel::VulkanDevice> VulkanContext::GetCurrentDevice()
+	{
+		return Get()->GetDeviceNative();
+	}
+
 }

@@ -1,5 +1,11 @@
 #pragma once
 namespace Hazel {
+	struct RenderCommandDebugInfo
+	{
+		const char* file;
+		int line;
+		const char* function;
+	};
 	// 通过RT_xxx接口调用的函数都会存储在这里，在渲染线程中统一执行
 	class RenderCommandQueue
 	{
@@ -10,11 +16,13 @@ namespace Hazel {
 		~RenderCommandQueue();
 
 		void* Allocate(RenderCommandFn func, uint32_t size);
+		std::vector<RenderCommandDebugInfo> m_DebugInfos; // 调试信息
 
 		void Execute();
 	private:
 		uint8_t* m_CommandBuffer;
 		uint8_t* m_CommandBufferPtr;
 		uint32_t m_CommandCount = 0;
+
 	};
 }

@@ -13,7 +13,7 @@ namespace Hazel {
 	{
 		m_Shader = computeShader.As<VulkanShader>();
 		Ref<VulkanComputePipeline> instance = this;
-		Renderer::Submit([instance]() mutable
+		RENDER_SUBMIT([instance]() mutable
 			{
 				instance->RT_CreatePipeline();
 			});
@@ -69,7 +69,7 @@ namespace Hazel {
 
 	void VulkanComputePipeline::BufferMemoryBarrier(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<StorageBuffer> storageBuffer, PipelineStage fromStage, ResourceAccessFlags fromAccess, PipelineStage toStage, ResourceAccessFlags toAccess)
 	{
-		Renderer::Submit([vulkanRenderCommandBuffer = renderCommandBuffer.As<VulkanRenderCommandBuffer>(), vulkanStorageBuffer = storageBuffer.As<VulkanStorageBuffer>(), fromStage, fromAccess, toStage, toAccess]() mutable
+		RENDER_SUBMIT([vulkanRenderCommandBuffer = renderCommandBuffer.As<VulkanRenderCommandBuffer>(), vulkanStorageBuffer = storageBuffer.As<VulkanStorageBuffer>(), fromStage, fromAccess, toStage, toAccess]() mutable
 			{
 				VkBufferMemoryBarrier bufferMemoryBarrier = {};
 				bufferMemoryBarrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
@@ -96,7 +96,7 @@ namespace Hazel {
 
 	void VulkanComputePipeline::ImageMemoryBarrier(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<Image2D> image, PipelineStage fromStage, ResourceAccessFlags fromAccess, PipelineStage toStage, ResourceAccessFlags toAccess)
 	{
-		Renderer::Submit([vulkanRenderCommandBuffer = renderCommandBuffer.As<VulkanRenderCommandBuffer>(), vulkanImage = image.As<VulkanImage2D>(), fromStage, fromAccess, toStage, toAccess]() mutable
+		RENDER_SUBMIT([vulkanRenderCommandBuffer = renderCommandBuffer.As<VulkanRenderCommandBuffer>(), vulkanImage = image.As<VulkanImage2D>(), fromStage, fromAccess, toStage, toAccess]() mutable
 			{
 				VkImageLayout imageLayout = vulkanImage->GetDescriptorInfoVulkan().imageLayout;
 

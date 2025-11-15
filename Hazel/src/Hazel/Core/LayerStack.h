@@ -12,7 +12,7 @@ namespace Hazel {
 	public:
 		LayerStack() = default;
 		~LayerStack();
-
+		Layer* GetLayer(size_t index);
 		void PushLayer(Layer* layer);
 		void PushOverlay(Layer* overlay);
 		void PopLayer(Layer* layer);

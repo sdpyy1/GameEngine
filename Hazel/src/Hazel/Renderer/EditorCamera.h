@@ -19,9 +19,9 @@ namespace Hazel {
 		void Init();
 
 		void Focus(const glm::vec3& focusPoint);
-		void OnUpdate(Timestep ts, bool isMouseInViewport);
+		void OnUpdate(Timestep ts);
 		void OnEvent(Event& e);
-
+		void SetIsMouseInViewPort(bool flag){ m_IsMouseInViewport = flag;}
 		bool IsActive() const { return m_IsActive; }
 		void SetActive(bool active) { m_IsActive = active; }
 
@@ -105,7 +105,7 @@ namespace Hazel {
 		friend class EditorLayer;
 
 		bool m_IsCapturing = false;
-
+		bool m_IsMouseInViewport = true;
 	};
 
 }

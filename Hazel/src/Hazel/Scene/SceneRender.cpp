@@ -9,13 +9,13 @@ namespace Hazel {
 		m_CommandBuffer = RenderCommandBuffer::Create("PassCommandBuffer");
 		InitBuffers();
 
-		// Ô¤¼ÆËãPass
+		// Ô¤ï¿½ï¿½ï¿½ï¿½Pass
 		InitEnvPass();
 		InitAtmospherePass();
 
-		preCompute(); // Ô¤¼ÆËã
+		preCompute(); // Ô¤ï¿½ï¿½ï¿½ï¿½
 
-		// äÖÈ¾Pass
+		// ï¿½ï¿½È¾Pass
 		InitDirShadowPass();
 		InitSpotShadowPass();
 		InitPreDepthPass();
@@ -46,17 +46,17 @@ namespace Hazel {
 	void SceneRender::PreRender(SceneInfo sceneData)
 	{
 		uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
-		// ½ÓÊÕ³¡¾°Êý¾Ý
+		// ï¿½ï¿½ï¿½Õ³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		m_SceneDataFromScene = sceneData;
-		// ´¦ÀíResize
+		// ï¿½ï¿½ï¿½ï¿½Resize
 		HandleResizeRuntime();
-		// ¸üÐÂ¸÷ÖÖ×ÊÔ´ÐÅÏ¢
-		UploadCameraData(); // ÉãÏñ»úÊý¾Ý
-		UploadMeshAndBoneTransForm(); // Ä£ÐÍ±ä»»ºÍ¹Ç÷À±ä»»¾ØÕó
-		UploadCSMShadowData(); // ¼¶ÁªÒõÓ°Êý¾Ý
-		UploadSpotShadowData(); // ¾Û¹âÒõÓ°
-		UploadRenderSettingData();  // äÖÈ¾ÉèÖÃÊý¾Ý
-		uploadSceneData(); // ³¡¾°Êý¾Ý
+		// ï¿½ï¿½ï¿½Â¸ï¿½ï¿½ï¿½ï¿½ï¿½Ô´ï¿½ï¿½Ï¢
+		UploadCameraData(); // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+		UploadMeshAndBoneTransForm(); // Ä£ï¿½Í±ä»»ï¿½Í¹ï¿½ï¿½ï¿½ï¿½ä»»ï¿½ï¿½ï¿½ï¿½
+		UploadCSMShadowData(); // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó°ï¿½ï¿½ï¿½ï¿½
+		UploadSpotShadowData(); // ï¿½Û¹ï¿½ï¿½ï¿½Ó°
+		UploadRenderSettingData();  // ï¿½ï¿½È¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+		uploadSceneData(); // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	}
 	void SceneRender::EndRender()
 	{
@@ -74,7 +74,7 @@ namespace Hazel {
 	void SceneRender::GeoPass()
 	{
 		uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
-		// ¾²Ì¬Íø¸ñ
+		// ï¿½ï¿½Ì¬ï¿½ï¿½ï¿½ï¿½
 		Renderer::BeginRenderPass(m_CommandBuffer, m_GeoPass, false);
 		for (auto& [meshKey, drawCommand] : m_StaticMeshDrawList)
 		{
@@ -83,7 +83,7 @@ namespace Hazel {
 		}
 		Renderer::EndRenderPass(m_CommandBuffer);
 
-		// ¶¯Ì¬Íø¸ñ
+		// ï¿½ï¿½Ì¬ï¿½ï¿½ï¿½ï¿½
 		Renderer::BeginRenderPass(m_CommandBuffer, m_GeoAnimPass, false);
 		for (auto& [meshKey, drawCommand] : m_DynamicDrawList)
 		{
@@ -101,7 +101,7 @@ namespace Hazel {
 
 	void SceneRender::CalculateCascades(CascadeData* cascades, const EditorCamera& sceneCamera, const glm::vec3& lightDirection) const
 	{
-		float nearOffset = -250.f; // ¹â¿Õ¼äÐèÒªÍùºóÒÆ¶¯Ò»Ð©£¨ÆäÊµ×îºÃÊÇÍ¨¹ý¼ÆËã³¡¾°ÄÚ×îÔ¶µÄÎïÌåÔÚÄÄÀï£¬È»ºóºóÒÆNearÆ½Ãæ£¬²»È»ÎÞ·¨´¦Àí¹âÕÕÕÚµ²ÁË£¬µ«²»ÔÚÊÓ×¶ÄÚµÄÎïÌå£©
+		float nearOffset = -250.f; // ï¿½ï¿½Õ¼ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½Æ¶ï¿½Ò»Ð©ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½ï¿½ï¿½ï¿½Í¨ï¿½ï¿½ï¿½ï¿½ï¿½ã³¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï£¬È»ï¿½ï¿½ï¿½ï¿½ï¿½NearÆ½ï¿½æ£¬ï¿½ï¿½È»ï¿½Þ·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Úµï¿½ï¿½Ë£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×¶ï¿½Úµï¿½ï¿½ï¿½ï¿½å£©
 		float farOffset = 0.f;
 		glm::mat4 viewProjection = sceneCamera.GetViewProjection();
 		float CascadeSplitLambda = 0.9f;
@@ -150,7 +150,7 @@ namespace Hazel {
 				glm::vec4 invCorner = invCam * glm::vec4(frustumCorners[i], 1.0f);
 				frustumCorners[i] = invCorner / invCorner.w;
 			}
-			// frustumCornersÉèÖÃ³ÉÒ»¸ö¼¶ÁªµÄ8¸ö¶¥µãÎ»ÖÃ
+			// frustumCornersï¿½ï¿½ï¿½Ã³ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½8ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½
 			for (uint32_t i = 0; i < 4; i++)
 			{
 				glm::vec3 dist = frustumCorners[i + 4] - frustumCorners[i];
@@ -158,25 +158,25 @@ namespace Hazel {
 				frustumCorners[i] = frustumCorners[i] + (dist * lastSplitDist);
 			}
 
-			// ¼ÆËã¼¶ÁªµÄÖÐÐÄ×ø±ê£¨8¸ö¶¥µãµÄÆ½¾ùÖµ£©
+			// ï¿½ï¿½ï¿½ã¼¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ê£¨8ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ½ï¿½ï¿½Öµï¿½ï¿½
 			glm::vec3 frustumCenter = glm::vec3(0.0f);
 			for (uint32_t i = 0; i < 8; i++)
 				frustumCenter += frustumCorners[i];
 
 			frustumCenter /= 8.0f;
 
-			// ¼ÆËã¼¶ÁªµÄ°ë¾¶£¨ÖÐÐÄµãµ½¸÷¸ö½Çµã¾àÀëµÄ×î´óÖµ£©
+			// ï¿½ï¿½ï¿½ã¼¶ï¿½ï¿½ï¿½Ä°ë¾¶ï¿½ï¿½ï¿½ï¿½ï¿½Äµãµ½ï¿½ï¿½ï¿½ï¿½ï¿½Çµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½
 			float radius = 0.0f;
 			for (uint32_t i = 0; i < 8; i++)
 			{
 				float distance = glm::length(frustumCorners[i] - frustumCenter);
 				radius = glm::max(radius, distance);
 			}
-			// ÏòÉÏÈ¡Õûµ½×î½üµÄ 1/16 ÕûÊý±¶(??)
+			// ï¿½ï¿½ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ 1/16 ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½(??)
 			radius = std::ceil(radius * 16.0f) / 16.0f;
 
-			glm::mat4 lightViewMatrix = glm::lookAt(frustumCenter - lightDirection * radius, frustumCenter, glm::vec3(0.0f, 1.0f, 0.0f)); // ×îÖÕ¶¥µãÒ²ÊÇÓÃÕâ¸öviewÀ´×ªÒÆµ½¹â¿Õ¼ä£¬ËùÒÔUp·½Ïò²»Ó°Ïì
-			glm::mat4 lightOrthoMatrix = glm::ortho(-radius, radius, -radius, radius, 0.0f + nearOffset, radius * 2 + farOffset); // TODO:·¶Î§Éè¼Æ»¹ÐèÒª¸ü¼Ó¾«Ï¸»¯µÄÉè¼Æ£¬offsetÄ¿Ç°Éè¼ÆºÜ´ó²ÅÄÜ°üÀ¨×îºóÒ»¸ö¼¶Áª
+			glm::mat4 lightViewMatrix = glm::lookAt(frustumCenter - lightDirection * radius, frustumCenter, glm::vec3(0.0f, 1.0f, 0.0f)); // ï¿½ï¿½ï¿½Õ¶ï¿½ï¿½ï¿½Ò²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½viewï¿½ï¿½×ªï¿½Æµï¿½ï¿½ï¿½Õ¼ä£¬ï¿½ï¿½ï¿½ï¿½Upï¿½ï¿½ï¿½ï¿½Ó°ï¿½ï¿½
+			glm::mat4 lightOrthoMatrix = glm::ortho(-radius, radius, -radius, radius, 0.0f + nearOffset, radius * 2 + farOffset); // TODO:ï¿½ï¿½Î§ï¿½ï¿½Æ»ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½Ó¾ï¿½Ï¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ£ï¿½offsetÄ¿Ç°ï¿½ï¿½ÆºÜ´ï¿½ï¿½ï¿½Ü°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
 			// Offset to texel space to avoid shimmering (from https://stackoverflow.com/questions/33499053/cascaded-shadow-map-shimmering)
 			glm::mat4 shadowMatrix = lightOrthoMatrix * lightViewMatrix;
@@ -189,7 +189,7 @@ namespace Hazel {
 			roundOffset.z = 0.0f;
 			roundOffset.w = 0.0f;
 
-			lightOrthoMatrix[3] += roundOffset;  // TODO:Õâ¸öÓÅ»¯»¹Ã»¿´¶®roundOffsetÏà¹ØµÄ
+			lightOrthoMatrix[3] += roundOffset;  // TODO:ï¿½ï¿½ï¿½ï¿½Å»ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½ï¿½roundOffsetï¿½ï¿½Øµï¿½
 
 			// Store split distance and matrix in cascade
 			cascades[i].SplitDepth = (nearClip + splitDist * clipRange);
@@ -423,7 +423,7 @@ namespace Hazel {
 		uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
 		m_CameraData[frameIndex].view = m_SceneDataFromScene.camera.GetViewMatrix();
 		m_CameraData[frameIndex].proj = m_SceneDataFromScene.camera.GetProjectionMatrix();
-		m_CameraData[frameIndex].proj[1][1] *= -1; // YÖá·´×ª
+		m_CameraData[frameIndex].proj[1][1] *= -1; // Yï¿½á·´×ª
 		m_CameraData[frameIndex].viewproj = m_CameraData[frameIndex].proj * m_CameraData[frameIndex].view;
 		m_CameraData[frameIndex].Near = m_SceneDataFromScene.camera.GetNearClip();
 		m_CameraData[frameIndex].Far = m_SceneDataFromScene.camera.GetFarClip();
@@ -436,17 +436,17 @@ namespace Hazel {
 	void SceneRender::SubmitStaticMesh(Ref<MeshSource> meshSource, const glm::mat4& transform) {
 		const auto& submeshData = meshSource->GetSubmeshes();
 		for (uint32_t submeshIndex = 0; submeshIndex < submeshData.size(); submeshIndex++) {
-			glm::mat4 submeshTransform = transform * submeshData[submeshIndex].Transform;  // subMeshµÄÈ«¾Ö±ä»»
+			glm::mat4 submeshTransform = transform * submeshData[submeshIndex].Transform;  // subMeshï¿½ï¿½È«ï¿½Ö±ä»»
 			AssetHandle materialHandle = meshSource->GetMaterialHandle(submeshData[submeshIndex].MaterialIndex);
-			Ref<MaterialAsset> material = AssetManager::GetAsset<MaterialAsset>(materialHandle);// subMeshµÄ²ÄÖÊË÷Òý;
+			Ref<MaterialAsset> material = AssetManager::GetAsset<MaterialAsset>(materialHandle);// subMeshï¿½Ä²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½;
 			VERIFY(material);
 			MeshKey meshKey = { meshSource->Handle, materialHandle, submeshIndex, false };
-			// »º´æ±ä»»¾ØÕó
-			auto& transformStorage = m_MeshTransformMap[meshKey].Transforms.emplace_back(); // ¶ÔÓÚÃ¿Ò»ÖÖMeshKey£¬¶¼´æ´¢¶à¸öTransforms¾ØÕó£¬±íÊ¾¶à¸öÊµÀý
+			// ï¿½ï¿½ï¿½ï¿½ä»»ï¿½ï¿½ï¿½ï¿½
+			auto& transformStorage = m_MeshTransformMap[meshKey].Transforms.emplace_back(); // ï¿½ï¿½ï¿½ï¿½Ã¿Ò»ï¿½ï¿½MeshKeyï¿½ï¿½ï¿½ï¿½ï¿½æ´¢ï¿½ï¿½ï¿½Transformsï¿½ï¿½ï¿½ó£¬±ï¿½Ê¾ï¿½ï¿½ï¿½Êµï¿½ï¿½
 			transformStorage.MRow[0] = { submeshTransform[0][0], submeshTransform[1][0], submeshTransform[2][0], submeshTransform[3][0] };
 			transformStorage.MRow[1] = { submeshTransform[0][1], submeshTransform[1][1], submeshTransform[2][1], submeshTransform[3][1] };
 			transformStorage.MRow[2] = { submeshTransform[0][2], submeshTransform[1][2], submeshTransform[2][2], submeshTransform[3][2] };
-			// »º´æ»æÖÆÃüÁî
+			// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 			StaticDrawCommand& drawCommand = m_StaticMeshDrawList[meshKey];
 			drawCommand.MeshSource = meshSource;
 			drawCommand.SubmeshIndex = submeshIndex;
@@ -498,7 +498,7 @@ namespace Hazel {
 		{
 			for (size_t i = 0; i < meshSource->m_BoneInfo.size(); ++i)
 			{
-				// 1. Äæ±ä»»¾ØÕó×ªÒÆµ½¹Ç÷À¿Õ¼ä 2. ¸úËæ¹Ç÷ÀÔÚÊÀ½ç¿Õ¼äÒÆ¶¯ 3. È«¾Ö±ä»»
+				// 1. ï¿½ï¿½ä»»ï¿½ï¿½ï¿½ï¿½×ªï¿½Æµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õ¼ï¿½ 2. ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õ¼ï¿½ï¿½Æ¶ï¿½ 3. È«ï¿½Ö±ä»»
 				boneTransformStorage[i] = meshSource->GetSkeleton()->GetTransform() * boneTransforms[meshSource->m_BoneInfo[i].BoneIndex] * meshSource->m_BoneInfo[i].InverseBindPose;
 			}
 		}
@@ -514,7 +514,7 @@ namespace Hazel {
 	void SceneRender::InitBuffers()
 	{
 		uint32_t framesInFlight = Renderer::GetConfig().FramesInFlight;
-		// MVP¾ØÕóµÄUBO
+		// MVPï¿½ï¿½ï¿½ï¿½ï¿½UBO
 		m_CameraData.resize(framesInFlight);
 		m_UBSCameraData = UniformBufferSet::Create(sizeof(CameraData), "CameraData");
 
@@ -547,7 +547,7 @@ namespace Hazel {
 		}
 	}
 	void SceneRender::InitDirShadowPass() {
-		// Ò»ÕÅ¶àLayerÉî¶ÈÍ¼ÓÃÓÚ²»Í¬µÄÒõÓ°¼¶
+		// Ò»ï¿½Å¶ï¿½Layerï¿½ï¿½ï¿½Í¼ï¿½ï¿½ï¿½Ú²ï¿½Í¬ï¿½ï¿½ï¿½ï¿½Ó°ï¿½ï¿½
 		ImageSpecification spec;
 		spec.Format = ImageFormat::DEPTH32F;
 		spec.Usage = ImageUsage::Attachment;
@@ -688,11 +688,10 @@ namespace Hazel {
 		gridPassSpec.Pipeline = m_GridPipeline;
 		gridPassSpec.DebugName = "gridPass";
 		m_GridPass = RenderPass::Create(gridPassSpec);
-		m_GridPass->SetInput("u_CameraData", m_UBSCameraData); // ÉèÖÃbinding=0µÄubo
+		m_GridPass->SetInput("u_CameraData", m_UBSCameraData); // ï¿½ï¿½ï¿½ï¿½binding=0ï¿½ï¿½ubo
 		m_GridPass->SetInput("inDepth",m_GeoAnimPass->GetDepthOutput());
 	}
 	void SceneRender::UploadMeshAndBoneTransForm() {
-		// ÊÕ¼¯ËùÓÐ²ÎÓëäÖÈ¾µÄMeshµÄ±ä»»¾ØÕó´æ´¢ÔÚm_SubmeshTransformBuffers
 		{
 			uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
 
@@ -706,11 +705,9 @@ namespace Hazel {
 					offset++;
 				}
 			}
-			// ÔÚÕâÀïËùÓÐµÄ±ä»»¾ØÕóÒÑ¾­ÉÏ´«µ½GPU£¨RTÏß³Ì£©
 			m_SubmeshTransformBuffers[frameIndex].Buffer->SetData(m_SubmeshTransformBuffers[frameIndex].Data, offset * sizeof(TransformVertexData));
 		}
 
-		// Æ½ÆÌ¹Ç÷ÀÐÅÏ¢µ½Ò»¸ö¶¥µã»º³åÇø
 		uint32_t index = 0;
 		for (auto& [key, boneTransformsData] : m_MeshBoneTransformsMap)
 		{
@@ -723,17 +720,17 @@ namespace Hazel {
 
 		if (index > 0)
 		{
-			Ref<SceneRender> instance = this;
-			Renderer::Submit([instance, index]() mutable
+			SceneRender* instance = this;
+			RENDER_SUBMIT([instance, index]() mutable
 				{
 					instance->m_SBSBoneTransforms->RT_Get()->RT_SetData(instance->m_BoneTransformsData, static_cast<uint32_t>(index * sizeof(BoneTransforms)));
+					LOG_INFO("SceneRender::UploadMeshAndBoneTransForm boneTransformsData size: {0}", index);
 				});
 		}
 	}
 	void SceneRender::HandleResizeRuntime() {
 		SetViewprotSize(m_SceneDataFromScene.camera.GetViewportWidth(), m_SceneDataFromScene.camera.GetViewportHeight());
 		if (NeedResize) {
-			// ¸üÐÂFBO³ß´ç£¨ÐèÒª°´Ë³ÐòResize£©
 			LOG_WARN("SceneRender::PreRender Resize FBO to {0}x{1}", m_SceneDataFromScene.camera.GetViewportWidth(), m_SceneDataFromScene.camera.GetViewportHeight());
 			m_PreDepthClearFramebuffer->Resize(m_SceneDataFromScene.camera.GetViewportWidth(), m_SceneDataFromScene.camera.GetViewportHeight());
 			m_PreDepthLoadFramebuffer->Resize(m_SceneDataFromScene.camera.GetViewportWidth(), m_SceneDataFromScene.camera.GetViewportHeight());
@@ -798,7 +795,7 @@ namespace Hazel {
 		spec.SamplerFilter = TextureFilter::Nearest;
 		spec.DebugName = "HierarchicalZ";
 		spec.Storage = true;
-		m_HierarchicalDepthTexture.Texture = Texture2D::Create(spec); // ´´½¨ÁËÒ»ÕÅÎÆÀíÓÃÓÚ´æ´¢×îÖÕµÄHZB
+		m_HierarchicalDepthTexture.Texture = Texture2D::Create(spec);
 		uint32_t mipCount = m_HierarchicalDepthTexture.Texture->GetMipLevelCount();
 		m_HierarchicalDepthTexture.ImageViews.resize(m_HierarchicalDepthTexture.Texture->GetMipLevelCount());
 		ImageViewSpecification imageViewSpec;
@@ -820,12 +817,12 @@ namespace Hazel {
 		uint32_t inputWidth = m_PreDepthLoadFramebuffer->GetDepthImage()->GetWidth();
 		uint32_t inputHeight = m_PreDepthLoadFramebuffer->GetDepthImage()->GetHeight();
 
-		// ¹¤×÷×éÊýÁ¿£¨°´µÚ0¼¶³ß´ç£©
+		// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½0ï¿½ï¿½ï¿½ß´ç£©
 		const uint32_t localSize = 8;
 		uint32_t groupCountX = (inputWidth + localSize - 1) / localSize;
 		uint32_t groupCountY = (inputHeight + localSize - 1) / localSize;
 
-		// °ó¶¨×ÊÔ´£ºÊäÈëÉî¶ÈÍ¼£¨²ÉÑùÆ÷£©+ HZBÊý×é£¨´æ´¢Í¼Ïñ£©
+		// ï¿½ï¿½ï¿½ï¿½Ô´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½+ HZBï¿½ï¿½ï¿½é£¨ï¿½æ´¢Í¼ï¿½ï¿½
 		Renderer::BeginComputePass(m_CommandBuffer, m_HierarchicalDepthPass);
 		m_HierarchicalDepthPass->SetInput("u_InputDepth",m_PreDepthLoadFramebuffer->GetDepthImage());
 		uint32_t mipLevels = 0;
@@ -1059,7 +1056,7 @@ namespace Hazel {
 		TextureSpecification spec;
 		spec.Format = ImageFormat::RGBA32F;
 		spec.DebugName = "BloomImage";
-		spec.SamplerWrap = TextureWrap::Clamp;  // ÎªÁË´¦Àí±ß½ç²ÉÑù
+		spec.SamplerWrap = TextureWrap::Clamp;  // Îªï¿½Ë´ï¿½ï¿½ï¿½ï¿½ß½ï¿½ï¿½ï¿½ï¿½
 		spec.Storage = true;
 		spec.GenerateMips = true;
 		m_BloomImage = Texture2D::Create(spec);
@@ -1101,7 +1098,7 @@ namespace Hazel {
 		}m_BloomSettings;
 		bloomComputePushConstants.Params = { m_BloomSettings.Threshold, m_BloomSettings.Threshold - m_BloomSettings.Knee, m_BloomSettings.Knee * 2.0f, 0.25f / m_BloomSettings.Knee };
 
-		// ÌáÈ¡¸ßÁÁ
+		// ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½
 		bloomComputePushConstants.Mode = 0;
 		glm::uvec3 workGroups(0);
 		Renderer::BeginComputePass(m_CommandBuffer, m_BloomPass);
@@ -1111,14 +1108,14 @@ namespace Hazel {
 		Renderer::DispatchCompute(m_CommandBuffer, m_BloomPass, m_BloomPreFilterMaterial, workGroups, Buffer(&bloomComputePushConstants, sizeof(bloomComputePushConstants)));
 		m_BloomPass->GetPipeline()->ImageMemoryBarrier(m_CommandBuffer, m_BloomImage->GetImage(), ResourceAccessFlags::ShaderWrite, ResourceAccessFlags::ShaderRead);
 
-		// ÏÂ²ÉÑù
+		// ï¿½Â²ï¿½ï¿½ï¿½
 		bloomComputePushConstants.Mode = 1;
 		uint32_t mipCount = m_BloomImage->GetMipLevelCount();
 		uint32_t width = m_BloomImage->GetWidth();
 		uint32_t height = m_BloomImage->GetHeight();
 		for (uint32_t i = 1; i < mipCount; i++) {
-			bloomComputePushConstants.LOD = i - 1;// ¶ÁÈ¡i-1²ãmipÀ´Ä£ºý£¬Ð´ÈëµÚi²ã
-			m_BloomPreDownSamplerMaterials[i]->SetInput("o_Texture", m_BloomImageViews[i]); // Ð´µÚi¸ömip
+			bloomComputePushConstants.LOD = i - 1;// ï¿½ï¿½È¡i-1ï¿½ï¿½mipï¿½ï¿½Ä£ï¿½ï¿½ï¿½ï¿½Ð´ï¿½ï¿½ï¿½iï¿½ï¿½
+			m_BloomPreDownSamplerMaterials[i]->SetInput("o_Texture", m_BloomImageViews[i]); // Ð´ï¿½ï¿½iï¿½ï¿½mip
 			m_BloomPreDownSamplerMaterials[i]->SetInput("u_InputTexture", m_BloomImage);
 			auto [mipWidth, mipHeight] = m_BloomImage->GetMipSize(i);
 			workGroups = { (uint32_t)glm::ceil((float)mipWidth / (float)m_BloomComputeWorkgroupSize) ,(uint32_t)glm::ceil((float)mipHeight / (float)m_BloomComputeWorkgroupSize), 1 };
@@ -1126,7 +1123,7 @@ namespace Hazel {
 			m_BloomPass->GetPipeline()->ImageMemoryBarrier(m_CommandBuffer, m_BloomImage->GetImage(), ResourceAccessFlags::ShaderWrite, ResourceAccessFlags::ShaderRead);
 		}
 
-		// ÉÏ²ÉÑù
+		// ï¿½Ï²ï¿½ï¿½ï¿½
 		width = 1;
 		height = 1;
 		bloomComputePushConstants.Mode = 3;

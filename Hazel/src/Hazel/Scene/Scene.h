@@ -3,18 +3,16 @@
 #include "Hazel/Core/Timestep.h"
 #include "Hazel/Core/UUID.h"
 #include "Hazel/Renderer/EditorCamera.h"
-#include "Hazel/Platform/Vulkan/VulkanShader.h"
 #include "entt.hpp"
-#include <Hazel/Renderer/RenderContext.h>
-#include "Hazel/Platform/Vulkan/VulkanContext.h"
-#include <Hazel/Renderer/IndexBuffer.h>
-#include <Hazel/Asset/Model/Mesh.h>
 
 class b2World;
 
 namespace Hazel {
+	class MeshSource;
+	class MeshNode;
 	class SceneRender;
 	class Entity;
+	class Skeleton;
 	struct DirLight
 	{
 		glm::vec3 Direction = { 0.0f, 0.0f, 0.0f };
@@ -92,13 +90,12 @@ namespace Hazel {
 		void PackupSceneInfo(EditorCamera& editorCamera);
 		~Scene();
 		void testButton() { LOG_INFO("Test");};
-		void OnEditorRender(Timestep ts, EditorCamera& editorCamera);
 		void UpdateAnimation(Timestep ts);
 		void OutputViewport();
 		void ShowDebugTexture();
 		void SetViewprotSize(float width, float height) { m_ViewportWidth = width; m_ViewportHeight = height; }
 	public:
-		void CollectRenderableEntities();
+		void CollectRenderableEntities(std::shared_ptr<SceneRender>& sceneRender);
 		Entity CreateEntity(const std::string& name = std::string());
 		Entity CreateChildEntity(Entity parent, const std::string& name);
 		void SortEntities();
@@ -115,7 +112,7 @@ namespace Hazel {
 		entt::registry& GetRegistry() { return m_Registry; }
 		Entity BuildDynamicMeshEntity(Ref<MeshSource> mesh, Entity& root, const std::filesystem::path& path);
 		RenderSettingData& GetRenderSettingData() { return m_SceneInfo.RenderSettingData; }
-		SceneInfo& GetSceneInfo() { return m_SceneInfo; }
+		SceneInfo GetSceneInfo() { return m_SceneInfo; }
 		glm::mat4 GetWorldSpaceTransformMatrix(Entity entity);
 
 	private:
@@ -138,6 +135,5 @@ namespace Hazel {
 		friend class SceneSerializer;
 		friend class SceneRender;
 		SceneInfo m_SceneInfo;
-		Ref<SceneRender> m_SceneRender = nullptr;
 	};
 }

@@ -1,24 +1,25 @@
 #pragma once
-#include "Hazel/Core/LayerStack.h"
 #include "Hazel/Core/RenderThread.h"
-#include "Hazel/ImGui/ImGuiRendererManager.h"
+#include "Hazel/Editor/ImGuiRendererManager.h"
 namespace Hazel
 {
+	class Scene;
+	class SceneRender;
 	class RendererManager
 	{
 	public:
         RendererManager();
+		~RendererManager() = default;
+		void tick(float timestep);
+		bool OnEvent(Event& e);
 		void ExecutePreFrame();
-		void Init();
-		void tick(float timestep, bool m_Minimized);
 		void RenderImGui();
-		LayerStack& GetLayerStatck() {return m_LayerStack;};
-
+		Ref<Hazel::Image2D>  GetFinalImage() const;
+		Ref<Image2D> GetTextureWhichNeedDebug() const;
 	private:
 		RenderThread m_RenderThread;
-		std::shared_ptr<ImGuiRendererManager> m_ImGuiLayer;
-		LayerStack m_LayerStack;
-
+		std::shared_ptr<ImGuiRendererManager> m_ImGuiRendererManager;
+		std::shared_ptr<SceneRender> m_SceneRender;
 	};
 }
 

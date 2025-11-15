@@ -1,6 +1,19 @@
 Scene: Untitled
 Entities:
-  - Entity: 4376985198759241905
+  - Entity: 252825504776983791
+    TagComponent:
+      Tag: Sky Light
+    Parent: 0
+    Children:
+      []
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    SkyComponent:
+      DynamicSky: false
+      selectedIBL: 7
+  - Entity: 469935833550427923
     TagComponent:
       Tag: DirLight
     Parent: 0
@@ -17,29 +30,16 @@ Entities:
       SoftShadows: true
       LightSize: 0.5
       ShadowAmount: 1
-  - Entity: 13081851765099173371
+  - Entity: 6156365651651056377
     TagComponent:
       Tag: Sponza
     Parent: 0
     Children:
       []
     TransformComponent:
-      Translation: [0, 1.10000002, 0]
+      Translation: [0, 0.922856331, -0.0963767767]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     StaticMeshComponent:
       MeshSourcePath: assets\model\Sponza\glTF\Sponza.gltf
       Visible: true
-  - Entity: 16813980124411665092
-    TagComponent:
-      Tag: Sky Light
-    Parent: 0
-    Children:
-      []
-    TransformComponent:
-      Translation: [0, 0, 0]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-    SkyComponent:
-      DynamicSky: false
-      selectedIBL: 7

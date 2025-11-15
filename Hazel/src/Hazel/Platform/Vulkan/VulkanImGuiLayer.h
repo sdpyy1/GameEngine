@@ -1,5 +1,5 @@
 #pragma once
-#include "Hazel/ImGui/ImGuiRendererManager.h"
+#include "Hazel/Editor/ImGuiRendererManager.h"
 #include "Hazel/Renderer/RenderCommandBuffer.h"
 
 
@@ -11,7 +11,6 @@ namespace Hazel {
 		VulkanImGuiLayer();
 		VulkanImGuiLayer(const std::string& name);
 		virtual ~VulkanImGuiLayer();
-		virtual void Init() override;
 
 		virtual void Begin() override;
 		virtual void End() override;

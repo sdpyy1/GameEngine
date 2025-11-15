@@ -11,7 +11,7 @@
 #include "Hazel/Renderer/Renderer.h"
 #include "Hazel/Scene/Scene.h"
 #include "Hazel/Scene/Entity.h"
-
+#include "Hazel/Asset/Model/Mesh.h"
 namespace Hazel {
 	FolderPreviewPanel::FolderPreviewPanel(const std::filesystem::path& assetsDir)
 		: m_AssetsDir(assetsDir), m_CurrentDir(assetsDir)
@@ -40,7 +40,7 @@ namespace Hazel {
 		m_SelectedFile.clear();
 	}
 
-	void FolderPreviewPanel::SetContext(Ref<Scene>& context)
+	void FolderPreviewPanel::SetContext(std::shared_ptr<Scene>& context)
 	{
 		m_Context = context;
 	}

@@ -48,8 +48,11 @@ namespace Hazel {
 		io.ConfigFlags &= ~ImGuiConfigFlags_NavNoCaptureKeyboard;
 	}
 
-	void EditorCamera::OnUpdate(const Timestep ts, bool isMouseInViewport)
+	void EditorCamera::OnUpdate(const Timestep ts)
 	{
+		bool isMouseInViewport = m_IsMouseInViewport; 
+
+		// LOG_INFO("{0}", isMouseInViewport);
 		bool isButtonPressed = Input::IsMouseButtonDown(MouseButton::Right) ||Input::IsMouseButtonDown(MouseButton::Middle) ||(Input::IsMouseButtonDown(MouseButton::Left) && Input::IsKeyDown(KeyCode::LeftAlt));
 		// 如果用户按下按钮，开始捕获
 		if (isButtonPressed && isMouseInViewport && !m_IsCapturing) {

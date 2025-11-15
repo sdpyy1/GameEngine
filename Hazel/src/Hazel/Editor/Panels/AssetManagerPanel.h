@@ -8,7 +8,7 @@ namespace Hazel {
 	public:
 		AssetManagerPanel();
 
-		void SetContext(Ref<Scene>& scene);
+		void SetContext(std::shared_ptr<Scene>& context);
 		void ClearState() { m_SelectionContext = {}; m_RenameEntity = {}; }
 		void OnImGuiRender() override;
 
@@ -23,7 +23,7 @@ namespace Hazel {
 		static void DrawMaterial(AssetHandle meshSourceHandle);
 
 	private:
-		Ref<Scene> m_Context;
+		std::shared_ptr<Scene> m_Context;
 		Entity m_SelectionContext;
 		Entity m_RenameEntity;
 		char m_RenameBuffer[256]{};

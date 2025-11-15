@@ -3,6 +3,7 @@
 #include <Hazel/Asset/Model/Material.h>
 
 namespace Hazel {
+	class MeshSource;
 	class MaterialAsset : public Asset
 	{
 	public:

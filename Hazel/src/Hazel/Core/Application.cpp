@@ -1,13 +1,16 @@
 #include "hzpch.h"
-#include "Hazel/Core/Application.h"
 
-#include "Hazel/Core/Log.h"
-
-#include "Hazel/Renderer/Renderer.h"
-#include "Hazel/Editor/EditorLayer.h"
-#include "Hazel/Utils/PlatformUtils.h"
-#include "Hazel/Asset/AssetImporter.h"
 #include <nfd.hpp>
+#include <GLFW/glfw3.h>
+#include "Hazel/Core/Application.h"
+#include "Hazel/Events/Event.h"
+#include "Hazel/Events/ApplicationEvent.h"
+#include "Hazel/Renderer/Renderer.h"
+#include "Hazel/Asset/AssetImporter.h"
+#include "Hazel/Scene/SceneManager.h"
+#include <Hazel/Renderer/RendererManager.h>
+#include "Hazel/Platform/Windows/WindowsWindow.h"
+#include "Hazel/Core/Window.h"
 
 namespace Hazel {
 	Application* Application::s_Instance = nullptr;
@@ -19,42 +22,42 @@ namespace Hazel {
 		ASSERT(!s_Instance, "Application already exists!");
 		s_Instance = this;
 
-		// Set working directory here
-		if (!m_Specification.WorkingDirectory.empty())
-			std::filesystem::current_path(m_Specification.WorkingDirectory);
-
 		m_Window = Window::Create(WindowProps(m_Specification.Name, 1950, 1300)); 
 		m_Window->SetEventCallback(HZ_BIND_EVENT_FN(Application::OnEvent));
 
 
 		NFD::Init();
+		m_SceneManager = std::make_shared<SceneManager>();
 		m_RendererManager = std::make_shared<RendererManager>();
 		AssetImporter::Init();
 
 	}
 
-	void Application::Run()
+	void Application::tick()
 	{
 		while (m_Running)
 		{
-			m_RendererManager->ExecutePreFrame();
+			m_RendererManager->ExecutePreFrame(); // RT_thread
 
-			float time = Time::GetTime();
-			Timestep timestep = time - m_LastFrameTime;
-			m_LastFrameTime = time;
+			float timestep = GetTimePreFrame();
 
+			m_SceneManager->tick(timestep);
 
-			m_RendererManager->tick(timestep,m_Minimized);
+			if (!m_Minimized) {
+				m_RendererManager->tick(timestep);
+			}
+
 			m_Window->tick();
 
-			// 主线程 FrameIndex 更新
 			m_CurrentFrameIndex = (m_CurrentFrameIndex + 1) % Renderer::GetConfig().FramesInFlight;
 		}
 	}
-
-	Application::~Application()
+	float Application::GetTimePreFrame()
 	{
-		Renderer::Shutdown();
+		float time = glfwGetTime();
+		Timestep timestep = time - m_LastFrameTime;
+		m_LastFrameTime = time;
+		return timestep;
 	}
 
 
@@ -70,12 +73,8 @@ namespace Hazel {
 		dispatcher.Dispatch<WindowCloseEvent>(HZ_BIND_EVENT_FN(Application::OnWindowClose));
 		dispatcher.Dispatch<WindowResizeEvent>(HZ_BIND_EVENT_FN(Application::OnWindowResize));
 		dispatcher.Dispatch<WindowMinimizeEvent>(HZ_BIND_EVENT_FN(Application::OnWindowMinimize));
-
-		for (auto it = m_RendererManager->GetLayerStatck().rbegin(); it != m_RendererManager->GetLayerStatck().rend(); ++it)
-		{
-			if (e.Handled)
-				break;
-			(*it)->OnEvent(e);
+		if (m_RendererManager->OnEvent(e)) {
+			return;
 		}
 	}
 	bool Application::OnWindowMinimize(WindowMinimizeEvent& e)
@@ -101,11 +100,22 @@ namespace Hazel {
 		//m_Minimized = false;
 
 		auto& window = m_Window;
-		Renderer::Submit([&window, width, height]() mutable
+		RENDER_SUBMIT([&window, width, height]() mutable
 			{
 				window->GetSwapChain().OnResize(width, height);
 			});
 
 		return false;
 	}
+
+	Hazel::Ref<Hazel::WindowsWindow>& Application::GetWindow()
+	{
+		return m_Window.As<WindowsWindow>();
+	}
+
+	Hazel::Ref<Hazel::RenderContext> Application::GetRenderContext()
+	{
+		return GetWindow()->GetRenderContext();
+	}
+
 }

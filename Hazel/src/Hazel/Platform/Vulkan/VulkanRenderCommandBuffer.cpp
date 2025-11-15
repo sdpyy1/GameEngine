@@ -5,6 +5,8 @@
 #include "VulkanUtils.h"
 #include <format>
 #include <utility>
+#include "Hazel/Core/Window.h"
+#include "Hazel/Platform/Windows/WindowsWindow.h"
 
 namespace Hazel {
 	VulkanRenderCommandBuffer::VulkanRenderCommandBuffer(uint32_t commandBufferCount, std::string debugName)
@@ -156,7 +158,7 @@ namespace Hazel {
 		m_TimestampNextAvailableQuery = 2;
 
 		Ref<VulkanRenderCommandBuffer> instance = this;
-		Renderer::Submit([instance]() mutable
+		RENDER_SUBMIT([instance]() mutable
 			{
 				uint32_t commandBufferIndex = Renderer::RT_GetCurrentFrameIndex();
 
@@ -192,7 +194,7 @@ namespace Hazel {
 	void VulkanRenderCommandBuffer::End()
 	{
 		Ref<VulkanRenderCommandBuffer> instance = this;
-		Renderer::Submit([instance]() mutable
+		RENDER_SUBMIT([instance]() mutable
 			{
 				uint32_t commandBufferIndex = Renderer::RT_GetCurrentFrameIndex();
 				if (!instance->m_OwnedBySwapChain)
@@ -213,7 +215,7 @@ namespace Hazel {
 			return;
 
 		Ref<VulkanRenderCommandBuffer> instance = this;
-		Renderer::Submit([instance]() mutable
+		RENDER_SUBMIT([instance]() mutable
 			{
 				auto device = VulkanContext::GetCurrentDevice();
 
@@ -257,7 +259,7 @@ namespace Hazel {
 		uint32_t queryIndex = m_TimestampNextAvailableQuery;
 		m_TimestampNextAvailableQuery += 2;
 		Ref<VulkanRenderCommandBuffer> instance = this;
-		Renderer::Submit([instance, queryIndex]()
+		RENDER_SUBMIT([instance, queryIndex]()
 			{
 				uint32_t commandBufferIndex = Renderer::RT_GetCurrentFrameIndex() % instance->m_CommandBuffers.size();
 				VkCommandBuffer commandBuffer = instance->m_CommandBuffers[commandBufferIndex];
@@ -269,7 +271,7 @@ namespace Hazel {
 	void VulkanRenderCommandBuffer::EndTimestampQuery(uint32_t queryID)
 	{
 		Ref<VulkanRenderCommandBuffer> instance = this;
-		Renderer::Submit([instance, queryID]()
+		RENDER_SUBMIT([instance, queryID]()
 			{
 				uint32_t commandBufferIndex = Renderer::RT_GetCurrentFrameIndex() % instance->m_CommandBuffers.size();
 				VkCommandBuffer commandBuffer = instance->m_CommandBuffers[commandBufferIndex];

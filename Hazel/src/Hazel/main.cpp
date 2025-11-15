@@ -9,6 +9,6 @@ int main(int argc, char** argv)
 	spec.Name = "Hazelnut";
 	spec.CommandLineArgs = { argc, argv };
 	Hazel::Application* app = new Hazel::Application(spec);
-	app->Run();
+	app->tick();
 	delete app;
 }

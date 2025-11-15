@@ -10,7 +10,7 @@ namespace Hazel {
 	{
 		m_LocalStorage = new uint8_t[size];
 		m_DebugName = debugName;
-		RT_Invalidate(); // ÒòÎªÕâ¸ö´´½¨ºÃ£¬ÔÚ³õÊ¼»¯äÖÈ¾Æ÷Ê±ÂíÉÏ¾ÍÒªÓÃµ½£¬ËùÒÔ²»ÄÜÍÆ³Ùµ½äÖÈ¾Ïß³ÌÔÙÖ´ĞĞ
+		RT_Invalidate(); // ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã£ï¿½ï¿½Ú³ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½È¾ï¿½ï¿½Ê±ï¿½ï¿½ï¿½Ï¾ï¿½Òªï¿½Ãµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô²ï¿½ï¿½ï¿½ï¿½Æ³Ùµï¿½ï¿½ï¿½È¾ï¿½ß³ï¿½ï¿½ï¿½Ö´ï¿½ï¿½
 	}
 
 	VulkanUniformBuffer::~VulkanUniformBuffer()
@@ -20,7 +20,7 @@ namespace Hazel {
 	void VulkanUniformBuffer::Invalidate()
 	{
 		Ref<VulkanUniformBuffer> instance = this;
-		Renderer::Submit([instance]() mutable
+		RENDER_SUBMIT([instance]() mutable
 			{
 				instance->RT_Invalidate();
 			});
@@ -74,7 +74,7 @@ namespace Hazel {
 		// TODO: local storage should be potentially replaced with render thread storage
 		memcpy(m_LocalStorage, data, size);
 		Ref<VulkanUniformBuffer> instance = this;
-		Renderer::Submit([instance, size, offset]() mutable
+		RENDER_SUBMIT([instance, size, offset]() mutable
 			{
 				instance->RT_SetData(instance->m_LocalStorage, size, offset);
 			});

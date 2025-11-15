@@ -5,6 +5,7 @@
 #include <glm/gtc/random.hpp>
 #include <imgui.h>
 #include <Hazel/Platform/Vulkan/VulkanImage.h>
+#include "Hazel/Platform/Windows/WindowsWindow.h"
 
 #include "Hazel/Asset/Model/Material.h"
 namespace Hazel {
@@ -39,7 +40,7 @@ namespace Hazel {
 		// Shader缓存
 		s_Data->m_ShaderLibrary = Ref<ShaderLibrary>::Create();
 
-		// 缓存队列 通过Renderer::submit提交的命令都会存储在RenderCommandQueue
+		// 缓存队列 通过RENDER_SUBMIT提交的命令都会存储在RenderCommandQueue
 		for (int i = 0; i < s_RenderCommandQueueCount; i++) {
 			s_CommandQueue[i] = new RenderCommandQueue();
 		}

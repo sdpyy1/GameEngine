@@ -10,6 +10,8 @@
 #include <cstring>
 #include <filesystem>
 #include <Hazel/Utils/UIUtils.h>
+#include "Hazel/Asset/AssetManager.h"
+#include "Hazel/Asset/Model/Mesh.h"
 #ifdef _MSVC_LANG
 #define _CRT_SECURE_NO_WARNINGS
 #endif
@@ -32,7 +34,7 @@ namespace Hazel {
 		m_SkyLightIcon = Texture2D::Create(spec, dirIcon);
 	}
 
-	void AssetManagerPanel::SetContext(Ref<Scene>& context)
+	void AssetManagerPanel::SetContext(std::shared_ptr<Scene>& context)
 	{
 		m_Context = context;
 		m_SelectionContext = {};
@@ -47,7 +49,7 @@ namespace Hazel {
 			// 只绘制根实体（没有父节点的实体）
 			m_Context->GetRegistry().each([&](auto entityID)
 				{
-					Entity entity{ entityID , m_Context };
+					Entity entity{ entityID , m_Context.get()};
 					// 检查是否是根实体（ParentHandle为0）
 					if (!entity.HasComponent<RelationshipComponent>() ||
 						entity.GetComponent<RelationshipComponent>().ParentHandle == 0)

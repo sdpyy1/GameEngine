@@ -14,7 +14,7 @@ namespace Hazel
 	void DescriptorManager::SetInput(std::string name, Ref<Image2D> image, bool isInit)
 	{
 		SetBindingKey setBinding = GetBinding(name);
-		Renderer::Submit([=]() {
+		RENDER_SUBMIT([=]() {
 			VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 			auto vulkanTexture = image.As<VulkanImage2D>();
 			if (isInit) {
@@ -27,7 +27,7 @@ namespace Hazel
 				{
 					m_BindImages[i][setBinding] = vulkanTexture->GetVulkanImage();
 
-					// Ìî³äÃ¿Ö¡µÄ imageInfo Êý×é
+					// ï¿½ï¿½ï¿½Ã¿Ö¡ï¿½ï¿½ imageInfo ï¿½ï¿½ï¿½ï¿½
 					allImageInfos[i].resize(layerCount);
 					const auto& descInfo = vulkanTexture->GetDescriptorInfoVulkan();
 					for (uint32_t l = 0; l < layerCount; ++l)
@@ -35,7 +35,7 @@ namespace Hazel
 						allImageInfos[i][l] = descInfo;
 					}
 
-					// ÌîÐ´ VkWriteDescriptorSet
+					// ï¿½ï¿½Ð´ VkWriteDescriptorSet
 					writes[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 					writes[i].dstSet = m_Shader->GetDescriptorSet(setBinding.set)[i];
 					writes[i].dstBinding = setBinding.binding;
@@ -83,7 +83,7 @@ namespace Hazel
 	{
 		SetBindingKey setBinding = GetBinding(name);
 
-		Renderer::Submit([setBinding, UboSet, this]() mutable {
+		RENDER_SUBMIT([setBinding, UboSet, this]() mutable {
 			VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 			uint32_t frameCount = Renderer::GetConfig().FramesInFlight;
 
@@ -122,7 +122,7 @@ namespace Hazel
 	{
 		SetBindingKey setBinding = GetBinding(name);
 
-		Renderer::Submit([setBinding, texture, this, isInit,name]() {
+		RENDER_SUBMIT([setBinding, texture, this, isInit,name]() {
 			VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 			auto vulkanTexture = texture.As<VulkanTexture2D>();
 
@@ -130,7 +130,7 @@ namespace Hazel
 
 			if (isInit)
 			{
-				// ³õÊ¼»¯½×¶Î£¬¸üÐÂËùÓÐÖ¡
+				// ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½×¶Î£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¡
 				std::vector<VkWriteDescriptorSet> descriptorWrites(framesInFlight);
 				std::vector<VkDescriptorImageInfo> imageInfos(framesInFlight);
 
@@ -154,7 +154,7 @@ namespace Hazel
 			}
 			else
 			{
-				// ·Ç³õÊ¼»¯½×¶Î£¬Ö»¸üÐÂµ±Ç°Ö¡
+				// ï¿½Ç³ï¿½Ê¼ï¿½ï¿½ï¿½×¶Î£ï¿½Ö»ï¿½ï¿½ï¿½Âµï¿½Ç°Ö¡
 				uint32_t frameIndex = Renderer::RT_GetCurrentFrameIndex();
 				VkImage curImage = m_BindImages[frameIndex][setBinding];
 				VkImage newImage = vulkanTexture->GetImage().As<VulkanImage2D>()->GetVulkanImage();
@@ -180,7 +180,7 @@ namespace Hazel
 	void DescriptorManager::SetInput(std::string name, Ref<StorageBufferSet> SBSet)
 	{
 		SetBindingKey setBinding = GetBinding(name);
-		Renderer::Submit([setBinding, SBSet, this]() mutable {
+		RENDER_SUBMIT([setBinding, SBSet, this]() mutable {
 			VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 
 			for (size_t i = 0; i < Renderer::GetConfig().FramesInFlight; i++) {
@@ -208,7 +208,7 @@ namespace Hazel
 	{
 		SetBindingKey setBinding = GetBinding(name);
 
-		Renderer::Submit([=]() {
+		RENDER_SUBMIT([=]() {
 			VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 			auto vulkanTexture = cubeMap.As<VulkanTextureCube>();
 
@@ -261,7 +261,7 @@ namespace Hazel
 	void DescriptorManager::SetInput(std::string name, Ref<ImageView> imageView)
 	{
         SetBindingKey setBinding = GetBinding(name);
-		Renderer::Submit([=]() {
+		RENDER_SUBMIT([=]() {
 			//LOG_TRACE("RT: VulkanRenderPass [{0}]::SetInput imageView[{2}] Binding {1}", m_Specification.DebugName, Binding, arrayIndex);
 			VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 			auto vulkanImageView = imageView.As<VulkanImageView>();
@@ -287,7 +287,7 @@ namespace Hazel
 	void DescriptorManager::SetInput2Addition(std::string name, Ref<Image2D> image, bool isInit)
 	{
 		SetBindingKey setBinding = GetBinding(name);
-		Renderer::Submit([=]() {
+		RENDER_SUBMIT([=]() {
 			VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 			auto vulkanTexture = image.As<VulkanImage2D>();
 			if (isInit) {
@@ -300,7 +300,7 @@ namespace Hazel
 				{
 					m_BindImages[i][setBinding] = vulkanTexture->GetVulkanImage();
 
-					// Ìî³äÃ¿Ö¡µÄ imageInfo Êý×é
+					// ï¿½ï¿½ï¿½Ã¿Ö¡ï¿½ï¿½ imageInfo ï¿½ï¿½ï¿½ï¿½
 					allImageInfos[i].resize(layerCount);
 					const auto& descInfo = vulkanTexture->GetDescriptorInfoVulkan();
 					for (uint32_t l = 0; l < layerCount; ++l)
@@ -308,7 +308,7 @@ namespace Hazel
 						allImageInfos[i][l] = descInfo;
 					}
 
-					// ÌîÐ´ VkWriteDescriptorSet
+					// ï¿½ï¿½Ð´ VkWriteDescriptorSet
 					writes[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 					writes[i].dstSet = AdditionDescriptorSets[i];
 					writes[i].dstBinding = setBinding.binding;
@@ -356,7 +356,7 @@ namespace Hazel
 	{
 		SetBindingKey setBinding = GetBinding(name);
 
-		Renderer::Submit([setBinding, UboSet, this]() mutable {
+		RENDER_SUBMIT([setBinding, UboSet, this]() mutable {
 			VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 			uint32_t frameCount = Renderer::GetConfig().FramesInFlight;
 
@@ -395,7 +395,7 @@ namespace Hazel
 	{
 		SetBindingKey setBinding = GetBinding(name);
 
-		Renderer::Submit([setBinding, image, this, isInit, name]() {
+		RENDER_SUBMIT([setBinding, image, this, isInit, name]() {
 			VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 			auto vulkanTexture = image.As<VulkanTexture2D>();
 
@@ -403,7 +403,7 @@ namespace Hazel
 
 			if (isInit)
 			{
-				// ³õÊ¼»¯½×¶Î£¬¸üÐÂËùÓÐÖ¡
+				// ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½×¶Î£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¡
 				std::vector<VkWriteDescriptorSet> descriptorWrites(framesInFlight);
 				std::vector<VkDescriptorImageInfo> imageInfos(framesInFlight);
 
@@ -427,7 +427,7 @@ namespace Hazel
 			}
 			else
 			{
-				// ·Ç³õÊ¼»¯½×¶Î£¬Ö»¸üÐÂµ±Ç°Ö¡
+				// ï¿½Ç³ï¿½Ê¼ï¿½ï¿½ï¿½×¶Î£ï¿½Ö»ï¿½ï¿½ï¿½Âµï¿½Ç°Ö¡
 				uint32_t frameIndex = Renderer::RT_GetCurrentFrameIndex();
 				VkImage curImage = m_BindImages[frameIndex][setBinding];
 				VkImage newImage = vulkanTexture->GetImage().As<VulkanImage2D>()->GetVulkanImage();
@@ -452,7 +452,7 @@ namespace Hazel
 	void DescriptorManager::SetInput2Addition(std::string name, Ref<StorageBufferSet> SBSet)
 	{
 		SetBindingKey setBinding = GetBinding(name);
-		Renderer::Submit([setBinding, SBSet, this]() mutable {
+		RENDER_SUBMIT([setBinding, SBSet, this]() mutable {
 			VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 
 			for (size_t i = 0; i < Renderer::GetConfig().FramesInFlight; i++) {
@@ -480,7 +480,7 @@ namespace Hazel
 	{
 		SetBindingKey setBinding = GetBinding(name);
 
-		Renderer::Submit([=]() {
+		RENDER_SUBMIT([=]() {
 			VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 			auto vulkanTexture = cubeMap.As<VulkanTextureCube>();
 
@@ -533,7 +533,7 @@ namespace Hazel
 	void DescriptorManager::SetInput2Addition(std::string name, Ref<ImageView> imageView)
 	{
 		SetBindingKey setBinding = GetBinding(name);
-		Renderer::Submit([=]() {
+		RENDER_SUBMIT([=]() {
 			//LOG_TRACE("RT: VulkanRenderPass [{0}]::SetInput imageView[{2}] Binding {1}", m_Specification.DebugName, Binding, arrayIndex);
 			VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 			auto vulkanImageView = imageView.As<VulkanImageView>();

@@ -3,6 +3,7 @@
 #include "VulkanContext.h"
 #include "VulkanUtils.h"
 #include "Hazel/Renderer/Renderer.h"
+#include "Hazel/Platform/Windows/WindowsWindow.h"
 
 namespace Hazel {
 
@@ -44,7 +45,7 @@ namespace Hazel {
 		uint32_t attachmentIndex = 0;
 		if (!m_Specification.ExistingFramebuffer)
 		{
-			// ¸ù¾Ý´«ÈëµÄspecificationÀ´´´½¨image
+			// ï¿½ï¿½ï¿½Ý´ï¿½ï¿½ï¿½ï¿½specificationï¿½ï¿½ï¿½ï¿½ï¿½ï¿½image
 			for (auto& attachmentSpec : m_Specification.Attachments.Attachments)
 			{
 				if (m_Specification.ExistingImage)
@@ -53,13 +54,13 @@ namespace Hazel {
 						m_DepthAttachmentImage = m_Specification.ExistingImage;
 					else
 						m_AttachmentImages.emplace_back(m_Specification.ExistingImage);
-				} // Ö¸¶¨ÒýÓÃ
+				} // Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 				else if (m_Specification.ExistingImages.find(attachmentIndex) != m_Specification.ExistingImages.end())
 				{
 					if (Utils::IsDepthFormat(attachmentSpec.Format))
 						m_DepthAttachmentImage = m_Specification.ExistingImages.at(attachmentIndex);
 					else
-						m_AttachmentImages.emplace_back(); // This will be set later À´×ÔÆäËûµÄFBOµÄÍ¼Æ¬ÒýÓÃÏÈÔÚMainÏß³ÌÕ¼Î»
+						m_AttachmentImages.emplace_back(); // This will be set later ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½FBOï¿½ï¿½Í¼Æ¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Mainï¿½ß³ï¿½Õ¼Î»
 				}
 				else if (Utils::IsDepthFormat(attachmentSpec.Format))
 				{
@@ -70,7 +71,7 @@ namespace Hazel {
 					spec.Width = (uint32_t)(m_Width * m_Specification.Scale);
 					spec.Height = (uint32_t)(m_Height * m_Specification.Scale);
 					spec.DebugName = fmt::format("{0}-DepthAttachment{1}", m_Specification.DebugName.empty() ? "Unnamed FB" : m_Specification.DebugName, attachmentIndex);
-					m_DepthAttachmentImage = Image2D::Create(spec); // Ö»ÊÇ´æ´¢¸ñÊ½£¬µ÷ÓÃinvalidateÊ±²ÅÕæÕý´´½¨
+					m_DepthAttachmentImage = Image2D::Create(spec); // Ö»ï¿½Ç´æ´¢ï¿½ï¿½Ê½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½invalidateÊ±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 				}
 				else
 				{
@@ -81,7 +82,7 @@ namespace Hazel {
 					spec.Width = (uint32_t)(m_Width * m_Specification.Scale);
 					spec.Height = (uint32_t)(m_Height * m_Specification.Scale);
 					spec.DebugName = fmt::format("{0}-ColorAttachment{1}", m_Specification.DebugName.empty() ? "Unnamed FB" : m_Specification.DebugName, attachmentIndex);
-					m_AttachmentImages.emplace_back(Image2D::Create(spec));// Ö»ÊÇ´æ´¢¸ñÊ½£¬µ÷ÓÃinvalidateÊ±²ÅÕæÕý´´½¨
+					m_AttachmentImages.emplace_back(Image2D::Create(spec));// Ö»ï¿½Ç´æ´¢ï¿½ï¿½Ê½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½invalidateÊ±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 				}
 				attachmentIndex++;
 			}
@@ -108,7 +109,7 @@ namespace Hazel {
 					vkDestroyFramebuffer(device, framebuffer, nullptr);
 				});
 
-			// ´«µÝ½øÀ´µÄImage²»»á±»Ïú»Ù
+			// ï¿½ï¿½ï¿½Ý½ï¿½ï¿½ï¿½ï¿½ï¿½Imageï¿½ï¿½ï¿½á±»ï¿½ï¿½ï¿½ï¿½
 			if (!m_Specification.ExistingFramebuffer)
 			{
 				uint32_t attachmentIndex = 0;
@@ -138,7 +139,7 @@ namespace Hazel {
 		if (!forceRecreate && (m_Width == width && m_Height == height))
 			return;
 		Ref<VulkanFramebuffer> instance = this;
-		Renderer::Submit([instance, width, height]() mutable
+		RENDER_SUBMIT([instance, width, height]() mutable
 			{
 				LOG_TRACE("RT: FrameBuffer [{}] Create! [Start To Create Image Or Attach Ref And Create RenderPass]", instance->m_Specification.DebugName);
 				instance->m_Width = (uint32_t)(width * instance->m_Specification.Scale);
@@ -170,7 +171,7 @@ namespace Hazel {
 	void VulkanFramebuffer::Invalidate()
 	{
 		Ref< VulkanFramebuffer> instance = this;
-		Renderer::Submit([instance]() mutable
+		RENDER_SUBMIT([instance]() mutable
 			{
 				instance->RT_Invalidate();
 			});
@@ -180,7 +181,7 @@ namespace Hazel {
 	{
 		auto device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 
-		Release(); // ³õÊ¼»¯Ê±²»»áÊÍ·Å£¬ÒòÎªm_FramebufferÎª¿Õ
+		Release(); // ï¿½ï¿½Ê¼ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½Í·Å£ï¿½ï¿½ï¿½Îªm_FramebufferÎªï¿½ï¿½
 
 		VulkanAllocator allocator("Framebuffer");
 

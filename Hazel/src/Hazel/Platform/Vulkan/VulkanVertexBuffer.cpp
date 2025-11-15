@@ -4,6 +4,7 @@
 #include "VulkanContext.h"
 
 #include "Hazel/Renderer/Renderer.h"
+#include "Hazel/Core/macro.h"
 
 namespace Hazel {
 
@@ -13,7 +14,7 @@ namespace Hazel {
 		m_LocalData.Allocate(size);
 		m_DebugName = debugeName;
 		Ref<VulkanVertexBuffer> instance = this;
-		Renderer::Submit([instance]() mutable
+		RENDER_SUBMIT([instance]() mutable
 			{
 				LOG_TRACE("RT: VulkanVertexBuffer [{0}] Create!  size {1} bytes", instance->m_DebugName, instance->m_Size);
 				auto device = VulkanContext::GetCurrentDevice();
@@ -34,14 +35,12 @@ namespace Hazel {
 		m_LocalData = Buffer::Copy(data, size);
 		m_DebugName = debugeName;
 		Ref<VulkanVertexBuffer> instance = this;
-		Renderer::Submit([instance]() mutable
+		RENDER_SUBMIT([instance]() mutable
 			{
 				LOG_TRACE("RT: VulkanVertexBuffer [{0}] Create!  size {1} bytes", instance->m_DebugName, instance->m_Size);
 				auto device = VulkanContext::GetCurrentDevice();
 				VulkanAllocator allocator("VertexBuffer");
 
-#define USE_STAGING 1
-#if USE_STAGING
 				VkBufferCreateInfo bufferCreateInfo{};
 				bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 				bufferCreateInfo.size = instance->m_Size;
@@ -61,7 +60,7 @@ namespace Hazel {
 				vertexBufferCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
 				instance->m_MemoryAllocation = allocator.AllocateBuffer(vertexBufferCreateInfo, VMA_MEMORY_USAGE_GPU_ONLY, instance->m_VulkanBuffer);
 
-				VkCommandBuffer copyCmd = device->GetCommandBuffer(true);  // »ñÈ¡ÃüÁî»º³åÇø²¢Ö±½Ó¿ªÊ¼¼ÇÂ¼ÃüÁî
+				VkCommandBuffer copyCmd = device->GetCommandBuffer(true);  // ï¿½ï¿½È¡ï¿½ï¿½ï¿½î»ºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö±ï¿½Ó¿ï¿½Ê¼ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½
 
 				VkBufferCopy copyRegion = {};
 				copyRegion.size = instance->m_LocalData.Size;
@@ -75,19 +74,6 @@ namespace Hazel {
 				device->FlushCommandBuffer(copyCmd);
 
 				allocator.DestroyBuffer(stagingBuffer, stagingBufferAllocation);
-#else
-				VkBufferCreateInfo vertexBufferCreateInfo = {};
-				vertexBufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-				vertexBufferCreateInfo.size = instance->m_Size;
-				vertexBufferCreateInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-
-				auto bufferAlloc = allocator.AllocateBuffer(vertexBufferCreateInfo, VMA_MEMORY_USAGE_CPU_TO_GPU, instance->m_VulkanBuffer);
-
-				void* dstBuffer = allocator.MapMemory<void>(bufferAlloc);
-				memcpy(dstBuffer, instance->m_LocalData.Data, instance->m_Size);
-				allocator.UnmapMemory(bufferAlloc);
-
-#endif
 			});
 	}
 
@@ -111,7 +97,7 @@ namespace Hazel {
 		ASSERT(size <= m_LocalData.Size);
 		memcpy(m_LocalData.Data, (uint8_t*)buffer + offset, size);;
 		Ref<VulkanVertexBuffer> instance = this;
-		Renderer::Submit([instance, size, offset]() mutable
+		RENDER_SUBMIT([instance, size, offset]() mutable
 			{
 				instance->RT_SetData(instance->m_LocalData.Data, size, offset);
 			});

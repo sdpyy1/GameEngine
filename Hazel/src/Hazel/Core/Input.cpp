@@ -3,6 +3,7 @@
 #include "Window.h"
 
 #include "Hazel/Core/Application.h"
+#include "Hazel/Platform/Windows/WindowsWindow.h"
 
 #include <GLFW/glfw3.h>
 #include <imgui_internal.h>

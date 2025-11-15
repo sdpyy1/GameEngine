@@ -139,7 +139,7 @@ namespace Hazel {
 		ASSERT(m_Specification.Format != ImageFormat::None);
 
 		Ref<VulkanTexture2D> instance = this;
-		Renderer::Submit([instance]() mutable
+		RENDER_SUBMIT([instance]() mutable
 			{
 				instance->Invalidate();
 			});
@@ -185,7 +185,7 @@ namespace Hazel {
 
 #if INVESTIGATE
 		Ref<VulkanTexture2D> instance = this;
-		Renderer::Submit([instance]() mutable
+		RENDER_SUBMIT([instance]() mutable
 			{
 				instance->Invalidate();
 			});
@@ -207,7 +207,7 @@ namespace Hazel {
 		//Invalidate();
 
 		Ref<VulkanTexture2D> instance = this;
-		Renderer::Submit([instance]() mutable
+		RENDER_SUBMIT([instance]() mutable
 			{
 				instance->Invalidate();
 			});
@@ -270,7 +270,7 @@ namespace Hazel {
 		samplerInfo.minLod = 0.0f;
 		samplerInfo.maxLod = (float)mipCount;
 		samplerInfo.maxAnisotropy = 1.0;
-		samplerInfo.anisotropyEnable = VK_FALSE;  // TODO:¿ªÆôÕâ¸öÐèÒªDeviceµÄFeatures
+		samplerInfo.anisotropyEnable = VK_FALSE;  // TODO:ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÒªDeviceï¿½ï¿½Features
 		samplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
 
 		info.Sampler = Vulkan::CreateSampler(samplerInfo);
@@ -536,7 +536,7 @@ namespace Hazel {
 
 		Utils::InsertImageMemoryBarrier(blitCmd, info.Image,
 			VK_ACCESS_TRANSFER_READ_BIT, VK_ACCESS_SHADER_READ_BIT,
-			VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, image->GetDescriptorInfoVulkan().imageLayout, //TODO: Ô­´úÂë×îÖÕÃ»ÓÐ°ÑLayout¸ÄÎªÔ­Ê¼imageµÄLayout
+			VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, image->GetDescriptorInfoVulkan().imageLayout, //TODO: Ô­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½Ð°ï¿½Layoutï¿½ï¿½ÎªÔ­Ê¼imageï¿½ï¿½Layout
 			VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
 			subresourceRange);
 
@@ -566,7 +566,7 @@ namespace Hazel {
 
 		Invalidate();
 		//Ref<VulkanTextureCube> instance = this;
-		//Renderer::Submit([instance]() mutable
+		//RENDER_SUBMIT([instance]() mutable
 		//{
 		//	instance->Invalidate();
 		//});
@@ -620,9 +620,9 @@ namespace Hazel {
 		imageCreateInfo.imageType = VK_IMAGE_TYPE_2D;
 		imageCreateInfo.format = format;
 		imageCreateInfo.mipLevels = mipCount;
-		imageCreateInfo.arrayLayers = 6; // cubeMap±¾ÖÊÊÇÒ»¸öÍ¼Æ¬Êý×é£¬arrayLayersÀ´±íÊ¾6¸öÃæ
+		imageCreateInfo.arrayLayers = 6; // cubeMapï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½Í¼Æ¬ï¿½ï¿½ï¿½é£¬arrayLayersï¿½ï¿½ï¿½ï¿½Ê¾6ï¿½ï¿½ï¿½ï¿½
 		imageCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-		imageCreateInfo.tiling = VK_IMAGE_TILING_OPTIMAL; // VK_IMAGE_TILING_OPTIMAL ÊÇ Vulkan ÍÆ¼öµÄ²¼¾Ö£¬ÓÉÇý¶¯³ÌÐò¾ö¶¨×îÊÊºÏ GPU ·ÃÎÊµÄÄÚ´æÅÅÁÐ·½Ê½£¬Í¨³£ÐÔÄÜ×îÓÅ£¬µ« CPU ÎÞ·¨Ö±½Ó·ÃÎÊ¸Ã²¼¾ÖµÄÍ¼ÏñÊý¾Ý
+		imageCreateInfo.tiling = VK_IMAGE_TILING_OPTIMAL; // VK_IMAGE_TILING_OPTIMAL ï¿½ï¿½ Vulkan ï¿½Æ¼ï¿½ï¿½Ä²ï¿½ï¿½Ö£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Êºï¿½ GPU ï¿½ï¿½ï¿½Êµï¿½ï¿½Ú´ï¿½ï¿½ï¿½ï¿½Ð·ï¿½Ê½ï¿½ï¿½Í¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å£ï¿½ï¿½ï¿½ CPU ï¿½Þ·ï¿½Ö±ï¿½Ó·ï¿½ï¿½Ê¸Ã²ï¿½ï¿½Öµï¿½Í¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		imageCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 		imageCreateInfo.extent = { m_Specification.Width, m_Specification.Height, 1 };
 		imageCreateInfo.usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT;
@@ -631,7 +631,7 @@ namespace Hazel {
 		VKUtils::SetDebugUtilsObjectName(vulkanDevice, VK_OBJECT_TYPE_IMAGE, m_Specification.DebugName, m_Image);
 		s_TextureCubeReferences[m_Image] = this;
 
-		m_DescriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL; // Í¼Æ¬²¼¾Ö¶¼ÊÇGENERAL
+		m_DescriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL; // Í¼Æ¬ï¿½ï¿½ï¿½Ö¶ï¿½ï¿½ï¿½GENERAL
 
 		// Copy data if present
 		if (m_LocalStorage)

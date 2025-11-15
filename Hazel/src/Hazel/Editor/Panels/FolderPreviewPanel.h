@@ -19,7 +19,7 @@ namespace Hazel {
 		FolderPreviewPanel(const std::filesystem::path& assetsDir);
 
 		void OnImGuiRender() override;
-		void SetContext(Ref<Scene>& scene);
+		void SetContext(std::shared_ptr<Scene>& context);
 
 	private:
 		void DrawToolbar();
@@ -39,7 +39,7 @@ namespace Hazel {
 		BrowserMode m_Mode = BrowserMode::Category;
 		std::filesystem::path m_AssetsDir;
 		std::filesystem::path m_CurrentDir;
-		Ref<Scene> m_Context;
+		std::shared_ptr<Scene> m_Context;
 		std::unordered_set<std::string> m_ExpandedFolders; // ��չ���ļ���·��
 
 		Ref<Texture2D> m_DirectoryIcon;

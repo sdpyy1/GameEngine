@@ -180,7 +180,7 @@ namespace Hazel {
 
 	void VulkanShader::Reload()
 	{
-		Renderer::Submit([instance = Ref(this)]() mutable {
+		RENDER_SUBMIT([instance = Ref(this)]() mutable {
 			LOG_INFO("RT: Create Shader :{0}", instance->m_Name);
 			instance->RT_Reload();
 			});

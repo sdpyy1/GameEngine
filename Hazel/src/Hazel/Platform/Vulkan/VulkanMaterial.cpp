@@ -11,9 +11,9 @@ namespace Hazel {
 
 		if (m_Shader->GetComputeFilePath() == "")
 		{
-			// ¾É½Ó¿Ú
+			// ï¿½É½Ó¿ï¿½
 			CreateDescriptorSet();
-			UpdateDescriptorSet(true);// Èç¹ûÒ»¸öÄ£ÐÍÃ»ÓÐ²ÄÖÊ£¬Ò²ÐèÒªÏÈ³õÊ¼»¯Ò»´Î DescriptorSet
+			UpdateDescriptorSet(true);// ï¿½ï¿½ï¿½Ò»ï¿½ï¿½Ä£ï¿½ï¿½Ã»ï¿½Ð²ï¿½ï¿½Ê£ï¿½Ò²ï¿½ï¿½Òªï¿½È³ï¿½Ê¼ï¿½ï¿½Ò»ï¿½ï¿½ DescriptorSet
 		}
 		else {
 			m_DescriptorManager.SetManagedDescriptorSet(1);
@@ -23,21 +23,21 @@ namespace Hazel {
 	}
 	void VulkanMaterial::CreateDescriptorSet()
 	{
-		Renderer::Submit([this] {
+		RENDER_SUBMIT([this] {
 			m_DescriptorSets = m_Shader->createDescriptorSet(1);
 			});
 	}
 	void VulkanMaterial::UpdateDescriptorSet(bool bInit)
 	{
-		Renderer::Submit([this, bInit] {
-			// Ñ¡ÔñÌùÍ¼£¨ÓÃ»§ÉèÖÃ»òÄ¬ÈÏ£©
+		RENDER_SUBMIT([this, bInit] {
+			// Ñ¡ï¿½ï¿½ï¿½ï¿½Í¼ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½ï¿½Ã»ï¿½Ä¬ï¿½Ï£ï¿½
 			auto albedo = AlbedoTexture ? AlbedoTexture : Renderer::GetWhiteTexture();
 			auto normal = NormalTexture ? NormalTexture : Renderer::GetWhiteTexture();
 			auto metalness = MetalnessTexture ? MetalnessTexture : Renderer::GetWhiteTexture();
 			auto roughness = RoughnessTexture ? RoughnessTexture : Renderer::GetWhiteTexture();
 			auto rms = EmissionTexture ? EmissionTexture : Renderer::GetBlackTexture();
 
-			// ×¼±¸ VkDescriptorImageInfo
+			// ×¼ï¿½ï¿½ VkDescriptorImageInfo
 			auto getImageInfo = [](Ref<Texture2D> tex) -> VkDescriptorImageInfo {
 				VkDescriptorImageInfo info{};
 				auto descriptor = tex.As<VulkanTexture2D>()->GetDescriptorInfoVulkan();
@@ -55,7 +55,7 @@ namespace Hazel {
                 getImageInfo(rms)
 			};
 
-			// Ð´Èë²Ù×÷Ä£°å
+			// Ð´ï¿½ï¿½ï¿½ï¿½ï¿½Ä£ï¿½ï¿½
 			std::array<VkWriteDescriptorSet, 5> writeSets{};
 			for (size_t i = 0; i < writeSets.size(); i++)
 			{
@@ -68,7 +68,7 @@ namespace Hazel {
 
 			if (bInit)
 			{
-				// ³õÊ¼»¯£º¸üÐÂËùÓÐÖ¡µÄ DescriptorSet
+				// ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¡ï¿½ï¿½ DescriptorSet
 				uint32_t framesInFlight = Renderer::GetConfig().FramesInFlight;
 				for (uint32_t frameIndex = 0; frameIndex < framesInFlight; ++frameIndex)
 				{
@@ -85,7 +85,7 @@ namespace Hazel {
 			}
 			else
 			{
-				// Æ½Ê±äÖÈ¾£ºÖ»¸üÐÂµ±Ç°Ö¡
+				// Æ½Ê±ï¿½ï¿½È¾ï¿½ï¿½Ö»ï¿½ï¿½ï¿½Âµï¿½Ç°Ö¡
 				uint32_t frameIndex = Renderer::RT_GetCurrentFrameIndex();
 				VkDescriptorSet currentSet = m_DescriptorSets[frameIndex];
 				for (auto& write : writeSets)

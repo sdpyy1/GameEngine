@@ -46,20 +46,22 @@ namespace Hazel {
 		static void EndFrame();
 
 		template<typename FuncT>
-		static void Submit(FuncT&& func)  // FuncT&&可以接收各种类型的函数对象，包括lambda表达式、函数指针等
+		static void Submit(FuncT&& func, const char* file = nullptr, int line = 0, const char* function = nullptr)
 		{
+			auto& queue = GetRenderCommandQueue();
+#ifdef RTDEBUG
+			queue.m_DebugInfos.push_back({ file, line, function });
+#endif
 			auto renderCmd = [](void* ptr) {
-				auto pFunc = (FuncT*)ptr; // 把传入的void*指针转换回FuncT类型的指针
-				(*pFunc)(); // 调用函数对象
-
-				// NOTE: Instead of destroying we could try and enforce all items to be trivally destructible
-				// however some items like uniforms which contain std::strings still exist for now
-				// static_assert(std::is_trivially_destructible_v<FuncT>, "FuncT must be trivially destructible");
+				auto pFunc = (FuncT*)ptr;
+				(*pFunc)();
 				pFunc->~FuncT();
 				};
-			auto storageBuffer = GetRenderCommandQueue().Allocate(renderCmd, sizeof(func));
-			new (storageBuffer) FuncT(std::forward<FuncT>(func));// 缓存命令
+
+			auto storageBuffer = queue.Allocate(renderCmd, sizeof(FuncT));
+			new (storageBuffer) FuncT(std::forward<FuncT>(func));
 		}
+
 		template<typename FuncT>
 		static void SubmitResourceFree(FuncT&& func)
 		{

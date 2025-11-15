@@ -1,73 +1,75 @@
 #include "hzpch.h"
 #include "RendererManager.h"
 #include "Renderer.h"
-#include <Hazel/Editor/EditorLayer.h>
+#include "Hazel/Scene/Scene.h"
+#include "Hazel/Scene/SceneRender.h"
+#include "Hazel/Scene/SceneManager.h"
+#include "Hazel/Core/Application.h"
 namespace Hazel {
-	void RendererManager::Init()
+	RendererManager::RendererManager() :m_RenderThread(ThreadingPolicy::SingleThreaded)
 	{
 		m_RenderThread.Run();
+
 		Renderer::Init();
 		m_RenderThread.Pump();
-		auto a = new EditorLayer();
 
-		m_ImGuiLayer = ImGuiRendererManager::Create();
 
-		m_LayerStack.PushLayer(a);
-		a->OnAttach();
+		m_ImGuiRendererManager = ImGuiRendererManager::Create();
+		m_ImGuiRendererManager->pre();
+		m_SceneRender = std::make_shared<SceneRender>();
+		m_RenderThread.Pump();
 	}
 
-	void RendererManager::tick(float timestep,bool m_Minimized)
+
+	void RendererManager::tick(float timestep)
 	{
+		// LOG_TRACE("RenderManager::tick {}",Renderer::GetCurrentFrameIndex());
+		Application::GetSceneManager()->GetActiveScene()->CollectRenderableEntities(m_SceneRender);
 
-		// 这里就做一件事：交换Submit用的命令缓冲区的Index，用下一个命令记录新命令。 这个切换只是用于多线程渲染的缓冲区，和渲染内部的Index无关
-		m_RenderThread.NextFrame();
+		Renderer::BeginFrame();
 
-		// -----------------同步点结束------------------------------------------------
+		m_SceneRender->PreRender(Application::GetSceneManager()->GetActiveScene()->GetSceneInfo());
+		m_SceneRender->EndRender();
 
-		// 提醒渲染线程工作，渲染上一帧信息
-		m_RenderThread.Kick();
+		RenderImGui();
 
-		// 上一行和下一行表示GPU和渲染线程都开始工作了，在渲染线程渲染上一帧的时候,CPU开始收集下一帧渲染命令
-		if (!m_Minimized)
-		{
-			// 重置DrawCall=0，（交换链的Begin也写在这里了：获取下一帧图片索引、更新交换链FrameIndex、清空交换链的命令缓冲区)
-			Renderer::BeginFrame();
-
-			// 更新各层
-			{
-				for (Layer* layer : m_LayerStack)
-					layer->OnUpdate(timestep);
-			}
-
-			RenderImGui();
-
-			// 提交命令缓冲区、呈现图片
-			Renderer::EndFrame();
-		}
+		Renderer::EndFrame();
+		// LOG_TRACE("RenderManager::tick Done!");
 	}
 
-	RendererManager::RendererManager():m_RenderThread(ThreadingPolicy::SingleThreaded)
-	{
-		Init();
-	}
 
 	void RendererManager::RenderImGui()
 	{
-		Renderer::Submit([this]()
+		RENDER_SUBMIT([this]()
 			{
-				m_ImGuiLayer->Begin();
-
-				for (Layer* layer : m_LayerStack)
-					layer->OnImGuiRender(); {
-				}
-
-				m_ImGuiLayer->End();
+				m_ImGuiRendererManager->Tick(0,nullptr);
 			});
 	}
 
 	void RendererManager::ExecutePreFrame()
 	{
 		m_RenderThread.BlockUntilRenderComplete();
+		// 锟剿达拷锟斤拷染锟竭程猴拷锟斤拷锟竭筹拷同锟斤拷锟斤拷
+		// xxxx
+		m_RenderThread.NextFrame();
+		m_RenderThread.Kick(); // 锟斤拷始锟斤拷染锟斤拷一帧
+	}
+
+	bool RendererManager::OnEvent(Event& e)
+	{
+		bool isHandle = false;
+		isHandle = m_ImGuiRendererManager->OnEvent(e);
+		return isHandle;
+	}
+
+	Ref<Hazel::Image2D> RendererManager::GetTextureWhichNeedDebug() const
+	{
+		return m_SceneRender->GetTextureWhichNeedDebug();
+	}
+
+	Ref<Hazel::Image2D> RendererManager::GetFinalImage() const
+	{
+		return m_SceneRender->GetFinalImage();
 	}
 
 }

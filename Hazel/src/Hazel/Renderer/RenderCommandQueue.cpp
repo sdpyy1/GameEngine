@@ -38,24 +38,56 @@ namespace Hazel {
 		return memory;
 	}
 
-	void RenderCommandQueue::Execute()
-	{
-		//HZ_RENDER_TRACE("RenderCommandQueue::Execute -- {0} commands, {1} bytes", m_CommandCount, (m_CommandBufferPtr - m_CommandBuffer));
-		byte* buffer = m_CommandBuffer;
-		if (Application::Get().isRunning() && !Application::Get().isMinimized()) {  // 因为即使最小化事件触发，命令缓存中还有上一帧数据要处理，而窗口大小已经变0了，会出Bug
-			for (uint32_t i = 0; i < m_CommandCount; i++)
-			{
-				RenderCommandFn function = *(RenderCommandFn*)buffer;
-				buffer += sizeof(RenderCommandFn);
+    void RenderCommandQueue::Execute()
+    {
+        byte* buffer = m_CommandBuffer;
 
-				uint32_t size = *(uint32_t*)buffer;
-				buffer += sizeof(uint32_t);
-				function(buffer);
-				buffer += size;
-			}
-		}
+        for (uint32_t i = 0; i < m_CommandCount; i++)
+        {
+            RenderCommandFn function = *(RenderCommandFn*)buffer;
+            buffer += sizeof(RenderCommandFn);
 
-		m_CommandBufferPtr = m_CommandBuffer;
-		m_CommandCount = 0;
-	}
+            uint32_t size = *(uint32_t*)buffer;
+            buffer += sizeof(uint32_t);
+
+#ifdef RTDEBUG
+            // 打印调试信息，截取最后两级目录 + 行号 + 函数名
+            if (i < m_DebugInfos.size())
+            {
+                auto& info = m_DebugInfos[i];
+
+                // 处理文件路径，只保留最后两级
+                std::string path = info.file ? info.file : "unknown_file";
+                size_t pos = path.find_last_of("/\\"); // 找最后一个斜杠
+                if (pos != std::string::npos)
+                {
+                    size_t pos2 = path.find_last_of("/\\", pos - 1); // 倒数第二个斜杠
+                    if (pos2 != std::string::npos)
+                        path = path.substr(pos2 + 1); // 保留最后两级
+                    else
+                        path = path.substr(pos + 1);  // 保留最后一级
+                }
+
+                std::string funcName = info.function ? info.function : "unknown_function";
+
+                LOG_WARN("[RenderCommand] Execute ID={} from {}:{} ({})",
+                    i, path, info.line, funcName);
+            }
+            else
+            {
+                LOG_WARN("[RenderCommand] Execute ID={} (no debug info)", i);
+            }
+#endif
+
+            // 执行命令
+            function(buffer);
+            buffer += size;
+        }
+
+        m_CommandBufferPtr = m_CommandBuffer;
+        m_CommandCount = 0;
+
+        // 执行完清理调试信息
+        m_DebugInfos.clear();
+    }
 }

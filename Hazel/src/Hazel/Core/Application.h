@@ -1,75 +1,76 @@
 #pragma once
 
 #include "Hazel/Core/Base.h"
+namespace Hazel
+{
+    class SceneManager;
+    class RendererManager;
+    class Event;
+    class WindowMinimizeEvent;
+    class WindowCloseEvent;
+    class WindowResizeEvent;
+    class Window;
+    class WindowsWindow;
+    class RenderContext;
+    struct ApplicationCommandLineArgs
+    {
+        int Count = 0;
+        char** Args = nullptr;
 
-#include "Hazel/Core/Window.h"
-#include "Hazel/Core/LayerStack.h"
-#include "Hazel/Events/Event.h"
-#include "Hazel/Events/ApplicationEvent.h"
-#include "Hazel/Platform/Windows/WindowsWindow.h"
-#include <Hazel/Renderer/RendererManager.h>
+        const char* operator[](int index) const
+        {
+            ASSERT(index < Count);
+            return Args[index];
+        }
+    };
 
-namespace Hazel {
+    struct ApplicationSpecification
+    {
+        std::string Name = "Hazel Application";
+        ApplicationCommandLineArgs CommandLineArgs;
+    };
 
-	struct ApplicationCommandLineArgs
-	{
-		int Count = 0;
-		char** Args = nullptr;
+    class Application
+    {
+    public:
+        Application(const ApplicationSpecification& specification);
+        virtual ~Application() = default;
 
-		const char* operator[](int index) const
-		{
-			ASSERT(index < Count);
-			return Args[index];
-		}
-	};
+        void tick();
+        void OnEvent(Event& e);
+        void Close();
 
-	struct ApplicationSpecification
-	{
-		std::string Name = "Hazel Application";
-		std::string WorkingDirectory;
-		ApplicationCommandLineArgs CommandLineArgs;
-	};
-	class VulkanContext;
-	class Application
-	{
-	public:
-		void Run();
+        bool isRunning() const { return m_Running; }
+        bool isMinimized() const { return m_Minimized; }
 
-		Application(const ApplicationSpecification& specification);
-		virtual ~Application();
+        Ref<WindowsWindow>& GetWindow();
+        Ref<RenderContext> GetRenderContext();
+        const ApplicationSpecification& GetSpecification() const { return m_Specification; }
+        uint32_t GetCurrentFrameIndex() const { return m_CurrentFrameIndex; }
 
-		void OnEvent(Event& e);
+        static Application& Get() { return *s_Instance; }
+        static std::shared_ptr<SceneManager> GetSceneManager() { return Get().m_SceneManager; }
+        static std::shared_ptr<RendererManager> GetRendererManager() { return Get().m_RendererManager; }
 
-		bool OnWindowMinimize(WindowMinimizeEvent& e);
-		bool isRunning() { return m_Running; }
-		void PushLayer(Layer* layer);
-		void PushOverlay(Layer* layer);
+    private:
+        bool OnWindowClose(WindowCloseEvent& e);
+        bool OnWindowResize(WindowResizeEvent& e);
+        bool OnWindowMinimize(WindowMinimizeEvent& e);
+        float GetTimePreFrame();
 
-		Ref<WindowsWindow>& GetWindow() { return m_Window.As<WindowsWindow>(); }
-		void RenderImGui();
+    private:
+        ApplicationSpecification m_Specification;
+        static Application* s_Instance;
 
-		void Close();
+        bool m_Running = true;
+        bool m_Minimized = false;
+        float m_LastFrameTime = 0.0f;
 
-		static Application& Get() { return *s_Instance; }
-		bool isMinimized() { return m_Minimized; }
-		Ref<RenderContext> GetRenderContext() { return GetWindow()->GetRenderContext(); }
-		const ApplicationSpecification& GetSpecification() const { return m_Specification; }
-		uint32_t GetCurrentFrameIndex() const { return m_CurrentFrameIndex; }
+        // Context
+        Ref<Window> m_Window;
+        std::shared_ptr<RendererManager> m_RendererManager;
+        std::shared_ptr<SceneManager> m_SceneManager;
 
-	private:
-		bool OnWindowClose(WindowCloseEvent& e);
-		bool OnWindowResize(WindowResizeEvent& e);
-
-	private:
-		ApplicationSpecification m_Specification;
-		Ref<Window> m_Window;
-		bool m_Running = true;
-		bool m_Minimized = false;
-		float m_LastFrameTime = 0.0f;
-
-		std::shared_ptr<RendererManager> m_RendererManager;
-	private:
-		static Application* s_Instance;
-		uint32_t m_CurrentFrameIndex = 0;
-	};
+        uint32_t m_CurrentFrameIndex = 0;
+    };
 }
