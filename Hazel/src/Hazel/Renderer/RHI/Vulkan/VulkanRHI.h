@@ -2,7 +2,7 @@
 #include "Volk/volk.h"
 #include "Hazel/Renderer/RHI/RHI.h"
 #include "VulkanMemoryAllocator/vk_mem_alloc.h"
-
+#include "VulkanRHIResource.h"
 namespace Hazel
 {
 	class VulkanDynamicRHI : public DynamicRHI
@@ -11,9 +11,22 @@ namespace Hazel
 		VulkanDynamicRHI() = delete;
 		VulkanDynamicRHI(const RHIConfig& config);
 
+		virtual RHIQueueRef GetQueue(const RHIQueueInfo& info) override final;
+
+		virtual RHISurfaceRef CreateSurface(GLFWwindow* window) override final;
+		virtual RHISwapchainRef CreateSwapChain(const RHISwapchainInfo& info) override final;
+		virtual RHICommandPoolRef CreateCommandPool(const RHICommandPoolInfo& info) override final;
+		virtual RHICommandContextRef CreateCommandContext(RHICommandPoolRef pool) override final;
+
+
+
+	public:
+		inline VkInstance GetInstance() const { return m_Instance; }
+		inline VkPhysicalDevice GetPhysicalDevice() const { return m_PhysicalDevice; }
+		inline VkDevice GetDevice() const { return m_LogicalDevice; }
+		inline VmaAllocator GetVMA() const { return m_MemoryAllocator; }
 
 	private:
-		inline VkInstance GetInstance() const { return m_Instance; }
 
 		void CreateInstance();
 		void CreatePhysicalDevice();
@@ -57,7 +70,17 @@ namespace Hazel
 	};
 
 
+	class VulkanRHICommandContext : public RHICommandContext {
+	public:
+		VulkanRHICommandContext(RHICommandPoolRef pool);
+		virtual void BeginCommand() override final;
+
+		virtual void EndCommand() override final;
 
 
+	private:
+		VkCommandBuffer handle;
+		std::shared_ptr<VulkanRHICommandPool> pool;
+	};
 
 }

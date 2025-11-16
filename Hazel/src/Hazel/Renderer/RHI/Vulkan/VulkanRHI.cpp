@@ -4,7 +4,7 @@
 #include "VulkanRHIResource.h"
 #define VMA_IMPLEMENTATION
 
-#define VULKAN_VERSION VK_API_VERSION_1_1
+#define VULKAN_VERSION VK_API_VERSION_1_2
 
 namespace Hazel
 {
@@ -21,10 +21,10 @@ namespace Hazel
 	void VulkanDynamicRHI::CreateInstance()
 	{
 		// volk
-		if (volkInitialize() != VK_SUCCESS) {
-			LOG_ERROR("Volk initialize failed!");
-			return;
-		}
+        if (volkInitialize() != VK_SUCCESS) {
+            LOG_ERROR("Volk initialize failed!");
+            return;
+        }
 		// 获取可用的实例层
 		{
 			uint32_t layerCount;
@@ -403,6 +403,78 @@ namespace Hazel
         };
         m_ImmediateCommand = std::make_shared<RHICommandListImmediate>(info);*/
     }
+
+    RHIQueueRef VulkanDynamicRHI::GetQueue(const RHIQueueInfo& info)
+    {
+        return m_Queues[info.type][info.index];
+
+    }
+
+	RHISurfaceRef VulkanDynamicRHI::CreateSurface(GLFWwindow* window)
+	{
+        RHISurfaceRef surface = std::make_shared<VulkanRHISurface>(window);
+        RegisterResource(surface);
+
+        return surface;
+	}
+
+	RHISwapchainRef VulkanDynamicRHI::CreateSwapChain(const RHISwapchainInfo& info)
+	{
+         RHISwapchainRef swapchain = std::make_shared<VulkanRHISwapchain>(info);
+         RegisterResource(swapchain);
+
+        return nullptr;
+	}
+
+	RHICommandPoolRef VulkanDynamicRHI::CreateCommandPool(const RHICommandPoolInfo& info)
+	{
+        RHICommandPoolRef commandPool = std::make_shared<VulkanRHICommandPool>(info);
+        RegisterResource(commandPool);
+
+        return commandPool;
+	}
+
+	RHICommandContextRef VulkanDynamicRHI::CreateCommandContext(RHICommandPoolRef pool)
+	{
+        RHICommandContextRef commandContext = std::make_shared<VulkanRHICommandContext>(pool);
+        RegisterResource(commandContext);
+
+        return commandContext;
+	}
+
+    VulkanRHICommandContext::VulkanRHICommandContext(RHICommandPoolRef pool): RHICommandContext(pool)
+    {
+        this->pool = std::static_pointer_cast<VulkanRHICommandPool>(pool);
+        VkCommandBufferAllocateInfo allocInfo = {};
+        allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        allocInfo.commandPool = this->pool->GetHandle();
+        allocInfo.commandBufferCount = 1;
+
+        if (vkAllocateCommandBuffers(VULKAN_DEVICE, &allocInfo, &handle) != VK_SUCCESS)
+        {
+            LOG_ERROR("Failed to allocate command buffer!");
+        }
+    }
+
+	void VulkanRHICommandContext::BeginCommand()
+	{
+        vkResetCommandBuffer(handle, 0);
+
+        VkCommandBufferBeginInfo beginInfo = {};
+        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        beginInfo.flags = 0;
+
+        vkBeginCommandBuffer(handle, &beginInfo);
+	}
+
+	void VulkanRHICommandContext::EndCommand()
+	{
+        if (vkEndCommandBuffer(handle) != VK_SUCCESS)
+        {
+            LOG_ERROR("Failed to end command buffer!");
+        }
+	}
 
 }
 

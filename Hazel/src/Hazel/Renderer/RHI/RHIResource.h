@@ -19,7 +19,7 @@ namespace Hazel {
 
 		virtual void Destroy() {};
 
-		friend class RHIBackend;
+		friend class DynamicRHI;
 	};
 
 	// ------------------------------------------------------------------------BASE ------------------------------------------------------------------------
@@ -44,15 +44,10 @@ namespace Hazel {
 		Extent2D extent;
 	};
 
-
 	class RHISwapchain : public RHIResource
 	{
 	public:
-		RHISwapchain(const RHISwapchainInfo& info)
-			: RHIResource(RHI_SWAPCHAIN)
-			, info(info)
-		{
-		}
+		RHISwapchain(const RHISwapchainInfo& info): RHIResource(RHI_SWAPCHAIN), info(info){}
 
 		virtual uint32_t GetCurrentFrameIndex() = 0;
 		virtual RHITextureRef GetTexture(uint32_t index) = 0;
@@ -62,6 +57,8 @@ namespace Hazel {
 	protected:
 		RHISwapchainInfo info;
 	};
+
+
 
 	class RHICommandPool : public RHIResource, public std::enable_shared_from_this<RHICommandPool>
 	{
@@ -86,11 +83,7 @@ namespace Hazel {
 	class RHITexture : public RHIResource
 	{
 	public:
-		RHITexture(const RHITextureInfo& info)
-			: RHIResource(RHI_TEXTURE)
-			, info(info)
-		{
-		}
+		RHITexture(const RHITextureInfo& info): RHIResource(RHI_TEXTURE), info(info){}
 
 		Extent3D MipExtent(uint32_t mipLevel);
 

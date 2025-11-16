@@ -3,6 +3,11 @@
 #include <Hazel/Core/macro.h>
 #include <GLFW/glfw3.h>
 namespace Hazel {
+#define VULKAN_INSTANCE (std::static_pointer_cast<VulkanDynamicRHI>(DynamicRHI::Get()).get())->GetInstance()
+#define VULKAN_PHYSICALDEVICE (std::static_pointer_cast<VulkanDynamicRHI>(DynamicRHI::Get()).get())->GetPhysicalDevice()
+#define VULKAN_DEVICE (std::static_pointer_cast<VulkanDynamicRHI>(DynamicRHI::Get()).get())->GetDevice()
+#define VULKAN_VMA (std::static_pointer_cast<VulkanDynamicRHI>(DynamicRHI::Get()).get())->GetVMA()
+#define CAST std::static_pointer_cast
 #define VK_CHECK_RESULT(f)\
 {\
 	VkResult res = (f);\
@@ -26,7 +31,8 @@ namespace Hazel {
     static const char* DEVICE_EXTENTIONS[] = {
         VK_KHR_SURFACE_EXTENSION_NAME,
         VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME,
-        VK_EXT_DEBUG_UTILS_EXTENSION_NAME
+        VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
+        VK_KHR_SWAPCHAIN_EXTENSION_NAME
     };
     static const char* RAY_TRACING_DEVICE_EXTENTIONS[] = {
         // Ray tracing related extensions required
@@ -200,6 +206,178 @@ namespace Hazel {
             }
         }
         
+        static VkFormat RHIFormatToVkFormat(const RHIFormat& pixelFormat)
+        {
+            VkFormat format;
 
+            switch (pixelFormat) {
+            case FORMAT_UKNOWN:                format = VK_FORMAT_UNDEFINED;               break;
+
+            case FORMAT_R8_SRGB:               format = VK_FORMAT_R8_SRGB;                 break;
+            case FORMAT_R8G8_SRGB:             format = VK_FORMAT_R8G8_SRGB;               break;
+            case FORMAT_R8G8B8_SRGB:           format = VK_FORMAT_R8G8B8_SRGB;             break;
+            case FORMAT_R8G8B8A8_SRGB:         format = VK_FORMAT_R8G8B8A8_SRGB;           break;
+            case FORMAT_B8G8R8A8_SRGB:         format = VK_FORMAT_B8G8R8A8_SRGB;           break;
+
+            case FORMAT_R16_SFLOAT:            format = VK_FORMAT_R16_SFLOAT;              break;
+            case FORMAT_R16G16_SFLOAT:         format = VK_FORMAT_R16G16_SFLOAT;           break;
+            case FORMAT_R16G16B16_SFLOAT:      format = VK_FORMAT_R16G16B16_SFLOAT;        break;
+            case FORMAT_R16G16B16A16_SFLOAT:   format = VK_FORMAT_R16G16B16A16_SFLOAT;     break;
+            case FORMAT_R32_SFLOAT:            format = VK_FORMAT_R32_SFLOAT;              break;
+            case FORMAT_R32G32_SFLOAT:         format = VK_FORMAT_R32G32_SFLOAT;           break;
+            case FORMAT_R32G32B32_SFLOAT:      format = VK_FORMAT_R32G32B32_SFLOAT;        break;
+            case FORMAT_R32G32B32A32_SFLOAT:   format = VK_FORMAT_R32G32B32A32_SFLOAT;     break;
+
+            case FORMAT_R8_UNORM:             format = VK_FORMAT_R8_UNORM;                break;
+            case FORMAT_R8G8_UNORM:           format = VK_FORMAT_R8G8_UNORM;              break;
+            case FORMAT_R8G8B8_UNORM:         format = VK_FORMAT_R8G8B8_UNORM;            break;
+            case FORMAT_R8G8B8A8_UNORM:       format = VK_FORMAT_R8G8B8A8_UNORM;          break;
+            case FORMAT_R16_UNORM:            format = VK_FORMAT_R16_UNORM;               break;
+            case FORMAT_R16G16_UNORM:         format = VK_FORMAT_R16G16_UNORM;            break;
+            case FORMAT_R16G16B16_UNORM:      format = VK_FORMAT_R16G16B16_UNORM;         break;
+            case FORMAT_R16G16B16A16_UNORM:   format = VK_FORMAT_R16G16B16A16_UNORM;      break;
+
+            case FORMAT_R8_SNORM:             format = VK_FORMAT_R8_SNORM;                break;
+            case FORMAT_R8G8_SNORM:           format = VK_FORMAT_R8G8_SNORM;              break;
+            case FORMAT_R8G8B8_SNORM:         format = VK_FORMAT_R8G8B8_SNORM;            break;
+            case FORMAT_R8G8B8A8_SNORM:       format = VK_FORMAT_R8G8B8A8_SNORM;          break;
+            case FORMAT_R16_SNORM:            format = VK_FORMAT_R16_SNORM;               break;
+            case FORMAT_R16G16_SNORM:         format = VK_FORMAT_R16G16_SNORM;            break;
+            case FORMAT_R16G16B16_SNORM:      format = VK_FORMAT_R16G16B16_SNORM;         break;
+            case FORMAT_R16G16B16A16_SNORM:   format = VK_FORMAT_R16G16B16A16_SNORM;      break;
+
+            case FORMAT_R8_UINT:              format = VK_FORMAT_R8_UINT;                 break;
+            case FORMAT_R8G8_UINT:            format = VK_FORMAT_R8G8_UINT;               break;
+            case FORMAT_R8G8B8_UINT:          format = VK_FORMAT_R8G8B8_UINT;             break;
+            case FORMAT_R8G8B8A8_UINT:        format = VK_FORMAT_R8G8B8A8_UINT;           break;
+            case FORMAT_R16_UINT:             format = VK_FORMAT_R16_UINT;                break;
+            case FORMAT_R16G16_UINT:          format = VK_FORMAT_R16G16_UINT;             break;
+            case FORMAT_R16G16B16_UINT:       format = VK_FORMAT_R16G16B16_UINT;          break;
+            case FORMAT_R16G16B16A16_UINT:    format = VK_FORMAT_R16G16B16A16_UINT;       break;
+            case FORMAT_R32_UINT:             format = VK_FORMAT_R32_UINT;                break;
+            case FORMAT_R32G32_UINT:          format = VK_FORMAT_R32G32_UINT;             break;
+            case FORMAT_R32G32B32_UINT:       format = VK_FORMAT_R32G32B32_UINT;          break;
+            case FORMAT_R32G32B32A32_UINT:    format = VK_FORMAT_R32G32B32A32_UINT;       break;
+
+            case FORMAT_R8_SINT:              format = VK_FORMAT_R8_SINT;                 break;
+            case FORMAT_R8G8_SINT:            format = VK_FORMAT_R8G8_SINT;               break;
+            case FORMAT_R8G8B8_SINT:          format = VK_FORMAT_R8G8B8_SINT;             break;
+            case FORMAT_R8G8B8A8_SINT:        format = VK_FORMAT_R8G8B8A8_SINT;           break;
+            case FORMAT_R16_SINT:             format = VK_FORMAT_R16_SINT;                break;
+            case FORMAT_R16G16_SINT:          format = VK_FORMAT_R16G16_SINT;             break;
+            case FORMAT_R16G16B16_SINT:       format = VK_FORMAT_R16G16B16_SINT;          break;
+            case FORMAT_R16G16B16A16_SINT:    format = VK_FORMAT_R16G16B16A16_SINT;       break;
+            case FORMAT_R32_SINT:             format = VK_FORMAT_R32_SINT;                break;
+            case FORMAT_R32G32_SINT:          format = VK_FORMAT_R32G32_SINT;             break;
+            case FORMAT_R32G32B32_SINT:       format = VK_FORMAT_R32G32B32_SINT;          break;
+            case FORMAT_R32G32B32A32_SINT:    format = VK_FORMAT_R32G32B32A32_SINT;       break;
+
+            case FORMAT_D32_SFLOAT:           format = VK_FORMAT_D32_SFLOAT;              break;
+            case FORMAT_D32_SFLOAT_S8_UINT:   format = VK_FORMAT_D32_SFLOAT_S8_UINT;      break;
+            case FORMAT_D24_UNORM_S8_UINT:    format = VK_FORMAT_D24_UNORM_S8_UINT;       break;
+
+            default:                          format = VK_FORMAT_UNDEFINED;               break;
+            }
+
+            return format;
+        }
+
+        static RHIFormat VkFormatToRHIFormat(const VkFormat& vkFormat)
+        {
+            RHIFormat format;
+
+            switch (vkFormat) {
+            case VK_FORMAT_UNDEFINED:            format = FORMAT_UKNOWN;                  break;
+
+            case VK_FORMAT_R8_SRGB:              format = FORMAT_R8_SRGB;                 break;
+            case VK_FORMAT_R8G8_SRGB:            format = FORMAT_R8G8_SRGB;               break;
+            case VK_FORMAT_R8G8B8_SRGB:          format = FORMAT_R8G8B8_SRGB;             break;
+            case VK_FORMAT_R8G8B8A8_SRGB:        format = FORMAT_R8G8B8A8_SRGB;           break;
+            case VK_FORMAT_B8G8R8A8_SRGB:        format = FORMAT_B8G8R8A8_SRGB;           break;
+
+            case VK_FORMAT_R16_SFLOAT:           format = FORMAT_R16_SFLOAT;              break;
+            case VK_FORMAT_R16G16_SFLOAT:        format = FORMAT_R16G16_SFLOAT;           break;
+            case VK_FORMAT_R16G16B16_SFLOAT:     format = FORMAT_R16G16B16_SFLOAT;        break;
+            case VK_FORMAT_R16G16B16A16_SFLOAT:  format = FORMAT_R16G16B16A16_SFLOAT;     break;
+            case VK_FORMAT_R32_SFLOAT:           format = FORMAT_R32_SFLOAT;              break;
+            case VK_FORMAT_R32G32_SFLOAT:        format = FORMAT_R32G32_SFLOAT;           break;
+            case VK_FORMAT_R32G32B32_SFLOAT:     format = FORMAT_R32G32B32_SFLOAT;        break;
+            case VK_FORMAT_R32G32B32A32_SFLOAT:  format = FORMAT_R32G32B32A32_SFLOAT;     break;
+
+            case VK_FORMAT_R8_UNORM:             format = FORMAT_R8_UNORM;                break;
+            case VK_FORMAT_R8G8_UNORM:           format = FORMAT_R8G8_UNORM;              break;
+            case VK_FORMAT_R8G8B8_UNORM:         format = FORMAT_R8G8B8_UNORM;            break;
+            case VK_FORMAT_R8G8B8A8_UNORM:       format = FORMAT_R8G8B8A8_UNORM;          break;
+            case VK_FORMAT_R16_UNORM:            format = FORMAT_R16_UNORM;               break;
+            case VK_FORMAT_R16G16_UNORM:         format = FORMAT_R16G16_UNORM;            break;
+            case VK_FORMAT_R16G16B16_UNORM:      format = FORMAT_R16G16B16_UNORM;         break;
+            case VK_FORMAT_R16G16B16A16_UNORM:   format = FORMAT_R16G16B16A16_UNORM;      break;
+
+            case VK_FORMAT_R8_SNORM:             format = FORMAT_R8_SNORM;                break;
+            case VK_FORMAT_R8G8_SNORM:           format = FORMAT_R8G8_SNORM;              break;
+            case VK_FORMAT_R8G8B8_SNORM:         format = FORMAT_R8G8B8_SNORM;            break;
+            case VK_FORMAT_R8G8B8A8_SNORM:       format = FORMAT_R8G8B8A8_SNORM;          break;
+            case VK_FORMAT_R16_SNORM:            format = FORMAT_R16_SNORM;               break;
+            case VK_FORMAT_R16G16_SNORM:         format = FORMAT_R16G16_SNORM;            break;
+            case VK_FORMAT_R16G16B16_SNORM:      format = FORMAT_R16G16B16_SNORM;         break;
+            case VK_FORMAT_R16G16B16A16_SNORM:   format = FORMAT_R16G16B16A16_SNORM;      break;
+
+            case VK_FORMAT_R8_UINT:              format = FORMAT_R8_UINT;                 break;
+            case VK_FORMAT_R8G8_UINT:            format = FORMAT_R8G8_UINT;               break;
+            case VK_FORMAT_R8G8B8_UINT:          format = FORMAT_R8G8B8_UINT;             break;
+            case VK_FORMAT_R8G8B8A8_UINT:        format = FORMAT_R8G8B8A8_UINT;           break;
+            case VK_FORMAT_R16_UINT:             format = FORMAT_R16_UINT;                break;
+            case VK_FORMAT_R16G16_UINT:          format = FORMAT_R16G16_UINT;             break;
+            case VK_FORMAT_R16G16B16_UINT:       format = FORMAT_R16G16B16_UINT;          break;
+            case VK_FORMAT_R16G16B16A16_UINT:    format = FORMAT_R16G16B16A16_UINT;       break;
+            case VK_FORMAT_R32_UINT:             format = FORMAT_R32_UINT;                break;
+            case VK_FORMAT_R32G32_UINT:          format = FORMAT_R32G32_UINT;             break;
+            case VK_FORMAT_R32G32B32_UINT:       format = FORMAT_R32G32B32_UINT;          break;
+            case VK_FORMAT_R32G32B32A32_UINT:    format = FORMAT_R32G32B32A32_UINT;       break;
+
+            case VK_FORMAT_R8_SINT:              format = FORMAT_R8_SINT;                 break;
+            case VK_FORMAT_R8G8_SINT:            format = FORMAT_R8G8_SINT;               break;
+            case VK_FORMAT_R8G8B8_SINT:          format = FORMAT_R8G8B8_SINT;             break;
+            case VK_FORMAT_R8G8B8A8_SINT:        format = FORMAT_R8G8B8A8_SINT;           break;
+            case VK_FORMAT_R16_SINT:             format = FORMAT_R16_SINT;                break;
+            case VK_FORMAT_R16G16_SINT:          format = FORMAT_R16G16_SINT;             break;
+            case VK_FORMAT_R16G16B16_SINT:       format = FORMAT_R16G16B16_SINT;          break;
+            case VK_FORMAT_R16G16B16A16_SINT:    format = FORMAT_R16G16B16A16_SINT;       break;
+            case VK_FORMAT_R32_SINT:             format = FORMAT_R32_SINT;                break;
+            case VK_FORMAT_R32G32_SINT:          format = FORMAT_R32G32_SINT;             break;
+            case VK_FORMAT_R32G32B32_SINT:       format = FORMAT_R32G32B32_SINT;          break;
+            case VK_FORMAT_R32G32B32A32_SINT:    format = FORMAT_R32G32B32A32_SINT;       break;
+
+            case VK_FORMAT_D32_SFLOAT:           format = FORMAT_D32_SFLOAT;              break;
+            case VK_FORMAT_D32_SFLOAT_S8_UINT:   format = FORMAT_D32_SFLOAT_S8_UINT;      break;
+            case VK_FORMAT_D24_UNORM_S8_UINT:    format = FORMAT_D24_UNORM_S8_UINT;       break;
+
+            default:                             format = FORMAT_UKNOWN;                   break;
+            }
+
+            return format;
+        }
+        static VmaMemoryUsage MemoryUsageToVma(MemoryUsage memoryUsage)
+        {
+            VmaMemoryUsage usage;
+            switch (memoryUsage) {
+            case MEMORY_USAGE_UNKNOWN:      usage = VMA_MEMORY_USAGE_UNKNOWN;       break;
+            case MEMORY_USAGE_GPU_ONLY:     usage = VMA_MEMORY_USAGE_GPU_ONLY;      break;
+            case MEMORY_USAGE_CPU_ONLY:     usage = VMA_MEMORY_USAGE_CPU_ONLY;      break;
+            case MEMORY_USAGE_CPU_TO_GPU:   usage = VMA_MEMORY_USAGE_CPU_TO_GPU;    break;
+            case MEMORY_USAGE_GPU_TO_CPU:   usage = VMA_MEMORY_USAGE_GPU_TO_CPU;    break;
+            default:                        usage = VMA_MEMORY_USAGE_UNKNOWN;       break;
+            }
+
+            return usage;
+        }
+        static VkBufferUsageFlags ResourceTypeToImageUsage(ResourceType type)
+        {
+            VkImageUsageFlags usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+            if (type & RESOURCE_TYPE_TEXTURE)               usage |= VK_IMAGE_USAGE_SAMPLED_BIT;
+            if (type & RESOURCE_TYPE_RW_TEXTURE)            usage |= VK_IMAGE_USAGE_STORAGE_BIT;
+
+            return usage;
+        }
 	}
 }

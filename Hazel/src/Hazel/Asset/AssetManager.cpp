@@ -1,4 +1,5 @@
 #include "hzpch.h"
+#include "Volk/volk.h"
 #include "AssetManager.h"
 namespace Hazel {
 	std::unordered_map<AssetHandle, Ref<Asset>> AssetManager::m_MemoryAssets;
