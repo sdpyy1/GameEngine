@@ -20,7 +20,8 @@ namespace Hazel {
 
 	void VulkanContext::Init()
 	{
-		CheckVersion();
+		/// auto fpEnumerateInstanceVersion =(PFN_vkEnumerateInstanceVersion)vkGetInstanceProcAddr(nullptr, "vkEnumerateInstanceVersion");
+		// CheckVersion();
 		LOG_INFO("Vulkan初始化开始！");
 		createInstance();
 		CreateDevice();

@@ -1,9 +1,10 @@
 #include "hzpch.h"
-#include "Volk/volk.h"
 #include "VulkanRHI.h"
 #include "VulkanUtil.h"
 #include "VulkanRHIResource.h"
-#define VULKAN_VERSION VK_API_VERSION_1_3
+#define VMA_IMPLEMENTATION
+
+#define VULKAN_VERSION VK_API_VERSION_1_1
 
 namespace Hazel
 {
@@ -13,6 +14,8 @@ namespace Hazel
 		CreatePhysicalDevice();
         CreateLogicalDevice();
         CreateQueues();
+        CreateMemoryAllocator();
+        CreateDescriptorPool();
 	}
 
 	void VulkanDynamicRHI::CreateInstance()
@@ -77,7 +80,6 @@ namespace Hazel
 			if (vkCreateDebugUtilsMessengerEXT(m_Instance, &info, nullptr, &m_DebugMessenger) != VK_SUCCESS){LOG_ERROR("Failed to set up debug messenger!");}
 		}
 	}
-
 
 	void VulkanDynamicRHI::CreatePhysicalDevice()
 	{
@@ -293,7 +295,6 @@ namespace Hazel
         volkLoadDevice(m_LogicalDevice);  //volk
     }
 
-
     void VulkanDynamicRHI::CreateQueues()
     {
         std::vector<uint32_t> offsets(m_QueueFamilyProperties.size(), { 0 });
@@ -310,12 +311,99 @@ namespace Hazel
                     j
                 };
                 m_Queues[i][j] = std::make_shared<VulkanRHIQueue>(info, queue, m_QueueIndices[i]);
-                // RegisterResource(queues[i][j]);
+                RegisterResource(m_Queues[i][j]);
 
                 offsets[i]++;
             }
         }
     }
+
+	void VulkanDynamicRHI::CreateMemoryAllocator()
+	{
+        // volk集成vma: https://zhuanlan.zhihu.com/p/634912614 
+        // vma官方文档: https://gpuopen-librariesandsdks.github.io/VulkanMemoryAllocator/html/index.html
+        // 对照该表，不同vulkan版本有不同的绑定要求: https://gpuopen-librariesandsdks.github.io/VulkanMemoryAllocator/html/struct_vma_vulkan_functions.html
+
+        VmaVulkanFunctions vulkanFunctions{};
+        vulkanFunctions.vkGetPhysicalDeviceProperties = vkGetPhysicalDeviceProperties;
+        vulkanFunctions.vkGetPhysicalDeviceMemoryProperties = vkGetPhysicalDeviceMemoryProperties;
+        vulkanFunctions.vkAllocateMemory = vkAllocateMemory;
+        vulkanFunctions.vkFreeMemory = vkFreeMemory;
+        vulkanFunctions.vkMapMemory = vkMapMemory;
+        vulkanFunctions.vkUnmapMemory = vkUnmapMemory;
+        vulkanFunctions.vkFlushMappedMemoryRanges = vkFlushMappedMemoryRanges;
+        vulkanFunctions.vkInvalidateMappedMemoryRanges = vkInvalidateMappedMemoryRanges;
+        vulkanFunctions.vkBindBufferMemory = vkBindBufferMemory;
+        vulkanFunctions.vkBindImageMemory = vkBindImageMemory;
+        vulkanFunctions.vkGetBufferMemoryRequirements = vkGetBufferMemoryRequirements;
+        vulkanFunctions.vkGetImageMemoryRequirements = vkGetImageMemoryRequirements;
+        vulkanFunctions.vkCreateBuffer = vkCreateBuffer;
+        vulkanFunctions.vkDestroyBuffer = vkDestroyBuffer;
+        vulkanFunctions.vkCreateImage = vkCreateImage;
+        vulkanFunctions.vkDestroyImage = vkDestroyImage;
+        vulkanFunctions.vkCmdCopyBuffer = vkCmdCopyBuffer;
+        // vulkanFunctions.vkGetBufferMemoryRequirements2KHR = vkGetBufferMemoryRequirements2KHR;
+        // vulkanFunctions.vkGetImageMemoryRequirements2KHR = vkGetImageMemoryRequirements2KHR;
+        // vulkanFunctions.vkBindBufferMemory2KHR = vkBindBufferMemory2KHR;
+        // vulkanFunctions.vkBindImageMemory2KHR = vkBindImageMemory2KHR;
+        // vulkanFunctions.vkGetPhysicalDeviceMemoryProperties2KHR = vkGetPhysicalDeviceMemoryProperties2KHR;
+        vulkanFunctions.vkGetBufferMemoryRequirements2KHR = vkGetBufferMemoryRequirements2;
+        vulkanFunctions.vkGetImageMemoryRequirements2KHR = vkGetImageMemoryRequirements2;
+        vulkanFunctions.vkBindBufferMemory2KHR = vkBindBufferMemory2;
+        vulkanFunctions.vkBindImageMemory2KHR = vkBindImageMemory2;
+        vulkanFunctions.vkGetPhysicalDeviceMemoryProperties2KHR = vkGetPhysicalDeviceMemoryProperties2;
+        // vulkanFunctions.vkGetDeviceBufferMemoryRequirements = vkGetDeviceBufferMemoryRequirements;
+        // vulkanFunctions.vkGetDeviceImageMemoryRequirements = vkGetDeviceImageMemoryRequirements;
+
+        VmaAllocatorCreateInfo allocatorCreateInfo = {};
+        allocatorCreateInfo.vulkanApiVersion = VULKAN_VERSION;
+        allocatorCreateInfo.physicalDevice = m_PhysicalDevice;
+        allocatorCreateInfo.device = m_LogicalDevice;
+        allocatorCreateInfo.instance = m_Instance;
+        allocatorCreateInfo.pVulkanFunctions = &vulkanFunctions;
+        allocatorCreateInfo.flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT; // 加上这个才能获取地址
+
+        VK_CHECK_RESULT(vmaCreateAllocator(&allocatorCreateInfo, &m_MemoryAllocator));
+	}
+
+	void VulkanDynamicRHI::CreateDescriptorPool()
+	{
+        std::vector<VkDescriptorPoolSize> descriptorPoolSizes = {
+            { VK_DESCRIPTOR_TYPE_SAMPLER, 4096 },
+            { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 4096 },
+            { VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 4096 },
+            { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 4096 },
+            { VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 4096 },
+            { VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 4096 },
+            { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 4096 },
+            { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 4096 },
+            { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 4096 },
+            { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 4096 },
+        };
+
+        //描述符池信息
+        VkDescriptorPoolCreateInfo poolInfo = {};
+        poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        poolInfo.poolSizeCount = static_cast<uint32_t>(descriptorPoolSizes.size());
+        poolInfo.pPoolSizes = descriptorPoolSizes.data();
+        poolInfo.maxSets = 8192;
+        poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT;   // 使得描述符可以实时更新
+
+        VK_CHECK_RESULT(vkCreateDescriptorPool(m_LogicalDevice, &poolInfo, nullptr, &m_DescriptorPool));
+	}
+
+
+    void VulkanDynamicRHI::CreateImmediateCommand()
+    {
+        /*m_ImmediateCommandContext = std::make_shared<VulkanRHICommandContextImmediate>(*this);
+        RegisterResource(immediateCommandContext);
+
+        CommandListImmediateInfo info = {
+            .context = immediateCommandContext
+        };
+        m_ImmediateCommand = std::make_shared<RHICommandListImmediate>(info);*/
+    }
+
 }
 
 

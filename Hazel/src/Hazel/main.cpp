@@ -9,11 +9,11 @@ int main(int argc, char** argv)
 	// test
 
 
-	Hazel::RHIConfig config;
-    config.debug = true;
-    config.enableRayTracing = false;
-	config.api = Hazel::API::Vulkan;
-	Hazel::DynamicRHI::Init(config);
+	//Hazel::RHIConfig config;
+ //   config.debug = true;
+ //   config.enableRayTracing = false;
+	//config.api = Hazel::API::Vulkan;
+	//Hazel::DynamicRHI::Init(config);
 
 
 
@@ -21,10 +21,10 @@ int main(int argc, char** argv)
 
 
 
-	/*Hazel::ApplicationSpecification spec;
+	Hazel::ApplicationSpecification spec;
 	spec.Name = "Hazelnut";
 	spec.CommandLineArgs = { argc, argv };
 	Hazel::Application* app = new Hazel::Application(spec);
 	app->Tick();
-	delete app;*/
+	delete app;
 }

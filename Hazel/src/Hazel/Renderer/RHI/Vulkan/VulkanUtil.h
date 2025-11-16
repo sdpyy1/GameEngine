@@ -1,5 +1,5 @@
 #pragma once
-#include "vulkan/vulkan.h"
+#include "Volk/volk.h"
 #include <Hazel/Core/macro.h>
 #include <GLFW/glfw3.h>
 namespace Hazel {
@@ -24,7 +24,8 @@ namespace Hazel {
     };
 
     static const char* DEVICE_EXTENTIONS[] = {
-        VK_KHR_SURFACE_EXTENSION_NAME,          // 核心依赖扩展（实例级）
+        VK_KHR_SURFACE_EXTENSION_NAME,
+        VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME,
         VK_EXT_DEBUG_UTILS_EXTENSION_NAME
     };
     static const char* RAY_TRACING_DEVICE_EXTENTIONS[] = {
