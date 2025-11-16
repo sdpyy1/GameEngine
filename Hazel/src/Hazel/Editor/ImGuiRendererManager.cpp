@@ -65,15 +65,15 @@ namespace Hazel {
 	void ImGuiRendererManager::SetScene(std::shared_ptr<Scene> activeScene) {
 	}
 
-	void ImGuiRendererManager::Tick(float deltaTime, EditorLayer* ediotrLayer)
+	void ImGuiRendererManager::Tick(float deltaTime)
 	{
 		Begin();
-		ImGuiCommand(ediotrLayer);
+		ImGuiCommand();
 		End();
 	}
 
 
-	void ImGuiRendererManager::ImGuiCommand(EditorLayer* ediotrLayer)
+	void ImGuiRendererManager::ImGuiCommand()
 	{
 		// ========== Dockspace Ö÷´°¿Ú ==========
 		ImGuiIO& io = ImGui::GetIO();

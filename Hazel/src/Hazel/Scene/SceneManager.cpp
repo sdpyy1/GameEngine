@@ -10,13 +10,13 @@ namespace Hazel
 		m_EditorCamera = std::make_shared<EditorCamera>(45.0f, 1280.0f, 720.0f, 0.1f, 1000.0f);
 	}
 
-	void SceneManager::tick(Timestep ts)
+	void SceneManager::Tick(Timestep ts)
 	{
-		// LOG_TRACE("SceneManager::tick");
+		// LOG_TRACE("SceneManager::Tick");
 		m_EditorCamera->OnUpdate(ts);
 		m_CurrentScene->PackupSceneInfo(*m_EditorCamera); // 打包场景数据
 		m_CurrentScene->UpdateAnimation(ts); // 更新动画
-		// LOG_TRACE("SceneManager::tick Done!");
+		// LOG_TRACE("SceneManager::Tick Done!");
 	}
 
 	bool SceneManager::OpenScene()

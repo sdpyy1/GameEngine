@@ -10,10 +10,10 @@ namespace Hazel
 	public:
         RendererManager();
 		~RendererManager() = default;
-		void tick(float timestep);
+		void Tick(float timestep);
 		bool OnEvent(Event& e);
 		void ExecutePreFrame();
-		void RenderImGui();
+		void RenderImGui(float timestep);
 		Ref<Hazel::Image2D>  GetFinalImage() const;
 		Ref<Image2D> GetTextureWhichNeedDebug() const;
 	private:

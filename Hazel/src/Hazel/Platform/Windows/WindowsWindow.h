@@ -13,7 +13,7 @@ namespace Hazel {
 		virtual ~WindowsWindow();
 		virtual void SetTitle(const std::string& title) override;
 
-		void tick() override;
+		void Tick() override;
 
 		unsigned int GetWidth() const override { return m_Data.Width; }
 		unsigned int GetHeight() const override { return m_Data.Height; }

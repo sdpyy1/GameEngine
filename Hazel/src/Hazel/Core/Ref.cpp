@@ -19,10 +19,11 @@ namespace Hazel {
 
 		void RemoveFromLiveReferences(void* instance)
 		{
-			std::scoped_lock<std::mutex> lock(s_LiveReferenceMutex);
+			// TODO:这套后续不会用，所以无所谓
+			/*std::scoped_lock<std::mutex> lock(s_LiveReferenceMutex);
 			ASSERT(instance);
 			ASSERT(s_LiveReferences.find(instance) != s_LiveReferences.end());
-			s_LiveReferences.erase(instance);
+			s_LiveReferences.erase(instance);*/
 		}
 
 		bool IsLive(void* instance)

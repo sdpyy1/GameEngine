@@ -8,7 +8,7 @@ namespace Hazel
 	{
 	public:
 		SceneManager();
-		void tick(Timestep ts);
+		void Tick(Timestep ts);
 
 		std::shared_ptr<EditorCamera> GetEditorCamera() { return m_EditorCamera; };
 		std::shared_ptr<Scene> GetActiveScene() { return m_CurrentScene; };

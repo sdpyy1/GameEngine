@@ -33,7 +33,7 @@ namespace Hazel {
 
 	}
 
-	void Application::tick()
+	void Application::Tick()
 	{
 		while (m_Running)
 		{
@@ -41,13 +41,13 @@ namespace Hazel {
 
 			float timestep = GetTimePreFrame();
 
-			m_SceneManager->tick(timestep);
+			m_SceneManager->Tick(timestep);
 
 			if (!m_Minimized) {
-				m_RendererManager->tick(timestep);
+				m_RendererManager->Tick(timestep);
 			}
 
-			m_Window->tick();
+			m_Window->Tick();
 
 			m_CurrentFrameIndex = (m_CurrentFrameIndex + 1) % Renderer::GetConfig().FramesInFlight;
 		}

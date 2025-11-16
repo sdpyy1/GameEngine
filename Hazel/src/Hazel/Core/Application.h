@@ -36,7 +36,7 @@ namespace Hazel
         Application(const ApplicationSpecification& specification);
         virtual ~Application() = default;
 
-        void tick();
+        void Tick();
         void OnEvent(Event& e);
         void Close();
 

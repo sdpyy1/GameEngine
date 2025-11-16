@@ -1,12 +1,10 @@
 #pragma once
-#include "Hazel/Core/Layer.h"
 #include "Hazel/Events/MouseEvent.h"
 #include "Panels/AssetManagerPanel.h"
 #include "Panels/FolderPreviewPanel.h"
 #include "Panels/LogPanel.h"
 #include <Hazel/Asset/Model/Mesh.h>
 namespace Hazel {
-	class EditorLayer;
 	class SubMesh;
 	class ImGuiRendererManager
 	{
@@ -14,8 +12,8 @@ namespace Hazel {
 		virtual void Begin() = 0;
 		virtual void End() = 0;
 		void SetDarkThemeV2Colors();
-		void Tick(float deltaTime, EditorLayer* ediotrLayer);
-		void ImGuiCommand(EditorLayer* ediotrLayer);
+		void Tick(float deltaTime);
+		void ImGuiCommand();
 		bool OnEvent(Event& e);
 		// 各种窗口创建
 		void ViewportGUI();

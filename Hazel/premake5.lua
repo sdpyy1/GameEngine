@@ -22,7 +22,8 @@ project "Hazel"
 		"vendor/VMA/VulkanMemoryAllocator/**.cpp",
 		"vendor/ImGuizmo/ImGuizmo.h",
 		"vendor/ImGuizmo/ImGuizmo.cpp",
-		"vendor/spirv_reflect/spirv_reflect.c"
+		"vendor/spirv_reflect/spirv_reflect.c",
+		"%{IncludeDir.VulkanSDK}/Include/Volk/volk.c"
 	}
 
 	defines
@@ -87,6 +88,10 @@ project "Hazel"
 	flags { "NoPCH" }
 	filter "files:vendor/spirv_reflect/spirv_reflect.c"
     flags { "NoPCH" }
+	filter "files:**/volk.c"
+    flags { "NoPCH" } 
+
+
 	filter "system:windows"
 		systemversion "latest"
 

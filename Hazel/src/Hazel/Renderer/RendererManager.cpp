@@ -21,9 +21,9 @@ namespace Hazel {
 	}
 
 
-	void RendererManager::tick(float timestep)
+	void RendererManager::Tick(float timestep)
 	{
-		// LOG_TRACE("RenderManager::tick {}",Renderer::GetCurrentFrameIndex());
+		// LOG_TRACE("RenderManager::Tick {}",Renderer::GetCurrentFrameIndex());
 		Application::GetSceneManager()->GetActiveScene()->CollectRenderableEntities(m_SceneRender);
 
 		Renderer::BeginFrame();
@@ -31,28 +31,27 @@ namespace Hazel {
 		m_SceneRender->PreRender(Application::GetSceneManager()->GetActiveScene()->GetSceneInfo());
 		m_SceneRender->EndRender();
 
-		RenderImGui();
+		RenderImGui(timestep);
 
 		Renderer::EndFrame();
-		// LOG_TRACE("RenderManager::tick Done!");
+		// LOG_TRACE("RenderManager::Tick Done!");
 	}
 
 
-	void RendererManager::RenderImGui()
+	void RendererManager::RenderImGui(float timestep)
 	{
-		RENDER_SUBMIT([this]()
+		RENDER_SUBMIT([this, timestep]()
 			{
-				m_ImGuiRendererManager->Tick(0,nullptr);
+				m_ImGuiRendererManager->Tick(timestep);
 			});
 	}
 
 	void RendererManager::ExecutePreFrame()
 	{
 		m_RenderThread.BlockUntilRenderComplete();
-		// �˴���Ⱦ�̺߳����߳�ͬ����
 		// xxxx
 		m_RenderThread.NextFrame();
-		m_RenderThread.Kick(); // ��ʼ��Ⱦ��һ֡
+		m_RenderThread.Kick();
 	}
 
 	bool RendererManager::OnEvent(Event& e)

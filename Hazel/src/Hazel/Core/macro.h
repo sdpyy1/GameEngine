@@ -66,10 +66,10 @@
 #define LOG_WARN_TAG(tag, ...)   _TAG_LOG(warn,    tag, __VA_ARGS__)
 #define LOG_ERROR_TAG(tag, ...)  _TAG_LOG(error,   tag, __VA_ARGS__)
 #define LOG_CRITICAL_TAG(tag, ...)  _TAG_LOG(critical,tag, __VA_ARGS__)
+#define LOG_LINE "-------------------------------------------------------------------"
 #define HZ_EXPAND_MACRO(x) x
 #define HZ_STRINGIFY(x) #x  // °Ñ x ±ä³É "x"
 #define HZ_STRINGIFY_MACRO(x) HZ_STRINGIFY(x)
-
 #ifdef HZ_ENABLE_ASSERTS
 	#define ASSERT(condition,...) if(!(condition)) { LOG_ERROR("Assert Failed"); HZ_DEBUGBREAK(); }
 	#define VERIFY(condition,...) if(!(condition)) { LOG_ERROR("Verify Failed"); HZ_DEBUGBREAK(); }

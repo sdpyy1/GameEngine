@@ -9,13 +9,11 @@ namespace Hazel {
 		m_CommandBuffer = RenderCommandBuffer::Create("PassCommandBuffer");
 		InitBuffers();
 
-		// Ԥ����Pass
 		InitEnvPass();
 		InitAtmospherePass();
 
-		preCompute(); // Ԥ����
+		preCompute(); 
 
-		// ��ȾPass
 		InitDirShadowPass();
 		InitSpotShadowPass();
 		InitPreDepthPass();
@@ -724,7 +722,6 @@ namespace Hazel {
 			RENDER_SUBMIT([instance, index]() mutable
 				{
 					instance->m_SBSBoneTransforms->RT_Get()->RT_SetData(instance->m_BoneTransformsData, static_cast<uint32_t>(index * sizeof(BoneTransforms)));
-					LOG_INFO("SceneRender::UploadMeshAndBoneTransForm boneTransformsData size: {0}", index);
 				});
 		}
 	}
