@@ -3,6 +3,7 @@
 #include <Hazel/Core/macro.h>
 #include <GLFW/glfw3.h>
 namespace Hazel {
+#define VULKAN_RHI std::static_pointer_cast<VulkanDynamicRHI>(DynamicRHI::Get()).get()
 #define VULKAN_INSTANCE (std::static_pointer_cast<VulkanDynamicRHI>(DynamicRHI::Get()).get())->GetInstance()
 #define VULKAN_PHYSICALDEVICE (std::static_pointer_cast<VulkanDynamicRHI>(DynamicRHI::Get()).get())->GetPhysicalDevice()
 #define VULKAN_DEVICE (std::static_pointer_cast<VulkanDynamicRHI>(DynamicRHI::Get()).get())->GetDevice()

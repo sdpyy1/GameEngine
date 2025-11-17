@@ -18,7 +18,9 @@ namespace Hazel
 		virtual RHICommandPoolRef CreateCommandPool(const RHICommandPoolInfo& info) override final;
 		virtual RHICommandContextRef CreateCommandContext(RHICommandPoolRef pool) override final;
 
+		virtual RHIFenceRef CreateFence(bool signaled = false) override final;
 
+		virtual RHISemaphoreRef CreateSemaphore() override final;
 
 	public:
 		inline VkInstance GetInstance() const { return m_Instance; }
@@ -83,4 +85,16 @@ namespace Hazel
 		std::shared_ptr<VulkanRHICommandPool> pool;
 	};
 
+
+
+	class VulkanRHICommandContextImmediate : public RHICommandContextImmediate
+	{
+	public:
+		VulkanRHICommandContextImmediate();
+	private:
+		RHIFenceRef fence;
+		RHIQueueRef queue;
+		RHICommandPoolRef commandPool;
+		VkCommandBuffer handle;
+	};
 }

@@ -442,6 +442,23 @@ namespace Hazel
         return commandContext;
 	}
 
+    RHIFenceRef VulkanDynamicRHI::CreateFence(bool signaled)
+    {
+        RHIFenceRef fence = std::make_shared<VulkanRHIFence>(signaled);
+        RegisterResource(fence);
+
+        return fence;
+    }
+
+    RHISemaphoreRef VulkanDynamicRHI::CreateSemaphore()
+    {
+        RHISemaphoreRef semaphore = std::make_shared<VulkanRHISemaphore>();
+        RegisterResource(semaphore);
+
+        return semaphore;
+    }
+
+
     VulkanRHICommandContext::VulkanRHICommandContext(RHICommandPoolRef pool): RHICommandContext(pool)
     {
         this->pool = std::static_pointer_cast<VulkanRHICommandPool>(pool);
@@ -474,6 +491,13 @@ namespace Hazel
         {
             LOG_ERROR("Failed to end command buffer!");
         }
+	}
+
+	VulkanRHICommandContextImmediate::VulkanRHICommandContextImmediate()
+	{
+        fence = VULKAN_RHI->CreateFence(true);
+        queue = VULKAN_RHI->GetQueue({ QUEUE_TYPE_GRAPHICS, 0 }); // 用QUEUE_TYPE_TRANSFER其实就行？
+        commandPool = VULKAN_RHI->CreateCommandPool({ queue });
 	}
 
 }
