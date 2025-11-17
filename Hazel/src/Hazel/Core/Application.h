@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Hazel/Core/Base.h"
-namespace Hazel
+namespace GameEngine
 {
     class SceneManager;
     class RendererManager;
@@ -26,7 +26,7 @@ namespace Hazel
 
     struct ApplicationSpecification
     {
-        std::string Name = "Hazel Application";
+        std::string Name = "GameEngine Application";
         ApplicationCommandLineArgs CommandLineArgs;
     };
 
@@ -67,7 +67,7 @@ namespace Hazel
         float m_LastFrameTime = 0.0f;
 
         // Context
-        Ref<Window> m_Window;
+        Ref<Window> m_GLFWWindow;
         std::shared_ptr<RendererManager> m_RendererManager;
         std::shared_ptr<SceneManager> m_SceneManager;
 

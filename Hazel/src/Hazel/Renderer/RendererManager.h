@@ -1,7 +1,7 @@
 #pragma once
 #include "Hazel/Core/RenderThread.h"
 #include "Hazel/Editor/ImGuiRendererManager.h"
-namespace Hazel
+namespace GameEngine
 {
 	class Scene;
 	class SceneRender;
@@ -14,7 +14,7 @@ namespace Hazel
 		bool OnEvent(Event& e);
 		void ExecutePreFrame();
 		void RenderImGui(float timestep);
-		Ref<Hazel::Image2D>  GetFinalImage() const;
+		Ref<GameEngine::Image2D>  GetFinalImage() const;
 		Ref<Image2D> GetTextureWhichNeedDebug() const;
 	private:
 		RenderThread m_RenderThread;

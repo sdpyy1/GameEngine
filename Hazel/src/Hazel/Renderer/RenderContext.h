@@ -1,6 +1,6 @@
 #pragma once
 
-namespace Hazel {
+namespace GameEngine {
 	class RenderContext : public RefCounted
 	{
 	public:

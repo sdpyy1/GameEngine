@@ -1,7 +1,7 @@
 #include "hzpch.h"
 #include "Mesh.h"
 #include "Hazel/Asset/AssimpMeshImporter.h"
-namespace Hazel
+namespace GameEngine
 {
 	const Animation* MeshSource::GetAnimation(const std::string& animationName, const Skeleton& skeleton, bool isMaskedRootMotion, const glm::vec3& rootTranslationMask, float rootRotationMask) const
 	{

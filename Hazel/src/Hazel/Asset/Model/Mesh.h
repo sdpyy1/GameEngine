@@ -9,7 +9,7 @@
 #include "Skeleton.h"
 #include "Animation.h"
 
-namespace Hazel {
+namespace GameEngine {
 	struct Vertex {
 		glm::vec3 Position;
 		glm::vec3 Normal;

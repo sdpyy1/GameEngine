@@ -5,7 +5,7 @@
 #include "Hazel/Scene/SceneRender.h"
 #include "Hazel/Scene/SceneManager.h"
 #include "Hazel/Core/Application.h"
-namespace Hazel {
+namespace GameEngine {
 	RendererManager::RendererManager() :m_RenderThread(ThreadingPolicy::SingleThreaded)
 	{
 		m_RenderThread.Run();
@@ -61,12 +61,12 @@ namespace Hazel {
 		return isHandle;
 	}
 
-	Ref<Hazel::Image2D> RendererManager::GetTextureWhichNeedDebug() const
+	Ref<GameEngine::Image2D> RendererManager::GetTextureWhichNeedDebug() const
 	{
 		return m_SceneRender->GetTextureWhichNeedDebug();
 	}
 
-	Ref<Hazel::Image2D> RendererManager::GetFinalImage() const
+	Ref<GameEngine::Image2D> RendererManager::GetFinalImage() const
 	{
 		return m_SceneRender->GetFinalImage();
 	}

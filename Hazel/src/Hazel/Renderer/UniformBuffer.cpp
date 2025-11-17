@@ -4,7 +4,7 @@
 #include "Hazel/Renderer/Renderer.h"
 #include <Hazel/Platform/Vulkan/VulkanUniformBuffer.h>
 
-namespace Hazel {
+namespace GameEngine {
 
 	Ref<UniformBuffer> UniformBuffer::Create(uint32_t size, std::string debugName)
 	{

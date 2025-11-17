@@ -4,7 +4,7 @@
 #include "Hazel/Renderer/RendererAPI.h"
 #include <Hazel/Platform/Vulkan/VulkanRenderCommandBuffer.h>
 
-namespace Hazel {
+namespace GameEngine {
 	Ref<RenderCommandBuffer> RenderCommandBuffer::Create(const std::string& debugName, uint32_t count)
 	{
 		switch (RendererAPI::Current())

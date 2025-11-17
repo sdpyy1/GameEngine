@@ -2,7 +2,7 @@
 #include <Hazel/Renderer/Shader.h>
 #include <Hazel/Renderer/Renderer.h>
 #include <Hazel/Renderer/Texture.h>
-namespace Hazel {
+namespace GameEngine {
 	struct MaterialPush {  // PushRange需要是16字节的整数倍
 		glm::vec3 AlbedoColor;
 		float Metalness;

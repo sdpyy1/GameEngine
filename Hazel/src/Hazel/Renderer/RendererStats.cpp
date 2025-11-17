@@ -1,7 +1,7 @@
 #include "hzpch.h"
 #include "RendererStats.h"
 
-namespace Hazel {
+namespace GameEngine {
 
 	namespace RendererUtils {
 

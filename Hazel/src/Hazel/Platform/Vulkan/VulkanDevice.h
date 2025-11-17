@@ -3,7 +3,7 @@
 #include <map>
 #include <unordered_set>
 
-namespace Hazel {
+namespace GameEngine {
 	class VulkanPhysicalDevice : public RefCounted {
 	public:
 		struct QueueFamilyIndices

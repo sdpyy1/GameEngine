@@ -6,7 +6,7 @@
 #include "Hazel/Renderer/RendererTypes.h"
 #include "Image.h"
 
-namespace Hazel {
+namespace GameEngine {
 
 	class Framebuffer;
 

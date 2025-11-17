@@ -2,7 +2,7 @@
 #include"Hazel/Renderer/Texture.h"
 #include "VulkanAllocator.h"
 #include "VulkanImage.h"
-namespace Hazel {
+namespace GameEngine {
 	class VulkanTexture2D : public Texture2D
 	{
 	public:

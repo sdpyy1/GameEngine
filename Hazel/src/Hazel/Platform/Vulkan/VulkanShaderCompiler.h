@@ -1,6 +1,6 @@
 #pragma once
 #include "VulkanShader.h"
-namespace Hazel
+namespace GameEngine
 {
 	class VulkanShaderCompiler
 	{

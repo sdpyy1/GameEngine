@@ -4,7 +4,7 @@
 #include "Hazel/Renderer/RendererAPI.h"
 #include <Hazel/Platform/Vulkan/VulkanFramebuffer.h>
 
-namespace Hazel {
+namespace GameEngine {
 
 	Ref<Framebuffer> Framebuffer::Create(const FramebufferSpecification& spec)
 	{

@@ -2,7 +2,7 @@
 
 #include "Hazel/Core/Ref.h"
 
-namespace Hazel {
+namespace GameEngine {
 	struct StorageBufferSpecification
 	{
 		bool GPUOnly = true;

@@ -2,7 +2,7 @@
 #include "RHIBase.h"
 #include "RHIResource.h"
 #include <GLFW/glfw3.h>
-namespace Hazel {
+namespace GameEngine {
 	/* RHI总览
 	* 上下文无关的操作，定义在DynamicRHI的虚函数，Init时进行各个API的初始化操作
 	* 上下文相关的操作，定义在RHICommandContext的虚函数，创建RHICommandContext对象时，底层会创建一个上下文handle，比如Vulkan会创建一个VkCommandBuffer
@@ -19,20 +19,22 @@ namespace Hazel {
 		virtual void Tick();    // 更新资源计数，清理无引用且长时间未使用资源
 
 		virtual void Destroy();
-
 		virtual RHIQueueRef GetQueue(const RHIQueueInfo& info) = 0;
-
 		virtual RHISurfaceRef CreateSurface(GLFWwindow* window) = 0;
-
 		virtual RHISwapchainRef CreateSwapChain(const RHISwapchainInfo& info) = 0;
-
 		virtual RHICommandPoolRef CreateCommandPool(const RHICommandPoolInfo& info) = 0;
-
 		virtual RHICommandContextRef CreateCommandContext(RHICommandPoolRef pool) = 0;
+		virtual RHITextureRef CreateTexture(const RHITextureInfo& info) = 0;
+		virtual RHITextureViewRef CreateTextureView(const RHITextureViewInfo& info) = 0;
+		virtual RHISamplerRef CreateSampler(const RHISamplerInfo& info) = 0;
+		virtual RHIShaderRef CreateShader(const RHIShaderInfo& info) = 0;
 
+
+		// 同步
 		virtual RHIFenceRef CreateFence(bool signaled) = 0;
 
 		virtual RHISemaphoreRef CreateSemaphore() = 0;
+		virtual RHICommandListImmediateRef GetImmediateCommand() = 0;
 
     protected:
 		DynamicRHI(const RHIConfig& config) : m_Config(config) {};

@@ -1,5 +1,5 @@
 #pragma once
-namespace Hazel {
+namespace GameEngine {
 	struct RenderCommandDebugInfo
 	{
 		const char* file;

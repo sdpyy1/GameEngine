@@ -4,7 +4,7 @@
 #include "RenderCommandBuffer.h"
 #include "StorageBuffer.h"
 
-namespace Hazel
+namespace GameEngine
 {
 	class PipelineCompute : public RefCounted
 	{

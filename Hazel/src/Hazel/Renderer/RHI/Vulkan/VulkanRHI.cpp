@@ -6,7 +6,7 @@
 
 #define VULKAN_VERSION VK_API_VERSION_1_2
 
-namespace Hazel
+namespace GameEngine
 {
 	VulkanDynamicRHI::VulkanDynamicRHI(const RHIConfig& config): DynamicRHI(config)
 	{
@@ -423,7 +423,7 @@ namespace Hazel
          RHISwapchainRef swapchain = std::make_shared<VulkanRHISwapchain>(info);
          RegisterResource(swapchain);
 
-        return nullptr;
+        return swapchain;
 	}
 
 	RHICommandPoolRef VulkanDynamicRHI::CreateCommandPool(const RHICommandPoolInfo& info)
@@ -458,6 +458,43 @@ namespace Hazel
         return semaphore;
     }
 
+	RHITextureRef VulkanDynamicRHI::CreateTexture(const RHITextureInfo& info)
+	{
+        RHITextureRef texture = std::make_shared<VulkanRHITexture>(info);
+        RegisterResource(texture);
+
+        return texture;
+	}
+
+	RHISamplerRef VulkanDynamicRHI::CreateSampler(const RHISamplerInfo& info)
+	{
+        RHISamplerRef sampler = std::make_shared<VulkanRHISampler>(info);
+        RegisterResource(sampler);
+
+        return sampler;
+	}
+
+	RHIShaderRef VulkanDynamicRHI::CreateShader(const RHIShaderInfo& info)
+	{
+        RHIShaderRef shader = std::make_shared<VulkanRHIShader>(info);
+        RegisterResource(shader);
+
+        return shader;
+	}
+
+	RHICommandListImmediateRef VulkanDynamicRHI::GetImmediateCommand()
+	{
+        return m_ImmediateCommand;
+
+	}
+
+	RHITextureViewRef VulkanDynamicRHI::CreateTextureView(const RHITextureViewInfo& info)
+	{
+        RHITextureViewRef textureView = std::make_shared<VulkanRHITextureView>(info);
+        RegisterResource(textureView);
+
+        return textureView;
+	}
 
     VulkanRHICommandContext::VulkanRHICommandContext(RHICommandPoolRef pool): RHICommandContext(pool)
     {

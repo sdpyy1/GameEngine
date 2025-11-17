@@ -3,7 +3,7 @@
 #include "Hazel/Renderer/RenderContext.h"
 #include "VulkanDevice.h"
 #include "VulkanSwapChain.h"
-namespace Hazel {
+namespace GameEngine {
 	class Application;
 	class VulkanContext : public RenderContext
 	{

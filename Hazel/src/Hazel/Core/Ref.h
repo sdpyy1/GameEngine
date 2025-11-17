@@ -1,6 +1,6 @@
 #pragma once
 #include <atomic>
-namespace Hazel {
+namespace GameEngine {
 	class RefCounted
 	{
 	public:

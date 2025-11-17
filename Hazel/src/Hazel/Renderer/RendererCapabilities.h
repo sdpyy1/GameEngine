@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 
-namespace Hazel {
+namespace GameEngine {
 	// ´æ´¢ÔÚVulkanRendererÖĞ
 	struct RendererCapabilities
 	{

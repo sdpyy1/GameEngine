@@ -6,7 +6,7 @@
 
 #include "entt.hpp"
 
-namespace Hazel {
+namespace GameEngine {
 
 	class Entity
 	{

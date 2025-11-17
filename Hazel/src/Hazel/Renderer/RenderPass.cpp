@@ -7,7 +7,7 @@
 
 #include "Hazel/Renderer/RendererAPI.h"
 
-namespace Hazel {
+namespace GameEngine {
 	Ref<RenderPass> RenderPass::Create(const RenderPassSpecification& spec)
 	{
 		switch (RendererAPI::Current())

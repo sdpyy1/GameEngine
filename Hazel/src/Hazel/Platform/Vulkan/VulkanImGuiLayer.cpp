@@ -15,7 +15,7 @@
 #include "Hazel/Core/Window.h"
 #include "Hazel/Platform/Windows/WindowsWindow.h"
 
-namespace Hazel {
+namespace GameEngine {
 	static std::vector<VkCommandBuffer> s_ImGuiCommandBuffers;
 
 	VulkanImGuiLayer::VulkanImGuiLayer()
@@ -79,7 +79,7 @@ namespace Hazel {
 				pool_info.pPoolSizes = pool_sizes;
 				VK_CHECK_RESULT(vkCreateDescriptorPool(device, &pool_info, nullptr, &descriptorPool));
 
-				// Setup Hazel/Platform/Renderer bindings
+				// Setup GameEngine/Platform/Renderer bindings
 				ImGui_ImplGlfw_InitForVulkan(window, true);
 				ImGui_ImplVulkan_InitInfo init_info = {};
 				init_info.Instance = VulkanContext::GetInstance();

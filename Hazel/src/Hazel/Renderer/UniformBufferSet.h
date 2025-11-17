@@ -1,7 +1,7 @@
 #pragma once
 #include "UniformBuffer.h"
 
-namespace Hazel {
+namespace GameEngine {
 
 	class UniformBufferSet : public RefCounted
 	{

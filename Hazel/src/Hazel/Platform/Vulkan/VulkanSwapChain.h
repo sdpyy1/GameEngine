@@ -4,7 +4,7 @@
 #include "VulkanDevice.h"
 #include "VulkanShader.h"
 struct GLFWwindow;
-namespace Hazel {
+namespace GameEngine {
 	class VulkanSwapChain
 	{
 	public:

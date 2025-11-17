@@ -2,7 +2,7 @@
 #include "LogPanel.h"
 #include <imgui.h>
 
-namespace Hazel {
+namespace GameEngine {
 
 	ImGuiLogPanel::ImGuiLogPanel()
 		: m_ShowTrace(false)
@@ -13,7 +13,7 @@ namespace Hazel {
 	{
 	}
 
-	bool ImGuiLogPanel::ShouldShow(Hazel::LogLevel level) const
+	bool ImGuiLogPanel::ShouldShow(GameEngine::LogLevel level) const
 	{
 		switch (level)
 		{
@@ -42,14 +42,14 @@ namespace Hazel {
 
 		if (ImGui::Button("Clear"))
 		{
-			std::lock_guard<std::mutex> lock(Hazel::Log::s_LogMutex);
-			Hazel::Log::s_LogCache.clear();
+			std::lock_guard<std::mutex> lock(GameEngine::Log::s_LogMutex);
+			GameEngine::Log::s_LogCache.clear();
 			m_ScrollToBottom = true; // 清空后滚动到底
 		}
 
 		ImGui::BeginChild("LogRegion", ImVec2(0, 0), true, ImGuiWindowFlags_HorizontalScrollbar);
 
-		const auto& logs = Hazel::Log::GetCache();
+		const auto& logs = GameEngine::Log::GetCache();
 		for (const auto& log : logs)
 		{
 			if (!ShouldShow(log.Level))
@@ -92,4 +92,4 @@ namespace Hazel {
 		ImGui::End();
 	}
 
-} // namespace Hazel
+} // namespace GameEngine

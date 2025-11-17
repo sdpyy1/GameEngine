@@ -4,7 +4,7 @@
 #include "Hazel/Renderer/Renderer.h"
 #include <Hazel/Platform/Vulkan/VulkanShader.h>
 
-namespace Hazel {
+namespace GameEngine {
 	Ref<Shader> Shader::Create(const std::string& name, const std::string& vertFilePath, const std::string& fragFilePath)
 	{
 		Ref<Shader> result = nullptr;
@@ -18,7 +18,7 @@ namespace Hazel {
 		return result;
 	}
 
-	Hazel::Ref<Hazel::Shader> Shader::Create(const std::string& name, const std::string& computeFilePath)
+	GameEngine::Ref<GameEngine::Shader> Shader::Create(const std::string& name, const std::string& computeFilePath)
 	{
 		Ref<Shader> result = nullptr;
 
@@ -47,11 +47,11 @@ namespace Hazel {
 	{
 		Ref<Shader> shader;
 		if (!isComputeShader) {
-			shader = Shader::Create(name, "D:/AAA_GameEngine/Hazel/Assets/shader/spv/" + name + "Vert.spv", "D:/AAA_GameEngine/Hazel/Assets/shader/spv/" + name + "Frag.spv");
+			shader = Shader::Create(name, "D:/AAA_GameEngine/GameEngine/Assets/shader/spv/" + name + "Vert.spv", "D:/AAA_GameEngine/GameEngine/Assets/shader/spv/" + name + "Frag.spv");
 			Add(shader);
 		}
 		else {
-			shader = Shader::Create(name, "D:/AAA_GameEngine/Hazel/Assets/shader/spv/" + name + ".comp.spv");
+			shader = Shader::Create(name, "D:/AAA_GameEngine/GameEngine/Assets/shader/spv/" + name + ".comp.spv");
 			Add(shader);
 		}
 		return shader;

@@ -1,6 +1,6 @@
 #pragma once
 
-namespace Hazel {
+namespace GameEngine {
 	class UUID
 	{
 	public:
@@ -30,9 +30,9 @@ namespace Hazel {
 
 namespace std {
 	template <>
-	struct hash<Hazel::UUID>
+	struct hash<GameEngine::UUID>
 	{
-		std::size_t operator()(const Hazel::UUID& uuid) const
+		std::size_t operator()(const GameEngine::UUID& uuid) const
 		{
 			// uuid is already a randomly generated number, and is suitable as a hash key as-is.
 			// this may change in future, in which case return hash<uint64_t>{}(uuid); might be more appropriate
@@ -41,9 +41,9 @@ namespace std {
 	};
 
 	template <>
-	struct hash<Hazel::UUID32>
+	struct hash<GameEngine::UUID32>
 	{
-		std::size_t operator()(const Hazel::UUID32& uuid) const
+		std::size_t operator()(const GameEngine::UUID32& uuid) const
 		{
 			return hash<uint32_t>()((uint32_t)uuid);
 		}

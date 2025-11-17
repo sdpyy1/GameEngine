@@ -2,7 +2,7 @@
 #include "RendererResource.h"
 #include <Hazel/Core/Buffer.h>
 #include <glm/gtc/integer.hpp>
-namespace Hazel {
+namespace GameEngine {
 	enum class ImageFormat
 	{
 		None = 0,

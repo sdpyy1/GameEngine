@@ -6,7 +6,7 @@
 #include "VulkanAllocator.h"
 #include <Hazel/Core/Application.h>
 
-namespace Hazel {
+namespace GameEngine {
 #if defined(HZ_DEBUG) || defined(HZ_RELEASE)
 	static bool s_Validation = true;
 #else
@@ -53,8 +53,8 @@ namespace Hazel {
 				/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		VkApplicationInfo appInfo = {};
 		appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-		appInfo.pApplicationName = "Hazel";
-		appInfo.pEngineName = "Hazel";
+		appInfo.pApplicationName = "GameEngine";
+		appInfo.pEngineName = "GameEngine";
 		appInfo.apiVersion = VK_API_VERSION_1_2;
 
 		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -139,7 +139,7 @@ namespace Hazel {
 		debugCreateInfo.pfnUserCallback = VKUtils::debugCallback;
 
 		VkDebugUtilsMessengerEXT debugMessenger;
-		Hazel::VKUtils::CreateDebugUtilsMessengerEXT(m_Instance, &debugCreateInfo, nullptr, &debugMessenger);
+		GameEngine::VKUtils::CreateDebugUtilsMessengerEXT(m_Instance, &debugCreateInfo, nullptr, &debugMessenger);
 	}
 
 	void VulkanContext::createPipelineCache()
@@ -156,14 +156,14 @@ namespace Hazel {
 		if (!VKUtils::CheckDriverAPIVersionSupport(VK_API_VERSION_1_2))
 		{
 #ifdef HZ_PLATFORM_WINDOWS
-			MessageBox(nullptr, L"Incompatible Vulkan driver version.\nUpdate your GPU drivers!", L"Hazel error", MB_OK | MB_ICONERROR);
+			MessageBox(nullptr, L"Incompatible Vulkan driver version.\nUpdate your GPU drivers!", L"GameEngine error", MB_OK | MB_ICONERROR);
 #else
 			HZ_CORE_ERROR("Incompatible Vulkan driver version.\nUpdate your GPU drivers!");
 #endif
 		}
 	}
 
-	Hazel::Ref<Hazel::VulkanContext> VulkanContext::Get()
+	GameEngine::Ref<GameEngine::VulkanContext> VulkanContext::Get()
 	{
 		return Application::Get().GetRenderContext().As<VulkanContext>();
 	}
@@ -173,7 +173,7 @@ namespace Hazel {
 		return Get()->GetInstanceNative();
 	}
 
-	Hazel::Ref<Hazel::VulkanDevice> VulkanContext::GetCurrentDevice()
+	GameEngine::Ref<GameEngine::VulkanDevice> VulkanContext::GetCurrentDevice()
 	{
 		return Get()->GetDeviceNative();
 	}

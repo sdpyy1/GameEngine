@@ -4,7 +4,7 @@
 #include "Hazel/Events/KeyEvent.h"
 #include "Hazel/Events/MouseEvent.h"
 
-namespace Hazel {
+namespace GameEngine {
 
 	enum class CameraMode
 	{

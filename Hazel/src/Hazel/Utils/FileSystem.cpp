@@ -11,7 +11,7 @@
 #include <format>
 #include <shellapi.h>
 
-namespace Hazel {
+namespace GameEngine {
 	std::filesystem::path FileSystem::GetWorkingDirectory()
 	{
 		return std::filesystem::current_path();

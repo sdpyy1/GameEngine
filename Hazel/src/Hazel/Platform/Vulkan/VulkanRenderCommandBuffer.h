@@ -3,7 +3,7 @@
 #include "Hazel/Renderer/RenderCommandBuffer.h"
 #include "vulkan/vulkan.h"
 
-namespace Hazel {
+namespace GameEngine {
 
 	class VulkanRenderCommandBuffer : public RenderCommandBuffer
 	{

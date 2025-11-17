@@ -12,7 +12,7 @@ enum class BrowserMode
 	Directory,
 	Category
 };
-namespace Hazel {
+namespace GameEngine {
 	class FolderPreviewPanel : public EditorPanel
 	{
 	public:

@@ -7,7 +7,7 @@
 #include "Hazel/Renderer/UniformBuffer.h"
 #include "Hazel/Renderer/Framebuffer.h"
 
-namespace Hazel {
+namespace GameEngine {
 	enum class PrimitiveTopology
 	{
 		None = 0,

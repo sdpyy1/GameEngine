@@ -2,7 +2,7 @@
 
 #include "Hazel/Core/Base.h"
 
-namespace Hazel {
+namespace GameEngine {
 
 	class UniformBuffer : public RefCounted
 	{

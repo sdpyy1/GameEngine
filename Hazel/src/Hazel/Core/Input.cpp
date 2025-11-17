@@ -8,7 +8,7 @@
 #include <GLFW/glfw3.h>
 #include <imgui_internal.h>
 
-namespace Hazel {
+namespace GameEngine {
 	bool Input::IsKeyDown(KeyCode keycode)
 	{
 		auto& window = static_cast<Window&>(*Application::Get().GetWindow());

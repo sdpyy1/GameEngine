@@ -6,7 +6,7 @@
 
 #include "VulkanImage.h"
 
-namespace Hazel {
+namespace GameEngine {
 	class VulkanFramebuffer : public Framebuffer
 	{
 	public:

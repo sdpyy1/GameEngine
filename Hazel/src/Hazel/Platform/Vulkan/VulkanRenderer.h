@@ -2,7 +2,7 @@
 #include "Hazel/Renderer/RendererAPI.h"
 #include "Vulkan.h"
 #include <Hazel/Asset/Model/Mesh.h>
-namespace Hazel {
+namespace GameEngine {
 	class VulkanRenderer : public RendererAPI
 	{
 	public:

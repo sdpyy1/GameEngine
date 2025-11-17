@@ -1,50 +1,41 @@
 #include "hzpch.h"
 #include "Hazel/Core/Application.h"
+#include "Hazel/Window/WindowManager.h"
 #include "Hazel/Renderer/RHI/Vulkan/VulkanRHI.h"
 int main(int argc, char** argv)
 {
-	Hazel::Log::Init();
-
-    // 1. 初始化 GLFW
-    if (!glfwInit()) {
-        std::cerr << "Failed to initialize GLFW!" << std::endl;
-        return -1;
-    }
-
-    // 2. 告诉 GLFW 不创建 OpenGL 上下文
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-
-    // 3. 可选：隐藏窗口
-    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
-
-    // 4. 创建窗口
-    GLFWwindow* window = glfwCreateWindow(800, 600, "Vulkan Test", nullptr, nullptr);
-    if (!window) {
-        std::cerr << "Failed to create GLFW window!" << std::endl;
-        glfwTerminate();
-        return -1;
-    }
+	GameEngine::Log::Init();
+    GameEngine::WindowSpec spec;
+    spec.Title = "Hazel";
+    spec.Width = 800;
+    spec.Height = 600;
+    GameEngine::WindowManager * window = new GameEngine::WindowManager(spec);
 	//test
-	Hazel::RHIConfig config;
+	GameEngine::RHIConfig config;
     config.debug = true;
     config.enableRayTracing = false;
-	config.api = Hazel::API::Vulkan;
-	Hazel::DynamicRHI::Init(config);
-    Hazel::RHIQueueInfo aaaa;
+	config.api = GameEngine::API::Vulkan;
+	GameEngine::DynamicRHI::Init(config);
+    GameEngine::RHIQueueInfo aaaa;
     aaaa.index = 0;
-    aaaa.type = Hazel::QueueType::QUEUE_TYPE_GRAPHICS;
-    Hazel::RHISwapchainInfo a;
+    aaaa.type = GameEngine::QueueType::QUEUE_TYPE_GRAPHICS;
+    GameEngine::RHISwapchainInfo a;
     a.extent = { 800, 600 };
-    a.format = Hazel::RHIFormat::FORMAT_R8G8B8A8_UNORM;
+    a.format = GameEngine::RHIFormat::FORMAT_R8G8B8A8_UNORM;
     a.imageCount = 3;
-    a.presentQueue = Hazel::DynamicRHI::Get()->GetQueue(aaaa);
-    a.surface = Hazel::DynamicRHI::Get()->CreateSurface(window);
-	Hazel::DynamicRHI::Get()->CreateSwapChain(a);
+    a.presentQueue = GameEngine::DynamicRHI::Get()->GetQueue(aaaa);
+    a.surface = GameEngine::DynamicRHI::Get()->CreateSurface(window->GetGLFWWindow());
+    GameEngine::RHISwapchainRef swpeChain = GameEngine::DynamicRHI::Get()->CreateSwapChain(a);
+    while (!glfwWindowShouldClose(window->GetGLFWWindow())) {
+        swpeChain->GetNewFrame(nullptr,nullptr);
+        swpeChain->Present(nullptr);
+        glfwPollEvents();
+    }
     
-	/*Hazel::ApplicationSpecification spec;
+	/*GameEngine::ApplicationSpecification spec;
 	spec.Name = "Hazelnut";
 	spec.CommandLineArgs = { argc, argv };
-	Hazel::Application* app = new Hazel::Application(spec);
+	GameEngine::Application* app = new GameEngine::Application(spec);
 	app->Tick();
 	delete app;*/
 }

@@ -5,7 +5,7 @@
 #include <vulkan/vulkan.h>
 #include <glm/glm.hpp>
 
-namespace Hazel {
+namespace GameEngine {
 	class Shader : public RefCounted
 	{
 	public:

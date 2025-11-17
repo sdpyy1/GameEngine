@@ -47,18 +47,18 @@
 #endif
 
 // Core log macros
-#define LOG_TRACE(...)    do { ::Hazel::Log::GetCoreLogger()->trace(__VA_ARGS__); ::Hazel::Log::AddToCache(::Hazel::LogLevel::trace, fmt::format(__VA_ARGS__)); } while(0)
-#define LOG_INFO(...)     do { ::Hazel::Log::GetCoreLogger()->info(__VA_ARGS__);  ::Hazel::Log::AddToCache(::Hazel::LogLevel::info,  fmt::format(__VA_ARGS__)); } while(0)
-#define LOG_WARN(...)     do { ::Hazel::Log::GetCoreLogger()->warn(__VA_ARGS__);  ::Hazel::Log::AddToCache(::Hazel::LogLevel::warn,  fmt::format(__VA_ARGS__)); } while(0)
-#define LOG_ERROR(...)    do { ::Hazel::Log::GetCoreLogger()->error(__VA_ARGS__); ::Hazel::Log::AddToCache(::Hazel::LogLevel::error, fmt::format(__VA_ARGS__)); HZ_DEBUGBREAK();} while(0)
-#define LOG_CRITICAL(...) do { ::Hazel::Log::GetCoreLogger()->critical(__VA_ARGS__); ::Hazel::Log::AddToCache(::Hazel::LogLevel::critical, fmt::format(__VA_ARGS__)); } while(0)
+#define LOG_TRACE(...)    do { ::GameEngine::Log::GetCoreLogger()->trace(__VA_ARGS__); ::GameEngine::Log::AddToCache(::GameEngine::LogLevel::trace, fmt::format(__VA_ARGS__)); } while(0)
+#define LOG_INFO(...)     do { ::GameEngine::Log::GetCoreLogger()->info(__VA_ARGS__);  ::GameEngine::Log::AddToCache(::GameEngine::LogLevel::info,  fmt::format(__VA_ARGS__)); } while(0)
+#define LOG_WARN(...)     do { ::GameEngine::Log::GetCoreLogger()->warn(__VA_ARGS__);  ::GameEngine::Log::AddToCache(::GameEngine::LogLevel::warn,  fmt::format(__VA_ARGS__)); } while(0)
+#define LOG_ERROR(...)    do { ::GameEngine::Log::GetCoreLogger()->error(__VA_ARGS__); ::GameEngine::Log::AddToCache(::GameEngine::LogLevel::error, fmt::format(__VA_ARGS__)); HZ_DEBUGBREAK();} while(0)
+#define LOG_CRITICAL(...) do { ::GameEngine::Log::GetCoreLogger()->critical(__VA_ARGS__); ::GameEngine::Log::AddToCache(::GameEngine::LogLevel::critical, fmt::format(__VA_ARGS__)); } while(0)
 
 #define _TAG_LOG(level, tag, ...) do { \
     std::string tagStr = "[" + std::string(tag) + "] ";\
     std::string content = fmt::format(__VA_ARGS__); \
     std::string msg = tagStr + content;\
-    ::Hazel::Log::GetCoreLogger()->##level(msg); \
-    ::Hazel::Log::AddToCache(::Hazel::LogLevel::##level, msg); \
+    ::GameEngine::Log::GetCoreLogger()->##level(msg); \
+    ::GameEngine::Log::AddToCache(::GameEngine::LogLevel::##level, msg); \
 } while(0)
 
 #define LOG_TRACE_TAG(tag, ...)  _TAG_LOG(trace,   tag, __VA_ARGS__)

@@ -11,7 +11,7 @@
 #include <format>
 #include "VulkanRenderCommandBuffer.h"
 
-namespace Hazel {
+namespace GameEngine {
 	namespace Utils {
 		static VkSamplerAddressMode VulkanSamplerWrap(TextureWrap wrap)
 		{

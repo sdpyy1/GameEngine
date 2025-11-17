@@ -12,7 +12,7 @@
 #include "Hazel/Scene/Scene.h"
 #include "Hazel/Scene/Entity.h"
 #include "Hazel/Asset/Model/Mesh.h"
-namespace Hazel {
+namespace GameEngine {
 	FolderPreviewPanel::FolderPreviewPanel(const std::filesystem::path& assetsDir)
 		: m_AssetsDir(assetsDir), m_CurrentDir(assetsDir)
 	{
@@ -428,4 +428,4 @@ namespace Hazel {
 			ImGui::PopID();
 		}
 	}
-} // namespace Hazel
+} // namespace GameEngine

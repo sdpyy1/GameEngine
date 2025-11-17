@@ -1,7 +1,7 @@
 #pragma once
 #include <Hazel/Platform/Vulkan/VulkanImage.h>
 #include <examples/imgui_impl_vulkan_with_textures.h>
-namespace Hazel {
+namespace GameEngine {
 	namespace UI {
 		static void Image(const Ref<Image2D>& image, const ImVec2& size, const ImVec2& uv0, const ImVec2& uv1, const ImVec4& tint_col = { 1,1,1,1 }, const ImVec4& border_col = { 0,0,0,0 })
 		{

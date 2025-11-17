@@ -9,7 +9,7 @@
 #include "VulkanStorageBuffer.h"
 #include "VulkanStorageBufferSet.h"
 
-namespace Hazel
+namespace GameEngine
 {
 	void DescriptorManager::SetInput(std::string name, Ref<Image2D> image, bool isInit)
 	{

@@ -2,7 +2,7 @@
 
 #include <filesystem>
 
-namespace Hazel::Utils {
+namespace GameEngine::Utils {
 	namespace String
 	{
 		bool EqualsIgnoreCase(const std::string_view a, const std::string_view b);

@@ -4,7 +4,7 @@
 
 #include <filesystem>
 
-namespace Hazel {
+namespace GameEngine {
 
 	enum class AssetStatus
 	{

@@ -12,7 +12,7 @@
 #include "Hazel/Asset/Model/Mesh.h"
 #include <ImGuizmo.h>
 #include "Hazel/Scene/SceneManager.h"
-namespace Hazel {
+namespace GameEngine {
 	namespace Colors
 	{
 		// To experiment with editor theme live you can change these constexpr into static
@@ -138,7 +138,7 @@ namespace Hazel {
 			// --- Help ²Ëµ¥ ---
 			if (ImGui::BeginMenu("Help"))
 			{
-				ImGui::Text("Hazel Editor - Custom Build");
+				ImGui::Text("GameEngine Editor - Custom Build");
 				ImGui::Separator();
 				ImGui::Text("Ctrl+S  Save Scene");
 				ImGui::Text("W/E/R   Gizmo Control");

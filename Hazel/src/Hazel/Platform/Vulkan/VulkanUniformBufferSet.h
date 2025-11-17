@@ -4,7 +4,7 @@
 #include "Hazel/Renderer/Renderer.h"
 #include <map>
 
-namespace Hazel {
+namespace GameEngine {
 
 	class VulkanUniformBufferSet : public UniformBufferSet
 	{

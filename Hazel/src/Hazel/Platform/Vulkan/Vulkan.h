@@ -1,6 +1,6 @@
 #pragma once
 #include <vulkan/vulkan.h>
-namespace Hazel {
+namespace GameEngine {
 #define VK_CHECK_RESULT(f)\
 {\
 	VkResult res = (f);\

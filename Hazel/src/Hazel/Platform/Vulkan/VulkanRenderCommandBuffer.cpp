@@ -8,7 +8,7 @@
 #include "Hazel/Core/Window.h"
 #include "Hazel/Platform/Windows/WindowsWindow.h"
 
-namespace Hazel {
+namespace GameEngine {
 	VulkanRenderCommandBuffer::VulkanRenderCommandBuffer(uint32_t commandBufferCount, std::string debugName)
 		: m_DebugName(std::move(debugName))
 	{

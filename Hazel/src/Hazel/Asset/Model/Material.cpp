@@ -4,7 +4,7 @@
 
 #include "Hazel/Renderer/RendererAPI.h"
 
-namespace Hazel {
+namespace GameEngine {
 	Ref<Material> Material::Create(const Ref<Shader>& shader, const std::string& name)
 	{
 		switch (RendererAPI::Current())

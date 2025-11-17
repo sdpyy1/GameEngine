@@ -2,7 +2,7 @@
 #include "EnvPass.h"
 #include "Hazel/Renderer/Renderer.h"
 #include "Hazel/Asset/Model/Material.h"
-namespace Hazel{
+namespace GameEngine{
 	void EnvPass::Init()
 	{
 		// HDR->Cubemap Pass

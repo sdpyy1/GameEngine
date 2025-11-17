@@ -2,7 +2,7 @@
 
 #include "Entity.h"
 
-namespace Hazel {
+namespace GameEngine {
 
 	class ScriptableEntity
 	{

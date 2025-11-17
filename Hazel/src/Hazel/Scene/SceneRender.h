@@ -3,7 +3,7 @@
 #include "Hazel/Asset/Model/Mesh.h"
 #include <Hazel/Renderer/ComputePass.h>
 #include "Pass/EnvPass.h"
-namespace Hazel {
+namespace GameEngine {
 
 	class SceneRender : public RefCounted
 	{

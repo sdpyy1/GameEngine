@@ -3,7 +3,7 @@
 #include "Hazel/Events/Event.h"
 #include "Hazel/Core/KeyCodes.h"
 
-namespace Hazel {
+namespace GameEngine {
 
 	class KeyEvent : public Event
 	{

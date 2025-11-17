@@ -3,7 +3,7 @@
 #include "Hazel/Renderer/Renderer.h"
 #include "VulkanContext.h"
 
-namespace Hazel {
+namespace GameEngine {
 
 #define NO_STAGING 1
 

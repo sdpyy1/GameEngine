@@ -6,7 +6,7 @@
 #include "Hazel/Renderer/RendererAPI.h"
 #include <Hazel/Platform/Vulkan/VulkanPipeline.h>
 
-namespace Hazel {
+namespace GameEngine {
 	Ref<Pipeline> Pipeline::Create(const PipelineSpecification& spec)
 	{
 		switch (RendererAPI::Current())

@@ -6,7 +6,7 @@
 #include "VulkanShader.h"
 #include "DescriptorManager.h"
 
-namespace Hazel {
+namespace GameEngine {
 	class VulkanRenderPass : public RenderPass
 	{
 	public:

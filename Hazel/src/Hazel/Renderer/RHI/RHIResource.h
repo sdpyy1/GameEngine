@@ -1,7 +1,7 @@
 #pragma once
 #include "RHIBase.h"
 #include <queue>
-namespace Hazel {
+namespace GameEngine {
 	class RHIResource
 	{
 	public:
@@ -99,6 +99,51 @@ namespace Hazel {
 		TextureSubresourceLayers defaultLayers = {};
 	};
 
+	class RHITextureView : public RHIResource
+	{
+	public:
+		RHITextureView(const RHITextureViewInfo& info): RHIResource(RHI_TEXTURE_VIEW), info(info){}
+
+		inline const RHITextureViewInfo& GetInfo() const { return info; }
+
+	protected:
+		RHITextureViewInfo info;
+	};
+	class RHISampler : public RHIResource
+	{
+	public:
+		RHISampler(const RHISamplerInfo& info)
+			: RHIResource(RHI_SAMPLER)
+			, info(info)
+		{
+		}
+
+		inline const RHISamplerInfo& GetInfo() const { return info; }
+
+	protected:
+		RHISamplerInfo info;
+	};
+	class RHIShader : public RHIResource
+	{
+	public:
+		RHIShader(const RHIShaderInfo& info)
+			: RHIResource(RHI_SHADER)
+			, info(info)
+		{
+			frequency = info.frequency;
+		}
+
+		ShaderFrequency GetFrequency() 				const { return frequency; }
+		const ShaderReflectInfo& GetReflectInfo() 	const { return reflectInfo; }
+		const RHIShaderInfo& GetInfo() 				const { return info; }
+
+	private:
+		ShaderFrequency frequency;
+
+	protected:
+		RHIShaderInfo info;
+		ShaderReflectInfo reflectInfo;
+	};
 	// ------------------------------------------------------------------------ Í¬²½ ------------------------------------------------------------------------
 	class RHIFence : public RHIResource
 	{

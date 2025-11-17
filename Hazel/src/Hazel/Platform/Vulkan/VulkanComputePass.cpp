@@ -8,7 +8,7 @@
 #include "VulkanComputePipeline.h"
 #include "VulkanUniformBufferSet.h"
 #include "VulkanUniformBuffer.h"
-namespace Hazel
+namespace GameEngine
 {
 	VulkanComputePass::VulkanComputePass(const ComputePassSpecification& spec) : m_Specification(spec), m_DescriptorManager(spec.Pipeline.As<VulkanComputePipeline>()->GetShader())
 	{

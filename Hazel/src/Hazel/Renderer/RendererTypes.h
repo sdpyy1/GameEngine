@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdint>
 
-namespace Hazel {
+namespace GameEngine {
 
 	using RendererID = uint32_t;
 

@@ -5,7 +5,7 @@
 #include "Hazel/Renderer/Renderer.h"
 #include "Hazel/Platform/Windows/WindowsWindow.h"
 
-namespace Hazel {
+namespace GameEngine {
 
 	namespace Utils {
 

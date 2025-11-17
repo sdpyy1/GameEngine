@@ -4,7 +4,7 @@
 
 #include <map>
 
-namespace Hazel {
+namespace GameEngine {
 
 	class VulkanStorageBufferSet : public StorageBufferSet
 	{

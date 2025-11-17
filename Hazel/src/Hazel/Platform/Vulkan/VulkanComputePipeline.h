@@ -1,7 +1,7 @@
 #pragma once
 #include "VulkanShader.h"
 #include "Hazel/Renderer/PipelineCompute.h"
-namespace Hazel
+namespace GameEngine
 {
 	class VulkanComputePipeline : public PipelineCompute
 	{

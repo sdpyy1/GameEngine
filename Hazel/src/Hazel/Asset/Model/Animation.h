@@ -1,6 +1,6 @@
 #pragma once
 #include "Hazel/Asset/Asset.h"
-namespace Hazel {
+namespace GameEngine {
 	class MeshSource;
 	struct LocalTransform
 	{

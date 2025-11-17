@@ -4,7 +4,7 @@
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <Windows.h>
 
-namespace Hazel {
+namespace GameEngine {
 
 	Thread::Thread(const std::string& name)
 		: m_Name(name)

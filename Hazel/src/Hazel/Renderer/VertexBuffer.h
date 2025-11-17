@@ -1,7 +1,7 @@
 #pragma once
 #include "RendererTypes.h"
 #include "Buffer.h"
-namespace Hazel {
+namespace GameEngine {
 	struct VertexBufferElement
 	{
 		std::string Name;

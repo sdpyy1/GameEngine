@@ -1,6 +1,6 @@
 #include "hzpch.h"
 #include "AssetImporter.h"
-namespace Hazel {
+namespace GameEngine {
 	std::unordered_map<AssetType, Scope<AssetSerializer>> AssetImporter::s_Serializers;
 
 	void AssetImporter::Init()

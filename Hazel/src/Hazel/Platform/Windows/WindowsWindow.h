@@ -4,7 +4,7 @@
 #include "Hazel/Renderer/RenderContext.h"
 #include "Hazel/Platform/Vulkan/VulkanSwapChain.h"
 struct GLFWcursor;
-namespace Hazel {
+namespace GameEngine {
 
 	class WindowsWindow : public Window
 	{
@@ -24,14 +24,14 @@ namespace Hazel {
 		bool IsVSync() const override;
 
 
-		virtual void* GetNativeWindow() const { return m_Window; }
+		virtual void* GetNativeWindow() const { return m_GLFWWindow; }
 	private:
 		virtual void Init(const WindowProps& props);
 		virtual void Shutdown();
 
 
 	private:
-		GLFWwindow* m_Window;
+		GLFWwindow* m_GLFWWindow;
 
 		struct WindowData
 		{

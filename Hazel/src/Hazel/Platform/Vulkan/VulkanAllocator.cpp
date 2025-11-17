@@ -13,7 +13,7 @@
 
 #define HZ_GPU_TRACK_MEMORY_ALLOCATION 1
 
-namespace Hazel {
+namespace GameEngine {
 	struct VulkanAllocatorData
 	{
 		VmaAllocator Allocator;

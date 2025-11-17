@@ -8,7 +8,7 @@
 #include "VulkanRenderer.h"
 #include "Hazel/Renderer/Renderer.h"
 
-namespace Hazel {
+namespace GameEngine {
 	// ����ʱֻ�ᱣ����û��ʵ�ʴ���
 	VulkanImage2D::VulkanImage2D(const ImageSpecification& specification)
 		: m_Specification(specification)

@@ -4,7 +4,7 @@
 #include "Hazel/Renderer/Renderer.h"
 #include "Hazel/Platform/Vulkan/VulkanTexture.h"
 
-namespace Hazel {
+namespace GameEngine {
 	Ref<Texture2D> Texture2D::Create(const TextureSpecification& specification)
 	{
 		switch (RendererAPI::Current())

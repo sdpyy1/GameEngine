@@ -14,7 +14,7 @@
 #include <filesystem>
 #include <thread>
 
-namespace Hazel {
+namespace GameEngine {
 
 	static std::filesystem::path s_PersistentStoragePath;
 

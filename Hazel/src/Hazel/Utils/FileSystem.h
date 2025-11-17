@@ -17,7 +17,7 @@
 #include <functional>
 #include <filesystem>
 
-namespace Hazel {
+namespace GameEngine {
 	enum class FileStatus
 	{
 		Success = 0, Invalid, Locked, OtherError

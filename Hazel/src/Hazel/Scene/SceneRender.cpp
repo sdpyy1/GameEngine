@@ -3,7 +3,7 @@
 #include "Hazel/Asset/AssetManager.h"
 #include <Hazel/Asset/Model/Mesh.h>
 #include <glm/gtc/matrix_transform.hpp>
-namespace Hazel {
+namespace GameEngine {
 	void SceneRender::Init()
 	{
 		m_CommandBuffer = RenderCommandBuffer::Create("PassCommandBuffer");

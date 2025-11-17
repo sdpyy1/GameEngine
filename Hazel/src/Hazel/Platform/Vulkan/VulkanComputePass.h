@@ -2,7 +2,7 @@
 #include "Hazel/Renderer/ComputePass.h"
 #include "VulkanShader.h"
 #include "DescriptorManager.h"
-namespace Hazel
+namespace GameEngine
 {
 	class VulkanComputePass : public ComputePass
 	{

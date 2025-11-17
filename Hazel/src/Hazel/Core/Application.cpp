@@ -12,7 +12,7 @@
 #include "Hazel/Platform/Windows/WindowsWindow.h"
 #include "Hazel/Core/Window.h"
 
-namespace Hazel {
+namespace GameEngine {
 	Application* Application::s_Instance = nullptr;
 
 	Application::Application(const ApplicationSpecification& specification)
@@ -22,8 +22,8 @@ namespace Hazel {
 		ASSERT(!s_Instance, "Application already exists!");
 		s_Instance = this;
 
-		m_Window = Window::Create(WindowProps(m_Specification.Name, 1950, 1300)); 
-		m_Window->SetEventCallback(HZ_BIND_EVENT_FN(Application::OnEvent));
+		m_GLFWWindow = Window::Create(WindowProps(m_Specification.Name, 1950, 1300)); 
+		m_GLFWWindow->SetEventCallback(HZ_BIND_EVENT_FN(Application::OnEvent));
 
 
 		NFD::Init();
@@ -47,7 +47,7 @@ namespace Hazel {
 				m_RendererManager->Tick(timestep);
 			}
 
-			m_Window->Tick();
+			m_GLFWWindow->Tick();
 
 			m_CurrentFrameIndex = (m_CurrentFrameIndex + 1) % Renderer::GetConfig().FramesInFlight;
 		}
@@ -99,7 +99,7 @@ namespace Hazel {
 		}
 		//m_Minimized = false;
 
-		auto& window = m_Window;
+		auto& window = m_GLFWWindow;
 		RENDER_SUBMIT([&window, width, height]() mutable
 			{
 				window->GetSwapChain().OnResize(width, height);
@@ -108,12 +108,12 @@ namespace Hazel {
 		return false;
 	}
 
-	Hazel::Ref<Hazel::WindowsWindow>& Application::GetWindow()
+	GameEngine::Ref<GameEngine::WindowsWindow>& Application::GetWindow()
 	{
-		return m_Window.As<WindowsWindow>();
+		return m_GLFWWindow.As<WindowsWindow>();
 	}
 
-	Hazel::Ref<Hazel::RenderContext> Application::GetRenderContext()
+	GameEngine::Ref<GameEngine::RenderContext> Application::GetRenderContext()
 	{
 		return GetWindow()->GetRenderContext();
 	}

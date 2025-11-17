@@ -3,7 +3,7 @@
 #include <unordered_set>
 
 
-namespace Hazel {
+namespace GameEngine {
 
 	static std::unordered_set<void*> s_LiveReferences;
 	static std::mutex s_LiveReferenceMutex;

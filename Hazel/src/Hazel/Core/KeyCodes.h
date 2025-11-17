@@ -1,6 +1,6 @@
 #pragma once
 
-namespace Hazel
+namespace GameEngine
 {
 	typedef enum class KeyCode : uint16_t
 	{
@@ -180,135 +180,135 @@ namespace Hazel
 }
 
 // From glfw3.h
-#define HZ_KEY_SPACE           ::Hazel::Key::Space
-#define HZ_KEY_APOSTROPHE      ::Hazel::Key::Apostrophe    /* ' */
-#define HZ_KEY_COMMA           ::Hazel::Key::Comma         /* , */
-#define HZ_KEY_MINUS           ::Hazel::Key::Minus         /* - */
-#define HZ_KEY_PERIOD          ::Hazel::Key::Period        /* . */
-#define HZ_KEY_SLASH           ::Hazel::Key::Slash         /* / */
-#define HZ_KEY_0               ::Hazel::Key::D0
-#define HZ_KEY_1               ::Hazel::Key::D1
-#define HZ_KEY_2               ::Hazel::Key::D2
-#define HZ_KEY_3               ::Hazel::Key::D3
-#define HZ_KEY_4               ::Hazel::Key::D4
-#define HZ_KEY_5               ::Hazel::Key::D5
-#define HZ_KEY_6               ::Hazel::Key::D6
-#define HZ_KEY_7               ::Hazel::Key::D7
-#define HZ_KEY_8               ::Hazel::Key::D8
-#define HZ_KEY_9               ::Hazel::Key::D9
-#define HZ_KEY_SEMICOLON       ::Hazel::Key::Semicolon     /* ; */
-#define HZ_KEY_EQUAL           ::Hazel::Key::Equal         /* = */
-#define HZ_KEY_A               ::Hazel::Key::A
-#define HZ_KEY_B               ::Hazel::Key::B
-#define HZ_KEY_C               ::Hazel::Key::C
-#define HZ_KEY_D               ::Hazel::Key::D
-#define HZ_KEY_E               ::Hazel::Key::E
-#define HZ_KEY_F               ::Hazel::Key::F
-#define HZ_KEY_G               ::Hazel::Key::G
-#define HZ_KEY_H               ::Hazel::Key::H
-#define HZ_KEY_I               ::Hazel::Key::I
-#define HZ_KEY_J               ::Hazel::Key::J
-#define HZ_KEY_K               ::Hazel::Key::K
-#define HZ_KEY_L               ::Hazel::Key::L
-#define HZ_KEY_M               ::Hazel::Key::M
-#define HZ_KEY_N               ::Hazel::Key::N
-#define HZ_KEY_O               ::Hazel::Key::O
-#define HZ_KEY_P               ::Hazel::Key::P
-#define HZ_KEY_Q               ::Hazel::Key::Q
-#define HZ_KEY_R               ::Hazel::Key::R
-#define HZ_KEY_S               ::Hazel::Key::S
-#define HZ_KEY_T               ::Hazel::Key::T
-#define HZ_KEY_U               ::Hazel::Key::U
-#define HZ_KEY_V               ::Hazel::Key::V
-#define HZ_KEY_W               ::Hazel::Key::W
-#define HZ_KEY_X               ::Hazel::Key::X
-#define HZ_KEY_Y               ::Hazel::Key::Y
-#define HZ_KEY_Z               ::Hazel::Key::Z
-#define HZ_KEY_LEFT_BRACKET    ::Hazel::Key::LeftBracket   /* [ */
-#define HZ_KEY_BACKSLASH       ::Hazel::Key::Backslash     /* \ */
-#define HZ_KEY_RIGHT_BRACKET   ::Hazel::Key::RightBracket  /* ] */
-#define HZ_KEY_GRAVE_ACCENT    ::Hazel::Key::GraveAccent   /* ` */
-#define HZ_KEY_WORLD_1         ::Hazel::Key::World1        /* non-US #1 */
-#define HZ_KEY_WORLD_2         ::Hazel::Key::World2        /* non-US #2 */
+#define HZ_KEY_SPACE           ::GameEngine::Key::Space
+#define HZ_KEY_APOSTROPHE      ::GameEngine::Key::Apostrophe    /* ' */
+#define HZ_KEY_COMMA           ::GameEngine::Key::Comma         /* , */
+#define HZ_KEY_MINUS           ::GameEngine::Key::Minus         /* - */
+#define HZ_KEY_PERIOD          ::GameEngine::Key::Period        /* . */
+#define HZ_KEY_SLASH           ::GameEngine::Key::Slash         /* / */
+#define HZ_KEY_0               ::GameEngine::Key::D0
+#define HZ_KEY_1               ::GameEngine::Key::D1
+#define HZ_KEY_2               ::GameEngine::Key::D2
+#define HZ_KEY_3               ::GameEngine::Key::D3
+#define HZ_KEY_4               ::GameEngine::Key::D4
+#define HZ_KEY_5               ::GameEngine::Key::D5
+#define HZ_KEY_6               ::GameEngine::Key::D6
+#define HZ_KEY_7               ::GameEngine::Key::D7
+#define HZ_KEY_8               ::GameEngine::Key::D8
+#define HZ_KEY_9               ::GameEngine::Key::D9
+#define HZ_KEY_SEMICOLON       ::GameEngine::Key::Semicolon     /* ; */
+#define HZ_KEY_EQUAL           ::GameEngine::Key::Equal         /* = */
+#define HZ_KEY_A               ::GameEngine::Key::A
+#define HZ_KEY_B               ::GameEngine::Key::B
+#define HZ_KEY_C               ::GameEngine::Key::C
+#define HZ_KEY_D               ::GameEngine::Key::D
+#define HZ_KEY_E               ::GameEngine::Key::E
+#define HZ_KEY_F               ::GameEngine::Key::F
+#define HZ_KEY_G               ::GameEngine::Key::G
+#define HZ_KEY_H               ::GameEngine::Key::H
+#define HZ_KEY_I               ::GameEngine::Key::I
+#define HZ_KEY_J               ::GameEngine::Key::J
+#define HZ_KEY_K               ::GameEngine::Key::K
+#define HZ_KEY_L               ::GameEngine::Key::L
+#define HZ_KEY_M               ::GameEngine::Key::M
+#define HZ_KEY_N               ::GameEngine::Key::N
+#define HZ_KEY_O               ::GameEngine::Key::O
+#define HZ_KEY_P               ::GameEngine::Key::P
+#define HZ_KEY_Q               ::GameEngine::Key::Q
+#define HZ_KEY_R               ::GameEngine::Key::R
+#define HZ_KEY_S               ::GameEngine::Key::S
+#define HZ_KEY_T               ::GameEngine::Key::T
+#define HZ_KEY_U               ::GameEngine::Key::U
+#define HZ_KEY_V               ::GameEngine::Key::V
+#define HZ_KEY_W               ::GameEngine::Key::W
+#define HZ_KEY_X               ::GameEngine::Key::X
+#define HZ_KEY_Y               ::GameEngine::Key::Y
+#define HZ_KEY_Z               ::GameEngine::Key::Z
+#define HZ_KEY_LEFT_BRACKET    ::GameEngine::Key::LeftBracket   /* [ */
+#define HZ_KEY_BACKSLASH       ::GameEngine::Key::Backslash     /* \ */
+#define HZ_KEY_RIGHT_BRACKET   ::GameEngine::Key::RightBracket  /* ] */
+#define HZ_KEY_GRAVE_ACCENT    ::GameEngine::Key::GraveAccent   /* ` */
+#define HZ_KEY_WORLD_1         ::GameEngine::Key::World1        /* non-US #1 */
+#define HZ_KEY_WORLD_2         ::GameEngine::Key::World2        /* non-US #2 */
 
 /* Function keys */
-#define HZ_KEY_ESCAPE          ::Hazel::Key::Escape
-#define HZ_KEY_ENTER           ::Hazel::Key::Enter
-#define HZ_KEY_TAB             ::Hazel::Key::Tab
-#define HZ_KEY_BACKSPACE       ::Hazel::Key::Backspace
-#define HZ_KEY_INSERT          ::Hazel::Key::Insert
-#define HZ_KEY_DELETE          ::Hazel::Key::Delete
-#define HZ_KEY_RIGHT           ::Hazel::Key::Right
-#define HZ_KEY_LEFT            ::Hazel::Key::Left
-#define HZ_KEY_DOWN            ::Hazel::Key::Down
-#define HZ_KEY_UP              ::Hazel::Key::Up
-#define HZ_KEY_PAGE_UP         ::Hazel::Key::PageUp
-#define HZ_KEY_PAGE_DOWN       ::Hazel::Key::PageDown
-#define HZ_KEY_HOME            ::Hazel::Key::Home
-#define HZ_KEY_END             ::Hazel::Key::End
-#define HZ_KEY_CAPS_LOCK       ::Hazel::Key::CapsLock
-#define HZ_KEY_SCROLL_LOCK     ::Hazel::Key::ScrollLock
-#define HZ_KEY_NUM_LOCK        ::Hazel::Key::NumLock
-#define HZ_KEY_PRINT_SCREEN    ::Hazel::Key::PrintScreen
-#define HZ_KEY_PAUSE           ::Hazel::Key::Pause
-#define HZ_KEY_F1              ::Hazel::Key::F1
-#define HZ_KEY_F2              ::Hazel::Key::F2
-#define HZ_KEY_F3              ::Hazel::Key::F3
-#define HZ_KEY_F4              ::Hazel::Key::F4
-#define HZ_KEY_F5              ::Hazel::Key::F5
-#define HZ_KEY_F6              ::Hazel::Key::F6
-#define HZ_KEY_F7              ::Hazel::Key::F7
-#define HZ_KEY_F8              ::Hazel::Key::F8
-#define HZ_KEY_F9              ::Hazel::Key::F9
-#define HZ_KEY_F10             ::Hazel::Key::F10
-#define HZ_KEY_F11             ::Hazel::Key::F11
-#define HZ_KEY_F12             ::Hazel::Key::F12
-#define HZ_KEY_F13             ::Hazel::Key::F13
-#define HZ_KEY_F14             ::Hazel::Key::F14
-#define HZ_KEY_F15             ::Hazel::Key::F15
-#define HZ_KEY_F16             ::Hazel::Key::F16
-#define HZ_KEY_F17             ::Hazel::Key::F17
-#define HZ_KEY_F18             ::Hazel::Key::F18
-#define HZ_KEY_F19             ::Hazel::Key::F19
-#define HZ_KEY_F20             ::Hazel::Key::F20
-#define HZ_KEY_F21             ::Hazel::Key::F21
-#define HZ_KEY_F22             ::Hazel::Key::F22
-#define HZ_KEY_F23             ::Hazel::Key::F23
-#define HZ_KEY_F24             ::Hazel::Key::F24
-#define HZ_KEY_F25             ::Hazel::Key::F25
+#define HZ_KEY_ESCAPE          ::GameEngine::Key::Escape
+#define HZ_KEY_ENTER           ::GameEngine::Key::Enter
+#define HZ_KEY_TAB             ::GameEngine::Key::Tab
+#define HZ_KEY_BACKSPACE       ::GameEngine::Key::Backspace
+#define HZ_KEY_INSERT          ::GameEngine::Key::Insert
+#define HZ_KEY_DELETE          ::GameEngine::Key::Delete
+#define HZ_KEY_RIGHT           ::GameEngine::Key::Right
+#define HZ_KEY_LEFT            ::GameEngine::Key::Left
+#define HZ_KEY_DOWN            ::GameEngine::Key::Down
+#define HZ_KEY_UP              ::GameEngine::Key::Up
+#define HZ_KEY_PAGE_UP         ::GameEngine::Key::PageUp
+#define HZ_KEY_PAGE_DOWN       ::GameEngine::Key::PageDown
+#define HZ_KEY_HOME            ::GameEngine::Key::Home
+#define HZ_KEY_END             ::GameEngine::Key::End
+#define HZ_KEY_CAPS_LOCK       ::GameEngine::Key::CapsLock
+#define HZ_KEY_SCROLL_LOCK     ::GameEngine::Key::ScrollLock
+#define HZ_KEY_NUM_LOCK        ::GameEngine::Key::NumLock
+#define HZ_KEY_PRINT_SCREEN    ::GameEngine::Key::PrintScreen
+#define HZ_KEY_PAUSE           ::GameEngine::Key::Pause
+#define HZ_KEY_F1              ::GameEngine::Key::F1
+#define HZ_KEY_F2              ::GameEngine::Key::F2
+#define HZ_KEY_F3              ::GameEngine::Key::F3
+#define HZ_KEY_F4              ::GameEngine::Key::F4
+#define HZ_KEY_F5              ::GameEngine::Key::F5
+#define HZ_KEY_F6              ::GameEngine::Key::F6
+#define HZ_KEY_F7              ::GameEngine::Key::F7
+#define HZ_KEY_F8              ::GameEngine::Key::F8
+#define HZ_KEY_F9              ::GameEngine::Key::F9
+#define HZ_KEY_F10             ::GameEngine::Key::F10
+#define HZ_KEY_F11             ::GameEngine::Key::F11
+#define HZ_KEY_F12             ::GameEngine::Key::F12
+#define HZ_KEY_F13             ::GameEngine::Key::F13
+#define HZ_KEY_F14             ::GameEngine::Key::F14
+#define HZ_KEY_F15             ::GameEngine::Key::F15
+#define HZ_KEY_F16             ::GameEngine::Key::F16
+#define HZ_KEY_F17             ::GameEngine::Key::F17
+#define HZ_KEY_F18             ::GameEngine::Key::F18
+#define HZ_KEY_F19             ::GameEngine::Key::F19
+#define HZ_KEY_F20             ::GameEngine::Key::F20
+#define HZ_KEY_F21             ::GameEngine::Key::F21
+#define HZ_KEY_F22             ::GameEngine::Key::F22
+#define HZ_KEY_F23             ::GameEngine::Key::F23
+#define HZ_KEY_F24             ::GameEngine::Key::F24
+#define HZ_KEY_F25             ::GameEngine::Key::F25
 
 /* Keypad */
-#define HZ_KEY_KP_0            ::Hazel::Key::KP0
-#define HZ_KEY_KP_1            ::Hazel::Key::KP1
-#define HZ_KEY_KP_2            ::Hazel::Key::KP2
-#define HZ_KEY_KP_3            ::Hazel::Key::KP3
-#define HZ_KEY_KP_4            ::Hazel::Key::KP4
-#define HZ_KEY_KP_5            ::Hazel::Key::KP5
-#define HZ_KEY_KP_6            ::Hazel::Key::KP6
-#define HZ_KEY_KP_7            ::Hazel::Key::KP7
-#define HZ_KEY_KP_8            ::Hazel::Key::KP8
-#define HZ_KEY_KP_9            ::Hazel::Key::KP9
-#define HZ_KEY_KP_DECIMAL      ::Hazel::Key::KPDecimal
-#define HZ_KEY_KP_DIVIDE       ::Hazel::Key::KPDivide
-#define HZ_KEY_KP_MULTIPLY     ::Hazel::Key::KPMultiply
-#define HZ_KEY_KP_SUBTRACT     ::Hazel::Key::KPSubtract
-#define HZ_KEY_KP_ADD          ::Hazel::Key::KPAdd
-#define HZ_KEY_KP_ENTER        ::Hazel::Key::KPEnter
-#define HZ_KEY_KP_EQUAL        ::Hazel::Key::KPEqual
+#define HZ_KEY_KP_0            ::GameEngine::Key::KP0
+#define HZ_KEY_KP_1            ::GameEngine::Key::KP1
+#define HZ_KEY_KP_2            ::GameEngine::Key::KP2
+#define HZ_KEY_KP_3            ::GameEngine::Key::KP3
+#define HZ_KEY_KP_4            ::GameEngine::Key::KP4
+#define HZ_KEY_KP_5            ::GameEngine::Key::KP5
+#define HZ_KEY_KP_6            ::GameEngine::Key::KP6
+#define HZ_KEY_KP_7            ::GameEngine::Key::KP7
+#define HZ_KEY_KP_8            ::GameEngine::Key::KP8
+#define HZ_KEY_KP_9            ::GameEngine::Key::KP9
+#define HZ_KEY_KP_DECIMAL      ::GameEngine::Key::KPDecimal
+#define HZ_KEY_KP_DIVIDE       ::GameEngine::Key::KPDivide
+#define HZ_KEY_KP_MULTIPLY     ::GameEngine::Key::KPMultiply
+#define HZ_KEY_KP_SUBTRACT     ::GameEngine::Key::KPSubtract
+#define HZ_KEY_KP_ADD          ::GameEngine::Key::KPAdd
+#define HZ_KEY_KP_ENTER        ::GameEngine::Key::KPEnter
+#define HZ_KEY_KP_EQUAL        ::GameEngine::Key::KPEqual
 
-#define HZ_KEY_LEFT_SHIFT      ::Hazel::Key::LeftShift
-#define HZ_KEY_LEFT_CONTROL    ::Hazel::Key::LeftControl
-#define HZ_KEY_LEFT_ALT        ::Hazel::Key::LeftAlt
-#define HZ_KEY_LEFT_SUPER      ::Hazel::Key::LeftSuper
-#define HZ_KEY_RIGHT_SHIFT     ::Hazel::Key::RightShift
-#define HZ_KEY_RIGHT_CONTROL   ::Hazel::Key::RightControl
-#define HZ_KEY_RIGHT_ALT       ::Hazel::Key::RightAlt
-#define HZ_KEY_RIGHT_SUPER     ::Hazel::Key::RightSuper
-#define HZ_KEY_MENU            ::Hazel::Key::Menu
+#define HZ_KEY_LEFT_SHIFT      ::GameEngine::Key::LeftShift
+#define HZ_KEY_LEFT_CONTROL    ::GameEngine::Key::LeftControl
+#define HZ_KEY_LEFT_ALT        ::GameEngine::Key::LeftAlt
+#define HZ_KEY_LEFT_SUPER      ::GameEngine::Key::LeftSuper
+#define HZ_KEY_RIGHT_SHIFT     ::GameEngine::Key::RightShift
+#define HZ_KEY_RIGHT_CONTROL   ::GameEngine::Key::RightControl
+#define HZ_KEY_RIGHT_ALT       ::GameEngine::Key::RightAlt
+#define HZ_KEY_RIGHT_SUPER     ::GameEngine::Key::RightSuper
+#define HZ_KEY_MENU            ::GameEngine::Key::Menu
 
 // Mouse
-#define HZ_MOUSE_BUTTON_LEFT    ::Hazel::Button::Left
-#define HZ_MOUSE_BUTTON_RIGHT   ::Hazel::Button::Right
-#define HZ_MOUSE_BUTTON_MIDDLE  ::Hazel::Button::Middle
+#define HZ_MOUSE_BUTTON_LEFT    ::GameEngine::Button::Left
+#define HZ_MOUSE_BUTTON_RIGHT   ::GameEngine::Button::Right
+#define HZ_MOUSE_BUTTON_MIDDLE  ::GameEngine::Button::Middle
 
 

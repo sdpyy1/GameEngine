@@ -1,7 +1,7 @@
 #pragma once
 #include "Hazel/Renderer/RenderContext.h"
 struct GLFWwindow;
-namespace Hazel {
+namespace GameEngine {
 	class OpenGLContext : public RenderContext
 	{
 	public:

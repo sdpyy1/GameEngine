@@ -1,7 +1,7 @@
 #pragma once
 
 // 定义资产类型
-namespace Hazel {
+namespace GameEngine {
 
 	enum class AssetFlag : uint16_t
 	{

@@ -4,7 +4,7 @@
 #include "Panels/FolderPreviewPanel.h"
 #include "Panels/LogPanel.h"
 #include <Hazel/Asset/Model/Mesh.h>
-namespace Hazel {
+namespace GameEngine {
 	class SubMesh;
 	class ImGuiRendererManager
 	{

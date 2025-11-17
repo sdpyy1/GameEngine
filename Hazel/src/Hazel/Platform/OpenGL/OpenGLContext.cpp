@@ -3,7 +3,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-namespace Hazel {
+namespace GameEngine {
 
 	OpenGLContext::OpenGLContext(void* windowHandle)
 		: m_WindowHandle(windowHandle)
@@ -21,6 +21,6 @@ namespace Hazel {
 		LOG_INFO("  Renderer: {0}", glGetString(GL_RENDERER));
 		LOG_INFO("  Version: {0}", glGetString(GL_VERSION));
 
-		ASSERT(GLVersion.major > 4 || (GLVersion.major == 4 && GLVersion.minor >= 5), "Hazel requires at least OpenGL version 4.5!");
+		ASSERT(GLVersion.major > 4 || (GLVersion.major == 4 && GLVersion.minor >= 5), "GameEngine requires at least OpenGL version 4.5!");
 	}
 }

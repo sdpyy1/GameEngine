@@ -1,6 +1,6 @@
 #pragma once
 #include <Hazel/Asset/Model/Mesh.h>
-namespace Hazel {
+namespace GameEngine {
 	class AssimpMeshImporter
 	{
 	public:

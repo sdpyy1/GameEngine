@@ -2,7 +2,7 @@
 #include "Hazel/Renderer/RendererAPI.h"
 #include <Hazel/Platform/Vulkan/VulkanRenderer.h>
 
-namespace Hazel {
+namespace GameEngine {
 	RendererAPI::Type RendererAPI::s_API = RendererAPI::Type::Vulkan;
 
 	RendererAPI* RendererAPI::CreateAPI()

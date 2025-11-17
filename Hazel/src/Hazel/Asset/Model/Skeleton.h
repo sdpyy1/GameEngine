@@ -2,7 +2,7 @@
 #include <set>
 
 #include <assimp/scene.h>
-namespace Hazel {
+namespace GameEngine {
 	class Skeleton
 	{
 	public:

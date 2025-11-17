@@ -13,7 +13,7 @@
 #include <Hazel/Platform/Vulkan/VulkanMaterial.h>
 #include "Hazel/Asset/AssimpAnimationImporter.h"
 #include "Hazel/Math/Math.h"
-namespace Hazel {
+namespace GameEngine {
 #define MESH_DEBUG_LOG 0
 
 #if MESH_DEBUG_LOG
@@ -359,7 +359,7 @@ namespace Hazel {
 					}
 					else
 					{
-						// TODO: Temp - this should be handled by Hazel's filesystem
+						// TODO: Temp - this should be handled by GameEngine's filesystem
 						// NOTE(Yan): we probably shouldn't make this a memory-only asset, since this
 						//            should already exist within the asset registry as a texture asset
 						auto parentPath = m_Path.parent_path();
@@ -395,7 +395,7 @@ namespace Hazel {
 					}
 					else
 					{
-						// TODO: Temp - this should be handled by Hazel's filesystem
+						// TODO: Temp - this should be handled by GameEngine's filesystem
 						auto parentPath = m_Path.parent_path();
 						auto texturePath = parentPath / aiTexPath.C_Str();
 						if (!std::filesystem::exists(texturePath))
@@ -427,7 +427,7 @@ namespace Hazel {
 					}
 					else
 					{
-						// TODO: Temp - this should be handled by Hazel's filesystem
+						// TODO: Temp - this should be handled by GameEngine's filesystem
 						auto parentPath = m_Path.parent_path();
 						auto texturePath = parentPath / aiTexPath.C_Str();
 						if (!std::filesystem::exists(texturePath))
@@ -485,7 +485,7 @@ namespace Hazel {
 					}
 					else
 					{
-						// TODO: Temp - this should be handled by Hazel's filesystem
+						// TODO: Temp - this should be handled by GameEngine's filesystem
 						auto parentPath = m_Path.parent_path();
 						auto texturePath = parentPath / aiTexPath.C_Str();
 						if (!std::filesystem::exists(texturePath))
@@ -559,7 +559,7 @@ namespace Hazel {
 			// û�в��ʣ�����Ĭ�ϵ�
 			if (scene->HasMeshes())
 			{
-				Ref<Material> material = Material::Create(Renderer::GetShaderLibrary()->Get("gBuffer"), "Hazel-Default");
+				Ref<Material> material = Material::Create(Renderer::GetShaderLibrary()->Get("gBuffer"), "GameEngine-Default");
 				AssetHandle maHandle = AssetManager::AddMemoryOnlyAsset(Ref<MaterialAsset>::Create(material));
 				meshSource->m_Materials.push_back(maHandle);
 			}

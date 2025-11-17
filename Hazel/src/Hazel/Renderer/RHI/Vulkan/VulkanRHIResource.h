@@ -4,7 +4,7 @@
 #include <GLFW/glfw3.h>
 #include "VulkanMemoryAllocator/vk_mem_alloc.h"
 
-namespace Hazel {
+namespace GameEngine {
 	class VulkanDynamicRHI;
 	class VulkanRHIQueue : public RHIQueue
 	{
@@ -82,7 +82,19 @@ namespace Hazel {
 		VmaAllocation allocation;
 		VmaAllocationInfo allocationInfo;
 	};
+	class VulkanRHITextureView : public RHITextureView
+	{
+	public:
+		VulkanRHITextureView(const RHITextureViewInfo& info);
 
+		const VkImageView& GetHandle() { return handle; }
+
+		virtual void Destroy() override final;
+		virtual void* RawHandle() override final { return handle; };
+
+	private:
+		VkImageView handle;
+	};
 	class VulkanRHICommandPool : public RHICommandPool
 	{
 	public:
@@ -99,7 +111,34 @@ namespace Hazel {
 		VkCommandPool handle;
 	};
 
+	class VulkanRHISampler : public RHISampler
+	{
+	public:
+		VulkanRHISampler(const RHISamplerInfo& info);
 
+		const VkSampler& GetHandle() { return handle; }
+
+		virtual void Destroy() override final;
+		virtual void* RawHandle() override final { return handle; };
+
+	private:
+		VkSampler handle;
+	};
+	class VulkanRHIShader : public RHIShader
+	{
+	public:
+		VulkanRHIShader(const RHIShaderInfo& info);
+
+		VkPipelineShaderStageCreateInfo GetShaderStageCreateInfo();
+
+		const VkShaderModule& GetHandle() { return handle; }
+
+		virtual void Destroy() override final;
+		virtual void* RawHandle() override final { return handle; };
+
+	private:
+		VkShaderModule handle;
+	};
 	//Í¬²½ ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	class VulkanRHIFence : public RHIFence

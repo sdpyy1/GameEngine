@@ -2,7 +2,7 @@
 #include "Skeleton.h"
 #include "Hazel/Math/Math.h"
 
-namespace Hazel
+namespace GameEngine
 {
 	namespace Utils
 	{

@@ -3,7 +3,7 @@
 #include "Hazel/Renderer/Renderer.h"
 #include "Hazel/Asset/AssetManager.h"
 
-namespace Hazel{
+namespace GameEngine{
 	MaterialAsset::MaterialAsset(bool transparent)
 		: m_Transparent(transparent)
 	{

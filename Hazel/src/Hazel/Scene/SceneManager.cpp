@@ -2,7 +2,7 @@
 #include "SceneManager.h"
 #include "Hazel/Utils/FileSystem.h"
 #include "SceneSerializer.h"
-namespace Hazel
+namespace GameEngine
 {
 	SceneManager::SceneManager()
 	{
@@ -21,7 +21,7 @@ namespace Hazel
 
 	bool SceneManager::OpenScene()
 	{
-		std::filesystem::path filepath = FileSystem::OpenFileDialog({ { "Hazel Scene", "hscene" } });
+		std::filesystem::path filepath = FileSystem::OpenFileDialog({ { "GameEngine Scene", "hscene" } });
 		if (!filepath.empty())
 			return OpenScene(filepath);
 
@@ -64,7 +64,7 @@ namespace Hazel
 
 	void SceneManager::SaveSceneAs()
 	{
-		std::filesystem::path filepath = FileSystem::SaveFileDialog({ { "Hazel Scene (*.hscene)", "hscene" } });
+		std::filesystem::path filepath = FileSystem::SaveFileDialog({ { "GameEngine Scene (*.hscene)", "hscene" } });
 
 		if (filepath.empty())
 			return;

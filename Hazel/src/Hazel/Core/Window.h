@@ -5,7 +5,7 @@
 #include "Hazel/Renderer/RenderContext.h"
 #include <sstream>
 #include "Hazel/Platform/Vulkan/VulkanSwapChain.h"
-namespace Hazel {
+namespace GameEngine {
 
 	struct WindowProps
 	{
@@ -13,7 +13,7 @@ namespace Hazel {
 		uint32_t Width;
 		uint32_t Height;
 		bool VSync;
-		WindowProps(const std::string& title = "Hazel Engine",
+		WindowProps(const std::string& title = "GameEngine Engine",
 			        uint32_t width = 800,
 			        uint32_t height = 600, bool VSync = false)
 			: Title(title), Width(width), Height(height), VSync(VSync)

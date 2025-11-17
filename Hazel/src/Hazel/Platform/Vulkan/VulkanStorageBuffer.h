@@ -4,7 +4,7 @@
 #include "Hazel/Renderer/StorageBuffer.h"
 #include "VulkanAllocator.h"
 
-namespace Hazel {
+namespace GameEngine {
 
 	class VulkanStorageBuffer : public StorageBuffer
 	{

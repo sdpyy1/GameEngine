@@ -16,7 +16,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
-namespace Hazel {
+namespace GameEngine {
 	AssetManagerPanel::AssetManagerPanel()
 	{
 		TextureSpecification spec;
@@ -571,4 +571,4 @@ namespace Hazel {
 			}
 		}
 	}
-} // namespace Hazel
+} // namespace GameEngine

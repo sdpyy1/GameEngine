@@ -2,7 +2,7 @@
 #include "TextureImporter.h"
 #include <Hazel/Utils/FileSystem.h>
 #include <stb_image.h>
-namespace Hazel {
+namespace GameEngine {
 
 	Buffer TextureImporter::ToBufferFromFile(const std::filesystem::path& path, ImageFormat& outFormat, uint32_t& outWidth, uint32_t& outHeight, bool flip)
 	{

@@ -2,7 +2,7 @@
 #include "VulkanShader.h"
 #include "Hazel/Renderer/Renderer.h"
 #include <Hazel/Renderer/Image.h>
-namespace Hazel
+namespace GameEngine
 {
 	class DescriptorManager
 	{

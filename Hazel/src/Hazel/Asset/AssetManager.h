@@ -3,7 +3,7 @@
 #include "Hazel/Asset/Model/MaterialAsset.h"
 #include "AssetMetadata.h"
 #include "AssetImporter.h"
-namespace Hazel {
+namespace GameEngine {
 	class AssetManager {
 	public:
 		template<typename TAsset>

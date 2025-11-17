@@ -3,7 +3,7 @@
 
 #include "Pipeline.h"
 
-namespace Hazel {
+namespace GameEngine {
 
 	class RenderCommandBuffer : public RefCounted
 	{

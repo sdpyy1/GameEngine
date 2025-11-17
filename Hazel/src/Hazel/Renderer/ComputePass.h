@@ -3,7 +3,7 @@
 #include "Texture.h"
 #include "UniformBufferSet.h"
 #include "StorageBufferSet.h"
-namespace Hazel
+namespace GameEngine
 {
 	struct ComputePassSpecification
 	{

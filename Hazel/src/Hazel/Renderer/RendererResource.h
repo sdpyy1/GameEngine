@@ -1,7 +1,7 @@
 #pragma once
 #include "Hazel/Asset/Asset.h"
 
-namespace Hazel {
+namespace GameEngine {
 	using ResourceDescriptorInfo = void*;
 	class RendererResource : public Asset
 	{

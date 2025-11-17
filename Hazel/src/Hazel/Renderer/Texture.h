@@ -5,7 +5,7 @@
 #include "Hazel/Renderer/RenderCommandBuffer.h"
 #include <string>
 
-namespace Hazel {
+namespace GameEngine {
 	struct TextureSpecification
 	{
 		ImageFormat Format = ImageFormat::RGBA;

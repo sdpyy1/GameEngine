@@ -2,7 +2,7 @@
 #include "Model/Skeleton.h"
 #include <assimp/scene.h>
 #include "Hazel/Asset/Model/Animation.h"
-namespace Hazel {
+namespace GameEngine {
 	class AssimpAnimationImporter
 	{
 	public:

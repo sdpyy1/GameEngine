@@ -4,7 +4,7 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/matrix_decompose.hpp>
 
-namespace Hazel::Math {
+namespace GameEngine::Math {
 	template<typename T, std::enable_if_t<std::is_integral_v<T>, bool> = true>
 	inline static T DivideAndRoundUp(T dividend, T divisor)
 	{

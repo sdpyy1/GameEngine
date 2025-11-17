@@ -2,7 +2,7 @@
 #include "EditorPanel.h"
 #include "Hazel/Core/Log.h"
 
-namespace Hazel {
+namespace GameEngine {
 
 	class ImGuiLogPanel : public EditorPanel
 	{
@@ -19,7 +19,7 @@ namespace Hazel {
 		bool m_ShowError;
 		bool m_ScrollToBottom;
 
-		bool ShouldShow(Hazel::LogLevel level) const;
+		bool ShouldShow(GameEngine::LogLevel level) const;
 	};
 
-} // namespace Hazel
+} // namespace GameEngine

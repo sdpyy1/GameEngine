@@ -6,7 +6,7 @@
 #include <string>
 #include <unordered_map>
 
-namespace Hazel {
+namespace GameEngine {
 	// 定义反射信息
 	namespace ShaderResource {
 

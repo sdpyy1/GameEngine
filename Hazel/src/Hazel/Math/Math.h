@@ -2,7 +2,7 @@
 
 #include <glm/glm.hpp>
 
-namespace Hazel::Math {
+namespace GameEngine::Math {
 	bool DecomposeTransform(const glm::mat4& transform, glm::vec3& translation, glm::vec3& rotation, glm::vec3& scale);
 	bool DecomposeTransform(const glm::mat4& transform, glm::vec3& translation, glm::quat& rotation, glm::vec3& scale);
 	// 1. 处理整数标量 ÷ 整数标量（如 uint32_t ÷ uint32_t）

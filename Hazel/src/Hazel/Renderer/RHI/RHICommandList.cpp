@@ -1,7 +1,7 @@
 #include "hzpch.h"
 #include "RHICommandList.h"
 #include "RHI.h"
-namespace Hazel {
+namespace GameEngine {
 	void RHICommandBeginCommand::Execute(RHICommandContextRef context)
 	{
 		context->BeginCommand();

@@ -4,7 +4,7 @@
 #include <map>
 #include <glm/glm.hpp>
 
-namespace Hazel {
+namespace GameEngine {
 	class Input
 	{
 	public:

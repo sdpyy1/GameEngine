@@ -2,7 +2,7 @@
 #include "AssetMetadata.h"
 #include "AssetSerializer.h"
 
-namespace Hazel {
+namespace GameEngine {
 
 	class AssetImporter
 	{

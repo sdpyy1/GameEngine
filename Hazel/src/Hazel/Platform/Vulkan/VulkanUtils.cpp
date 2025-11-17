@@ -3,7 +3,7 @@
 #include <GLFW/glfw3.h>
 #include <set>
 
-VKAPI_ATTR VkBool32 VKAPI_CALL Hazel::VKUtils::debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
+VKAPI_ATTR VkBool32 VKAPI_CALL GameEngine::VKUtils::debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
 {
 	std::string msg = pCallbackData->pMessage;
 
@@ -17,7 +17,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL Hazel::VKUtils::debugCallback(VkDebugUtilsMessage
 
 	return VK_FALSE;
 }
-void Hazel::VKUtils::SetDebugUtilsObjectName(const VkDevice device, const VkObjectType objectType, const std::string& name, const void* handle)
+void GameEngine::VKUtils::SetDebugUtilsObjectName(const VkDevice device, const VkObjectType objectType, const std::string& name, const void* handle)
 {
 	VkDebugUtilsObjectNameInfoEXT nameInfo;
 	nameInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;
@@ -28,7 +28,7 @@ void Hazel::VKUtils::SetDebugUtilsObjectName(const VkDevice device, const VkObje
 
 	VK_CHECK_RESULT(fpSetDebugUtilsObjectNameEXT(device, &nameInfo));
 }
-VkResult Hazel::VKUtils::CreateDebugUtilsMessengerEXT(VkInstance m_Instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger) {
+VkResult GameEngine::VKUtils::CreateDebugUtilsMessengerEXT(VkInstance m_Instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger) {
 	auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(m_Instance, "vkCreateDebugUtilsMessengerEXT");
 	if (func != nullptr) {
 		return func(m_Instance, pCreateInfo, pAllocator, pDebugMessenger);
@@ -37,7 +37,7 @@ VkResult Hazel::VKUtils::CreateDebugUtilsMessengerEXT(VkInstance m_Instance, con
 		return VK_ERROR_EXTENSION_NOT_PRESENT;
 	}
 }
-void Hazel::VKUtils::VulkanLoadDebugUtilsExtensions(VkInstance m_Instance,VkDevice device)
+void GameEngine::VKUtils::VulkanLoadDebugUtilsExtensions(VkInstance m_Instance,VkDevice device)
 {
 	fpSetDebugUtilsObjectNameEXT = (PFN_vkSetDebugUtilsObjectNameEXT)(vkGetInstanceProcAddr(m_Instance, "vkSetDebugUtilsObjectNameEXT"));
 	if (fpSetDebugUtilsObjectNameEXT == nullptr)
@@ -56,7 +56,7 @@ void Hazel::VKUtils::VulkanLoadDebugUtilsExtensions(VkInstance m_Instance,VkDevi
 		fpCmdInsertDebugUtilsLabelEXT = [](VkCommandBuffer commandBuffer, const VkDebugUtilsLabelEXT* pLabelInfo) {};
 }
 
-bool Hazel::VKUtils::CheckDriverAPIVersionSupport(uint32_t minimumSupportedVersion)
+bool GameEngine::VKUtils::CheckDriverAPIVersionSupport(uint32_t minimumSupportedVersion)
 {
 	uint32_t instanceVersion;
 		vkEnumerateInstanceVersion(&instanceVersion);

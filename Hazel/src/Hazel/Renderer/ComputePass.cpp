@@ -3,9 +3,9 @@
 #include "Hazel/Platform/Vulkan/VulkanComputePass.h"
 #include "Hazel/Renderer/RendererAPI.h"
 
-namespace Hazel
+namespace GameEngine
 {
-	Ref<Hazel::ComputePass> Hazel::ComputePass::Create(const ComputePassSpecification& spec)
+	Ref<GameEngine::ComputePass> GameEngine::ComputePass::Create(const ComputePassSpecification& spec)
 	{
 		switch (RendererAPI::Current())
 		{

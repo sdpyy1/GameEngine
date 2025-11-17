@@ -1,7 +1,8 @@
 #pragma once
 #include "Hazel/Core/Base.h"
-namespace Hazel {
+namespace GameEngine {
 #define MAX_QUEUE_CNT 2					//每个队列族的最大队列数目
+#define MAX_SHADER_IN_OUT_VARIABLES 8	//允许着色器最大的输入和输出变量数目
 
 
 	typedef std::shared_ptr<class DynamicRHI> DynamicRHIRef;
@@ -17,15 +18,18 @@ namespace Hazel {
 	typedef std::shared_ptr<class RHICommandPool> RHICommandPoolRef;
 	typedef std::shared_ptr<class RHICommandList> RHICommandListRef;
 	typedef std::shared_ptr<class RHISwapchain> RHISwapchainRef;
+	typedef std::shared_ptr<class RHITextureView> RHITextureViewRef;
+	typedef std::shared_ptr<class RHISampler> RHISamplerRef;
+	typedef std::shared_ptr<class RHIShader> RHIShaderRef;
 
 	enum API {
 		Vulkan,
 		OpenGL,
 		DirectX,
-		None
+		NoneAPI
 	};
 	struct RHIConfig {
-		API api = None;
+		API api = NoneAPI;
 		bool debug = false;
 		bool enableRayTracing = false;
 	};
@@ -177,6 +181,91 @@ namespace Hazel {
 		TEXTURE_CREATION_MAX_ENUM = 0x7FFFFFFF,	//
 	};
 	typedef uint32_t TextureCreationFlags;
+	enum TextureViewType : uint32_t
+	{
+		VIEW_TYPE_UNDEFINED = 0,
+		VIEW_TYPE_1D,
+		VIEW_TYPE_2D,
+		VIEW_TYPE_3D,
+		VIEW_TYPE_CUBE,
+		VIEW_TYPE_1D_ARRAY,
+		VIEW_TYPE_2D_ARRAY,
+		VIEW_TYPE_CUBE_ARRAY,
+
+		VIEW_TYPE_MAX_ENUM,		//	
+	};
+	enum FilterType : uint32_t
+	{
+		FILTER_TYPE_NEAREST = 0,
+		FILTER_TYPE_LINEAR,
+
+		FILTER_TYPE_MAX_ENUM,	//
+	};
+
+	enum MipMapMode : uint32_t
+	{
+		MIPMAP_MODE_NEAREST = 0,
+		MIPMAP_MODE_LINEAR,
+
+		MIPMAP_MODE_MAX_ENUM_BIT,	//
+	};
+	enum AddressMode : uint32_t
+	{
+		ADDRESS_MODE_MIRROR,
+		ADDRESS_MODE_REPEAT,
+		ADDRESS_MODE_CLAMP_TO_EDGE,
+		ADDRESS_MODE_CLAMP_TO_BORDER,
+
+		ADDRESS_MODE_MAX_ENUM,	//
+	};
+	enum CompareFunction : uint32_t
+	{
+		COMPARE_FUNCTION_LESS = 0,
+		COMPARE_FUNCTION_LESS_EQUAL,
+		COMPARE_FUNCTION_GREATER,
+		COMPARE_FUNCTION_GREATER_EQUAL,
+		COMPARE_FUNCTION_EQUAL,
+		COMPARE_FUNCTION_NOT_EQUAL,
+		COMPARE_FUNCTION_NEVER,
+		COMPARE_FUNCTION_ALWAYS,
+
+		COMPARE_FUNCTION_MAX_ENUM,   //
+	};
+	enum SamplerReductionMode : uint32_t
+	{
+		SAMPLER_REDUCTION_MODE_WEIGHTED_AVERAGE = 0,
+		SAMPLER_REDUCTION_MODE_MIN,
+		SAMPLER_REDUCTION_MODE_MAX,
+
+		SAMPLER_REDUCTION_MODE_MAX_ENUM,   //
+	};
+	typedef struct RHISamplerInfo
+	{
+		FilterType minFilter = FILTER_TYPE_LINEAR;
+		FilterType magFilter = FILTER_TYPE_LINEAR;
+		MipMapMode mipmapMode = MIPMAP_MODE_LINEAR;
+		AddressMode addressModeU = ADDRESS_MODE_REPEAT;
+		AddressMode addressModeV = ADDRESS_MODE_REPEAT;
+		AddressMode addressModeW = ADDRESS_MODE_REPEAT;
+		CompareFunction compareFunction = COMPARE_FUNCTION_NEVER;
+		SamplerReductionMode reductionMode = SAMPLER_REDUCTION_MODE_WEIGHTED_AVERAGE;
+
+		float mipLodBias = 0.0f;
+		float maxAnisotropy = 0.0f;
+
+	} RHISamplerInfo;
+	enum TextureAspectFlagBits : uint32_t
+	{
+		TEXTURE_ASPECT_NONE = 0x00000000,
+		TEXTURE_ASPECT_COLOR = 0x00000001,
+		TEXTURE_ASPECT_DEPTH = 0x00000002,
+		TEXTURE_ASPECT_STENCIL = 0x00000004,
+
+		TEXTURE_ASPECT_DEPTH_STENCIL = TEXTURE_ASPECT_DEPTH | TEXTURE_ASPECT_STENCIL,
+
+		TEXTURE_ASPECT_MAX_ENUM = 0x7FFFFFFF,	//
+	};
+	typedef uint32_t TextureAspectFlags;
 	typedef struct RHIQueueInfo
 	{
 		QueueType type;
@@ -201,39 +290,6 @@ namespace Hazel {
 		}
 
 	} Extent2D;
-
-
-	typedef struct Extent3D
-	{
-		uint32_t    width;
-		uint32_t    height;
-		uint32_t    depth;
-
-		friend bool operator==(const Extent3D& a, const Extent3D& b)
-		{
-			return 	a.width == b.width &&
-				a.height == b.height &&
-				a.depth == b.depth;
-		}
-
-		const uint32_t MipSize() const
-		{
-			return (uint32_t)(std::floor(std::log2(std::max(width, std::max(height, depth))))) + 1;
-		}
-
-	} Extent3D;
-	enum TextureAspectFlagBits : uint32_t
-	{
-		TEXTURE_ASPECT_NONE = 0x00000000,
-		TEXTURE_ASPECT_COLOR = 0x00000001,
-		TEXTURE_ASPECT_DEPTH = 0x00000002,
-		TEXTURE_ASPECT_STENCIL = 0x00000004,
-
-		TEXTURE_ASPECT_DEPTH_STENCIL = TEXTURE_ASPECT_DEPTH | TEXTURE_ASPECT_STENCIL,
-
-		TEXTURE_ASPECT_MAX_ENUM = 0x7FFFFFFF,	//
-	};
-	typedef uint32_t TextureAspectFlags;
 	typedef struct TextureSubresourceRange
 	{
 		TextureAspectFlags	  aspect = TEXTURE_ASPECT_NONE;
@@ -263,7 +319,113 @@ namespace Hazel {
 		}
 
 	} TextureSubresourceRange;
+	typedef struct RHITextureViewInfo
+	{
+		RHITextureRef texture;
+		RHIFormat format = FORMAT_UKNOWN;			// 此时取texture的format
+		TextureViewType viewType = VIEW_TYPE_2D;
 
+		TextureSubresourceRange subresource;	// 此时取texture的默认range
+
+		friend bool operator== (const RHITextureViewInfo& a, const RHITextureViewInfo& b)
+		{
+			return  a.texture.get() == b.texture.get() &&
+				a.format == b.format &&
+				a.viewType == b.viewType &&
+				a.subresource == b.subresource;
+		}
+
+	} RHITextureViewInfo;
+
+	typedef struct Extent3D
+	{
+		uint32_t    width;
+		uint32_t    height;
+		uint32_t    depth;
+
+		friend bool operator==(const Extent3D& a, const Extent3D& b)
+		{
+			return 	a.width == b.width &&
+				a.height == b.height &&
+				a.depth == b.depth;
+		}
+
+		const uint32_t MipSize() const
+		{
+			return (uint32_t)(std::floor(std::log2(std::max(width, std::max(height, depth))))) + 1;
+		}
+
+	} Extent3D;
+
+	
+	enum ShaderFrequencyBits : uint32_t
+	{
+		SHADER_FREQUENCY_COMPUTE = 0x00000001,
+		SHADER_FREQUENCY_VERTEX = 0x00000002,
+		SHADER_FREQUENCY_FRAGMENT = 0x00000004,
+		SHADER_FREQUENCY_GEOMETRY = 0x00000008,
+		SHADER_FREQUENCY_RAY_GEN = 0x00000010,
+		SHADER_FREQUENCY_CLOSEST_HIT = 0x00000020,
+		SHADER_FREQUENCY_RAY_MISS = 0x00000040,
+		SHADER_FREQUENCY_INTERSECTION = 0x00000080,
+		SHADER_FREQUENCY_ANY_HIT = 0x00000100,
+		SHADER_FREQUENCY_MESH = 0x00000200,
+
+		SHADER_FREQUENCY_GRAPHICS = SHADER_FREQUENCY_VERTEX |
+		SHADER_FREQUENCY_FRAGMENT |
+		SHADER_FREQUENCY_GEOMETRY |
+		SHADER_FREQUENCY_MESH,
+		SHADER_FREQUENCY_RAY_TRACING = SHADER_FREQUENCY_RAY_GEN |
+		SHADER_FREQUENCY_CLOSEST_HIT |
+		SHADER_FREQUENCY_RAY_MISS |
+		SHADER_FREQUENCY_INTERSECTION |
+		SHADER_FREQUENCY_ANY_HIT,
+		SHADER_FREQUENCY_ALL = SHADER_FREQUENCY_GRAPHICS |
+		SHADER_FREQUENCY_COMPUTE |
+		SHADER_FREQUENCY_RAY_TRACING,
+
+		SHADER_FREQUENCY_MAX_ENUM = 0x7FFFFFFF, //
+	};
+	typedef uint32_t ShaderFrequency;
+	typedef struct ShaderResourceEntry
+	{
+		// std::string name;
+
+		uint32_t set = 0;
+		uint32_t binding = 0;
+		uint32_t size = 1;
+		ShaderFrequency frequency = SHADER_FREQUENCY_ALL;
+
+		ResourceType type = RESOURCE_TYPE_NONE;
+		// TextureViewType textureViewType = VIEW_TYPE_UNDEFINED;	// 只有反射会填的信息，创建描述符绑定并不需要
+
+		friend bool operator== (const ShaderResourceEntry& a, const ShaderResourceEntry& b)
+		{
+			return  a.set == b.set &&
+				a.binding == b.binding &&
+				a.size == b.size &&
+				a.frequency == b.frequency &&
+				a.type == b.type;
+			// a.textureViewType == b.textureViewType;
+		}
+
+	} ShaderResourceEntry;
+	typedef struct ShaderReflectInfo
+	{
+		std::string name;
+
+		ShaderFrequency frequency;
+		std::vector<ShaderResourceEntry> resources;
+		std::unordered_set<std::string> definedSymbols;
+		std::array<RHIFormat, MAX_SHADER_IN_OUT_VARIABLES> inputVariables = {};
+		std::array<RHIFormat, MAX_SHADER_IN_OUT_VARIABLES> outputVariables = {};
+		uint32_t localSizeX = 0;
+		uint32_t localSizeY = 0;
+		uint32_t localSizeZ = 0;
+
+		bool DefinedSymbol(std::string symbol) const { return definedSymbols.find(symbol) != definedSymbols.end(); }
+
+	} ShaderReflectInfo;
 	typedef struct TextureSubresourceLayers
 	{
 		TextureAspectFlags	  aspect = TEXTURE_ASPECT_NONE;
@@ -343,7 +505,13 @@ namespace Hazel {
 
 	} CommandListImmediateInfo;
 
+	typedef struct RHIShaderInfo
+	{
+		std::string entry = "main";
 
+		ShaderFrequency frequency;
+		std::vector<uint8_t> code;
+	} RHIShaderInfo;
 	static bool IsDepthStencilFormat(RHIFormat format)
 	{
 		switch (format) {

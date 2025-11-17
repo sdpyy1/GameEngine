@@ -5,7 +5,7 @@
 
 #define HZ_RENDER_TRACE(...) LOG_TRACE(__VA_ARGS__)
 
-namespace Hazel {
+namespace GameEngine {
 	RenderCommandQueue::RenderCommandQueue()
 	{
 		m_CommandBuffer = new uint8_t[10 * 1024 * 1024]; // 10mb buffer

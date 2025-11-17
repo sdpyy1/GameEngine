@@ -2,7 +2,7 @@
 #include "PipelineCompute.h"
 #include "Hazel/Renderer/RendererAPI.h"
 #include <Hazel/Platform/Vulkan/VulkanComputePipeline.h>
-namespace Hazel {
+namespace GameEngine {
 	Ref<PipelineCompute> PipelineCompute::Create(Ref<Shader> computeShader)
 	{
 		switch (RendererAPI::Current())

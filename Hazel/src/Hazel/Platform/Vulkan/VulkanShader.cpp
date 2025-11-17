@@ -5,7 +5,7 @@
 #include "spirv_reflect.h"
 #include "VulkanShaderCompiler.h"
 
-namespace Hazel {
+namespace GameEngine {
 
 	static std::vector<char> readFile(const std::string& filename) {  // 参数改为std::filesystem::path
 		std::ifstream file(filename, std::ios::ate | std::ios::binary);

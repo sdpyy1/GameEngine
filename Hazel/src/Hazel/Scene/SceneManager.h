@@ -2,7 +2,7 @@
 #include "Hazel/Core/Timestep.h"
 #include "Scene.h"
 #include "Hazel/Renderer/EditorCamera.h"
-namespace Hazel
+namespace GameEngine
 {
 	class SceneManager
 	{

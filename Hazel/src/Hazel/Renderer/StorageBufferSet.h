@@ -2,7 +2,7 @@
 
 #include "StorageBuffer.h"
 
-namespace Hazel {
+namespace GameEngine {
 
 	class StorageBufferSet : public RefCounted
 	{

@@ -3,7 +3,7 @@
 
 #include "VulkanContext.h"
 
-namespace Hazel {
+namespace GameEngine {
 
 	VulkanUniformBuffer::VulkanUniformBuffer(uint32_t size, std::string debugName)
 		: m_Size(size)

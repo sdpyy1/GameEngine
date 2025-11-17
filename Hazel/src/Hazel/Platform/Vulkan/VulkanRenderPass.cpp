@@ -12,7 +12,7 @@
 #include "VulkanImage.h"
 #include "VulkanTexture.h"
 
-namespace Hazel {
+namespace GameEngine {
 	VulkanRenderPass::VulkanRenderPass(const RenderPassSpecification& spec) :m_DescriptorManager(m_Specification.Pipeline->GetShader())
 		,m_Specification(spec)
 	{

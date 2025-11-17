@@ -2,7 +2,7 @@
 
 #include "Scene.h"
 
-namespace Hazel {
+namespace GameEngine {
 
 	class SceneSerializer
 	{

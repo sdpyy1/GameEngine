@@ -3,7 +3,7 @@
 #include "VulkanContext.h"
 #include <shaderc/shaderc.hpp>
 
-namespace Hazel
+namespace GameEngine
 { 
 	VulkanShaderCompiler::VulkanShaderCompiler(Ref<VulkanShader> shader) : m_Shader(shader){}
 

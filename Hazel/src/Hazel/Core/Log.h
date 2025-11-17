@@ -10,7 +10,7 @@
 #include <mutex>
 #include <deque>
 
-namespace Hazel {
+namespace GameEngine {
 
 	enum class LogLevel
 	{
@@ -47,7 +47,7 @@ namespace Hazel {
 		static std::mutex s_LogMutex;
 	};
 
-} // namespace Hazel
+} // namespace GameEngine
 
 
 template<typename OStream, glm::length_t L, typename T, glm::qualifier Q>

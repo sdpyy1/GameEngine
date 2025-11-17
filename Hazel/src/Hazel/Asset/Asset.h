@@ -2,7 +2,7 @@
 #include <Hazel/Core/UUID.h>
 #include "Hazel/Asset/AssetTypes.h"
 
-namespace Hazel {
+namespace GameEngine {
 
 	using AssetHandle = UUID;
 

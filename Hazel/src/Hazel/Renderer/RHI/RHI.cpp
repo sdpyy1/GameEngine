@@ -1,7 +1,7 @@
 #include "hzpch.h"
 #include "RHI.h"
 #include "Vulkan/VulkanRHI.h"
-namespace Hazel {
+namespace GameEngine {
 	DynamicRHIRef DynamicRHI::s_DynamicRHI = nullptr;
 	DynamicRHIRef DynamicRHI::Init(RHIConfig config)
 	{

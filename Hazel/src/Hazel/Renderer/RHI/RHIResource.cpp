@@ -1,6 +1,6 @@
 #include "hzpch.h"
 #include "RHIResource.h"
-namespace Hazel {
+namespace GameEngine {
 
 	Extent3D RHITexture::MipExtent(uint32_t mipLevel)
 	{

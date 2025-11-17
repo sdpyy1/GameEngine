@@ -6,7 +6,7 @@
 #include "VulkanShader.h"
 #include <map>
 
-namespace Hazel {
+namespace GameEngine {
 	class VulkanPipeline : public Pipeline
 	{
 	public:

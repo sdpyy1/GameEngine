@@ -1,6 +1,6 @@
 #pragma once
 #include <Hazel/Events/Event.h>
-namespace Hazel {
+namespace GameEngine {
 
 	class EditorPanel : public RefCounted
 	{

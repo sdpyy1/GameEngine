@@ -4,7 +4,7 @@
 
 #include "Hazel/Renderer/RendererStats.h"
 
-namespace Hazel::Vulkan {
+namespace GameEngine::Vulkan {
 
 	VkDescriptorSetAllocateInfo DescriptorSetAllocInfo(const VkDescriptorSetLayout* layouts, uint32_t count, VkDescriptorPool pool)
 	{

@@ -7,7 +7,7 @@
 
 class b2World;
 
-namespace Hazel {
+namespace GameEngine {
 	class MeshSource;
 	class MeshNode;
 	class SceneRender;

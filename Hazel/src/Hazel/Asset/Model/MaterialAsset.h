@@ -2,7 +2,7 @@
 #include "Hazel/Asset/Asset.h"
 #include <Hazel/Asset/Model/Material.h>
 
-namespace Hazel {
+namespace GameEngine {
 	class MeshSource;
 	class MaterialAsset : public Asset
 	{

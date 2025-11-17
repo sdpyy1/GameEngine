@@ -2,7 +2,7 @@
 #include "Hazel/Renderer/Texture.h"
 
 #include <filesystem>
-namespace Hazel {
+namespace GameEngine {
 
 	class TextureImporter
 	{

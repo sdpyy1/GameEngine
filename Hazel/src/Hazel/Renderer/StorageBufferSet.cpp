@@ -9,7 +9,7 @@
 #include "Hazel/Platform/Vulkan/VulkanStorageBufferSet.h"
 #include "Hazel/Renderer/RendererAPI.h"
 
-namespace Hazel {
+namespace GameEngine {
 
 	Ref<StorageBufferSet> StorageBufferSet::Create(const StorageBufferSpecification& specification, uint32_t size, uint32_t framesInFlight)
 	{

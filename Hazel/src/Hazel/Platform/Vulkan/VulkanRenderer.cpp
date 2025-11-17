@@ -20,7 +20,7 @@
 #include "VulkanComputePipeline.h"
 #include "Hazel/Platform/Windows/WindowsWindow.h"
 
-namespace Hazel {
+namespace GameEngine {
 	struct VulkanRendererData
 	{
 		RendererCapabilities RenderCaps;
@@ -180,8 +180,8 @@ namespace Hazel {
 	void VulkanRenderer::EndFrame()
 	{
 		RENDER_SUBMIT([]() {
-			Ref<WindowsWindow> m_Window = Application::Get().GetWindow();
-			m_Window->SwapBuffers();
+			Ref<WindowsWindow> m_GLFWWindow = Application::Get().GetWindow();
+			m_GLFWWindow->SwapBuffers();
 			});
 #if 0
 

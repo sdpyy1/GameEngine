@@ -2,7 +2,8 @@
 #include "Volk/volk.h"
 #include <Hazel/Core/macro.h>
 #include <GLFW/glfw3.h>
-namespace Hazel {
+#include "spirv_reflect.h"
+namespace GameEngine {
 #define VULKAN_RHI std::static_pointer_cast<VulkanDynamicRHI>(DynamicRHI::Get()).get()
 #define VULKAN_INSTANCE (std::static_pointer_cast<VulkanDynamicRHI>(DynamicRHI::Get()).get())->GetInstance()
 #define VULKAN_PHYSICALDEVICE (std::static_pointer_cast<VulkanDynamicRHI>(DynamicRHI::Get()).get())->GetPhysicalDevice()
@@ -130,7 +131,109 @@ namespace Hazel {
 
             return extensions;
         }
+        static VkFilter FilterTypeToVk(FilterType filterType)
+        {
+            VkFilter filter;
+            switch (filterType) {
+            case FILTER_TYPE_NEAREST:   filter = VK_FILTER_NEAREST;     break;
+            case FILTER_TYPE_LINEAR:    filter = VK_FILTER_LINEAR;      break;
+            default:                    filter = VK_FILTER_LINEAR;      break;
+            }
 
+            return  filter;
+        }
+        static VkSamplerAddressMode AddressModeToVk(AddressMode addressMode)
+        {
+            VkSamplerAddressMode mode;
+            switch (addressMode) {
+            case ADDRESS_MODE_MIRROR:               mode = VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;     break;
+            case ADDRESS_MODE_REPEAT:               mode = VK_SAMPLER_ADDRESS_MODE_REPEAT;              break;
+            case ADDRESS_MODE_CLAMP_TO_EDGE:        mode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;       break;
+            case ADDRESS_MODE_CLAMP_TO_BORDER:      mode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;     break;
+            default:                                mode = VK_SAMPLER_ADDRESS_MODE_REPEAT;              break;
+            }
+
+            return mode;
+        }
+
+        static VkSamplerMipmapMode MipMapModeToVk(MipMapMode mipMapMode)
+        {
+            VkSamplerMipmapMode mode;
+            switch (mipMapMode) {
+            case MIPMAP_MODE_NEAREST:   mode = VK_SAMPLER_MIPMAP_MODE_NEAREST;  break;
+            case MIPMAP_MODE_LINEAR:    mode = VK_SAMPLER_MIPMAP_MODE_LINEAR;   break;
+            default:                    mode = VK_SAMPLER_MIPMAP_MODE_NEAREST;  break;
+            }
+
+            return mode;
+        }
+        static VkSamplerReductionMode SamplerReductionModeToVk(SamplerReductionMode reductionMode)
+        {
+            VkSamplerReductionMode mode = VK_SAMPLER_REDUCTION_MODE_WEIGHTED_AVERAGE;
+            switch (reductionMode) {
+            case SAMPLER_REDUCTION_MODE_WEIGHTED_AVERAGE:   mode = VK_SAMPLER_REDUCTION_MODE_WEIGHTED_AVERAGE; break;
+            case SAMPLER_REDUCTION_MODE_MIN:                mode = VK_SAMPLER_REDUCTION_MODE_MIN; break;
+            case SAMPLER_REDUCTION_MODE_MAX:                mode = VK_SAMPLER_REDUCTION_MODE_MAX; break;
+            default:                                        mode = VK_SAMPLER_REDUCTION_MODE_WEIGHTED_AVERAGE; break;
+            }
+
+            return mode;
+        }
+        static VkShaderStageFlagBits ShaderFrequencyToVkStageFlagBits(ShaderFrequency frequency)
+        {
+            if (frequency & SHADER_FREQUENCY_COMPUTE)        return VK_SHADER_STAGE_COMPUTE_BIT;
+            if (frequency & SHADER_FREQUENCY_VERTEX)         return VK_SHADER_STAGE_VERTEX_BIT;
+            if (frequency & SHADER_FREQUENCY_FRAGMENT)       return VK_SHADER_STAGE_FRAGMENT_BIT;
+            if (frequency & SHADER_FREQUENCY_GEOMETRY)       return VK_SHADER_STAGE_GEOMETRY_BIT;
+            if (frequency & SHADER_FREQUENCY_RAY_GEN)        return VK_SHADER_STAGE_RAYGEN_BIT_KHR;
+            if (frequency & SHADER_FREQUENCY_CLOSEST_HIT)    return VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR;
+            if (frequency & SHADER_FREQUENCY_RAY_MISS)       return VK_SHADER_STAGE_MISS_BIT_KHR;
+            if (frequency & SHADER_FREQUENCY_INTERSECTION)   return VK_SHADER_STAGE_INTERSECTION_BIT_KHR;
+            if (frequency & SHADER_FREQUENCY_ANY_HIT)        return VK_SHADER_STAGE_ANY_HIT_BIT_KHR;
+            if (frequency & SHADER_FREQUENCY_MESH)           return VK_SHADER_STAGE_MESH_BIT_EXT;
+            LOG_ERROR("Unsupported frequency!");      return VK_SHADER_STAGE_ALL;
+        }
+        static VkCompareOp CompareFunctionToVk(CompareFunction compareFunction)
+        {
+            VkCompareOp compare;
+            switch (compareFunction) {
+            case COMPARE_FUNCTION_LESS:             compare = VK_COMPARE_OP_LESS;               break;
+            case COMPARE_FUNCTION_LESS_EQUAL:       compare = VK_COMPARE_OP_LESS_OR_EQUAL;      break;
+            case COMPARE_FUNCTION_GREATER:          compare = VK_COMPARE_OP_GREATER;            break;
+            case COMPARE_FUNCTION_GREATER_EQUAL:    compare = VK_COMPARE_OP_GREATER_OR_EQUAL;   break;
+            case COMPARE_FUNCTION_EQUAL:            compare = VK_COMPARE_OP_EQUAL;              break;
+            case COMPARE_FUNCTION_NOT_EQUAL:        compare = VK_COMPARE_OP_NOT_EQUAL;          break;
+            case COMPARE_FUNCTION_NEVER:            compare = VK_COMPARE_OP_NEVER;              break;
+            case COMPARE_FUNCTION_ALWAYS:           compare = VK_COMPARE_OP_ALWAYS;             break;
+            default:                                compare = VK_COMPARE_OP_NEVER;              break;
+            }
+
+            return compare;
+        }
+        static VkImageAspectFlags TextureAspectToVk(TextureAspectFlags flags)
+        {
+            VkImageAspectFlags aspectFlags = 0;
+            if (flags & TEXTURE_ASPECT_COLOR)                aspectFlags |= VK_IMAGE_ASPECT_COLOR_BIT;
+            if (flags & TEXTURE_ASPECT_DEPTH)                aspectFlags |= VK_IMAGE_ASPECT_DEPTH_BIT;
+            if (flags & TEXTURE_ASPECT_STENCIL)              aspectFlags |= VK_IMAGE_ASPECT_STENCIL_BIT;
+            return aspectFlags;
+        }
+        static VkImageViewType TextureViewTypeToVk(TextureViewType textureViewType)
+        {
+            VkImageViewType type;
+            switch (textureViewType) {
+            case VIEW_TYPE_1D:              type = VK_IMAGE_VIEW_TYPE_1D;           break;
+            case VIEW_TYPE_2D:              type = VK_IMAGE_VIEW_TYPE_2D;           break;
+            case VIEW_TYPE_3D:              type = VK_IMAGE_VIEW_TYPE_3D;           break;
+            case VIEW_TYPE_CUBE:            type = VK_IMAGE_VIEW_TYPE_CUBE;         break;
+            case VIEW_TYPE_1D_ARRAY:        type = VK_IMAGE_VIEW_TYPE_1D_ARRAY;     break;
+            case VIEW_TYPE_2D_ARRAY:        type = VK_IMAGE_VIEW_TYPE_2D_ARRAY;     break;
+            case VIEW_TYPE_CUBE_ARRAY:      type = VK_IMAGE_VIEW_TYPE_CUBE_ARRAY;   break;
+            default:                        type = VK_IMAGE_VIEW_TYPE_2D;           break;
+            }
+
+            return type;
+        }
 
         static std::string QueueFlagsToString(VkQueueFlags queueFlags)
         {
@@ -380,5 +483,80 @@ namespace Hazel {
 
             return usage;
         }
+        static ResourceType SpvDescriptorTypeToResourceType(SpvReflectDescriptorType descriptorType)
+        {
+            ResourceType resourceType;
+            switch (descriptorType) {
+            case SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLER:                       resourceType = RESOURCE_TYPE_SAMPLER;                   break;
+            case SPV_REFLECT_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER:        resourceType = RESOURCE_TYPE_COMBINED_IMAGE_SAMPLER;    break;
+            case SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLED_IMAGE:                 resourceType = RESOURCE_TYPE_TEXTURE;                   break;
+            case SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_IMAGE:                 resourceType = RESOURCE_TYPE_RW_TEXTURE;                break;
+            case SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER:          resourceType = RESOURCE_TYPE_TEXEL_BUFFER;              break;
+            case SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER:          resourceType = RESOURCE_TYPE_RW_TEXEL_BUFFER;           break;
+            case SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER:                resourceType = RESOURCE_TYPE_UNIFORM_BUFFER;            break;
+            case SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_BUFFER:                resourceType = RESOURCE_TYPE_RW_BUFFER;                 break;
+            case SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC:        resourceType = RESOURCE_TYPE_UNIFORM_BUFFER;            break;
+            case SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC:        resourceType = RESOURCE_TYPE_RW_BUFFER;                 break;
+            case SPV_REFLECT_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR:    resourceType = RESOURCE_TYPE_RAY_TRACING;               break;
+            default:                                                        LOG_ERROR("Unsupported reflect descriptor type!");
+            }
+
+            return resourceType;
+        }
+        static ShaderFrequency SpvShaderStageToFrequency(SpvReflectShaderStageFlagBits spvShaderStage)
+        {
+            ShaderFrequency frequency;
+            switch (spvShaderStage) {
+            case SPV_REFLECT_SHADER_STAGE_VERTEX_BIT:               frequency = SHADER_FREQUENCY_VERTEX;         break;
+            case SPV_REFLECT_SHADER_STAGE_GEOMETRY_BIT:             frequency = SHADER_FREQUENCY_GEOMETRY;       break;
+            case SPV_REFLECT_SHADER_STAGE_FRAGMENT_BIT:             frequency = SHADER_FREQUENCY_FRAGMENT;       break;
+            case SPV_REFLECT_SHADER_STAGE_COMPUTE_BIT:              frequency = SHADER_FREQUENCY_COMPUTE;        break;
+            case SPV_REFLECT_SHADER_STAGE_MESH_BIT_NV:              frequency = SHADER_FREQUENCY_MESH;           break;
+            case SPV_REFLECT_SHADER_STAGE_RAYGEN_BIT_KHR:           frequency = SHADER_FREQUENCY_RAY_GEN;        break;
+            case SPV_REFLECT_SHADER_STAGE_ANY_HIT_BIT_KHR:          frequency = SHADER_FREQUENCY_ANY_HIT;        break;
+            case SPV_REFLECT_SHADER_STAGE_CLOSEST_HIT_BIT_KHR:      frequency = SHADER_FREQUENCY_CLOSEST_HIT;    break;
+            case SPV_REFLECT_SHADER_STAGE_MISS_BIT_KHR:             frequency = SHADER_FREQUENCY_RAY_MISS;       break;
+            case SPV_REFLECT_SHADER_STAGE_INTERSECTION_BIT_KHR:     frequency = SHADER_FREQUENCY_INTERSECTION;   break;
+            default:                                                frequency = SHADER_FREQUENCY_ALL;            break;
+            }
+
+            return frequency;
+        }
+        static RHIFormat SpvFormatToRHIFormat(const SpvReflectFormat& spvFormat)
+        {
+            RHIFormat format;
+
+            switch (spvFormat) {
+            case SPV_REFLECT_FORMAT_UNDEFINED:              format = FORMAT_UKNOWN;                 break;
+            case SPV_REFLECT_FORMAT_R16_UINT:               format = FORMAT_R16_UINT;               break;
+            case SPV_REFLECT_FORMAT_R16_SINT:               format = FORMAT_R16_SINT;               break;
+            case SPV_REFLECT_FORMAT_R16_SFLOAT:             format = FORMAT_R16_SFLOAT;             break;
+            case SPV_REFLECT_FORMAT_R16G16_UINT:            format = FORMAT_R16G16_UINT;            break;
+            case SPV_REFLECT_FORMAT_R16G16_SINT:            format = FORMAT_R16G16_SINT;            break;
+            case SPV_REFLECT_FORMAT_R16G16_SFLOAT:          format = FORMAT_R16G16_SFLOAT;          break;
+            case SPV_REFLECT_FORMAT_R16G16B16_UINT:         format = FORMAT_R16G16B16_UINT;         break;
+            case SPV_REFLECT_FORMAT_R16G16B16_SINT:         format = FORMAT_R16G16B16_SINT;         break;
+            case SPV_REFLECT_FORMAT_R16G16B16_SFLOAT:       format = FORMAT_R16G16B16_SFLOAT;       break;
+            case SPV_REFLECT_FORMAT_R16G16B16A16_UINT:      format = FORMAT_R16G16B16A16_UINT;      break;
+            case SPV_REFLECT_FORMAT_R16G16B16A16_SINT:      format = FORMAT_R16G16B16A16_SINT;      break;
+            case SPV_REFLECT_FORMAT_R16G16B16A16_SFLOAT:    format = FORMAT_R16G16B16A16_SFLOAT;    break;
+            case SPV_REFLECT_FORMAT_R32_UINT:               format = FORMAT_R32_UINT;               break;
+            case SPV_REFLECT_FORMAT_R32_SINT:               format = FORMAT_R32_SINT;               break;
+            case SPV_REFLECT_FORMAT_R32_SFLOAT:             format = FORMAT_R32_SFLOAT;             break;
+            case SPV_REFLECT_FORMAT_R32G32_UINT:            format = FORMAT_R32G32_UINT;            break;
+            case SPV_REFLECT_FORMAT_R32G32_SINT:            format = FORMAT_R32G32_SINT;            break;
+            case SPV_REFLECT_FORMAT_R32G32_SFLOAT:          format = FORMAT_R32G32_SFLOAT;          break;
+            case SPV_REFLECT_FORMAT_R32G32B32_UINT:         format = FORMAT_R32G32B32_UINT;         break;
+            case SPV_REFLECT_FORMAT_R32G32B32_SINT:         format = FORMAT_R32G32B32_SINT;         break;
+            case SPV_REFLECT_FORMAT_R32G32B32_SFLOAT:       format = FORMAT_R32G32B32_SFLOAT;       break;
+            case SPV_REFLECT_FORMAT_R32G32B32A32_UINT:      format = FORMAT_R32G32B32A32_UINT;      break;
+            case SPV_REFLECT_FORMAT_R32G32B32A32_SINT:      format = FORMAT_R32G32B32A32_SINT;      break;
+            case SPV_REFLECT_FORMAT_R32G32B32A32_SFLOAT:    format = FORMAT_R32G32B32A32_SFLOAT;    break;
+            default:                                        LOG_ERROR("Unsupported reflect format type!");
+            }
+
+            return format;
+        }
+
 	}
 }

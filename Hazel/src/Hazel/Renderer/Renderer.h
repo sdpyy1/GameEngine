@@ -12,7 +12,7 @@
 #include "IndexBuffer.h"
 #include "ComputePass.h"
 
-namespace Hazel {
+namespace GameEngine {
 	class ShaderLibrary;
 	class MeshSource;
 	// 管理命令缓冲区的调度和渲染相关的初始资源

@@ -86,16 +86,16 @@ namespace YAML {
 	};
 
 	template<>
-	struct convert<Hazel::UUID>
+	struct convert<GameEngine::UUID>
 	{
-		static Node encode(const Hazel::UUID& uuid)
+		static Node encode(const GameEngine::UUID& uuid)
 		{
 			Node node;
 			node.push_back((uint64_t)uuid);
 			return node;
 		}
 
-		static bool decode(const Node& node, Hazel::UUID& uuid)
+		static bool decode(const Node& node, GameEngine::UUID& uuid)
 		{
 			uuid = node.as<uint64_t>();
 			return true;
@@ -103,7 +103,7 @@ namespace YAML {
 	};
 }
 
-namespace Hazel {
+namespace GameEngine {
 #define WRITE_SCRIPT_FIELD(FieldType, Type)           \
 			case ScriptFieldType::FieldType:          \
 				out << scriptField.GetValue<Type>();  \

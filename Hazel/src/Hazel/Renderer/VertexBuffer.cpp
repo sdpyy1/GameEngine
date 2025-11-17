@@ -9,7 +9,7 @@
 
 #include "Hazel/Renderer/RendererAPI.h"
 
-namespace Hazel {
+namespace GameEngine {
 
 	Ref<VertexBuffer> VertexBuffer::Create(void* data, uint64_t size,std::string debugeName, VertexBufferUsage usage)
 	{

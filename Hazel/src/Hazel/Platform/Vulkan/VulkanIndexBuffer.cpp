@@ -5,7 +5,7 @@
 
 #include "Hazel/Renderer/Renderer.h"
 
-namespace Hazel {
+namespace GameEngine {
 
 	VulkanIndexBuffer::VulkanIndexBuffer(uint64_t size)
 		: m_Size(size)

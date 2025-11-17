@@ -6,7 +6,7 @@
 #include "VulkanRenderCommandBuffer.h"
 #include "VulkanStorageBuffer.h"
 #include "VulkanImage.h"
-namespace Hazel {
+namespace GameEngine {
 	static VkFence s_ComputeFence = nullptr;
 
 	VulkanComputePipeline::VulkanComputePipeline(Ref<Shader> computeShader)

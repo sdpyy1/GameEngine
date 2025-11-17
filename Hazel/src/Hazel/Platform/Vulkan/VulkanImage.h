@@ -5,7 +5,7 @@
 #include "VulkanAllocator.h"
 #include <map>
 
-namespace Hazel {
+namespace GameEngine {
 	struct VulkanImageInfo
 	{
 		VkImage Image = nullptr;

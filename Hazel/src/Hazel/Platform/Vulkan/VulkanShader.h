@@ -1,7 +1,7 @@
 #pragma once
 #include"Hazel/Renderer/Shader.h"
 #include <vulkan/vulkan.h>
-namespace Hazel {
+namespace GameEngine {
 	struct DescriptorBinding {
 		uint32_t binding; 
 		VkDescriptorType type; 

@@ -1,7 +1,7 @@
 #include "hzpch.h"
 #include "Camera.h"
 
-namespace Hazel {
+namespace GameEngine {
 	Camera::Camera(const glm::mat4& projection, const glm::mat4& unReversedProjection)
 		: m_ProjectionMatrix(projection), m_UnReversedProjectionMatrix(unReversedProjection)
 	{

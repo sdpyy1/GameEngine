@@ -1,6 +1,6 @@
 #pragma once
 #include "RHIBase.h"
-namespace Hazel
+namespace GameEngine
 {
 #if ENABLE_DEBUG_MODE
     #define COMMANDLIST_DEBUG_OUTPUT() do {  \

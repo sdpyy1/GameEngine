@@ -2,7 +2,7 @@
 
 #include <chrono>
 
-namespace Hazel {
+namespace GameEngine {
 
 	class Timer
 	{

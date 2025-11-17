@@ -10,7 +10,7 @@
 
 #include <glm/gtc/type_ptr.hpp>
 
-namespace Hazel {
+namespace GameEngine {
 
 	namespace Utils {
 
@@ -245,7 +245,7 @@ namespace Hazel {
 	}
 
 
-	const Hazel::Animation* AnimationAsset::GetAnimation() const
+	const GameEngine::Animation* AnimationAsset::GetAnimation() const
 	{
 		Ref<MeshSource> animationSource = AssetManager::GetAsset<MeshSource>(m_AnimationSource);
 		Ref<MeshSource> skeletonSource = AssetManager::GetAsset<MeshSource>(m_SkeletonSource);

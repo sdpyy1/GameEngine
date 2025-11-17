@@ -6,7 +6,7 @@
 #include <Hazel/Core/Application.h>
 #include <Hazel/Platform/OpenGL/OpenGLContext.h>
 
-namespace Hazel {
+namespace GameEngine {
 	Ref<RenderContext> RenderContext::Create(void* window)
 	{
 		switch (Renderer::Current())

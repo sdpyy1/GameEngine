@@ -4,7 +4,7 @@
 #include "Vulkan.h"
 #include "VulkanDevice.h"
 #include "VulkanMemoryAllocator/vk_mem_alloc.h"
-namespace Hazel {
+namespace GameEngine {
 	struct GPUMemoryStats
 	{
 		uint64_t Used = 0;

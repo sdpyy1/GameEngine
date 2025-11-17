@@ -2,7 +2,7 @@
 #include "Image.h"
 #include "Hazel/Renderer/RendererAPI.h"
 #include <Hazel/Platform/Vulkan/VulkanImage.h>
-namespace Hazel {
+namespace GameEngine {
 	Ref<Image2D> Image2D::Create(const ImageSpecification& specification, Buffer buffer)
 	{
 		ASSERT(!buffer);
@@ -16,7 +16,7 @@ namespace Hazel {
 		return nullptr;
 	}
 
-	Hazel::Ref<Hazel::ImageView> ImageView::Create(const ImageViewSpecification& specification)
+	GameEngine::Ref<GameEngine::ImageView> ImageView::Create(const ImageViewSpecification& specification)
 	{
 		switch (RendererAPI::Current())
 		{

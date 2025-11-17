@@ -2,7 +2,7 @@
 
 #include "Hazel/Events/Event.h"
 
-namespace Hazel {
+namespace GameEngine {
 
 	class WindowResizeEvent : public Event
 	{

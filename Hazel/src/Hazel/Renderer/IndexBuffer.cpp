@@ -7,7 +7,7 @@
 
 #include "Hazel/Renderer/RendererAPI.h"
 
-namespace Hazel {
+namespace GameEngine {
 
 	Ref<IndexBuffer> IndexBuffer::Create(uint64_t size)
 	{

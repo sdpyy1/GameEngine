@@ -15,7 +15,7 @@
 #include <Hazel/Asset/Model/Mesh.h>
 #include "SceneRender.h"
 
-namespace Hazel {
+namespace GameEngine {
 	Scene::Scene()
 	{
 	}

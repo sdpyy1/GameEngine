@@ -6,7 +6,7 @@
 #include "Hazel/Renderer/Renderer.h"
 #include "Hazel/Core/macro.h"
 
-namespace Hazel {
+namespace GameEngine {
 
 	VulkanVertexBuffer::VulkanVertexBuffer(uint64_t size, std::string debugeName, VertexBufferUsage usage)
 		: m_Size(size)

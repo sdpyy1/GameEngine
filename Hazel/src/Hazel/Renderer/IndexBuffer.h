@@ -4,7 +4,7 @@
 
 #include "RendererTypes.h"
 
-namespace Hazel {
+namespace GameEngine {
 
 	class IndexBuffer : public RefCounted
 	{
@@ -22,6 +22,5 @@ namespace Hazel {
 		static Ref<IndexBuffer> Create(uint64_t size);
 		static Ref<IndexBuffer> Create(void* data, uint64_t size = 0);
 	};
-
 }
 

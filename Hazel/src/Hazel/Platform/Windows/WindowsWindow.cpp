@@ -13,7 +13,7 @@
 #include <imgui.h>
 #include <GLFW/glfw3.h>
 
-namespace Hazel {
+namespace GameEngine {
 	
 	static uint8_t s_GLFWWindowCount = 0;
 
@@ -62,14 +62,14 @@ namespace Hazel {
 			if (Renderer::Current() == RendererAPI::Type::Vulkan)
 				glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-			m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
+			m_GLFWWindow = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
 			++s_GLFWWindowCount;
 		}
 	
 		LOG_INFO("Create GLFW Window Done!");
 
 		// RenderContext
-		m_RenderContext = RenderContext::Create(m_Window);
+		m_RenderContext = RenderContext::Create(m_GLFWWindow);
 		m_RenderContext->Init(); 
 		LOG_INFO("RenderContext Init Done!");
 
@@ -78,17 +78,17 @@ namespace Hazel {
 			Ref<VulkanContext> context = m_RenderContext.As<VulkanContext>();
 
 			m_SwapChain = new VulkanSwapChain(context->GetInstanceNative(), context->GetDeviceNative());
-			m_SwapChain->InitSurface(m_Window);
+			m_SwapChain->InitSurface(m_GLFWWindow);
 
 			m_SwapChain->Create(&m_Data.Width, &m_Data.Height, m_Data.VSync);
 			LOG_INFO("Create Vulkan SwapChain Done!");
 		}
 
-		glfwSetWindowUserPointer(m_Window, &m_Data);
+		glfwSetWindowUserPointer(m_GLFWWindow, &m_Data);
 		SetVSync(&m_Data.VSync);
 
 		// Set GLFW callbacks
-		glfwSetWindowSizeCallback(m_Window, [](GLFWwindow* window, int width, int height)
+		glfwSetWindowSizeCallback(m_GLFWWindow, [](GLFWwindow* window, int width, int height)
 		{
 			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 			data.Width = width;
@@ -98,14 +98,14 @@ namespace Hazel {
 			data.EventCallback(event);
 		});
 
-		glfwSetWindowCloseCallback(m_Window, [](GLFWwindow* window)
+		glfwSetWindowCloseCallback(m_GLFWWindow, [](GLFWwindow* window)
 		{
 			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 			WindowCloseEvent event;
 			data.EventCallback(event);
 		});
 
-		glfwSetKeyCallback(m_Window, [](GLFWwindow* window, int key, int scancode, int action, int mods)
+		glfwSetKeyCallback(m_GLFWWindow, [](GLFWwindow* window, int key, int scancode, int action, int mods)
 		{
 			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
@@ -132,7 +132,7 @@ namespace Hazel {
 			}
 		});
 
-		glfwSetCharCallback(m_Window, [](GLFWwindow* window, unsigned int keycode)
+		glfwSetCharCallback(m_GLFWWindow, [](GLFWwindow* window, unsigned int keycode)
 		{
 			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
@@ -140,7 +140,7 @@ namespace Hazel {
 			data.EventCallback(event);
 		});
 
-		glfwSetMouseButtonCallback(m_Window, [](GLFWwindow* window, int button, int action, int mods)
+		glfwSetMouseButtonCallback(m_GLFWWindow, [](GLFWwindow* window, int button, int action, int mods)
 		{
 			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
@@ -161,7 +161,7 @@ namespace Hazel {
 			}
 		});
 
-		glfwSetScrollCallback(m_Window, [](GLFWwindow* window, double xOffset, double yOffset)
+		glfwSetScrollCallback(m_GLFWWindow, [](GLFWwindow* window, double xOffset, double yOffset)
 		{
 			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
@@ -169,14 +169,14 @@ namespace Hazel {
 			data.EventCallback(event);
 		});
 
-		glfwSetCursorPosCallback(m_Window, [](GLFWwindow* window, double xPos, double yPos)
+		glfwSetCursorPosCallback(m_GLFWWindow, [](GLFWwindow* window, double xPos, double yPos)
 		{
 			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
 			MouseMovedEvent event((float)xPos, (float)yPos);
 			data.EventCallback(event);
 		});
-		glfwSetWindowIconifyCallback(m_Window, [](GLFWwindow* window, int iconified)
+		glfwSetWindowIconifyCallback(m_GLFWWindow, [](GLFWwindow* window, int iconified)
 			{
 				auto& data = *((WindowData*)glfwGetWindowUserPointer(window));
 				WindowMinimizeEvent event((bool)iconified);
@@ -195,7 +195,7 @@ namespace Hazel {
 		// Update window size to actual size
 		{
 			int width, height;
-			glfwGetWindowSize(m_Window, &width, &height);
+			glfwGetWindowSize(m_GLFWWindow, &width, &height);
 			m_Data.Width = width;
 			m_Data.Height = height;
 		}
@@ -203,13 +203,13 @@ namespace Hazel {
 	void WindowsWindow::SetTitle(const std::string& title)
 	{
 		m_Data.Title = title;
-		glfwSetWindowTitle(m_Window, m_Data.Title.c_str());
+		glfwSetWindowTitle(m_GLFWWindow, m_Data.Title.c_str());
 	}
 	void WindowsWindow::Shutdown()
 	{
 		 
 
-		glfwDestroyWindow(m_Window);
+		glfwDestroyWindow(m_GLFWWindow);
 		--s_GLFWWindowCount;
 
 		if (s_GLFWWindowCount == 0)

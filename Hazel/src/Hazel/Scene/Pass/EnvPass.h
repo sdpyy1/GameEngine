@@ -1,7 +1,7 @@
 #pragma once
 #include <Hazel/Renderer/ComputePass.h>
 #include <unordered_map>
-namespace Hazel{
+namespace GameEngine{
 	struct EnvTextures {
 		Ref<TextureCube> m_EnvCubeMap;
 		Ref<TextureCube> m_EnvPreFilterMap;

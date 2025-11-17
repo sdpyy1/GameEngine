@@ -5,7 +5,7 @@
 #include "Hazel/Core/Base.h"
 #include "Hazel/Renderer/Texture.h"
 
-namespace Hazel {
+namespace GameEngine {
 
 	struct MSDFData;
 

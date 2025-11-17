@@ -1,6 +1,6 @@
 #pragma once
 #include "AssetMetadata.h"
-namespace Hazel {
+namespace GameEngine {
 	struct AssetSerializationInfo
 	{
 		uint64_t Offset = 0;

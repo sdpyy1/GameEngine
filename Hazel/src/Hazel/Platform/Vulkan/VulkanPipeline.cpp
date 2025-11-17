@@ -8,7 +8,7 @@
 #include "VulkanUtils.h"
 #include "Hazel/Renderer/Renderer.h"
 
-namespace Hazel {
+namespace GameEngine {
 	namespace Utils {
 		static VkPrimitiveTopology GetVulkanTopology(PrimitiveTopology topology)
 		{

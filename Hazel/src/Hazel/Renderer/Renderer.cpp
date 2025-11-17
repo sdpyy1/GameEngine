@@ -8,7 +8,7 @@
 #include "Hazel/Platform/Windows/WindowsWindow.h"
 
 #include "Hazel/Asset/Model/Material.h"
-namespace Hazel {
+namespace GameEngine {
 	// 这里存储常用渲染资源
 	struct RendererData
 	{

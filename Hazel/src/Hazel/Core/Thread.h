@@ -2,7 +2,7 @@
 #include <string>
 #include <thread>
 
-namespace Hazel {
+namespace GameEngine {
 
 	class Thread
 	{

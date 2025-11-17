@@ -2,7 +2,9 @@
 #include "VulkanRHIResource.h"
 #include "VulkanRHI.h"
 #include "VulkanUtil.h"
-namespace Hazel
+#include <regex>
+#include "spirv_reflect.h"
+namespace GameEngine
 {
 
 	VulkanRHISurface::VulkanRHISurface(GLFWwindow* window)
@@ -139,7 +141,7 @@ namespace Hazel
         }
     }
 
-	Hazel::RHITextureRef VulkanRHISwapchain::GetNewFrame(RHIFenceRef fence, RHISemaphoreRef signalSemaphore)
+	GameEngine::RHITextureRef VulkanRHISwapchain::GetNewFrame(RHIFenceRef fence, RHISemaphoreRef signalSemaphore)
 	{
         VkFence signalFence = VK_NULL_HANDLE;
         VkSemaphore semaphore = VK_NULL_HANDLE;
@@ -363,5 +365,263 @@ namespace Hazel
     {
         vkDestroyCommandPool(VULKAN_DEVICE, handle, nullptr);
     }
+
+	VulkanRHITextureView::VulkanRHITextureView(const RHITextureViewInfo& info) : RHITextureView(info)
+	{
+        if (info.subresource.aspect == TEXTURE_ASPECT_NONE)  this->info.subresource = info.texture->GetDefaultSubresourceRange();
+
+        RHITextureInfo textureInfo = CAST<VulkanRHITexture>(info.texture)->GetInfo();
+        VkImageAspectFlags aspectMask = VulkanUtil::TextureAspectToVk(this->info.subresource.aspect);
+
+        // if(IsDepthStencilFormat(info.format)) 
+        // {
+        //     aspectMask |= VK_IMAGE_ASPECT_DEPTH_BIT;
+        //     if(IsStencilFormat(info.format))        aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
+        // }
+        // else 
+        // {
+        //     if(textureInfo.type & RESOURCE_TYPE_TEXTURE)    aspectMask |= VK_IMAGE_ASPECT_COLOR_BIT;
+        //     if(textureInfo.type & RESOURCE_TYPE_RW_TEXTURE) aspectMask |= VK_IMAGE_ASPECT_COLOR_BIT;
+        // }
+
+        VkImageViewCreateInfo viewInfo = {};
+        viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        viewInfo.image = CAST<VulkanRHITexture>(info.texture)->GetHandle();
+        viewInfo.viewType = VulkanUtil::TextureViewTypeToVk(info.viewType);
+        viewInfo.format = VulkanUtil::RHIFormatToVkFormat(info.format);
+        viewInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+        viewInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+        viewInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+        viewInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+        viewInfo.subresourceRange.aspectMask = aspectMask;
+        viewInfo.subresourceRange.baseArrayLayer = this->info.subresource.baseArrayLayer;
+        viewInfo.subresourceRange.baseMipLevel = this->info.subresource.baseMipLevel;
+        viewInfo.subresourceRange.layerCount = this->info.subresource.layerCount;
+        viewInfo.subresourceRange.levelCount = this->info.subresource.levelCount;
+
+        if (vkCreateImageView(VULKAN_DEVICE, &viewInfo, nullptr, &handle) != VK_SUCCESS)
+        {
+            LOG_ERROR("Failed to create texture image view!");
+        }
+	}
+
+	void VulkanRHITextureView::Destroy()
+	{
+        vkDestroyImageView(VULKAN_DEVICE, handle, nullptr);
+	}
+
+	VulkanRHISampler::VulkanRHISampler(const RHISamplerInfo& info) : RHISampler(info)
+	{
+        VkSamplerCreateInfo samplerInfo = {};
+        samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+        samplerInfo.magFilter = VulkanUtil::FilterTypeToVk(info.magFilter);   //放大滤波  //LOD较小（较近）时使用？？
+        samplerInfo.minFilter = VulkanUtil::FilterTypeToVk(info.minFilter);   //缩小滤波
+        samplerInfo.mipmapMode = VulkanUtil::MipMapModeToVk(info.mipmapMode);
+        samplerInfo.anisotropyEnable = info.maxAnisotropy > 0.0f ? VK_TRUE : VK_FALSE;
+        samplerInfo.maxAnisotropy = info.maxAnisotropy;
+        samplerInfo.minLod = 0.0f;
+        samplerInfo.maxLod = 100.0f;
+        samplerInfo.mipLodBias = info.mipLodBias;
+        samplerInfo.addressModeU = VulkanUtil::AddressModeToVk(info.addressModeU);
+        samplerInfo.addressModeV = VulkanUtil::AddressModeToVk(info.addressModeV);
+        samplerInfo.addressModeW = VulkanUtil::AddressModeToVk(info.addressModeW);
+        samplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;
+        samplerInfo.compareEnable = info.compareFunction == COMPARE_FUNCTION_NEVER ? VK_FALSE : VK_TRUE;
+        samplerInfo.compareOp = VulkanUtil::CompareFunctionToVk(info.compareFunction);
+
+        // VkPhysicalDeviceProperties properties{};
+        // vkGetPhysicalDeviceProperties(Backend::Get()->physicalDevice, &properties);
+        // samplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy; //设备支持的最大各向异性滤波采样数目
+        // if (maxAnisotropy > 0)
+        // {
+        //     samplerInfo.anisotropyEnable = VK_TRUE;             //各向异性滤波
+        //     samplerInfo.maxAnisotropy = (float)maxAnisotropy;   //设备支持的最大各向异性滤波采样数目
+        // }
+        // else
+        // {
+        //     samplerInfo.anisotropyEnable = VK_FALSE;
+        // }
+
+        //add a extension struct to enable Min mode
+        VkSamplerReductionModeCreateInfoEXT createInfoReduction = {};
+        createInfoReduction.sType = VK_STRUCTURE_TYPE_SAMPLER_REDUCTION_MODE_CREATE_INFO_EXT;
+        createInfoReduction.reductionMode = VulkanUtil::SamplerReductionModeToVk(info.reductionMode);
+        samplerInfo.pNext = &createInfoReduction;
+
+        if (vkCreateSampler(VULKAN_DEVICE, &samplerInfo, nullptr, &handle) != VK_SUCCESS)
+        {
+            LOG_ERROR("Failed to create texture sampler!");
+        }
+	}
+
+	void VulkanRHISampler::Destroy()
+	{
+        vkDestroySampler(VULKAN_DEVICE, handle, nullptr);
+	}
+
+	VulkanRHIShader::VulkanRHIShader(const RHIShaderInfo& info) : RHIShader(info)
+	{
+        // 从spv文件的字符串信息里收集定义的宏
+        std::regex pattern("#define (\\w+)");
+        for (std::cregex_iterator it((char*)info.code.data(), (char*)info.code.data() + info.code.size(), pattern);
+            it != std::cregex_iterator{}; it++)
+        {
+            reflectInfo.definedSymbols.insert((*it)[1].str());
+        }
+
+        // 创建ShaderModule
+        VkShaderModuleCreateInfo createInfo = {};
+        createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+        createInfo.codeSize = info.code.size();
+        createInfo.pCode = (const uint32_t*)info.code.data();
+
+        if (vkCreateShaderModule(VULKAN_DEVICE, &createInfo, nullptr, &handle) != VK_SUCCESS)
+        {
+            LOG_ERROR("Failed to create shader module!");
+        }
+        this->info.code.clear();    // 代码不需要带着了
+
+        // 收集反射信息
+        SpvReflectShaderModule module;
+        SpvReflectResult result = spvReflectCreateShaderModule(info.code.size(), info.code.data(), &module);
+        if (result != SPV_REFLECT_RESULT_SUCCESS)    LOG_ERROR("Failed to generate shader reflect data!");
+        if (module.entry_point_count != 1)           LOG_ERROR("Shader file contains more than one entry!");      
+
+        const SpvReflectEntryPoint* entry = spvReflectGetEntryPoint(&module, module.entry_points[0].name);
+
+        reflectInfo.name = std::string(entry->name);
+        reflectInfo.frequency = VulkanUtil::SpvShaderStageToFrequency(entry->shader_stage);
+        if (reflectInfo.frequency == SHADER_FREQUENCY_COMPUTE)
+        {
+            reflectInfo.localSizeX = entry->local_size.x;
+            reflectInfo.localSizeY = entry->local_size.y;
+            reflectInfo.localSizeZ = entry->local_size.z;
+        }
+
+        // bool isGLSL = module.source_language & SpvSourceLanguageGLSL;
+        // bool isHLSL = module.source_language & SpvSourceLanguageHLSL;
+
+        // pushConstant
+        // uint32_t pushConstantCnt;
+        // spvReflectEnumeratePushConstantBlocks(&module, &pushConstantCnt, NULL);
+        // if (pushConstantCnt > 0) 
+        // {
+        //     std::vector<SpvReflectBlockVariable*> blockVariables(pushConstantCnt + 1);
+        //     spvReflectEnumeratePushConstantBlocks(&module, &pushConstantCnt, blockVariables.data());
+        // }
+
+        // 着色器输入和输出
+        uint32_t inputVariableCnt;
+        spvReflectEnumerateInputVariables(&module, &inputVariableCnt, NULL);
+        if (inputVariableCnt > 0)
+        {
+            std::vector<SpvReflectInterfaceVariable*> inputVariables(inputVariableCnt);
+            spvReflectEnumerateInputVariables(&module, &inputVariableCnt, inputVariables.data());
+
+            for (uint32_t i = 0; i < inputVariableCnt; i++)
+            {
+                if (inputVariables[i]->location < MAX_SHADER_IN_OUT_VARIABLES)
+                    reflectInfo.inputVariables[inputVariables[i]->location] = VulkanUtil::SpvFormatToRHIFormat(inputVariables[i]->format);
+            }
+        }
+
+        uint32_t outputVariableCnt;
+        spvReflectEnumerateOutputVariables(&module, &outputVariableCnt, NULL);
+        if (outputVariableCnt > 0)
+        {
+            std::vector<SpvReflectInterfaceVariable*> outputVariables(outputVariableCnt);
+            spvReflectEnumerateOutputVariables(&module, &outputVariableCnt, outputVariables.data());
+
+            for (uint32_t i = 0; i < outputVariableCnt; i++)
+            {
+                if (outputVariables[i]->location < MAX_SHADER_IN_OUT_VARIABLES)
+                    reflectInfo.outputVariables[outputVariables[i]->location] = VulkanUtil::SpvFormatToRHIFormat(outputVariables[i]->format);
+            }
+        }
+
+        // specialization constant
+        // uint32_t specializationConstantCnt;
+        // spvReflectEnumerateSpecializationConstants(&module, &specializationConstantCnt, NULL);
+        // if(specializationConstantCnt > 0)
+        // {
+        //     std::vector<SpvReflectSpecializationConstant*> specializationConstants(specializationConstantCnt);
+        //     spvReflectEnumerateSpecializationConstants(&module, &specializationConstantCnt, specializationConstants.data());
+
+        //     for(uint32_t i = 0; i < specializationConstantCnt; i++)
+        //     {
+        //         specializationConstants[i];
+        //     }       
+        // }
+
+        // interface variable
+        // uint32_t interfaceVariableCnt;
+        // spvReflectEnumerateInterfaceVariables(&module, &interfaceVariableCnt, NULL);
+        // if(interfaceVariableCnt > 0)
+        // {
+        //     std::vector<SpvReflectInterfaceVariable*> interfaceVariables(interfaceVariableCnt);
+        //     spvReflectEnumerateInterfaceVariables(&module, &interfaceVariableCnt, interfaceVariables.data());
+
+        //     for(uint32_t i = 0; i < interfaceVariableCnt; i++)
+        //     {
+        //         interfaceVariables[i];
+        //     }       
+        // }
+
+
+        // 描述符
+        uint32_t descriptorSetCnt;
+        spvReflectEnumerateDescriptorSets(&module, &descriptorSetCnt, NULL);
+        if (descriptorSetCnt > 0)
+        {
+            std::vector<SpvReflectDescriptorSet*> descriptorSets(descriptorSetCnt);
+            spvReflectEnumerateDescriptorSets(&module, &descriptorSetCnt, descriptorSets.data());
+
+            uint32_t descriptorSize = 0;
+            for (uint32_t i = 0; i < descriptorSetCnt; i++)   descriptorSize += descriptorSets[i]->binding_count;
+            reflectInfo.resources.resize(descriptorSize);
+
+            uint32_t i = 0;
+            for (uint32_t set = 0; set < descriptorSetCnt; set++)
+            {
+                SpvReflectDescriptorSet* currentSet = descriptorSets[set];
+
+                for (uint32_t binding = 0; binding < currentSet->binding_count; binding++, i++)
+                {
+                    SpvReflectDescriptorBinding* currentBinding = currentSet->bindings[binding];
+
+                    ShaderResourceEntry& entry = reflectInfo.resources[i];
+                    //entry.name = std::string(currentBinding->name);
+                    entry.set = currentBinding->set;
+                    entry.binding = currentBinding->binding;
+                    entry.size = currentBinding->count;
+                    entry.type = VulkanUtil::SpvDescriptorTypeToResourceType(currentBinding->descriptor_type);
+                    entry.frequency = reflectInfo.frequency;
+
+                    if ((currentBinding->type_description->type_flags & SPV_REFLECT_TYPE_FLAG_EXTERNAL_IMAGE) ||
+                        (currentBinding->type_description->type_flags & SPV_REFLECT_TYPE_FLAG_EXTERNAL_SAMPLED_IMAGE))
+                    {
+                        bool isArray = (currentBinding->type_description->type_flags & SPV_REFLECT_TYPE_FLAG_ARRAY);
+                        // entry.textureViewType = VulkanUtil::SpvDimToTextureViewType(currentBinding->image.dim, isArray); // 暂时不需要这个信息
+                    }
+                }
+            }
+        }
+	}
+
+    VkPipelineShaderStageCreateInfo VulkanRHIShader::GetShaderStageCreateInfo()
+    {
+        VkPipelineShaderStageCreateInfo shaderStage = {};
+        shaderStage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+        shaderStage.stage = VulkanUtil::ShaderFrequencyToVkStageFlagBits(info.frequency);
+        shaderStage.module = handle;
+        shaderStage.pName = info.entry.c_str();
+
+        return shaderStage;
+    }
+
+	void VulkanRHIShader::Destroy()
+	{
+        vkDestroyShaderModule(VULKAN_DEVICE, handle, nullptr);
+	}
 
 }

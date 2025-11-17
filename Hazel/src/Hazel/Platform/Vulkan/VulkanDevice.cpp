@@ -3,7 +3,7 @@
 #include "VulkanContext.h"
 #include "VulkanUtils.h"
 
-namespace Hazel
+namespace GameEngine
 {
 	VulkanPhysicalDevice::VulkanPhysicalDevice(VkInstance vkInstance)
 	{

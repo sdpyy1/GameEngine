@@ -3,7 +3,7 @@
 #include <Hazel/Renderer/Shader.h>
 #include "VulkanContext.h"
 #include "VulkanTexture.h"
-namespace Hazel {
+namespace GameEngine {
 	VulkanMaterial::VulkanMaterial(const Ref<Shader>& shader, const std::string& name)
 		: m_Shader(shader.As<VulkanShader>()), m_Name(name), m_DescriptorManager(m_Shader)
 	{

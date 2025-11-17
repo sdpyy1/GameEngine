@@ -5,7 +5,7 @@
 	#include "Hazel/Platform/Windows/WindowsWindow.h"
 #endif
 
-namespace Hazel
+namespace GameEngine
 {
 	Ref<Window> Window::Create(const WindowProps& props)
 	{

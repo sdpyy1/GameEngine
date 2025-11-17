@@ -2,7 +2,7 @@
 #include "EditorPanel.h"
 #include "Hazel/Scene/Scene.h"
 #include "Hazel/Scene/Entity.h"
-namespace Hazel {
+namespace GameEngine {
 	class AssetManagerPanel : public EditorPanel
 	{
 	public:

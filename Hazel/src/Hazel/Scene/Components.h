@@ -12,7 +12,7 @@
 #include <Hazel/Renderer/EditorCamera.h>
 #include <Hazel/Asset/Model/Animation.h>
 
-namespace Hazel {
+namespace GameEngine {
 
 	struct IDComponent
 	{

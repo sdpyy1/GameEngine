@@ -15,7 +15,7 @@
 #include <unordered_map>
 #include <unordered_set>
 
-namespace Hazel {
+namespace GameEngine {
 	namespace Utils {
 
 		acl::iallocator& GetAnimationAllocator();

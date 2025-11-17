@@ -17,7 +17,7 @@ static PFN_vkQueuePresentKHR fpQueuePresentKHR;
 // Nvidia extensions
 PFN_vkCmdSetCheckpointNV fpCmdSetCheckpointNV;
 PFN_vkGetQueueCheckpointDataNV fpGetQueueCheckpointDataNV;
-namespace Hazel
+namespace GameEngine
 {
 	VulkanSwapChain::VulkanSwapChain(VkInstance instance, const Ref<VulkanDevice>& device)
 	{

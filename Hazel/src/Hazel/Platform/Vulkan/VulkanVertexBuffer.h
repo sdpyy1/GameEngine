@@ -5,7 +5,7 @@
 
 #include "VulkanAllocator.h"
 
-namespace Hazel {
+namespace GameEngine {
 
 	class VulkanVertexBuffer : public VertexBuffer
 	{

@@ -4,7 +4,7 @@
 #include "Hazel/Renderer/RendererAPI.h"
 #include <Hazel/Platform/Vulkan/VulkanStorageBuffer.h>
 
-namespace Hazel {
+namespace GameEngine {
 
 	Ref<StorageBuffer> StorageBuffer::Create(uint32_t size, const StorageBufferSpecification& specification)
 	{

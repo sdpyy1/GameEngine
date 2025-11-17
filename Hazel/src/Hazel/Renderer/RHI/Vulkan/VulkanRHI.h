@@ -3,7 +3,7 @@
 #include "Hazel/Renderer/RHI/RHI.h"
 #include "VulkanMemoryAllocator/vk_mem_alloc.h"
 #include "VulkanRHIResource.h"
-namespace Hazel
+namespace GameEngine
 {
 	class VulkanDynamicRHI : public DynamicRHI
 	{
@@ -17,10 +17,14 @@ namespace Hazel
 		virtual RHISwapchainRef CreateSwapChain(const RHISwapchainInfo& info) override final;
 		virtual RHICommandPoolRef CreateCommandPool(const RHICommandPoolInfo& info) override final;
 		virtual RHICommandContextRef CreateCommandContext(RHICommandPoolRef pool) override final;
+		virtual RHITextureRef CreateTexture(const RHITextureInfo& info) override final;
+		virtual RHITextureViewRef CreateTextureView(const RHITextureViewInfo& info) override final;
 
+		virtual RHISamplerRef CreateSampler(const RHISamplerInfo& info) override final;
+		virtual RHIShaderRef CreateShader(const RHIShaderInfo& info) override final;
 		virtual RHIFenceRef CreateFence(bool signaled = false) override final;
-
 		virtual RHISemaphoreRef CreateSemaphore() override final;
+		virtual RHICommandListImmediateRef GetImmediateCommand() override final;
 
 	public:
 		inline VkInstance GetInstance() const { return m_Instance; }

@@ -6,7 +6,7 @@
 #include "RenderPass.h"
 #include "Hazel/Renderer/IndexBuffer.h"
 #include "Hazel/Renderer/ComputePass.h"
-namespace Hazel {
+namespace GameEngine {
 	class Material;
 	class MeshSource;
 	// 抽象各种图像API的接口
