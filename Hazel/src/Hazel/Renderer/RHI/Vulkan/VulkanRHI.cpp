@@ -501,6 +501,14 @@ namespace GameEngine
         return textureView;
 	}
 
+	RHIBufferRef VulkanDynamicRHI::CreateBuffer(const RHIBufferInfo& info)
+	{
+        RHIBufferRef buffer = std::make_shared<VulkanRHIBuffer>(info);
+        RegisterResource(buffer);
+
+        return buffer;
+	}
+
     VulkanRHICommandContext::VulkanRHICommandContext(RHICommandPoolRef pool): RHICommandContext(pool)
     {
         this->pool = std::static_pointer_cast<VulkanRHICommandPool>(pool);

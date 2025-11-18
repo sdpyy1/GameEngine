@@ -22,6 +22,7 @@ namespace GameEngine {
 	typedef std::shared_ptr<class RHITextureView> RHITextureViewRef;
 	typedef std::shared_ptr<class RHISampler> RHISamplerRef;
 	typedef std::shared_ptr<class RHIShader> RHIShaderRef;
+	typedef std::shared_ptr<class RHIBuffer> RHIBufferRef;
 
 	enum API {
 		API_Vulkan,
@@ -151,6 +152,15 @@ namespace GameEngine {
 
 		MEMORY_USAGE_MAX_ENUM = 0x7FFFFFFF,		//
 	};
+	enum BufferCreationFlagBits : uint32_t
+	{
+		BUFFER_CREATION_NONE = 0x00000000,
+		BUFFER_CREATION_PERSISTENT_MAP = 0x00000001,
+		BUFFER_CREATION_FORCE_ALIGNMENT = 0x00000002,	// 使用256字节的内存对齐
+
+		BUFFER_CREATION_MAX_ENUM = 0x7FFFFFFF,	//
+	};
+	typedef uint32_t BufferCreationFlags;
 	enum ResourceTypeBits : uint32_t
 	{
 		RESOURCE_TYPE_NONE = 0x00000000,
@@ -173,6 +183,17 @@ namespace GameEngine {
 		RESOURCE_TYPE_MAX_ENUM = 0x7FFFFFFF,	//
 	};
 	typedef uint32_t ResourceType;
+	typedef struct RHIBufferInfo
+	{
+		uint64_t size;
+
+		MemoryUsage memoryUsage = MEMORY_USAGE_GPU_ONLY;
+		ResourceType type = RESOURCE_TYPE_BUFFER;
+
+		BufferCreationFlags creationFlag = BUFFER_CREATION_NONE;
+
+	} RHIBufferInfo;
+	
 	enum TextureCreationFlagBits : uint32_t
 	{
 		TEXTURE_CREATION_NONE = 0x00000000,

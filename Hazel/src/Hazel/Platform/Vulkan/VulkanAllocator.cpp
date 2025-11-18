@@ -207,59 +207,13 @@ namespace GameEngine {
 
 	void VulkanAllocator::DumpStats()
 	{
-		const auto& memoryProps = VulkanContext::GetCurrentDevice()->GetPhysicalDevice()->GetMemoryProperties();
-		std::vector<VmaBudget> budgets(memoryProps.memoryHeapCount);
-		vmaGetBudget(s_Data->Allocator, budgets.data());
-
-		LOG_WARN("-----------------------------------");
-		for (VmaBudget& b : budgets)
-		{
-			LOG_WARN("VmaBudget.allocationBytes = {0}", Utils::BytesToString(b.allocationBytes));
-			LOG_WARN("VmaBudget.blockBytes = {0}", Utils::BytesToString(b.blockBytes));
-			LOG_WARN("VmaBudget.usage = {0}", Utils::BytesToString(b.usage));
-			LOG_WARN("VmaBudget.budget = {0}", Utils::BytesToString(b.budget));
-		}
-		LOG_WARN("-----------------------------------");
+		
 	}
 
 	GPUMemoryStats VulkanAllocator::GetStats()
 	{
-		const auto& memoryProps = VulkanContext::GetCurrentDevice()->GetPhysicalDevice()->GetMemoryProperties();
-		std::vector<VmaBudget> budgets(memoryProps.memoryHeapCount);
-		vmaGetBudget(s_Data->Allocator, budgets.data());
-
-		uint64_t budget = 0;
-		for (VmaBudget& b : budgets)
-			budget += b.budget;
-
-		GPUMemoryStats result;
-		for (const auto& [k, v] : s_AllocationMap)
-		{
-			if (v.Type == AllocationType::Buffer)
-			{
-				result.BufferAllocationCount++;
-				result.BufferAllocationSize += v.AllocatedSize;
-			}
-			else if (v.Type == AllocationType::Image)
-			{
-				result.ImageAllocationCount++;
-				result.ImageAllocationSize += v.AllocatedSize;
-			}
-		}
-
-		result.AllocationCount = s_AllocationMap.size();
-		result.Used = s_Data->MemoryUsage;
-		result.TotalAvailable = budget;
-		return result;
-#if 0
-		VmaStats stats;
-		vmaCalculateStats(s_Data->Allocator, &stats);
-
-		uint64_t usedMemory = stats.total.usedBytes;
-		uint64_t freeMemory = stats.total.unusedBytes;
-
-		return { usedMemory, freeMemory };
-#endif
+		GPUMemoryStats a;
+		return a;
 	}
 
 	void VulkanAllocator::Init(Ref<VulkanDevice> device)

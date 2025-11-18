@@ -140,6 +140,28 @@ namespace GameEngine {
 	private:
 		VkShaderModule handle;
 	};
+	class VulkanRHIBuffer : public RHIBuffer
+	{
+	public:
+		VulkanRHIBuffer(const RHIBufferInfo& info);
+
+		const VkBuffer& GetHandle() { return handle; }
+
+		virtual void* Map() override final;
+		virtual void UnMap() override final;
+
+		virtual void Destroy() override final;
+		virtual void* RawHandle() override final { return handle; };
+
+	private:
+		VkBuffer handle;
+
+		VmaAllocation allocation;
+		VmaAllocationInfo allocationInfo;
+
+		bool mapped = false;
+		void* pointer = nullptr;
+	};
 	//Í¬²½ ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	class VulkanRHIFence : public RHIFence

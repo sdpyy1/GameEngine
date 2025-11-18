@@ -77,7 +77,23 @@ namespace GameEngine {
 		// void ReturnToPool(RHICommandContextRef commandContext) { idleContexts.push(commandContext); }
 		friend class RHICommandList;
 	};
+	class RHIBuffer : public RHIResource
+	{
+	public:
+		RHIBuffer(const RHIBufferInfo& info)
+			: RHIResource(RHI_BUFFER)
+			, info(info)
+		{
+		}
 
+		virtual void* Map() = 0;
+		virtual void UnMap() = 0;
+
+		inline const RHIBufferInfo& GetInfo() const { return info; }
+
+	protected:
+		RHIBufferInfo info;
+	};
 
 	// ------------------------------------------------------------------------TEXTURE ------------------------------------------------------------------------
 	class RHITexture : public RHIResource

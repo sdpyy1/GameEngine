@@ -1,5 +1,6 @@
 #pragma once
 #include "string"
+#include "Hazel/Renderer/RDG/RDGBuilder.h"
 namespace GameEngine {
 	enum PassType
 	{
@@ -20,7 +21,7 @@ namespace GameEngine {
 		~RenderPass() {};
 
 		virtual void Init() {};
-		// virtual void Build(RDGBuilder& builder) {};  // RDG
+		virtual void Build(RDGBuilder& builder) {};
 
 		virtual std::string GetName() { return "Unknown"; }
 

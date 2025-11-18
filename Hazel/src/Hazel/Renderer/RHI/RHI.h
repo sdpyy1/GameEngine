@@ -28,6 +28,7 @@ namespace GameEngine {
 		virtual RHITextureViewRef CreateTextureView(const RHITextureViewInfo& info) = 0;
 		virtual RHISamplerRef CreateSampler(const RHISamplerInfo& info) = 0;
 		virtual RHIShaderRef CreateShader(const RHIShaderInfo& info) = 0;
+		virtual RHIBufferRef CreateBuffer(const RHIBufferInfo& info) = 0;
 
 
 		// Í¬²½

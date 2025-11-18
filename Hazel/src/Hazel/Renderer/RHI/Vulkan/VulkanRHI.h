@@ -20,6 +20,7 @@ namespace GameEngine
 		virtual RHICommandContextRef CreateCommandContext(RHICommandPoolRef pool) override final;
 		virtual RHITextureRef CreateTexture(const RHITextureInfo& info) override final;
 		virtual RHITextureViewRef CreateTextureView(const RHITextureViewInfo& info) override final;
+		virtual RHIBufferRef CreateBuffer(const RHIBufferInfo& info) override final;
 
 		virtual RHISamplerRef CreateSampler(const RHISamplerInfo& info) override final;
 		virtual RHIShaderRef CreateShader(const RHIShaderInfo& info) override final;

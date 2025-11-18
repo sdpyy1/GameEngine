@@ -16,7 +16,7 @@ namespace GameEngine {
 		m_SwapChain = m_DynamicRHI->CreateSwapChain({ m_Surface, m_GraphicsQueue, FRAMES_IN_FLIGHT, m_Surface->GetExetent(), SWAPCHAIN_COLOR_FORMAT });
 		m_CommandPool = m_DynamicRHI->CreateCommandPool({ m_GraphicsQueue });
 		for (int i = 0; i < FRAMES_IN_FLIGHT; i++){
-			m_PerFrameBaseResources[i].commandList = m_CommandPool->CreateCommandList(true);
+			m_PerFrameBaseResources[i].commandList = m_CommandPool->CreateCommandList(false);
 			m_PerFrameBaseResources[i].startSemaphore = m_DynamicRHI->CreateSemaphore();
 			m_PerFrameBaseResources[i].finishSemaphore = m_DynamicRHI->CreateSemaphore();
 			m_PerFrameBaseResources[i].fence = m_DynamicRHI->CreateFence(true);

@@ -5,6 +5,8 @@
 #include <regex>
 #include "spirv_reflect.h"
 #include "Hazel/Renderer/RHI/RHICommandList.h"
+#include "VulkanMemoryAllocator/vk_mem_alloc.h"
+
 namespace GameEngine
 {
 
@@ -750,6 +752,89 @@ namespace GameEngine
 	void VulkanRHIShader::Destroy()
 	{
         vkDestroyShaderModule(VULKAN_DEVICE, handle, nullptr);
+	}
+
+	VulkanRHIBuffer::VulkanRHIBuffer(const RHIBufferInfo& info) : RHIBuffer(info)
+	{
+        VkBufferUsageFlags usage = VulkanUtil::ResourceTypeToBufferUsage(info.type);
+        if (info.memoryUsage == MEMORY_USAGE_GPU_ONLY || info.memoryUsage == MEMORY_USAGE_GPU_TO_CPU)   usage |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+
+        VkBufferCreateInfo bufferInfo = {};
+        bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        bufferInfo.size = info.size;
+        bufferInfo.usage = usage;
+        bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        bufferInfo.queueFamilyIndexCount = 0,
+            bufferInfo.pQueueFamilyIndices = NULL;
+
+        VmaAllocationCreateInfo allocationCreateInfo = {};
+        allocationCreateInfo.usage = VulkanUtil::MemoryUsageToVma(info.memoryUsage);
+        if (info.creationFlag & BUFFER_CREATION_PERSISTENT_MAP)
+        {
+            allocationCreateInfo.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
+            mapped = true;
+        }
+        //allocationCreateInfo.requiredFlags    //必要需求
+        //allocationCreateInfo.preferredFlags   //尽量满足的需求
+
+        //VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT 强制要求单独开辟内存
+        //VMA_ALLOCATION_CREATE_MAPPED_BIT  强制持久映射，可由allocationInfo.pMappedData直接访问
+        //vmaFlushAllocation(), vmaInvalidateAllocation() 指定缓存写入和缓存失效
+
+        allocationInfo = {};
+        if (info.creationFlag & BUFFER_CREATION_FORCE_ALIGNMENT)
+        {
+            // 带上一个256位对齐，光追等会用到
+            if (vmaCreateBufferWithAlignment(VULKAN_VMA,
+                &bufferInfo,
+                &allocationCreateInfo,
+                256,
+                &handle,
+                &allocation,
+                &allocationInfo) != VK_SUCCESS)
+            {
+                LOG_ERROR("VMA failed to allocate buffer!");
+            }
+        }
+        else
+        {
+            if (vmaCreateBuffer(VULKAN_VMA,
+                &bufferInfo,
+                &allocationCreateInfo,
+                &handle,
+                &allocation,
+                &allocationInfo) != VK_SUCCESS)
+            {
+                LOG_ERROR("VMA failed to allocate buffer!");
+            }
+        }
+	}
+
+	void* VulkanRHIBuffer::Map()
+	{
+        if (info.creationFlag & BUFFER_CREATION_PERSISTENT_MAP) return allocationInfo.pMappedData;
+        if (!mapped)
+        {
+            vmaMapMemory(VULKAN_VMA, allocation, &pointer);
+            mapped = true;
+        }
+        return pointer;
+	}
+
+	void VulkanRHIBuffer::UnMap()
+	{
+        if (mapped && !(info.creationFlag & BUFFER_CREATION_PERSISTENT_MAP))
+        {
+            vmaUnmapMemory(VULKAN_VMA, allocation);
+            pointer = nullptr;
+            mapped = false;
+        }
+	}
+
+	void VulkanRHIBuffer::Destroy()
+	{
+        vmaDestroyBuffer(VULKAN_VMA, handle, allocation);
+
 	}
 
 }
