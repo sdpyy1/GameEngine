@@ -4,6 +4,7 @@ namespace GameEngine {
 #define MAX_QUEUE_CNT 2					//每个队列族的最大队列数目
 #define MAX_SHADER_IN_OUT_VARIABLES 8	//允许着色器最大的输入和输出变量数目
 
+#define RHI_DYNAMICRHI DynamicRHI::Get()
 
 	typedef std::shared_ptr<class DynamicRHI> DynamicRHIRef;
 	typedef std::shared_ptr<class RHIResource> RHIResourceRef;
@@ -23,7 +24,7 @@ namespace GameEngine {
 	typedef std::shared_ptr<class RHIShader> RHIShaderRef;
 
 	enum API {
-		Vulkan,
+		API_Vulkan,
 		OpenGL,
 		DirectX,
 		NoneAPI
@@ -387,6 +388,24 @@ namespace GameEngine {
 		SHADER_FREQUENCY_MAX_ENUM = 0x7FFFFFFF, //
 	};
 	typedef uint32_t ShaderFrequency;
+	enum RHIResourceState : uint32_t	
+	{
+		RESOURCE_STATE_UNDEFINED = 0,
+		RESOURCE_STATE_COMMON,
+		RESOURCE_STATE_TRANSFER_SRC,
+		RESOURCE_STATE_TRANSFER_DST,
+		RESOURCE_STATE_VERTEX_BUFFER,
+		RESOURCE_STATE_INDEX_BUFFER,
+		RESOURCE_STATE_COLOR_ATTACHMENT,
+		RESOURCE_STATE_DEPTH_STENCIL_ATTACHMENT,
+		RESOURCE_STATE_UNORDERED_ACCESS,
+		RESOURCE_STATE_SHADER_RESOURCE,
+		RESOURCE_STATE_INDIRECT_ARGUMENT,
+		RESOURCE_STATE_PRESENT,
+		RESOURCE_STATE_ACCELERATION_STRUCTURE,
+
+		RESOURCE_STATE_MAX_ENUM,	//
+	};
 	typedef struct ShaderResourceEntry
 	{
 		// std::string name;
@@ -512,6 +531,19 @@ namespace GameEngine {
 		ShaderFrequency frequency;
 		std::vector<uint8_t> code;
 	} RHIShaderInfo;
+
+	typedef struct RHITextureBarrier
+	{
+		RHITextureRef texture;
+		RHIResourceState srcState;
+		RHIResourceState dstState;
+
+		TextureSubresourceRange subresource = {};	// 此时取texture的默认range
+
+	} RHITextureBarrier;
+
+
+
 	static bool IsDepthStencilFormat(RHIFormat format)
 	{
 		switch (format) {
@@ -567,4 +599,5 @@ namespace GameEngine {
 			return true;
 		}
 	}
+
 }

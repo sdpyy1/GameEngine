@@ -70,11 +70,11 @@ namespace GameEngine {
 	protected:
 		RHICommandPoolInfo info;
 
-		std::queue<RHICommandContextRef> idleContexts = {};  // 暂未运行的线程
-		std::vector<RHICommandContextRef> contexts = {};     // 所有分配的线程
+		//std::queue<RHICommandContextRef> idleContexts = {};  // 暂未运行的线程
+		//std::vector<RHICommandContextRef> contexts = {};     // 所有分配的线程
 		// CriticalSectionRef sync;
 
-		void ReturnToPool(RHICommandContextRef commandContext) { idleContexts.push(commandContext); }
+		// void ReturnToPool(RHICommandContextRef commandContext) { idleContexts.push(commandContext); }
 		friend class RHICommandList;
 	};
 

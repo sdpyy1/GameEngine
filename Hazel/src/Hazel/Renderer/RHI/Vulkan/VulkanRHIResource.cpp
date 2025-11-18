@@ -4,6 +4,7 @@
 #include "VulkanUtil.h"
 #include <regex>
 #include "spirv_reflect.h"
+#include "Hazel/Renderer/RHI/RHICommandList.h"
 namespace GameEngine
 {
 
@@ -118,7 +119,7 @@ namespace GameEngine
 
         imageFormat = surfaceFormat.format;  // 存储extent和format
         imageExtent = extent;
-
+        RHI_DYNAMICRHI->GetImmediateCommandList(true);
         for (uint32_t i = 0; i < imageCount; i++)
         {
             RHITextureInfo info = {
@@ -134,11 +135,11 @@ namespace GameEngine
             RHITextureRef texture = std::make_shared<VulkanRHITexture>(info, images[i]);
             textures.push_back(texture);
 
-            // 留着RESOURCE_STATE_UNDEFINED之后处理其实也可以，可加可不加
-            /*backend.GetImmediateCommand()->TextureBarrier(
-                { texture, RESOURCE_STATE_UNDEFINED, RESOURCE_STATE_PRESENT, {TEXTURE_ASPECT_COLOR, 0, 1, 0, 1} });
-            backend.GetImmediateCommand()->Flush();*/
+            // 修改布局
+            RHI_DYNAMICRHI->GetImmediateCommandList()->TextureBarrier({ texture, RESOURCE_STATE_UNDEFINED, RESOURCE_STATE_PRESENT,{ TEXTURE_ASPECT_COLOR, 0, 1, 0, 1 } });
         }
+        RHI_DYNAMICRHI->GetImmediateCommandList()->Flush();
+
     }
 
 	GameEngine::RHITextureRef VulkanRHISwapchain::GetNewFrame(RHIFenceRef fence, RHISemaphoreRef signalSemaphore)
@@ -157,11 +158,11 @@ namespace GameEngine
     VkSurfaceFormatKHR VulkanRHISwapchain::ChooseSwapSurfaceFormat(VkFormat targetFormat)
     {
         // 选择通道标准，以及色彩空间
-        std::cout << "Available swapchain surface formats:" << std::endl;
-        for (const auto format : availableFormats) {
-            std::cout << format.format << " : " << format.colorSpace << std::endl;
-        }
-        std::cout << " " << std::endl;
+        //std::cout << "Available swapchain surface formats:" << std::endl;
+        //for (const auto format : availableFormats) {
+        //    std::cout << format.format << " : " << format.colorSpace << std::endl;
+        //}
+        //std::cout << " " << std::endl;
 
         if (availableFormats.size() == 1 && availableFormats[0].format == VK_FORMAT_UNDEFINED) {    //无偏向性，任选
             return { VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR };
@@ -179,11 +180,11 @@ namespace GameEngine
     VkPresentModeKHR VulkanRHISwapchain::ChooseSwapPresentMode()
     {
         // 选择刷新模式
-        std::cout << "Available swapchain present modes:" << std::endl;
+       /* std::cout << "Available swapchain present modes:" << std::endl;
         for (const auto mode : availablePresentModes) {
             std::cout << mode << std::endl;
         }
-        std::cout << " " << std::endl;
+        std::cout << " " << std::endl;*/
 
         VkPresentModeKHR bestMode;
         bestMode = VK_PRESENT_MODE_IMMEDIATE_KHR;         // normal
@@ -206,7 +207,7 @@ namespace GameEngine
     VkExtent2D VulkanRHISwapchain::ChooseSwapExtent()
     {
         // 选择分辨率
-        std::cout << "Swapchain extent: " << capabilities.currentExtent.width << " : " << capabilities.currentExtent.height << std::endl;
+        //std::cout << "Swapchain extent: " << capabilities.currentExtent.width << " : " << capabilities.currentExtent.height << std::endl;
 
         if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max())
         {
@@ -239,16 +240,143 @@ namespace GameEngine
         presentInfo.pResults = nullptr;
         presentInfo.waitSemaphoreCount = semaphore == VK_NULL_HANDLE ? 0 : 1;
         presentInfo.pWaitSemaphores = &semaphore;
-
-        if (vkQueuePresentKHR(std::static_pointer_cast<VulkanRHIQueue>(this->info.presentQueue)->GetHandle(), &presentInfo) != VK_SUCCESS)
+        VkResult result = vkQueuePresentKHR(std::static_pointer_cast<VulkanRHIQueue>(this->info.presentQueue)->GetHandle(), &presentInfo);
+        if (result != VK_SUCCESS)
         {
-            LOG_ERROR("Failed to present swap chain image!\n");
+            if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
+            {
+                Resize();
+            }
+            else
+            {
+                VK_CHECK_RESULT(result);
+            }
         }
 	}
 
 	void VulkanRHISwapchain::Destroy()
 	{
         vkDestroySwapchainKHR(VULKAN_DEVICE, handle, nullptr);
+	}
+
+	void VulkanRHISwapchain::Resize()
+	{
+        // 1. 等待设备空闲，确保旧Swapchain资源不再被使用
+        vkDeviceWaitIdle(VULKAN_DEVICE);
+
+        VkSurfaceKHR surface = std::static_pointer_cast<VulkanRHISurface>(info.surface)->GetHandle();
+
+        // 2. 销毁旧Swapchain相关资源
+        // 销毁纹理对象（如果纹理由Swapchain管理）
+        textures.clear();
+        // 销毁旧Swapchain句柄
+        if (handle != VK_NULL_HANDLE)
+        {
+            vkDestroySwapchainKHR(VULKAN_DEVICE, handle, nullptr);
+            handle = VK_NULL_HANDLE;
+        }
+        VkPhysicalDevice device = VULKAN_PHYSICALDEVICE;
+        VkDevice logicalDevice = VULKAN_DEVICE;
+        // 3. 重新查询Surface支持信息（窗口Resize后可能变化）
+        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &capabilities);
+
+        uint32_t size = 0;
+        vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &size, nullptr);
+        availableFormats.resize(size);
+        vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &size, availableFormats.data());
+
+        vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &size, nullptr);
+        availablePresentModes.resize(size);
+        vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &size, availablePresentModes.data());
+
+        // 4. 重新计算Swapchain参数（与构造函数逻辑一致，但使用新窗口尺寸）
+        VkSurfaceFormatKHR surfaceFormat = ChooseSwapSurfaceFormat(VulkanUtil::RHIFormatToVkFormat(this->info.format));
+        RHIFormat targetFormat = VulkanUtil::VkFormatToRHIFormat(surfaceFormat.format);
+        if (targetFormat != this->info.format)
+        {
+            this->info.format = targetFormat;
+            LOG_ERROR("Swapchain format adjusted to supported format");
+        }
+
+        VkPresentModeKHR presentMode = ChooseSwapPresentMode();
+        VkExtent2D newExtent = ChooseSwapExtent(); // 自动适配新窗口尺寸
+        this->info.extent = { newExtent.width, newExtent.height }; // 更新info中的尺寸
+
+        // 图像数量（保持与原逻辑一致）
+        uint32_t imageCount = std::max(this->info.imageCount, capabilities.minImageCount);
+        if (capabilities.maxImageCount > 0 && imageCount > capabilities.maxImageCount)
+        {
+            imageCount = capabilities.maxImageCount;
+        }
+        this->info.imageCount = imageCount;
+
+        // 5. 重新创建Swapchain
+        VkSwapchainCreateInfoKHR createInfo = {};
+        createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+        createInfo.surface = surface;
+        createInfo.minImageCount = imageCount;
+        createInfo.imageFormat = surfaceFormat.format;
+        createInfo.imageColorSpace = surfaceFormat.colorSpace;
+        createInfo.imageExtent = newExtent;
+        createInfo.imageArrayLayers = 1;
+        createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT |
+            VK_IMAGE_USAGE_TRANSFER_SRC_BIT |
+            VK_IMAGE_USAGE_TRANSFER_DST_BIT |
+            VK_IMAGE_USAGE_SAMPLED_BIT |
+            VK_IMAGE_USAGE_STORAGE_BIT;
+
+        // 图像共享模式（保持原逻辑）
+        createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        createInfo.queueFamilyIndexCount = 0;
+        createInfo.pQueueFamilyIndices = nullptr;
+
+        createInfo.preTransform = capabilities.currentTransform;
+        createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+        createInfo.presentMode = presentMode;
+        createInfo.clipped = VK_TRUE;
+        createInfo.oldSwapchain = VK_NULL_HANDLE; // 旧Swapchain已销毁
+
+        if (vkCreateSwapchainKHR(logicalDevice, &createInfo, nullptr, &handle) != VK_SUCCESS)
+        {
+            LOG_ERROR("Failed to recreate Swapchain!");
+        }
+
+        // 6. 重新获取新Swapchain的图像和纹理
+        vkGetSwapchainImagesKHR(logicalDevice, handle, &imageCount, nullptr);
+        images.resize(imageCount);
+        vkGetSwapchainImagesKHR(logicalDevice, handle, &imageCount, images.data());
+
+        // 更新图像格式和尺寸
+        imageFormat = surfaceFormat.format;
+        imageExtent = newExtent;
+        info.extent = { newExtent.width, newExtent.height };
+        // 重新创建纹理对象（与构造函数逻辑一致）
+        for (uint32_t i = 0; i < imageCount; i++)
+        {
+            RHITextureInfo textureInfo;
+            textureInfo.format = targetFormat;
+            textureInfo.extent = { newExtent.width, newExtent.height, 1 };
+            textureInfo.arrayLayers = 1;
+            textureInfo.mipLevels = 1;
+            textureInfo.memoryUsage = MEMORY_USAGE_GPU_ONLY;
+            textureInfo.type = RESOURCE_TYPE_TEXTURE | RESOURCE_TYPE_RENDER_TARGET;
+            textureInfo.creationFlag = TEXTURE_CREATION_NONE;
+
+            RHITextureRef texture = std::make_shared<VulkanRHITexture>(textureInfo, images[i]);
+            textures.push_back(texture);
+
+            // 纹理屏障：从UNDEFINED过渡到PRESENT状态
+            RHI_DYNAMICRHI->GetImmediateCommandList(true)->TextureBarrier({
+                texture,
+                RESOURCE_STATE_UNDEFINED,
+                RESOURCE_STATE_PRESENT,
+                { TEXTURE_ASPECT_COLOR, 0, 1, 0, 1 }
+                });
+            RHI_DYNAMICRHI->GetImmediateCommandList()->Flush();
+        }
+
+        currentIndex = 0;
+        LOG_INFO("Swapchain recreated successfully! New extent: ({}, {})", newExtent.width, newExtent.height);
 	}
 
 	VulkanRHITexture::VulkanRHITexture(const RHITextureInfo& info, VkImage image) : RHITexture(info)

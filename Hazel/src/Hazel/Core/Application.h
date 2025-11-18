@@ -1,6 +1,8 @@
 #pragma once
-
 #include "Hazel/Core/Base.h"
+#include "Hazel/Core/Definations.h"
+#include "Hazel/Window/WindowManager.h"
+#include "Hazel/Renderer/RenderSystem/RenderSystem.h"
 namespace GameEngine
 {
     class SceneManager;
@@ -72,5 +74,18 @@ namespace GameEngine
         std::shared_ptr<SceneManager> m_SceneManager;
 
         uint32_t m_CurrentFrameIndex = 0;
+
+
+
+    // New
+    public:
+        static std::shared_ptr<WindowManager> GetWindowManager() { return Get().m_WindowManager; }
+        static std::shared_ptr<RenderSystem> GetRenderSystem() { return Get().m_RenderSystem; }
+        static uint32_t GetFrameIndex() { return Get().m_CurrentFrameIndex; }
+    private:
+        std::shared_ptr<WindowManager> m_WindowManager;
+        std::shared_ptr<RenderSystem> m_RenderSystem;
+
+
     };
 }

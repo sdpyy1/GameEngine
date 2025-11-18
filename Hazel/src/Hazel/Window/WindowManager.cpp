@@ -140,7 +140,11 @@ namespace GameEngine {
 	void WindowManager::Tick()
 	{
 		glfwPollEvents();
+	}
 
+	void WindowManager::SetEventCallback(const EventCallbackFn& callback)
+	{
+		m_Data.EventCallback = callback;
 	}
 
 }

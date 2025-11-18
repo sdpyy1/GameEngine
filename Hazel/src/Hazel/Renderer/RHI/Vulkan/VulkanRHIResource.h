@@ -65,6 +65,7 @@ namespace GameEngine {
 		VkSurfaceFormatKHR ChooseSwapSurfaceFormat(VkFormat targetFormat);
 		VkPresentModeKHR ChooseSwapPresentMode();
 		VkExtent2D ChooseSwapExtent();
+		void Resize();
 	};
 	class VulkanRHITexture : public RHITexture
 	{

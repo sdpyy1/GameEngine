@@ -22,14 +22,19 @@ namespace GameEngine {
 		ASSERT(!s_Instance, "Application already exists!");
 		s_Instance = this;
 
-		m_GLFWWindow = Window::Create(WindowProps(m_Specification.Name, 1950, 1300)); 
+		/*m_GLFWWindow = Window::Create(WindowProps(m_Specification.Name, 1950, 1300)); 
 		m_GLFWWindow->SetEventCallback(HZ_BIND_EVENT_FN(Application::OnEvent));
 
 
 		NFD::Init();
-		m_SceneManager = std::make_shared<SceneManager>();
 		m_RendererManager = std::make_shared<RendererManager>();
-		AssetImporter::Init();
+		AssetImporter::Init();*/
+
+		m_SceneManager = std::make_shared<SceneManager>();
+
+		m_WindowManager = std::make_shared<WindowManager>(WindowSpec(m_Specification.Name, 1950, 1300));
+		m_WindowManager->SetEventCallback(HZ_BIND_EVENT_FN(Application::OnEvent));
+		m_RenderSystem = std::make_shared<RenderSystem>();
 
 	}
 
@@ -37,19 +42,23 @@ namespace GameEngine {
 	{
 		while (m_Running)
 		{
-			m_RendererManager->ExecutePreFrame(); // RT_thread
+			//m_RendererManager->ExecutePreFrame(); // RT_thread
 
 			float timestep = GetTimePreFrame();
 
-			m_SceneManager->Tick(timestep);
+			// m_SceneManager->Tick(timestep);
 
+			//if (!m_Minimized) {
+			//	m_RendererManager->Tick(timestep);
+			//}
+
+			//m_GLFWWindow->Tick();
 			if (!m_Minimized) {
-				m_RendererManager->Tick(timestep);
+				m_RenderSystem->Tick(timestep);
 			}
+			m_WindowManager->Tick();
+			m_CurrentFrameIndex = (m_CurrentFrameIndex + 1) % FRAMES_IN_FLIGHT;
 
-			m_GLFWWindow->Tick();
-
-			m_CurrentFrameIndex = (m_CurrentFrameIndex + 1) % Renderer::GetConfig().FramesInFlight;
 		}
 	}
 	float Application::GetTimePreFrame()
@@ -71,11 +80,11 @@ namespace GameEngine {
 	{
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<WindowCloseEvent>(HZ_BIND_EVENT_FN(Application::OnWindowClose));
-		dispatcher.Dispatch<WindowResizeEvent>(HZ_BIND_EVENT_FN(Application::OnWindowResize));
-		dispatcher.Dispatch<WindowMinimizeEvent>(HZ_BIND_EVENT_FN(Application::OnWindowMinimize));
-		if (m_RendererManager->OnEvent(e)) {
+		/*dispatcher.Dispatch<WindowResizeEvent>(HZ_BIND_EVENT_FN(Application::OnWindowResize));
+		dispatcher.Dispatch<WindowMinimizeEvent>(HZ_BIND_EVENT_FN(Application::OnWindowMinimize));*/
+		/*if (m_RendererManager->OnEvent(e)) {
 			return;
-		}
+		}*/
 	}
 	bool Application::OnWindowMinimize(WindowMinimizeEvent& e)
 	{

@@ -33,60 +33,6 @@ namespace GameEngine
 
         virtual void Execute(RHICommandContextImmediateRef context) = 0;
     } RHICommandImmediate;
-
-
-    /*RHICommandList是RHICommand的载体，方法通过RHICommandList调用后会根据配置选择是直接执行命令还是缓存命令*/
-    class RHICommandList {
-        RHICommandList(const CommandListInfo& info) : info(info) {}
-        void BeginCommand();
-        void EndCommand();
-
-
-
-    protected:
-        inline void AddCommand(RHICommand* command) { commands.push_back(command); }
-
-
-    private:
-        std::vector<RHICommand*> commands;
-        CommandListInfo info;
-#if ENABLE_DEBUG_MODE
-        int currentCommandIndex = 0;
-#endif
-    };
-
-
-    class RHICommandListImmediate
-    {
-    public:
-        RHICommandListImmediate(const CommandListImmediateInfo& info) : info(info) {}
-
-        void Flush(); // 立即执行缓存的API命令
-
-        void GenerateMips(RHITextureRef src);
-
-
-
-    protected:
-        CommandListImmediateInfo info;
-
-        inline void AddCommand(RHICommandImmediate* command) { commands.push_back(command); }
-        std::vector<RHICommandImmediate*> commands;
-    };
-
-#define ADD_COMMAND(commandName, ...) do { \
-    RHICommand* command = new RHICommand##commandName(__VA_ARGS__);  \
-    AddCommand(command); \
-} while (0)
-#define ADD_COMMAND_IMMEDIATE(commandName, ...) do { \
-    RHICommandImmediate* command = new RHICommandImmediate##commandName(__VA_ARGS__);  \
-    AddCommand(command); \
-} while (0)
-
-
-
-
-
     // 各种Command的封装
     struct RHICommandBeginCommand : public RHICommand
     {
@@ -113,4 +59,70 @@ namespace GameEngine
         }
         virtual void Execute(RHICommandContextImmediateRef context) override final;
     };
+
+    struct RHICommandImmediateTextureBarrier : public RHICommandImmediate
+    {
+        RHITextureBarrier barrier;
+
+        RHICommandImmediateTextureBarrier(const RHITextureBarrier& barrier)
+            : barrier(barrier)
+        {
+        }
+
+        virtual void Execute(RHICommandContextImmediateRef context) override final;
+    };
+
+    /*RHICommandList是RHICommand的载体，方法通过RHICommandList调用后会根据配置选择是直接执行命令还是缓存命令*/
+    class RHICommandList {
+    public:
+        RHICommandList(const CommandListInfo& info) : info(info) {}
+        void BeginCommand();
+        void EndCommand();
+
+        void Execute(RHIFenceRef fence = nullptr, RHISemaphoreRef waitSemaphore = nullptr, RHISemaphoreRef signalSemaphore = nullptr);
+
+
+    protected:
+        inline void AddCommand(RHICommand* command) { commands.push_back(command); }
+
+
+    private:
+        std::vector<RHICommand*> commands;
+        CommandListInfo info;
+#if ENABLE_DEBUG_MODE
+        int currentCommandIndex = 0;
+#endif
+    };
+
+
+    class RHICommandListImmediate
+    {
+    public:
+        RHICommandListImmediate(const CommandListImmediateInfo& info) : info(info) {}
+
+        void Flush(); // 立即执行缓存的API命令
+        void GenerateMips(RHITextureRef src);
+        void TextureBarrier(const RHITextureBarrier& barrier);
+    protected:
+        CommandListImmediateInfo info;
+
+        inline void AddCommand(RHICommandImmediate* command) { commands.push_back(command); }
+        std::vector<RHICommandImmediate*> commands;
+    };
+
+#define ADD_COMMAND(commandName, ...) do { \
+    RHICommand* command = new RHICommand##commandName(__VA_ARGS__);  \
+    AddCommand(command); \
+} while (0)
+#define ADD_COMMAND_IMMEDIATE(commandName, ...) do { \
+    RHICommandImmediate* command = new RHICommandImmediate##commandName(__VA_ARGS__);  \
+    AddCommand(command); \
+} while (0)
+
+
+
+
+
+
+
 }

@@ -1,5 +1,7 @@
 #include "hzpch.h"
 #include "RHIResource.h"
+#include "RHI.h"
+#include "RHICommandList.h"
 namespace GameEngine {
 
 	Extent3D RHITexture::MipExtent(uint32_t mipLevel)
@@ -16,7 +18,12 @@ namespace GameEngine {
 
     RHICommandListRef RHICommandPool::CreateCommandList(bool byPass)
     {
-        return nullptr;
+        CommandListInfo info;
+        info.pool = shared_from_this();
+        info.context = DynamicRHI::Get()->CreateCommandContext(shared_from_this());
+        info.byPass = byPass;
+        RHICommandListRef commandList = std::make_shared<RHICommandList>(info);
+        return commandList;
     }
 
 }

@@ -7,7 +7,7 @@ namespace GameEngine {
 	{
 		if (s_DynamicRHI == nullptr) {
 			switch (config.api) {
-			case API::Vulkan:
+			case API::API_Vulkan:
 				s_DynamicRHI = std::make_shared<VulkanDynamicRHI>(config);
 				break;
 			default:

@@ -20,6 +20,7 @@ namespace GameEngine {
 	public:
 		using EventCallbackFn = std::function<void(Event&)>;
 		WindowManager(const WindowSpec& props);
+		void SetEventCallback(const EventCallbackFn& callback);
 		GLFWwindow* GetGLFWWindow() { return m_GLFWWindow; }
 		void Tick();
         ~WindowManager();

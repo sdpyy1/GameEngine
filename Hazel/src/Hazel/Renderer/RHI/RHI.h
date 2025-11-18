@@ -34,7 +34,7 @@ namespace GameEngine {
 		virtual RHIFenceRef CreateFence(bool signaled) = 0;
 
 		virtual RHISemaphoreRef CreateSemaphore() = 0;
-		virtual RHICommandListImmediateRef GetImmediateCommand() = 0;
+		virtual RHICommandListImmediateRef GetImmediateCommandList(bool start = false) = 0;
 
     protected:
 		DynamicRHI(const RHIConfig& config) : m_Config(config) {};
@@ -51,6 +51,8 @@ namespace GameEngine {
 		RHICommandContext(RHICommandPoolRef pool): RHIResource(RHI_COMMAND_CONTEXT), pool(pool){}
 		virtual void BeginCommand() = 0;
 		virtual void EndCommand() = 0;
+		virtual void Execute(RHIFenceRef waitFence, RHISemaphoreRef waitSemaphore, RHISemaphoreRef signalSemaphore) = 0;
+
 	protected:
 		RHICommandPoolRef pool;
 	};
@@ -64,6 +66,7 @@ namespace GameEngine {
 
 		virtual void Flush() = 0;
 		virtual void GenerateMips(RHITextureRef src) = 0;
+		virtual void TextureBarrier(const RHITextureBarrier& barrier) = 0;
 
 	};
 

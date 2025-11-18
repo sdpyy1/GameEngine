@@ -395,13 +395,12 @@ namespace GameEngine
 
     void VulkanDynamicRHI::CreateImmediateCommand()
     {
-        /*m_ImmediateCommandContext = std::make_shared<VulkanRHICommandContextImmediate>(*this);
-        RegisterResource(immediateCommandContext);
+        m_ImmediateCommandContext = std::make_shared<VulkanRHICommandContextImmediate>();
+        RegisterResource(m_ImmediateCommandContext);
 
-        CommandListImmediateInfo info = {
-            .context = immediateCommandContext
-        };
-        m_ImmediateCommand = std::make_shared<RHICommandListImmediate>(info);*/
+        CommandListImmediateInfo info;
+        info.context = m_ImmediateCommandContext;
+        m_ImmediateCommandList = std::make_shared<RHICommandListImmediate>(info);
     }
 
     RHIQueueRef VulkanDynamicRHI::GetQueue(const RHIQueueInfo& info)
@@ -482,9 +481,15 @@ namespace GameEngine
         return shader;
 	}
 
-	RHICommandListImmediateRef VulkanDynamicRHI::GetImmediateCommand()
+	RHICommandListImmediateRef VulkanDynamicRHI::GetImmediateCommandList(bool start)
 	{
-        return m_ImmediateCommand;
+        if (!m_ImmediateCommandList) {
+            CreateImmediateCommand();
+        }
+        if (start) {
+            CAST<VulkanRHICommandContextImmediate>(m_ImmediateCommandContext)->BeginSingleTimeCommand();
+        }
+        return m_ImmediateCommandList;
 
 	}
 
@@ -530,11 +535,169 @@ namespace GameEngine
         }
 	}
 
+	void VulkanRHICommandContext::Execute(RHIFenceRef fence, RHISemaphoreRef waitSemaphore, RHISemaphoreRef signalSemaphore)
+	{
+        VkPipelineStageFlags stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_TRANSFER_BIT;
+        VkFence signalFence = VK_NULL_HANDLE;
+
+        VkSubmitInfo submitInfo = {};
+        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submitInfo.commandBufferCount = 1;
+        submitInfo.pCommandBuffers = &handle;
+
+        if (fence != nullptr)
+        {
+            signalFence = CAST<VulkanRHIFence>(fence)->GetHandle();
+        }
+        if (waitSemaphore != nullptr)
+        {
+            submitInfo.waitSemaphoreCount = 1;
+            submitInfo.pWaitSemaphores = &CAST<VulkanRHISemaphore>(waitSemaphore)->GetHandle();
+            submitInfo.pWaitDstStageMask = &stage;
+        }
+        if (signalSemaphore != nullptr)
+        {
+            submitInfo.signalSemaphoreCount = 1;
+            submitInfo.pSignalSemaphores = &CAST<VulkanRHISemaphore>(signalSemaphore)->GetHandle();
+        }
+
+        if (vkQueueSubmit(CAST<VulkanRHIQueue>(pool->GetQueue())->GetHandle(), 1, &submitInfo, signalFence) != VK_SUCCESS)
+        {
+            LOG_ERROR("Failed to submit command buffer!");
+        }
+	}
+
 	VulkanRHICommandContextImmediate::VulkanRHICommandContextImmediate()
 	{
         fence = VULKAN_RHI->CreateFence(true);
-        queue = VULKAN_RHI->GetQueue({ QUEUE_TYPE_GRAPHICS, 0 }); // 用QUEUE_TYPE_TRANSFER其实就行？
+        queue = VULKAN_RHI->GetQueue({ QUEUE_TYPE_GRAPHICS, 0 });
         commandPool = VULKAN_RHI->CreateCommandPool({ queue });
+	}
+
+
+	void VulkanRHICommandContextImmediate::TextureBarrier(const RHITextureBarrier& barrier)
+	{
+        TextureSubresourceRange range = barrier.subresource;
+        if (range.aspect == TEXTURE_ASPECT_NONE) range = barrier.texture->GetDefaultSubresourceRange();
+
+        VkAccessFlags srcAccessMask = VulkanUtil::ResourceStateToAccessFlags(barrier.srcState);
+        VkAccessFlags dstAccessMask = VulkanUtil::ResourceStateToAccessFlags(barrier.dstState);
+        VkPipelineStageFlags srcStage = VulkanUtil::AccessFlagsToPipelineStageFlags(srcAccessMask);
+        VkPipelineStageFlags dstStage = VulkanUtil::AccessFlagsToPipelineStageFlags(dstAccessMask);
+
+        VkImageMemoryBarrier memoryBarrier = {};
+        memoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        memoryBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        memoryBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        memoryBarrier.oldLayout = VulkanUtil::ResourceStateToImageLayout(barrier.srcState);
+        memoryBarrier.newLayout = VulkanUtil::ResourceStateToImageLayout(barrier.dstState);
+        memoryBarrier.image = CAST<VulkanRHITexture>(barrier.texture)->GetHandle();
+        memoryBarrier.subresourceRange = VulkanUtil::SubresourceToVk(range);
+        memoryBarrier.srcAccessMask = srcAccessMask;
+        memoryBarrier.dstAccessMask = dstAccessMask;
+
+        vkCmdPipelineBarrier(
+            handle,
+            srcStage, dstStage, 0,
+            0, nullptr,
+            0, nullptr,
+            1, &memoryBarrier);
+	}
+
+	void VulkanRHICommandContextImmediate::Flush()
+	{
+        EndSingleTimeCommand();
+	}
+
+	void VulkanRHICommandContextImmediate::BeginSingleTimeCommand()
+	{
+        VkCommandBufferAllocateInfo allocInfo = {};
+        allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        allocInfo.commandPool = CAST<VulkanRHICommandPool>(commandPool)->GetHandle();
+        allocInfo.commandBufferCount = 1;
+
+        vkAllocateCommandBuffers(VULKAN_DEVICE, &allocInfo, &handle);
+
+        VkCommandBufferBeginInfo beginInfo = {};
+        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+        vkBeginCommandBuffer(handle, &beginInfo);
+	}
+
+	void VulkanRHICommandContextImmediate::EndSingleTimeCommand()
+	{
+        // 等待前一次flush执行完成
+        fence->Wait();
+        if (oldHandle != VK_NULL_HANDLE) vkFreeCommandBuffers(VULKAN_DEVICE, CAST<VulkanRHICommandPool>(commandPool)->GetHandle(), 1, &oldHandle);
+
+        // 提交最新一次的flush
+        if (vkEndCommandBuffer(handle) != VK_SUCCESS) {
+            LOG_ERROR("Failed to record command buffer!");
+        }
+
+        VkSubmitInfo submitInfo = {};
+        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submitInfo.commandBufferCount = 1;
+        submitInfo.pCommandBuffers = &handle;
+        submitInfo.waitSemaphoreCount = 0;
+        submitInfo.pWaitSemaphores = nullptr;
+        submitInfo.pWaitDstStageMask = nullptr;
+        submitInfo.signalSemaphoreCount = 0;
+        submitInfo.pSignalSemaphores = nullptr;
+
+        VkResult result = vkQueueSubmit(CAST<VulkanRHIQueue>(queue)->GetHandle(), 1, &submitInfo, CAST<VulkanRHIFence>(fence)->GetHandle());
+        if (result != VK_SUCCESS)
+        {
+            LOG_ERROR("Failed to submit draw command buffer! [%d]", result);
+        }
+
+        oldHandle = handle;
+	}
+
+	void VulkanRHICommandContextImmediate::GenerateMips(RHITextureRef src)
+	{
+        //总计生成的mip层数
+        //uint32_t mipLevels = src->GetInfo().mipLevels;
+
+        //VkImageSubresourceRange transition = {};
+        //transition.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+        //    transition.baseMipLevel = 0;
+        //transition.levelCount = 1;
+        //transition.baseArrayLayer = 0;
+        //transition.layerCount = 1;
+
+        //for (uint32_t i = 0; i < src->GetInfo().arrayLayers; i++)
+        //{
+        //    transition.baseMipLevel = 0;
+        //    transition.baseArrayLayer = i;
+
+        //    // 先将后面的层全设置到dst
+        //    TextureBarrier(handle,
+        //        { src,
+        //        RESOURCE_STATE_TRANSFER_SRC, RESOURCE_STATE_TRANSFER_DST,
+        //                {TEXTURE_ASPECT_COLOR, 1, mipLevels - 1, transition.baseArrayLayer, transition.layerCount} });
+
+        //    //循环生成各级mip，并将对应层级转到srcLayout
+        //    for (uint32_t i = 1; i < mipLevels; i++)    //总共mipLevels级，只需要mipLevels-1次blit
+        //    {
+        //        BlitTexture(
+        //            commandBuffer,
+        //            src,
+        //            src,
+        //            { transition.aspectMask, transition.baseMipLevel, transition.baseArrayLayer, transition.layerCount },
+        //            { transition.aspectMask, transition.baseMipLevel + 1, transition.baseArrayLayer, transition.layerCount },
+        //            FILTER_TYPE_LINEAR);
+
+        //        // 将生成后的层级设置到src
+        //        TextureBarrier(commandBuffer,
+        //            { src,
+        //            RESOURCE_STATE_TRANSFER_DST, RESOURCE_STATE_TRANSFER_SRC,
+        //                    {TEXTURE_ASPECT_COLOR, transition.baseMipLevel + 1, 1, transition.baseArrayLayer, transition.layerCount} });
+
+        //        transition.baseMipLevel++;
+        //    }
+        //}
 	}
 
 }

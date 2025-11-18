@@ -155,6 +155,87 @@ namespace GameEngine {
 
             return mode;
         }
+        static VkAccessFlags ResourceStateToAccessFlags(RHIResourceState state)
+        {
+            // 各个资源状态决定了访问用途，作为src和dst是一致的
+            VkAccessFlags accessFlags = VK_ACCESS_NONE;
+            switch (state) {
+            case RESOURCE_STATE_UNDEFINED:                      accessFlags = VK_ACCESS_NONE;                                           break;     // 无效？
+            case RESOURCE_STATE_COMMON:                         accessFlags = VK_ACCESS_NONE;                                           break;     // 无效？   
+            case RESOURCE_STATE_TRANSFER_SRC:                   accessFlags = VK_ACCESS_TRANSFER_READ_BIT;                              break;
+            case RESOURCE_STATE_TRANSFER_DST:                   accessFlags = VK_ACCESS_TRANSFER_WRITE_BIT;                             break;
+            case RESOURCE_STATE_VERTEX_BUFFER:                  accessFlags = VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT;                      break;
+            case RESOURCE_STATE_INDEX_BUFFER:                   accessFlags = VK_ACCESS_INDEX_READ_BIT;                                 break;
+            case RESOURCE_STATE_COLOR_ATTACHMENT:               accessFlags = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;                     break;
+            case RESOURCE_STATE_DEPTH_STENCIL_ATTACHMENT:       accessFlags = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;             break;
+            case RESOURCE_STATE_UNORDERED_ACCESS:               accessFlags = VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT;   break;
+            case RESOURCE_STATE_SHADER_RESOURCE:                accessFlags = VK_ACCESS_SHADER_READ_BIT;                                break;
+            case RESOURCE_STATE_INDIRECT_ARGUMENT:              accessFlags = VK_ACCESS_INDIRECT_COMMAND_READ_BIT;                      break;
+            case RESOURCE_STATE_PRESENT:                        accessFlags = VK_ACCESS_NONE;                                           break;      // 无效？ 
+            case RESOURCE_STATE_ACCELERATION_STRUCTURE:         accessFlags = VK_ACCESS_ACCELERATION_STRUCTURE_READ_BIT_KHR | VK_ACCESS_ACCELERATION_STRUCTURE_WRITE_BIT_KHR;   break;
+            default:                                            LOG_ERROR("Unsupported resource state!");
+            }
+            return accessFlags;
+        }
+
+        static VkImageLayout ResourceStateToImageLayout(RHIResourceState state)
+        {
+            // 各个资源状态决定了布局，作为src和dst是一致的
+            VkImageLayout layout = VK_IMAGE_LAYOUT_UNDEFINED;
+            switch (state) {
+            case RESOURCE_STATE_UNDEFINED:                      layout = VK_IMAGE_LAYOUT_UNDEFINED;                         break;
+            case RESOURCE_STATE_COMMON:                         layout = VK_IMAGE_LAYOUT_GENERAL;                           break;
+            case RESOURCE_STATE_TRANSFER_SRC:                   layout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;              break;
+            case RESOURCE_STATE_TRANSFER_DST:                   layout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;              break;
+            case RESOURCE_STATE_COLOR_ATTACHMENT:               layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;          break;
+            case RESOURCE_STATE_DEPTH_STENCIL_ATTACHMENT:       layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;  break;
+            case RESOURCE_STATE_UNORDERED_ACCESS:               layout = VK_IMAGE_LAYOUT_GENERAL;                           break;
+            case RESOURCE_STATE_SHADER_RESOURCE:                layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;          break;
+            case RESOURCE_STATE_PRESENT:                        layout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;                   break;
+            default:                                            LOG_ERROR("Unsupported resource state!");
+            }
+            return layout;
+        }
+        static VkPipelineStageFlags AccessFlagsToPipelineStageFlags(VkAccessFlags accessFlags)
+        {
+            // 根据所有的accessFlags来分析涉及到的stage阶段 参考Sakura
+
+            VkPipelineStageFlags flags = 0;
+
+            if (accessFlags & VK_ACCESS_INDIRECT_COMMAND_READ_BIT)               flags |= VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT;                    // 0x00000002
+
+            if (accessFlags & (VK_ACCESS_INDEX_READ_BIT |
+                VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT))           flags |= VK_PIPELINE_STAGE_VERTEX_INPUT_BIT;                     // 0x00000004
+
+            if (accessFlags & (VK_ACCESS_UNIFORM_READ_BIT |
+                VK_ACCESS_SHADER_READ_BIT |
+                VK_ACCESS_SHADER_WRITE_BIT))                    flags |= VK_PIPELINE_STAGE_VERTEX_SHADER_BIT |                   // 0x00000008
+                VK_PIPELINE_STAGE_TESSELLATION_CONTROL_SHADER_BIT |     // 0x00000010
+                VK_PIPELINE_STAGE_TESSELLATION_EVALUATION_SHADER_BIT |  // 0x00000020
+                VK_PIPELINE_STAGE_GEOMETRY_SHADER_BIT |                 // 0x00000040
+                VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT |                 // 0x00000080
+                VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT |                  // 0x00000800
+                VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR;           // 0x00200000
+
+            if (accessFlags & VK_ACCESS_INPUT_ATTACHMENT_READ_BIT)            flags |= VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;                  // 0x00000080
+
+            if (accessFlags & (VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT |
+                VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT))  flags |= VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT |            // 0x00000100
+                VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;              // 0x00000200
+
+            if (accessFlags & (VK_ACCESS_COLOR_ATTACHMENT_READ_BIT |
+                VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT))          flags |= VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;          // 0x00000400 
+
+            if (accessFlags & (VK_ACCESS_TRANSFER_READ_BIT |
+                VK_ACCESS_TRANSFER_WRITE_BIT))                  flags |= VK_PIPELINE_STAGE_TRANSFER_BIT;                         // 0x00001000
+
+            if (accessFlags & (VK_ACCESS_HOST_READ_BIT |
+                VK_ACCESS_HOST_WRITE_BIT))                      flags |= VK_PIPELINE_STAGE_HOST_BIT;                             // 0x00004000
+
+
+            if (flags == 0) flags = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+            return flags;
+        }
 
         static VkSamplerMipmapMode MipMapModeToVk(MipMapMode mipMapMode)
         {
@@ -193,6 +274,7 @@ namespace GameEngine {
             if (frequency & SHADER_FREQUENCY_MESH)           return VK_SHADER_STAGE_MESH_BIT_EXT;
             LOG_ERROR("Unsupported frequency!");      return VK_SHADER_STAGE_ALL;
         }
+
         static VkCompareOp CompareFunctionToVk(CompareFunction compareFunction)
         {
             VkCompareOp compare;
@@ -217,6 +299,16 @@ namespace GameEngine {
             if (flags & TEXTURE_ASPECT_DEPTH)                aspectFlags |= VK_IMAGE_ASPECT_DEPTH_BIT;
             if (flags & TEXTURE_ASPECT_STENCIL)              aspectFlags |= VK_IMAGE_ASPECT_STENCIL_BIT;
             return aspectFlags;
+        }
+        static VkImageSubresourceRange SubresourceToVk(const TextureSubresourceRange& subresource)
+        {
+            return {
+                TextureAspectToVk(subresource.aspect),  // aspectMask
+                subresource.baseMipLevel,               // baseMipLevel
+                subresource.levelCount,                 // levelCount
+                subresource.baseArrayLayer,             // baseArrayLayer
+                subresource.layerCount                  // layerCount
+            };
         }
         static VkImageViewType TextureViewTypeToVk(TextureViewType textureViewType)
         {

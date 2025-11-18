@@ -1,6 +1,7 @@
 #pragma once
 #include "Volk/volk.h"
 #include "Hazel/Renderer/RHI/RHI.h"
+#include "Hazel/Renderer/RHI/RHICommandList.h"
 #include "VulkanMemoryAllocator/vk_mem_alloc.h"
 #include "VulkanRHIResource.h"
 namespace GameEngine
@@ -24,7 +25,7 @@ namespace GameEngine
 		virtual RHIShaderRef CreateShader(const RHIShaderInfo& info) override final;
 		virtual RHIFenceRef CreateFence(bool signaled = false) override final;
 		virtual RHISemaphoreRef CreateSemaphore() override final;
-		virtual RHICommandListImmediateRef GetImmediateCommand() override final;
+		virtual RHICommandListImmediateRef GetImmediateCommandList(bool start) override final;
 
 	public:
 		inline VkInstance GetInstance() const { return m_Instance; }
@@ -72,7 +73,7 @@ namespace GameEngine
 
 		// 立即模式命令队列
 		RHICommandContextImmediateRef m_ImmediateCommandContext;
-		RHICommandListImmediateRef m_ImmediateCommand;
+		RHICommandListImmediateRef m_ImmediateCommandList;
 	};
 
 
@@ -82,6 +83,7 @@ namespace GameEngine
 		virtual void BeginCommand() override final;
 
 		virtual void EndCommand() override final;
+		virtual void Execute(RHIFenceRef fence, RHISemaphoreRef waitSemaphore, RHISemaphoreRef signalSemaphore) override final;
 
 
 	private:
@@ -95,10 +97,22 @@ namespace GameEngine
 	{
 	public:
 		VulkanRHICommandContextImmediate();
+
+		virtual void Flush() override final;
+		virtual void GenerateMips(RHITextureRef src) override final;
+
+		virtual void TextureBarrier(const RHITextureBarrier& barrier) override final;
+
+
 	private:
+		void BeginSingleTimeCommand();
+		void EndSingleTimeCommand();
 		RHIFenceRef fence;
 		RHIQueueRef queue;
 		RHICommandPoolRef commandPool;
+		VkCommandBuffer oldHandle = VK_NULL_HANDLE;
+
 		VkCommandBuffer handle;
+		friend class VulkanDynamicRHI;
 	};
 }
