@@ -147,4 +147,214 @@ namespace GameEngine {
 		context->TextureBarrier(barrier);
 	}
 
+	void RHICommandSetViewport::Execute(RHICommandContextRef context)
+	{
+		context->SetViewport(min, max);
+	}
+
+	void RHICommandSetScissor::Execute(RHICommandContextRef context)
+	{
+		context->SetScissor(min, max);
+	}
+
+	void RHICommandSetDepthBias::Execute(RHICommandContextRef context)
+	{
+		context->SetDepthBias(constantBias, slopeBias, clampBias);
+	}
+
+	void RHICommandSetLineWidth::Execute(RHICommandContextRef context)
+	{
+		context->SetLineWidth(width);
+	}
+
+
+	void RHICommandSetGraphicsPipeline::Execute(RHICommandContextRef context)
+	{
+		context->SetGraphicsPipeline(graphicsPipeline);
+	}
+
+	void RHICommandSetComputePipeline::Execute(RHICommandContextRef context)
+	{
+		context->SetComputePipeline(computePipeline);
+	}
+
+	void RHICommandPushConstants::Execute(RHICommandContextRef context)
+	{
+		context->PushConstants(data, size, frequency);
+	}
+
+	void RHICommandBindDescriptorSet::Execute(RHICommandContextRef context)
+	{
+		context->BindDescriptorSet(descriptor, set);
+	}
+
+	void RHICommandBindVertexBuffer::Execute(RHICommandContextRef context)
+	{
+		context->BindVertexBuffer(vertexBuffer, streamIndex, offset);
+	}
+
+	void RHICommandBindIndexBuffer::Execute(RHICommandContextRef context)
+	{
+		context->BindIndexBuffer(indexBuffer, offset);
+	}
+
+	void RHICommandDispatch::Execute(RHICommandContextRef context)
+	{
+		context->Dispatch(groupCountX, groupCountY, groupCountZ);
+	}
+
+	void RHICommandDispatchIndirect::Execute(RHICommandContextRef context)
+	{
+		context->DispatchIndirect(argumentBuffer, argumentOffset);
+	}
+
+	void RHICommandTraceRays::Execute(RHICommandContextRef context)
+	{
+		context->TraceRays(groupCountX, groupCountY, groupCountZ);
+	}
+
+	void RHICommandDraw::Execute(RHICommandContextRef context)
+	{
+		context->Draw(vertexCount, instanceCount, firstVertex, firstInstance);
+	}
+
+	void RHICommandDrawIndexed::Execute(RHICommandContextRef context)
+	{
+		context->DrawIndexed(indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
+	}
+
+	void RHICommandDrawIndirect::Execute(RHICommandContextRef context)
+	{
+		context->DrawIndirect(argumentBuffer, offset, drawCount);
+	}
+
+	void RHICommandDrawIndexedIndirect::Execute(RHICommandContextRef context)
+	{
+		context->DrawIndexedIndirect(argumentBuffer, offset, drawCount);
+	}
+	void RHICommandList::SetViewport(Offset2D min, Offset2D max)
+	{
+		COMMANDLIST_DEBUG_OUTPUT();
+		if (info.byPass) info.context->SetViewport(min, max);
+		else ADD_COMMAND(SetViewport, min, max);
+	}
+
+	void RHICommandList::SetScissor(Offset2D min, Offset2D max)
+	{
+		COMMANDLIST_DEBUG_OUTPUT();
+		if (info.byPass) info.context->SetScissor(min, max);
+		else ADD_COMMAND(SetScissor, min, max);
+	}
+
+	void RHICommandList::SetDepthBias(float constantBias, float slopeBias, float clampBias)
+	{
+		COMMANDLIST_DEBUG_OUTPUT();
+		if (info.byPass) info.context->SetDepthBias(constantBias, slopeBias, clampBias);
+		else ADD_COMMAND(SetDepthBias, constantBias, slopeBias, clampBias);
+	}
+
+	void RHICommandList::SetLineWidth(float width)
+	{
+		COMMANDLIST_DEBUG_OUTPUT();
+		if (info.byPass) info.context->SetLineWidth(width);
+		else ADD_COMMAND(SetLineWidth, width);
+	}
+
+	void RHICommandList::SetGraphicsPipeline(RHIGraphicsPipelineRef graphicsPipeline)
+	{
+		COMMANDLIST_DEBUG_OUTPUT();
+		if (info.byPass) info.context->SetGraphicsPipeline(graphicsPipeline);
+		else ADD_COMMAND(SetGraphicsPipeline, graphicsPipeline);
+	}
+
+	void RHICommandList::SetComputePipeline(RHIComputePipelineRef computePipeline)
+	{
+		COMMANDLIST_DEBUG_OUTPUT();
+		if (info.byPass) info.context->SetComputePipeline(computePipeline);
+		else ADD_COMMAND(SetComputePipeline, computePipeline);
+	}
+
+	/*void RHICommandList::SetRayTracingPipeline(RHIRayTracingPipelineRef rayTracingPipeline)
+	{
+		COMMANDLIST_DEBUG_OUTPUT();
+		if (info.byPass) info.context->SetRayTracingPipeline(rayTracingPipeline);
+		else ADD_COMMAND(SetRayTracingPipeline, rayTracingPipeline);
+	}*/
+
+	void RHICommandList::PushConstants(void* data, uint16_t size, ShaderFrequency frequency)
+	{
+		COMMANDLIST_DEBUG_OUTPUT();
+		if (info.byPass) info.context->PushConstants(data, size, frequency);
+		else ADD_COMMAND(PushConstants, data, size, frequency);
+	}
+
+	void RHICommandList::BindDescriptorSet(RHIDescriptorSetRef descriptor, uint32_t set)
+	{
+		COMMANDLIST_DEBUG_OUTPUT();
+		if (info.byPass) info.context->BindDescriptorSet(descriptor, set);
+		else ADD_COMMAND(BindDescriptorSet, descriptor, set);
+	}
+
+	void RHICommandList::BindVertexBuffer(RHIBufferRef vertexBuffer, uint32_t streamIndex, uint32_t offset)
+	{
+		COMMANDLIST_DEBUG_OUTPUT();
+		if (info.byPass) info.context->BindVertexBuffer(vertexBuffer, streamIndex, offset);
+		else ADD_COMMAND(BindVertexBuffer, vertexBuffer, streamIndex, offset);
+	}
+
+	void RHICommandList::BindIndexBuffer(RHIBufferRef indexBuffer, uint32_t offset)
+	{
+		COMMANDLIST_DEBUG_OUTPUT();
+		if (info.byPass) info.context->BindIndexBuffer(indexBuffer, offset);
+		else ADD_COMMAND(BindIndexBuffer, indexBuffer, offset);
+	}
+
+	void RHICommandList::Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ)
+	{
+		COMMANDLIST_DEBUG_OUTPUT();
+		if (info.byPass) info.context->Dispatch(groupCountX, groupCountY, groupCountZ);
+		else ADD_COMMAND(Dispatch, groupCountX, groupCountY, groupCountZ);
+	}
+
+	void RHICommandList::DispatchIndirect(RHIBufferRef argumentBuffer, uint32_t argumentOffset)
+	{
+		COMMANDLIST_DEBUG_OUTPUT();
+		if (info.byPass) info.context->DispatchIndirect(argumentBuffer, argumentOffset);
+		else ADD_COMMAND(DispatchIndirect, argumentBuffer, argumentOffset);
+	}
+
+	void RHICommandList::TraceRays(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ)
+	{
+		COMMANDLIST_DEBUG_OUTPUT();
+		if (info.byPass) info.context->TraceRays(groupCountX, groupCountY, groupCountZ);
+		else ADD_COMMAND(TraceRays, groupCountX, groupCountY, groupCountZ);
+	}
+
+	void RHICommandList::Draw(uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance)
+	{
+		COMMANDLIST_DEBUG_OUTPUT();
+		if (info.byPass) info.context->Draw(vertexCount, instanceCount, firstVertex, firstInstance);
+		else ADD_COMMAND(Draw, vertexCount, instanceCount, firstVertex, firstInstance);
+	}
+
+	void RHICommandList::DrawIndexed(uint32_t indexCount, uint32_t instanceCount, uint32_t firstIndex, uint32_t vertexOffset, uint32_t firstInstance)
+	{
+		COMMANDLIST_DEBUG_OUTPUT();
+		if (info.byPass) info.context->DrawIndexed(indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
+		else ADD_COMMAND(DrawIndexed, indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
+	}
+
+	void RHICommandList::DrawIndirect(RHIBufferRef argumentBuffer, uint32_t offset, uint32_t drawCount)
+	{
+		COMMANDLIST_DEBUG_OUTPUT();
+		if (info.byPass) info.context->DrawIndirect(argumentBuffer, offset, drawCount);
+		else ADD_COMMAND(DrawIndirect, argumentBuffer, offset, drawCount);
+	}
+
+	void RHICommandList::DrawIndexedIndirect(RHIBufferRef argumentBuffer, uint32_t offset, uint32_t drawCount)
+	{
+		COMMANDLIST_DEBUG_OUTPUT();
+		if (info.byPass) info.context->DrawIndexedIndirect(argumentBuffer, offset, drawCount);
+		else ADD_COMMAND(DrawIndexedIndirect, argumentBuffer, offset, drawCount);
+	}
 }

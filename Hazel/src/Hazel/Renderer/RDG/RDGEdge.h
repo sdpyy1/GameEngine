@@ -37,9 +37,11 @@ namespace GameEngine
         }
 
         TextureSubresourceRange subresource = {};
-        TextureSubresourceLayers subresourceLayer = {};
-        bool asColor = false;
-        bool asDepthStencil = false;
+        TextureSubresourceLayers subresourceLayer = {};  // 单层mip，多层layer
+
+        // 下面这些每种标记都对应一种用法
+        bool asColor = false;   // 颜色缓冲标记
+        bool asDepthStencil = false; // 深度缓冲标记
         bool asShaderRead = false;
         bool asShaderReadWrite = false;
         bool asOutputRead = false;
@@ -75,7 +77,7 @@ namespace GameEngine
 
         uint32_t offset = 0;
         uint32_t size = 0;
-        bool asShaderRead = false;
+        bool asShaderRead = false;   // Shader会读取
         bool asShaderReadWrite = false;
         bool asOutputRead = false;
         bool asOutputReadWrite = false;

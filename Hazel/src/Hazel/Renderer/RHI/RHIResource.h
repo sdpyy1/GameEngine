@@ -32,7 +32,18 @@ namespace GameEngine {
 	protected:
 		RHIQueueInfo info;
 	};
+	class RHIComputePipeline : public RHIResource
+	{
+	public:
+		RHIComputePipeline(const RHIComputePipelineInfo& info)
+			: RHIResource(RHI_COMPUTE_PIPELINE)
+			, info(info)
+		{
+		}
 
+	protected:
+		RHIComputePipelineInfo info;
+	};
 	class RHISurface : public RHIResource
 	{
 	public:

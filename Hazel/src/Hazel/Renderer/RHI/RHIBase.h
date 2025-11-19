@@ -29,6 +29,7 @@ namespace GameEngine {
 	typedef std::shared_ptr<class RHIDescriptorSet> RHIDescriptorSetRef;
 	typedef std::shared_ptr<class RHIGraphicsPipeline> RHIGraphicsPipelineRef;
 	typedef std::shared_ptr<class RHIRenderPass> RHIRenderPassRef;
+	typedef std::shared_ptr<class RHIComputePipeline> RHIComputePipelineRef;
 
 	enum API {
 		API_Vulkan,
@@ -347,6 +348,7 @@ namespace GameEngine {
 		}
 
 	} TextureSubresourceRange;
+
 	typedef struct RHITextureViewInfo
 	{
 		RHITextureRef texture;
@@ -426,9 +428,9 @@ namespace GameEngine {
 		RESOURCE_STATE_TRANSFER_DST,
 		RESOURCE_STATE_VERTEX_BUFFER,
 		RESOURCE_STATE_INDEX_BUFFER,
-		RESOURCE_STATE_COLOR_ATTACHMENT,
-		RESOURCE_STATE_DEPTH_STENCIL_ATTACHMENT,
-		RESOURCE_STATE_UNORDERED_ACCESS,
+		RESOURCE_STATE_COLOR_ATTACHMENT, // 颜色缓冲
+		RESOURCE_STATE_DEPTH_STENCIL_ATTACHMENT, // 深度缓冲
+		RESOURCE_STATE_UNORDERED_ACCESS,   // 支持随机读写（Storage Buffer / Storage Image）
 		RESOURCE_STATE_SHADER_RESOURCE,
 		RESOURCE_STATE_INDIRECT_ARGUMENT,
 		RESOURCE_STATE_PRESENT,
@@ -484,6 +486,8 @@ namespace GameEngine {
 		bool DefinedSymbol(std::string symbol) const { return definedSymbols.find(symbol) != definedSymbols.end(); }
 
 	} ShaderReflectInfo;
+
+	// 只允许一层mip，多层layer的结构
 	typedef struct TextureSubresourceLayers
 	{
 		TextureAspectFlags	  aspect = TEXTURE_ASPECT_NONE;
@@ -575,6 +579,7 @@ namespace GameEngine {
 		uint32_t size = 128;
 		ShaderFrequency frequency;
 	} PushConstantInfo;
+
 	typedef struct RHIDescriptorUpdateInfo
 	{
 		uint32_t binding = 0;
@@ -973,6 +978,52 @@ namespace GameEngine {
 
 	} RHIBufferBarrier;
 
+	typedef struct Offset2D
+	{
+		uint32_t x;
+		uint32_t y;
+
+		friend Offset2D operator+(const Offset2D& a, const Offset2D& b)
+		{
+			return { a.x + b.x, a.y + b.y };
+		}
+
+		friend bool operator==(const Offset2D& a, const Offset2D& b)
+		{
+			return a.x == b.x && a.y == b.y;
+		}
+
+	} Offset2D;
 
 
+	typedef struct Offset3D
+	{
+		uint32_t x;
+		uint32_t y;
+		uint32_t z;
+
+		friend Offset3D operator+(const Offset3D& a, const Offset3D& b)
+		{
+			return { a.x + b.x, a.y + b.y, a.z + b.z }; 
+		}
+
+		friend bool operator==(const Offset3D& a, const Offset3D& b)
+		{
+			return a.x == b.x && a.y == b.y && a.z == b.z;
+		}
+
+	} Offset3D;
+	typedef struct RHIComputePipelineInfo
+	{
+		RHIShaderRef 					computeShader;
+
+		RHIRootSignatureRef				rootSignature;
+
+		friend bool operator== (const RHIComputePipelineInfo& a, const RHIComputePipelineInfo& b)
+		{
+			return  a.computeShader.get() == b.computeShader.get() &&
+				a.rootSignature.get() == b.rootSignature.get();
+		}
+
+	} RHIComputePipelineInfo;
 }

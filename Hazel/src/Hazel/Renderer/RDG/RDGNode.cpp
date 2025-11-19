@@ -16,9 +16,11 @@ namespace GameEngine
 
     void RDGPassNode::ForEachTexture(const std::function<void(RDGTextureEdgeRef, RDGTextureNodeRef)>& func)
     {
-        std::vector<RDGTextureEdgeRef> inTextures = InEdges<RDGTextureEdge>();
+        // 获取输入的纹理边
+        std::vector<RDGTextureEdgeRef> inTextures = InEdges<RDGTextureEdge>(); 
+        // 获取输出的纹理边
         std::vector<RDGTextureEdgeRef> outTextures = OutEdges<RDGTextureEdge>();
-
+        // 遍历每一个输入的纹理结点
         for (auto& textureEdge : inTextures)     func(textureEdge, textureEdge->From<RDGTextureNode>());
         for (auto& textureEdge : outTextures)    func(textureEdge, textureEdge->To<RDGTextureNode>());
     }

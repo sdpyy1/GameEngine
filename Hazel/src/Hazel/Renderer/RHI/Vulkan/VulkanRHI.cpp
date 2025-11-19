@@ -994,6 +994,158 @@ namespace GameEngine
             1, &memoryBarrier);
     
     }
+
+	void VulkanRHICommandContext::SetViewport(Offset2D min, Offset2D max)
+	{
+        VkViewport viewport{};
+        viewport.x = (float)min.x;
+        viewport.y = (float)min.y;
+        viewport.width = (float)(max.x - min.x);
+        viewport.height = (float)(max.y - min.y);
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
+        vkCmdSetViewport(handle, 0, 1, &viewport);
+	}
+
+	void VulkanRHICommandContext::SetScissor(Offset2D min, Offset2D max)
+	{
+        VkRect2D scissor{};
+        scissor.offset = { (int32_t)min.x, (int32_t)min.y };
+        scissor.extent = { (uint32_t)(max.x - min.x), (uint32_t)(max.y - min.y) };
+        vkCmdSetScissor(handle, 0, 1, &scissor);
+	}
+    void VulkanRHICommandContext::SetDepthBias(float constantBias, float slopeBias, float clampBias)
+    {
+        vkCmdSetDepthBias(handle, constantBias, clampBias, slopeBias);
+    }
+
+    void VulkanRHICommandContext::SetLineWidth(float width)
+    {
+        vkCmdSetLineWidth(handle, width);
+    }
+
+    void VulkanRHICommandContext::SetGraphicsPipeline(RHIGraphicsPipelineRef graphicsPipeline)
+    {
+        this->graphicsPipeline = CAST<VulkanRHIGraphicsPipeline>(graphicsPipeline).get();
+        this->computePipeline = nullptr;
+        // this->rayTraycingPipeline = nullptr;
+
+        this->graphicsPipeline->Bind(handle);
+    }
+
+    void VulkanRHICommandContext::SetComputePipeline(RHIComputePipelineRef computePipeline)
+    {
+        this->graphicsPipeline = nullptr;
+        this->computePipeline = CAST<VulkanRHIComputePipeline>(computePipeline).get();
+        // this->rayTraycingPipeline = nullptr;
+
+        this->computePipeline->Bind(handle);
+    }
+
+   /* void VulkanRHICommandContext::SetRayTracingPipeline(RHIRayTracingPipelineRef rayTracingPipeline)
+    {
+        this->graphicsPipeline = nullptr;
+        this->computePipeline = nullptr;
+        this->rayTraycingPipeline = ResourceCast(rayTracingPipeline).get();
+
+        this->rayTraycingPipeline->Bind(handle);
+    }*/
+
+    void VulkanRHICommandContext::PushConstants(void* data, uint16_t size, ShaderFrequency frequency)
+    {
+        vkCmdPushConstants(handle,
+            GetCuttentPipelineLayout(),
+            VulkanUtil::ShaderFrequencyToVkStageFlags(frequency),
+            0, size, data);
+    }
+    VkPipelineLayout VulkanRHICommandContext::GetCuttentPipelineLayout()
+    {
+        if (graphicsPipeline != nullptr)    return graphicsPipeline->GetPipelineLayout();
+        if (computePipeline != nullptr)     return computePipeline->GetPipelineLayout();
+        // if (rayTraycingPipeline != nullptr) return rayTraycingPipeline->GetPipelineLayout();
+
+        LOG_ERROR("Havent bind any pipeline!"); return nullptr;
+    }
+
+    VkPipelineBindPoint VulkanRHICommandContext::GetCuttentBindingPoint()
+    {
+        if (graphicsPipeline != nullptr)        return VK_PIPELINE_BIND_POINT_GRAPHICS;
+        if (computePipeline != nullptr)         return VK_PIPELINE_BIND_POINT_COMPUTE;
+        // if (rayTraycingPipeline != nullptr)     return VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR;
+
+        LOG_ERROR("Havent bind any pipeline!"); return VK_PIPELINE_BIND_POINT_MAX_ENUM;
+    }
+
+    void VulkanRHICommandContext::BindDescriptorSet(RHIDescriptorSetRef descriptor, uint32_t set)
+    {
+        vkCmdBindDescriptorSets(handle,
+            GetCuttentBindingPoint(),
+            GetCuttentPipelineLayout(),
+            set, 1, &CAST<VulkanRHIDescriptorSet>(descriptor)->GetHandle(),
+            0,              //TODO dynamic offset
+            nullptr);
+    }
+
+    void VulkanRHICommandContext::BindVertexBuffer(RHIBufferRef vertexBuffer, uint32_t streamIndex, uint32_t offset)
+    {
+        VkDeviceSize offsets = offset;
+        vkCmdBindVertexBuffers(handle, streamIndex, 1, &CAST<VulkanRHIBuffer>(vertexBuffer)->GetHandle(), &offsets);
+    }
+
+    void VulkanRHICommandContext::BindIndexBuffer(RHIBufferRef indexBuffer, uint32_t offset)
+    {
+        vkCmdBindIndexBuffer(handle, CAST<VulkanRHIBuffer>(indexBuffer)->GetHandle(), offset, VK_INDEX_TYPE_UINT32);    // 固定了索引用32位的
+    }
+
+    void VulkanRHICommandContext::Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ)
+    {
+        vkCmdDispatch(handle, groupCountX, groupCountY, groupCountZ);
+    }
+
+    void VulkanRHICommandContext::DispatchIndirect(RHIBufferRef argumentBuffer, uint32_t argumentOffset)
+    {
+        LOG_ERROR("VulkanRHICommandContext::DispatchIndirect is not implemented yet!");
+    }
+
+    void VulkanRHICommandContext::TraceRays(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ)
+    {
+        //assert(this->rayTraycingPipeline != nullptr);
+
+        ////gl_LaunchSizeEXT 对应此处给出的3维尺寸
+        ////gl_LaunchIDEXT 类似于compute shader的gl_GlobalInvocationID，对应调用shader的坐标(ID)
+        //vkCmdTraceRaysKHR(
+        //    handle,
+        //    &this->rayTraycingPipeline->GetRaygenRegion(),
+        //    &this->rayTraycingPipeline->GetRayMissRegion(),
+        //    &this->rayTraycingPipeline->GetHitRegion(),
+        //    &this->rayTraycingPipeline->GetCallableRegion(),
+        //    groupCountX,
+        //    groupCountY,
+        //    groupCountZ);
+    }
+
+    void VulkanRHICommandContext::Draw(uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance)
+    {
+        vkCmdDraw(handle, vertexCount, instanceCount, firstVertex, firstInstance);
+    }
+
+    void VulkanRHICommandContext::DrawIndexed(uint32_t indexCount, uint32_t instanceCount, uint32_t firstIndex, uint32_t vertexOffset, uint32_t firstInstance)
+    {
+        vkCmdDrawIndexed(handle, indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
+    }
+
+    void VulkanRHICommandContext::DrawIndirect(RHIBufferRef argumentBuffer, uint32_t offset, uint32_t drawCount)
+    {
+        LOG_ERROR("VulkanRHICommandContext::DrawIndirect() is not implemented");
+        // vkCmdDrawIndirect(handle, CAST<>(argumentBuffer)->GetHandle(), offset, drawCount, sizeof(RHIIndirectCommand));
+    }
+
+    void VulkanRHICommandContext::DrawIndexedIndirect(RHIBufferRef argumentBuffer, uint32_t offset, uint32_t drawCount)
+    {
+        LOG_ERROR("VulkanRHICommandContext::DrawIndexedIndirect() is not implemented");
+        // vkCmdDrawIndexedIndirect(handle, ResourceCast(argumentBuffer)->GetHandle(), offset, drawCount, sizeof(RHIIndexedIndirectCommand));
+    }
+
 	void VulkanRHICommandContextImmediate::Flush()
 	{
         EndSingleTimeCommand();

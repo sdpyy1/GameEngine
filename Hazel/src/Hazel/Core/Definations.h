@@ -7,5 +7,8 @@ namespace GameEngine {
 #define APP_RENDERSYSTEM Application::GetRenderSystem()
 #define APP_DYNAMCIRHI Application::GetRenderSystem()->GetRHI()
 #define APP_WINDOWMINIMIZED Application::Get().isMinimized()
+#define APP_WINDOWSIZE Application::Get().GetWindowManager()->GetWindowSize()
+
+
 #define SWAPCHAIN_COLOR_FORMAT FORMAT_R8G8B8A8_UNORM
 }

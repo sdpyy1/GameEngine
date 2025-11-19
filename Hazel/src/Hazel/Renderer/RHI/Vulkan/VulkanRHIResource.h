@@ -30,7 +30,24 @@ namespace GameEngine {
 	private:
 		VkSurfaceKHR handle;
 	};
+	class VulkanRHIComputePipeline : public RHIComputePipeline
+	{
+	public:
+		VulkanRHIComputePipeline(const RHIComputePipelineInfo& info);
 
+		VkPipelineLayout GetPipelineLayout() { return pipelineLayout; }
+
+		const VkPipeline& GetHandle() { return handle; }
+
+		void Bind(VkCommandBuffer commandBuffer);
+
+		virtual void Destroy() override final;
+		virtual void* RawHandle() override final { return handle; };
+
+	private:
+		VkPipeline handle;
+		VkPipelineLayout pipelineLayout;
+	};
 	class VulkanRHISwapchain : public RHISwapchain
 	{
 	public:

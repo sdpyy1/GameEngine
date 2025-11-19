@@ -1349,4 +1349,49 @@ namespace GameEngine
 
 	}
 
+	VulkanRHIComputePipeline::VulkanRHIComputePipeline(const RHIComputePipelineInfo& info) : RHIComputePipeline(info)
+	{
+        // ÃèÊö·û push constant
+        std::vector<VkPushConstantRange> pushConstants;
+        std::vector<VkDescriptorSetLayout> descriptorSetLayouts;
+        for (const auto& pushConstant : info.rootSignature->GetInfo().GetPushConstants())
+        {
+            pushConstants.push_back(VulkanUtil::GetPushConstantInfo(pushConstant));
+        }
+        for (const auto& setInfo : CAST<VulkanRHIRootSignature>(info.rootSignature)->GetSetInfos())
+        {
+            descriptorSetLayouts.push_back(setInfo.layout);
+        }
+        pipelineLayout = VulkanUtil::CreatePipelineLayout(VULKAN_DEVICE, descriptorSetLayouts, pushConstants);
+
+        // ×ÅÉ«Æ÷
+        VkPipelineShaderStageCreateInfo shaderStage = CAST<VulkanRHIShader>(info.computeShader)->GetShaderStageCreateInfo();
+
+
+
+        VkComputePipelineCreateInfo pipelineInfo = {};
+        pipelineInfo.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+        pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
+        pipelineInfo.basePipelineIndex = -1;
+        pipelineInfo.stage = shaderStage;
+        pipelineInfo.layout = pipelineLayout;
+
+        if (vkCreateComputePipelines(VULKAN_DEVICE, VK_NULL_HANDLE, 1, &pipelineInfo, VK_NULL_HANDLE, &handle) != VK_SUCCESS)
+        {
+            LOG_ERROR("Failed to create compute pipeline!");
+        }
+	}
+
+	void VulkanRHIComputePipeline::Destroy()
+	{
+        vkDestroyPipelineLayout(VULKAN_DEVICE, pipelineLayout, nullptr);
+        vkDestroyPipeline(VULKAN_DEVICE, handle, nullptr);
+	}
+
+	void VulkanRHIComputePipeline::Bind(VkCommandBuffer commandBuffer)
+	{
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, handle);
+
+	}
+
 }

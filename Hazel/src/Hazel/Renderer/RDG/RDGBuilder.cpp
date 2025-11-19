@@ -233,18 +233,19 @@ namespace GameEngine {
 
     void RDGBuilder::PrepareDescriptorSet(RDGPassNodeRef pass)
     {
+        // ForEachTexture会遍历每一个输入的纹理，再遍历每一个输出的纹理
         pass->ForEachTexture([&](RDGTextureEdgeRef edge, RDGTextureNodeRef texture) {
 
-            if (edge->IsOutput()) return;    // 作为output声明时不需要view
+            if (edge->IsOutput()) return;    // 作为output声明时不需要view  TODO:???
             RHITextureViewInfo info;
-            info.texture = Resolve(texture);
-            info.texture = Resolve(texture);
+            info.texture = Resolve(texture); // 创建资源
             info.format = texture->info.format;
             info.viewType = edge->viewType;
             info.subresource = edge->subresource;
             RHITextureViewRef view = RDGTextureViewPool::Get()->Allocate(info).textureView;
             pass->pooledViews.push_back(view);
 
+            // 看这个纹理对应的资源描述符创建没有
             if (pass->descriptorSets[edge->set] == nullptr && pass->rootSignature != nullptr)
             {
                 auto descriptor = RDGDescriptorSetPool::Get(APP_FRAMEINDEX)->Allocate(pass->rootSignature, edge->set).descriptor;
@@ -252,6 +253,7 @@ namespace GameEngine {
                 pass->pooledDescriptorSets.push_back({ descriptor, edge->set });
             }
 
+            // 更新资源描述符
             if ((edge->asShaderRead || edge->asShaderReadWrite) &&
                 pass->descriptorSets[edge->set] != nullptr)
             {
@@ -263,7 +265,7 @@ namespace GameEngine {
                 pass->descriptorSets[edge->set]->UpdateDescriptor(updateInfo);
             }
             });
-
+        // Buffer同Textrue一样
         pass->ForEachBuffer([&](RDGBufferEdgeRef edge, RDGBufferNodeRef buffer) {
 
             if (pass->descriptorSets[edge->set] == nullptr && pass->rootSignature != nullptr)
@@ -292,10 +294,11 @@ namespace GameEngine {
 
     void RDGBuilder::PrepareRenderTarget(RDGRenderPassNodeRef pass, RHIRenderPassInfo& renderPassInfo)
     {
+        // 单独处理RT
         pass->ForEachTexture([&](RDGTextureEdgeRef edge, RDGTextureNodeRef texture) {
 
-            if (edge->IsOutput()) return;                            // 作为output声明时不需要view
-            if (!(edge->asColor || edge->asDepthStencil)) return;    // render target单独处理
+            if (edge->IsOutput()) return;                            
+            if (!(edge->asColor || edge->asDepthStencil)) return;
             RHITextureViewInfo info;
             info.texture = Resolve(texture);
             info.format = texture->info.format;
@@ -354,12 +357,12 @@ namespace GameEngine {
         // 调用Resolve()来分配和获取实际的RHI资源，资源将在最后一个使用的pass之后返回资源池
         // 处理状态转换的屏障
 
-        PrepareDescriptorSet(pass);   // 根据这个Pass需要的资源进行更新描述符
+        PrepareDescriptorSet(pass);   // 根据这个Pass需要的资源进行实际创建 + 更新描述符
 
         RHIRenderPassInfo renderPassInfo = {};
-        PrepareRenderTarget(pass, renderPassInfo);
+        PrepareRenderTarget(pass, renderPassInfo);   // 准备RenderPass需要的信息
 
-        RHIRenderPassRef renderPass = APP_DYNAMCIRHI->CreateRenderPass(renderPassInfo);   // renderPass和frameBuffer是在RHI层做的池化
+        RHIRenderPassRef renderPass = APP_DYNAMCIRHI->CreateRenderPass(renderPassInfo);   // 创建RenderPass和FrameBuffer
 
         // command->PushEvent(pass->Name(), { 0.0f, 0.0f, 0.0f });
 
@@ -367,7 +370,7 @@ namespace GameEngine {
 
         command->BeginRenderPass(renderPass);
 
-        RDGPassContext context;
+        RDGPassContext context;   // 在这准备的Context
         context.command = command;
         context.builder = this;
         context.descriptors = pass->descriptorSets;
@@ -394,11 +397,10 @@ namespace GameEngine {
 
         CreateInputBarriers(pass);
 
-        RDGPassContext context = {
-            context.command = command,
-            context.builder = this,
-            context.descriptors = pass->descriptorSets
-        };
+        RDGPassContext context;
+        context.command = command;
+        context.builder = this;
+        context.descriptors = pass->descriptorSets;
         context.passIndex[0] = pass->passIndex[0];
         context.passIndex[1] = pass->passIndex[1];
         context.passIndex[2] = pass->passIndex[2];
@@ -825,7 +827,7 @@ namespace GameEngine {
         edge->index = index;
         edge->type = RESOURCE_TYPE_UNIFORM_BUFFER;
 
-        graph->Link(graph->GetNode(buffer.ID()), pass, edge);
+        graph->Link(graph->GetNode(buffer.ID()), pass, edge); // 连接Buffer结点和当前Pass结点，在边中存储读Shader
 
         return *this;
     }
@@ -850,7 +852,7 @@ namespace GameEngine {
     RDGRenderPassBuilder& RDGRenderPassBuilder::ReadWrite(uint32_t set, uint32_t binding, uint32_t index, RDGBufferHandle buffer, uint32_t offset, uint32_t size)
     {
         RDGBufferEdgeRef edge = graph->CreateEdge<RDGBufferEdge>();
-        edge->state = RESOURCE_STATE_UNORDERED_ACCESS;
+        edge->state = RESOURCE_STATE_UNORDERED_ACCESS; // UAV（随机读写视图）
         edge->offset = offset;
         edge->size = size;
         edge->asShaderReadWrite = true;
@@ -859,7 +861,7 @@ namespace GameEngine {
         edge->index = index;
         edge->type = RESOURCE_TYPE_RW_BUFFER;
 
-        graph->Link(pass, graph->GetNode(buffer.ID()), edge);
+        graph->Link(pass, graph->GetNode(buffer.ID()), edge);   // 从Pass连向资源，表示会写入它
 
         return *this;
     }
@@ -867,7 +869,7 @@ namespace GameEngine {
     RDGRenderPassBuilder& RDGRenderPassBuilder::ReadWrite(uint32_t set, uint32_t binding, uint32_t index, RDGTextureHandle texture, TextureViewType viewType, TextureSubresourceRange subresource)
     {
         RDGTextureEdgeRef edge = graph->CreateEdge<RDGTextureEdge>();
-        edge->state = RESOURCE_STATE_UNORDERED_ACCESS;
+        edge->state = RESOURCE_STATE_UNORDERED_ACCESS; // UAV（随机读写视图）
         edge->subresource = subresource;
         edge->asShaderReadWrite = true;
         edge->set = set;
@@ -876,7 +878,7 @@ namespace GameEngine {
         edge->type = RESOURCE_TYPE_RW_TEXTURE;
         edge->viewType = viewType;
 
-        graph->Link(pass, graph->GetNode(texture.ID()), edge);
+        graph->Link(pass, graph->GetNode(texture.ID()), edge); // 从Pass连向资源，表示会写入它
 
         return *this;
     }
@@ -894,10 +896,10 @@ namespace GameEngine {
         edge->clearColor = clearColor;
         edge->subresource = subresource;
         edge->asColor = true;
-        edge->binding = binding;
+        edge->binding = binding;  // 这传递Binding干毛
         edge->viewType = subresource.layerCount > 1 ? VIEW_TYPE_2D_ARRAY : VIEW_TYPE_2D;
 
-        graph->Link(pass, graph->GetNode(texture.ID()), edge);
+        graph->Link(pass, graph->GetNode(texture.ID()), edge);  // 输出
 
         return *this;
     }

@@ -139,7 +139,274 @@ namespace GameEngine
 
         virtual void Execute(RHICommandContextImmediateRef context) override final;
     };
+    struct RHICommandSetViewport : public RHICommand
+    {
+        Offset2D min;
+        Offset2D max;
 
+        RHICommandSetViewport(Offset2D min, Offset2D max)
+            : min(min)
+            , max(max)
+        {
+        }
+
+        virtual void Execute(RHICommandContextRef context) override final;
+    };
+
+    struct RHICommandSetScissor : public RHICommand
+    {
+        Offset2D min;
+        Offset2D max;
+
+        RHICommandSetScissor(Offset2D min, Offset2D max)
+            : min(min)
+            , max(max)
+        {
+        }
+
+        virtual void Execute(RHICommandContextRef context) override final;
+    };
+
+    struct RHICommandSetDepthBias : public RHICommand
+    {
+        float constantBias;
+        float slopeBias;
+        float clampBias;
+
+        RHICommandSetDepthBias(float constantBias, float slopeBias, float clampBias)
+            : constantBias(constantBias)
+            , slopeBias(slopeBias)
+            , clampBias(clampBias)
+        {
+        }
+
+        virtual void Execute(RHICommandContextRef context) override final;
+    };
+
+    struct RHICommandSetLineWidth : public RHICommand
+    {
+        float width;
+
+        RHICommandSetLineWidth(float width)
+            : width(width)
+        {
+        }
+
+        virtual void Execute(RHICommandContextRef context) override final;
+    };
+
+    struct RHICommandSetGraphicsPipeline : public RHICommand
+    {
+        RHIGraphicsPipelineRef graphicsPipeline;
+
+        RHICommandSetGraphicsPipeline(RHIGraphicsPipelineRef graphicsPipeline)
+            : graphicsPipeline(graphicsPipeline)
+        {
+        }
+
+        virtual void Execute(RHICommandContextRef context) override final;
+    };
+
+    struct RHICommandSetComputePipeline : public RHICommand
+    {
+        RHIComputePipelineRef computePipeline;
+
+        RHICommandSetComputePipeline(RHIComputePipelineRef computePipeline)
+            : computePipeline(computePipeline)
+        {
+        }
+
+        virtual void Execute(RHICommandContextRef context) override final;
+    };
+
+    //struct RHICommandSetRayTracingPipeline : public RHICommand
+    //{
+    //   //  RHIRayTracingPipelineRef rayTracingPipeline;
+
+    //    RHICommandSetRayTracingPipeline(RHIRayTracingPipelineRef rayTracingPipeline)
+    //        : rayTracingPipeline(rayTracingPipeline)
+    //    {
+    //    }
+
+    //    virtual void Execute(RHICommandContextRef context) override final;
+    //};
+
+    struct RHICommandPushConstants : public RHICommand
+    {
+        uint8_t data[256] = { 0 };  // 需要缓存push constant的数据，假定最大支持256字节
+        uint16_t size;
+        ShaderFrequency frequency;
+
+        RHICommandPushConstants(void* data, uint16_t size, ShaderFrequency frequency)
+            : size(size)
+            , frequency(frequency)
+        {
+            assert(size <= 256);
+            memcpy(&this->data[0], data, size);
+        }
+
+        virtual void Execute(RHICommandContextRef context) override final;
+    };
+
+    struct RHICommandBindDescriptorSet : public RHICommand
+    {
+        RHIDescriptorSetRef descriptor;
+        uint32_t set;
+
+        RHICommandBindDescriptorSet(RHIDescriptorSetRef descriptor, uint32_t set)
+            : descriptor(descriptor)
+            , set(set)
+        {
+        }
+
+        virtual void Execute(RHICommandContextRef context) override final;
+    };
+
+    struct RHICommandBindVertexBuffer : public RHICommand
+    {
+        RHIBufferRef vertexBuffer;
+        uint32_t streamIndex;
+        uint32_t offset;
+
+        RHICommandBindVertexBuffer(RHIBufferRef vertexBuffer, uint32_t streamIndex, uint32_t offset)
+            : vertexBuffer(vertexBuffer)
+            , streamIndex(streamIndex)
+            , offset(offset)
+        {
+        }
+
+        virtual void Execute(RHICommandContextRef context) override final;
+    };
+
+    struct RHICommandBindIndexBuffer : public RHICommand
+    {
+        RHIBufferRef indexBuffer;
+        uint32_t offset;
+
+        RHICommandBindIndexBuffer(RHIBufferRef indexBuffer, uint32_t offset)
+            : indexBuffer(indexBuffer)
+            , offset(offset)
+        {
+        }
+
+        virtual void Execute(RHICommandContextRef context) override final;
+    };
+
+    struct RHICommandDispatch : public RHICommand
+    {
+        uint32_t groupCountX;
+        uint32_t groupCountY;
+        uint32_t groupCountZ; 
+
+            RHICommandDispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ)
+            : groupCountX(groupCountX)
+            , groupCountY(groupCountY)
+            , groupCountZ(groupCountZ)
+        {
+        }
+
+        virtual void Execute(RHICommandContextRef context) override final;
+    };
+
+    struct RHICommandDispatchIndirect : public RHICommand
+    {
+        RHIBufferRef argumentBuffer;
+        uint32_t argumentOffset;
+
+        RHICommandDispatchIndirect(RHIBufferRef argumentBuffer, uint32_t argumentOffset)
+            : argumentBuffer(argumentBuffer)
+            , argumentOffset(argumentOffset)
+        {
+        }
+
+        virtual void Execute(RHICommandContextRef context) override final;
+    };
+
+    struct RHICommandTraceRays : public RHICommand
+    {
+        uint32_t groupCountX;
+        uint32_t groupCountY;
+        uint32_t groupCountZ;
+
+        RHICommandTraceRays(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ)
+            : groupCountX(groupCountX)
+            , groupCountY(groupCountY)
+            , groupCountZ(groupCountZ)
+        {
+        }
+
+        virtual void Execute(RHICommandContextRef context) override final;
+    };
+
+    struct RHICommandDraw : public RHICommand
+    {
+        uint32_t vertexCount;
+        uint32_t instanceCount;
+        uint32_t firstVertex;
+        uint32_t firstInstance;
+
+        RHICommandDraw(uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance)
+            : vertexCount(vertexCount)
+            , instanceCount(instanceCount)
+            , firstVertex(firstVertex)
+            , firstInstance(firstInstance)
+        {
+        }
+
+        virtual void Execute(RHICommandContextRef context) override final;
+    };
+
+    struct RHICommandDrawIndexed : public RHICommand
+    {
+        uint32_t indexCount;
+        uint32_t instanceCount;
+        uint32_t firstIndex;
+        uint32_t vertexOffset;
+        uint32_t firstInstance;
+
+        RHICommandDrawIndexed(uint32_t indexCount, uint32_t instanceCount, uint32_t firstIndex, uint32_t vertexOffset, uint32_t firstInstance)
+            : indexCount(indexCount)
+            , instanceCount(instanceCount)
+            , firstIndex(firstIndex)
+            , vertexOffset(vertexOffset)
+            , firstInstance(firstInstance)
+        {
+        }
+
+        virtual void Execute(RHICommandContextRef context) override final;
+    };
+
+    struct RHICommandDrawIndirect : public RHICommand
+    {
+        RHIBufferRef argumentBuffer;
+        uint32_t offset;
+        uint32_t drawCount;
+
+        RHICommandDrawIndirect(RHIBufferRef argumentBuffer, uint32_t offset, uint32_t drawCount)
+            : argumentBuffer(argumentBuffer)
+            , offset(offset)
+            , drawCount(drawCount)
+        {
+        }
+
+        virtual void Execute(RHICommandContextRef context) override final;
+    };
+
+    struct RHICommandDrawIndexedIndirect : public RHICommand
+    {
+        RHIBufferRef argumentBuffer;
+        uint32_t offset;
+        uint32_t drawCount;
+
+        RHICommandDrawIndexedIndirect(RHIBufferRef argumentBuffer, uint32_t offset, uint32_t drawCount)
+            : argumentBuffer(argumentBuffer)
+            , offset(offset)
+            , drawCount(drawCount)
+        {
+        }
+
+        virtual void Execute(RHICommandContextRef context) override final;
+    };
     /*RHICommandList是RHICommand的载体，方法通过RHICommandList调用后会根据配置选择是直接执行命令还是缓存命令*/
     class RHICommandList {
     public:
@@ -154,7 +421,41 @@ namespace GameEngine
         void EndRenderPass();
         void BufferBarrier(const RHIBufferBarrier& barrier);
         void Execute(RHIFenceRef fence = nullptr, RHISemaphoreRef waitSemaphore = nullptr, RHISemaphoreRef signalSemaphore = nullptr);
+        void SetViewport(Offset2D min, Offset2D max);
 
+        void SetScissor(Offset2D min, Offset2D max);
+
+        void SetDepthBias(float constantBias, float slopeBias, float clampBias);
+
+        void SetLineWidth(float width);
+
+        void SetGraphicsPipeline(RHIGraphicsPipelineRef graphicsPipeline);
+
+        void SetComputePipeline(RHIComputePipelineRef computePipeline);
+
+        // void SetRayTracingPipeline(RHIRayTracingPipelineRef rayTracingPipeline);
+
+        void PushConstants(void* data, uint16_t size, ShaderFrequency frequency);
+
+        void BindDescriptorSet(RHIDescriptorSetRef descriptor, uint32_t set = 0);
+
+        void BindVertexBuffer(RHIBufferRef vertexBuffer, uint32_t streamIndex = 0, uint32_t offset = 0);
+
+        void BindIndexBuffer(RHIBufferRef indexBuffer, uint32_t offset = 0);
+
+        void Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ);
+
+        void DispatchIndirect(RHIBufferRef argumentBuffer, uint32_t argumentOffset = 0);
+
+        void TraceRays(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ);
+
+        void Draw(uint32_t vertexCount, uint32_t instanceCount = 1, uint32_t firstVertex = 0, uint32_t firstInstance = 0);
+
+        void DrawIndexed(uint32_t indexCount, uint32_t instanceCount = 1, uint32_t firstIndex = 0, uint32_t vertexOffset = 0, uint32_t firstInstance = 0);
+
+        void DrawIndirect(RHIBufferRef argumentBuffer, uint32_t offset, uint32_t drawCount);
+
+        void DrawIndexedIndirect(RHIBufferRef argumentBuffer, uint32_t offset, uint32_t drawCount);
 
     protected:
         inline void AddCommand(RHICommand* command) { commands.push_back(command); }

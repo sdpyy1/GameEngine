@@ -64,6 +64,7 @@ namespace GameEngine {
         void PrepareDescriptorSet(RDGPassNodeRef pass);
         void PrepareRenderTarget(RDGRenderPassNodeRef pass, RHIRenderPassInfo& renderPassInfo);
         void ReleaseResource(RDGPassNodeRef pass);
+
         void ExecutePass(RDGRenderPassNodeRef pass);
         void ExecutePass(RDGComputePassNodeRef pass);
         void ExecutePass(RDGRayTracingPassNodeRef pass);
@@ -160,6 +161,8 @@ namespace GameEngine {
         RDGRenderPassBuilder& PassIndex(uint32_t x = 0, uint32_t y = 0, uint32_t z = 0);        // 给一个index设置函数方便给Execute传参
         RDGRenderPassBuilder& RootSignature(RHIRootSignatureRef rootSignature);                 // 若提供根签名未提供描述符，使用池化创建
         RDGRenderPassBuilder& DescriptorSet(uint32_t set, RHIDescriptorSetRef descriptorSet);   // 若提供了描述符，直接用相应的描述符
+        
+        // 创建边
         RDGRenderPassBuilder& Read(uint32_t set, uint32_t binding, uint32_t index, RDGBufferHandle buffer, uint32_t offset = 0, uint32_t size = 0);
         RDGRenderPassBuilder& Read(uint32_t set, uint32_t binding, uint32_t index, RDGTextureHandle texture, TextureViewType viewType = VIEW_TYPE_2D, TextureSubresourceRange subresource = {});
         RDGRenderPassBuilder& ReadWrite(uint32_t set, uint32_t binding, uint32_t index, RDGBufferHandle buffer, uint32_t offset = 0, uint32_t size = 0);   // 好像和read也没什么区别？
@@ -175,6 +178,8 @@ namespace GameEngine {
             float clearDepth = 1.0f,
             uint32_t clearStencil = 0,
             TextureSubresourceRange subresource = {});
+
+        // 标识后续还会使用的资源，会用PassNode->ResourceNode
         RDGRenderPassBuilder& OutputRead(RDGBufferHandle buffer, uint32_t offset = 0, uint32_t size = 0);             // 在执行完Pass后作为输出，自动屏障，可能还会在其他地方使用
         RDGRenderPassBuilder& OutputRead(RDGTextureHandle texture, TextureSubresourceRange subresource = {});
         RDGRenderPassBuilder& OutputReadWrite(RDGBufferHandle buffer, uint32_t offset = 0, uint32_t size = 0);

@@ -19,8 +19,7 @@ namespace GameEngine {
 	VulkanUtil::VulkanCheckResult(res, __FILE__, __LINE__);ASSERT(res == VK_SUCCESS);\
 }
     static const char* INSTANCE_LAYERS[] = {
-        "VK_LAYER_KHRONOS_validation",
-        //"VK_LAYER_RENDERDOC_Capture",  
+        "VK_LAYER_KHRONOS_validation"
     };
     static const char* DEVICE_LAYERS[] = {
         "·ÏÆú",
@@ -32,12 +31,22 @@ namespace GameEngine {
         1.f, 1.f, 1.f, 1.f, 1.f,
         1.f, 1.f, 1.f, 1.f, 1.f,
     };
-
-    static const char* DEVICE_EXTENTIONS[] = {
-        VK_KHR_SURFACE_EXTENSION_NAME,
-        VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME,
+#ifdef HZ_PLATFORM_WINDOWS
+#define VK_KHR_WIN32_SURFACE_EXTENSION_NAME "VK_KHR_win32_surface"
+#elif defined(HZ_PLATFORM_LINUX)
+#define VK_KHR_WIN32_SURFACE_EXTENSION_NAME "VK_KHR_xcb_surface"
+#endif
+    static const char* INSTANCE_EXTENTIONS[] = {
         VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
-        VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+        VK_KHR_SURFACE_EXTENSION_NAME,
+        VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
+        VK_EXT_DEBUG_REPORT_EXTENSION_NAME,
+        VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME
+    };
+    static const char* DEVICE_EXTENTIONS[] = {
+         VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+         VK_NV_DEVICE_DIAGNOSTIC_CHECKPOINTS_EXTENSION_NAME,VK_NV_DEVICE_DIAGNOSTICS_CONFIG_EXTENSION_NAME,
+        VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME,VK_EXT_DEBUG_MARKER_EXTENSION_NAME,
         "VK_EXT_vertex_input_dynamic_state"
     };
     static const char* RAY_TRACING_DEVICE_EXTENTIONS[] = {
@@ -63,9 +72,7 @@ namespace GameEngine {
         VK_VALIDATION_FEATURE_ENABLE_SYNCHRONIZATION_VALIDATION_EXT
 #endif
     };
-    static const char* INSTANCE_EXTENTIONS[] = {
-        VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
-    };
+
 
     static const char* INSTANCE_VALIDATION_EXTENTIONS[] = {
         VK_EXT_VALIDATION_FEATURES_EXTENSION_NAME

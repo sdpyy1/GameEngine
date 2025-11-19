@@ -22,6 +22,7 @@ namespace GameEngine {
 		WindowManager(const WindowSpec& props);
 		void SetEventCallback(const EventCallbackFn& callback);
 		GLFWwindow* GetGLFWWindow() { return m_GLFWWindow; }
+		std::pair<unsigned int, unsigned int> GetWindowSize() const{return { m_Data.Width, m_Data.Height };}
 		void Tick();
         ~WindowManager();
 	private:
