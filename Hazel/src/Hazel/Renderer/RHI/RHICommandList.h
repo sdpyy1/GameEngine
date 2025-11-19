@@ -47,6 +47,74 @@ namespace GameEngine
         virtual void Execute(RHICommandContextRef context) override final;
     };
 
+    struct RHICommandBufferBarrier : public RHICommand
+    {
+        RHIBufferBarrier barrier;
+
+        RHICommandBufferBarrier(const RHIBufferBarrier& barrier)
+            : barrier(barrier)
+        {
+        }
+
+        virtual void Execute(RHICommandContextRef context) override final;
+    };
+    struct RHICommandTextureBarrier : public RHICommand
+    {
+        RHITextureBarrier barrier;
+
+        RHICommandTextureBarrier(const RHITextureBarrier& barrier)
+            : barrier(barrier)
+        {
+        }
+
+        virtual void Execute(RHICommandContextRef context) override final;
+    };
+    struct RHICommandGenerateMips : public RHICommand
+    {
+        RHITextureRef src;
+
+        RHICommandGenerateMips(RHITextureRef src)
+            : src(src)
+        {
+        }
+
+        virtual void Execute(RHICommandContextRef context) override final;
+    };
+    struct RHICommandBeginRenderPass : public RHICommand
+    {
+        RHIRenderPassRef renderPass;
+
+        RHICommandBeginRenderPass(RHIRenderPassRef renderPass)
+            : renderPass(renderPass)
+        {
+        }
+
+        virtual void Execute(RHICommandContextRef context) override final;
+    };
+    struct RHICommandEndRenderPass : public RHICommand
+    {
+        RHICommandEndRenderPass() {}
+
+        virtual void Execute(RHICommandContextRef context) override final;
+    };
+
+    struct RHICommandCopyTexture : public RHICommand
+    {
+        RHITextureRef src;
+        TextureSubresourceLayers srcSubresource;
+        RHITextureRef dst;
+        TextureSubresourceLayers dstSubresource;
+
+        RHICommandCopyTexture(RHITextureRef src, TextureSubresourceLayers srcSubresource, RHITextureRef dst, TextureSubresourceLayers dstSubresource)
+            : src(src)
+            , srcSubresource(srcSubresource)
+            , dst(dst)
+            , dstSubresource(dstSubresource)
+        {
+        }
+
+        virtual void Execute(RHICommandContextRef context) override final;
+    };
 
     // 各种CommandImmediate的封装
     struct RHICommandImmediateGenerateMips : public RHICommandImmediate
@@ -78,7 +146,13 @@ namespace GameEngine
         RHICommandList(const CommandListInfo& info) : info(info) {}
         void BeginCommand();
         void EndCommand();
+        void TextureBarrier(const RHITextureBarrier& barrier);
+        void BeginRenderPass(RHIRenderPassRef renderPass);
+        void CopyTexture(RHITextureRef src, TextureSubresourceLayers srcSubresource, RHITextureRef dst, TextureSubresourceLayers dstSubresource);
 
+        void GenerateMips(RHITextureRef src);
+        void EndRenderPass();
+        void BufferBarrier(const RHIBufferBarrier& barrier);
         void Execute(RHIFenceRef fence = nullptr, RHISemaphoreRef waitSemaphore = nullptr, RHISemaphoreRef signalSemaphore = nullptr);
 
 

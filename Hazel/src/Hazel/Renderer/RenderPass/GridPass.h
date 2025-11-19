@@ -1,7 +1,7 @@
 #pragma once
 #include "RenderPass.h"
 namespace GameEngine {
-	class GridPass : public RenderPass
+	class GridPass : public RenderPassNew
 	{
 	public:
 		GridPass() = default;
@@ -19,11 +19,5 @@ namespace GameEngine {
 		RHIRootSignatureRef m_RootSignature;
 		RHIGraphicsPipelineRef m_Pipeline;
 	};
-
-
-
-
-
-
 }
 

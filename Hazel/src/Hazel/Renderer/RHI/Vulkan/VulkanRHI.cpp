@@ -658,7 +658,37 @@ namespace GameEngine
             LOG_ERROR("Failed to end command buffer!");
         }
 	}
+    void TextureBarrier(VkCommandBuffer commandBuffer, const RHITextureBarrier& barrier)
+    {
+        TextureSubresourceRange range = barrier.subresource;
+        if (range.aspect == TEXTURE_ASPECT_NONE) range = barrier.texture->GetDefaultSubresourceRange();
 
+        VkAccessFlags srcAccessMask = VulkanUtil::ResourceStateToAccessFlags(barrier.srcState);
+        VkAccessFlags dstAccessMask = VulkanUtil::ResourceStateToAccessFlags(barrier.dstState);
+        VkPipelineStageFlags srcStage = VulkanUtil::AccessFlagsToPipelineStageFlags(srcAccessMask);
+        VkPipelineStageFlags dstStage = VulkanUtil::AccessFlagsToPipelineStageFlags(dstAccessMask);
+
+        // srcStage = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;   // 可以保证绝对不会出错
+        // dstStage = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;   // 目前验证层VK_VALIDATION_FEATURE_ENABLE_SYNCHRONIZATION_VALIDATION_EXT还是会有一些报错，太难调了
+
+        VkImageMemoryBarrier memoryBarrier = {};
+        memoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        memoryBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        memoryBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        memoryBarrier.oldLayout = VulkanUtil::ResourceStateToImageLayout(barrier.srcState);
+        memoryBarrier.newLayout = VulkanUtil::ResourceStateToImageLayout(barrier.dstState);
+        memoryBarrier.image = CAST<VulkanRHITexture>(barrier.texture)->GetHandle();
+        memoryBarrier.subresourceRange = VulkanUtil::SubresourceToVk(range);
+        memoryBarrier.srcAccessMask = srcAccessMask;
+        memoryBarrier.dstAccessMask = dstAccessMask;
+
+        vkCmdPipelineBarrier(
+            commandBuffer,
+            srcStage, dstStage, 0,
+            0, nullptr,
+            0, nullptr,
+            1, &memoryBarrier);
+    }
 	void VulkanRHICommandContext::Execute(RHIFenceRef fence, RHISemaphoreRef waitSemaphore, RHISemaphoreRef signalSemaphore)
 	{
         VkPipelineStageFlags stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_TRANSFER_BIT;
@@ -691,6 +721,181 @@ namespace GameEngine
         }
 	}
 
+	void VulkanRHICommandContext::BufferBarrier(const RHIBufferBarrier& barrier)
+	{
+        VkAccessFlags srcAccessMask = VulkanUtil::ResourceStateToAccessFlags(barrier.srcState);
+        VkAccessFlags dstAccessMask = VulkanUtil::ResourceStateToAccessFlags(barrier.dstState);
+        VkPipelineStageFlags srcStage = VulkanUtil::AccessFlagsToPipelineStageFlags(srcAccessMask);
+        VkPipelineStageFlags dstStage = VulkanUtil::AccessFlagsToPipelineStageFlags(dstAccessMask);
+
+        VkBufferMemoryBarrier memoryBarrier = {};
+        memoryBarrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+        memoryBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        memoryBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        memoryBarrier.srcAccessMask = srcAccessMask;
+        memoryBarrier.dstAccessMask = dstAccessMask;
+        memoryBarrier.buffer = CAST<VulkanRHIBuffer>(barrier.buffer)->GetHandle();
+        memoryBarrier.offset = barrier.offset;               // TODO
+        memoryBarrier.size = barrier.size == 0 ? VK_WHOLE_SIZE : barrier.size;
+
+        vkCmdPipelineBarrier(
+            handle,
+            srcStage, dstStage, 0,
+            0, nullptr,
+            1, &memoryBarrier,
+            0, nullptr);
+	}
+
+    void VulkanRHICommandContext::BeginRenderPass(RHIRenderPassRef renderPass)
+    {
+        std::vector<VkClearValue> clearValues;
+        for (uint32_t i = 0; i < MAX_RENDER_TARGETS; i++)
+        {
+            auto& attachment = CAST<VulkanRHIRenderPass>(renderPass)->GetInfo().colorAttachments[i];
+            if (attachment.textureView == nullptr) break;
+
+            VkClearValue clearValue = {};
+            clearValue.color = { {attachment.clearColor.r, attachment.clearColor.g,
+                                        attachment.clearColor.b, attachment.clearColor.a} };
+            clearValues.push_back(clearValue);
+        }
+        const auto& depthAttachment = CAST<VulkanRHIRenderPass>(renderPass)->GetInfo().depthStencilAttachment;
+        if (depthAttachment.textureView != nullptr)
+        {
+            VkClearValue clearValue = {};
+            clearValue.depthStencil = { depthAttachment.clearDepth, depthAttachment.clearStencil };
+            clearValues.push_back(clearValue);
+        }
+
+        VkRenderPassBeginInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        renderPassInfo.renderPass = CAST<VulkanRHIRenderPass>(renderPass)->GetHandle();
+        renderPassInfo.framebuffer = CAST<VulkanRHIRenderPass>(renderPass)->GetFrameBuffer();
+        renderPassInfo.renderArea.offset = { 0, 0 };
+        renderPassInfo.renderArea.extent = VulkanUtil::ExtentToVk(CAST<VulkanRHIRenderPass>(renderPass)->GetInfo().extent);
+        renderPassInfo.clearValueCount = (uint32_t)clearValues.size();
+        renderPassInfo.pClearValues = clearValues.data();
+
+        vkCmdBeginRenderPass(handle, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+        this->renderPass = CAST<VulkanRHIRenderPass>(renderPass).get();
+    }
+
+    void VulkanRHICommandContext::EndRenderPass()
+    {
+        vkCmdEndRenderPass(handle);
+        this->renderPass = nullptr;
+    }
+    void CopyTexture(VkCommandBuffer commandBuffer, RHITextureRef src, TextureSubresourceLayers srcSubresource, RHITextureRef dst, TextureSubresourceLayers dstSubresource)
+    {
+        VkImageCopy imageCopy = {};
+        imageCopy.srcOffset = { 0, 0, 0 };    // TODO ?
+        imageCopy.dstOffset = { 0, 0, 0 };
+        imageCopy.srcSubresource = (srcSubresource.aspect == 0) ? VulkanUtil::SubresourceToVk(src->GetDefaultSubresourceLayers()) : VulkanUtil::SubresourceToVk(srcSubresource);
+        imageCopy.dstSubresource = (dstSubresource.aspect == 0) ? VulkanUtil::SubresourceToVk(dst->GetDefaultSubresourceLayers()) : VulkanUtil::SubresourceToVk(dstSubresource);
+        imageCopy.extent = VulkanUtil::ExtentToVk(src->MipExtent(srcSubresource.mipLevel));
+
+        vkCmdCopyImage(commandBuffer,
+            CAST<VulkanRHITexture>(src)->GetHandle(), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+            CAST<VulkanRHITexture>(dst)->GetHandle(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+            1, &imageCopy);
+
+
+    }
+	void VulkanRHICommandContext::CopyTexture(RHITextureRef src, TextureSubresourceLayers srcSubresource, RHITextureRef dst, TextureSubresourceLayers dstSubresource)
+	{
+        VkImageCopy imageCopy = {};
+        imageCopy.srcOffset = { 0, 0, 0 };    // TODO ?
+        imageCopy.dstOffset = { 0, 0, 0 };
+        imageCopy.srcSubresource = (srcSubresource.aspect == 0) ? VulkanUtil::SubresourceToVk(src->GetDefaultSubresourceLayers()) : VulkanUtil::SubresourceToVk(srcSubresource);
+        imageCopy.dstSubresource = (dstSubresource.aspect == 0) ? VulkanUtil::SubresourceToVk(dst->GetDefaultSubresourceLayers()) : VulkanUtil::SubresourceToVk(dstSubresource);
+        imageCopy.extent = VulkanUtil::ExtentToVk(src->MipExtent(srcSubresource.mipLevel));
+
+        vkCmdCopyImage(handle,
+            CAST<VulkanRHITexture>(src)->GetHandle(), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+            CAST<VulkanRHITexture>(dst)->GetHandle(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+            1, &imageCopy);
+
+	}
+    // 假定处于正确的src在src状态，dst在dst状态
+    void BlitTexture(VkCommandBuffer commandBuffer,
+        RHITextureRef src, RHITextureRef dst,
+        TextureSubresourceLayers srcSubresource, TextureSubresourceLayers dstSubresource,
+        FilterType filter)
+    {
+        VkImageSubresourceLayers srcLayer = VulkanUtil::SubresourceToVk(srcSubresource);
+        VkImageSubresourceLayers dstLayer = VulkanUtil::SubresourceToVk(dstSubresource);
+
+        uint32_t srcMip = srcSubresource.mipLevel;
+        uint32_t dstMip = dstSubresource.mipLevel;
+
+        VkImageBlit blit = {};
+        blit.srcOffsets[0] = { 0, 0, 0 }; //TODO offset
+        blit.srcOffsets[1] = { (int32_t)(src->GetInfo().extent.width / pow(2, srcMip)),
+                                (int32_t)(src->GetInfo().extent.height / pow(2, srcMip)), 1 };
+        blit.srcSubresource = srcLayer;
+
+        blit.dstOffsets[0] = { 0, 0, 0 };
+        blit.dstOffsets[1] = { (int32_t)(dst->GetInfo().extent.width / pow(2, dstMip)),
+                                (int32_t)(dst->GetInfo().extent.height / pow(2, dstMip)), 1 };
+        blit.dstSubresource = dstLayer;
+
+        vkCmdBlitImage(commandBuffer,
+            CAST<VulkanRHITexture>(src)->GetHandle(),
+            VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+            CAST<VulkanRHITexture>(dst)->GetHandle(),
+            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+            1,
+            &blit,
+            VulkanUtil::FilterTypeToVk(filter));
+    }
+
+	void VulkanRHICommandContext::GenerateMips(RHITextureRef src)
+	{
+        //总计生成的mip层数
+        uint32_t mipLevels = src->GetInfo().mipLevels;
+
+        VkImageSubresourceRange transition = {};
+        transition.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+            transition.baseMipLevel = 0;
+        transition.levelCount = 1;
+        transition.baseArrayLayer = 0;
+        transition.layerCount = 1;
+
+        for (uint32_t i = 0; i < src->GetInfo().arrayLayers; i++)
+        {
+            transition.baseMipLevel = 0;
+            transition.baseArrayLayer = i;
+
+            // 先将后面的层全设置到dst
+            TextureBarrier(
+                { src,
+                RESOURCE_STATE_TRANSFER_SRC, RESOURCE_STATE_TRANSFER_DST,
+                        {TEXTURE_ASPECT_COLOR, 1, mipLevels - 1, transition.baseArrayLayer, transition.layerCount} });
+
+            //循环生成各级mip，并将对应层级转到srcLayout
+            for (uint32_t i = 1; i < mipLevels; i++)    //总共mipLevels级，只需要mipLevels-1次blit
+            {
+                BlitTexture(
+                    handle,
+                    src,
+                    src,
+                    { transition.aspectMask, transition.baseMipLevel, transition.baseArrayLayer, transition.layerCount },
+                    { transition.aspectMask, transition.baseMipLevel + 1, transition.baseArrayLayer, transition.layerCount },
+                    FILTER_TYPE_LINEAR);
+
+                // 将生成后的层级设置到src
+                TextureBarrier(
+                    { src,
+                    RESOURCE_STATE_TRANSFER_DST, RESOURCE_STATE_TRANSFER_SRC,
+                            {TEXTURE_ASPECT_COLOR, transition.baseMipLevel + 1, 1, transition.baseArrayLayer, transition.layerCount} });
+
+                transition.baseMipLevel++;
+            }
+        }
+	}
+
+
+
 	VulkanRHICommandContextImmediate::VulkanRHICommandContextImmediate()
 	{
         fence = VULKAN_RHI->CreateFence(true);
@@ -698,7 +903,37 @@ namespace GameEngine
         commandPool = VULKAN_RHI->CreateCommandPool({ queue });
 	}
 
+    void TextureBarrier1(VkCommandBuffer commandBuffer, const RHITextureBarrier& barrier)
+    {
+        TextureSubresourceRange range = barrier.subresource;
+        if (range.aspect == TEXTURE_ASPECT_NONE) range = barrier.texture->GetDefaultSubresourceRange();
 
+        VkAccessFlags srcAccessMask = VulkanUtil::ResourceStateToAccessFlags(barrier.srcState);
+        VkAccessFlags dstAccessMask = VulkanUtil::ResourceStateToAccessFlags(barrier.dstState);
+        VkPipelineStageFlags srcStage = VulkanUtil::AccessFlagsToPipelineStageFlags(srcAccessMask);
+        VkPipelineStageFlags dstStage = VulkanUtil::AccessFlagsToPipelineStageFlags(dstAccessMask);
+
+        // srcStage = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;   // 可以保证绝对不会出错
+        // dstStage = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;   // 目前验证层VK_VALIDATION_FEATURE_ENABLE_SYNCHRONIZATION_VALIDATION_EXT还是会有一些报错，太难调了
+
+        VkImageMemoryBarrier memoryBarrier = {};
+        memoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        memoryBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        memoryBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        memoryBarrier.oldLayout = VulkanUtil::ResourceStateToImageLayout(barrier.srcState);
+        memoryBarrier.newLayout = VulkanUtil::ResourceStateToImageLayout(barrier.dstState);
+        memoryBarrier.image = CAST<VulkanRHITexture>(barrier.texture)->GetHandle();
+        memoryBarrier.subresourceRange = VulkanUtil::SubresourceToVk(range);
+        memoryBarrier.srcAccessMask = srcAccessMask;
+        memoryBarrier.dstAccessMask = dstAccessMask;
+
+        vkCmdPipelineBarrier(
+            commandBuffer,
+            srcStage, dstStage, 0,
+            0, nullptr,
+            0, nullptr,
+            1, &memoryBarrier);
+    }
 	void VulkanRHICommandContextImmediate::TextureBarrier(const RHITextureBarrier& barrier)
 	{
         TextureSubresourceRange range = barrier.subresource;
@@ -727,7 +962,38 @@ namespace GameEngine
             0, nullptr,
             1, &memoryBarrier);
 	}
+    void VulkanRHICommandContext::TextureBarrier(const RHITextureBarrier& barrier)
+    {
+        TextureSubresourceRange range = barrier.subresource;
+        if (range.aspect == TEXTURE_ASPECT_NONE) range = barrier.texture->GetDefaultSubresourceRange();
 
+        VkAccessFlags srcAccessMask = VulkanUtil::ResourceStateToAccessFlags(barrier.srcState);
+        VkAccessFlags dstAccessMask = VulkanUtil::ResourceStateToAccessFlags(barrier.dstState);
+        VkPipelineStageFlags srcStage = VulkanUtil::AccessFlagsToPipelineStageFlags(srcAccessMask);
+        VkPipelineStageFlags dstStage = VulkanUtil::AccessFlagsToPipelineStageFlags(dstAccessMask);
+
+        // srcStage = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;   // 可以保证绝对不会出错
+        // dstStage = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;   // 目前验证层VK_VALIDATION_FEATURE_ENABLE_SYNCHRONIZATION_VALIDATION_EXT还是会有一些报错，太难调了
+
+        VkImageMemoryBarrier memoryBarrier = {};
+        memoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        memoryBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        memoryBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        memoryBarrier.oldLayout = VulkanUtil::ResourceStateToImageLayout(barrier.srcState);
+        memoryBarrier.newLayout = VulkanUtil::ResourceStateToImageLayout(barrier.dstState);
+        memoryBarrier.image = CAST<VulkanRHITexture>(barrier.texture)->GetHandle();
+        memoryBarrier.subresourceRange = VulkanUtil::SubresourceToVk(range);
+        memoryBarrier.srcAccessMask = srcAccessMask;
+        memoryBarrier.dstAccessMask = dstAccessMask;
+
+        vkCmdPipelineBarrier(
+            handle,
+            srcStage, dstStage, 0,
+            0, nullptr,
+            0, nullptr,
+            1, &memoryBarrier);
+    
+    }
 	void VulkanRHICommandContextImmediate::Flush()
 	{
         EndSingleTimeCommand();

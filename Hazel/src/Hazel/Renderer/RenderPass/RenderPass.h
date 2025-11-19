@@ -15,10 +15,10 @@ namespace GameEngine {
 
 		MESH_PASS_TYPE_MAX_CNT,	//
 	};
-	class RenderPass {
+	class RenderPassNew {
 	public:
-		RenderPass() = default;
-		~RenderPass() {};
+		RenderPassNew() = default;
+		~RenderPassNew() {};
 
 		virtual void Init() {};
 		virtual void Build(RDGBuilder& builder) {};

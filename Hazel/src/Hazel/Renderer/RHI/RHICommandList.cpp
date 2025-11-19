@@ -42,6 +42,48 @@ namespace GameEngine {
 		info.context->Execute(fence, waitSemaphore, signalSemaphore);
 	}
 
+	void RHICommandList::BufferBarrier(const RHIBufferBarrier& barrier)
+	{
+		COMMANDLIST_DEBUG_OUTPUT();
+		if (info.byPass) info.context->BufferBarrier(barrier);
+		else ADD_COMMAND(BufferBarrier, barrier);
+	}
+
+	void RHICommandList::BeginRenderPass(RHIRenderPassRef renderPass)
+	{
+		COMMANDLIST_DEBUG_OUTPUT();
+		if (info.byPass) info.context->BeginRenderPass(renderPass);
+		else ADD_COMMAND(BeginRenderPass, renderPass);
+	}
+
+	void RHICommandList::EndRenderPass()
+	{
+		COMMANDLIST_DEBUG_OUTPUT();
+		if (info.byPass) info.context->EndRenderPass();
+		else ADD_COMMAND(EndRenderPass);
+	}
+
+	void RHICommandList::CopyTexture(RHITextureRef src, TextureSubresourceLayers srcSubresource, RHITextureRef dst, TextureSubresourceLayers dstSubresource)
+	{
+		COMMANDLIST_DEBUG_OUTPUT();
+		if (info.byPass) info.context->CopyTexture(src, srcSubresource, dst, dstSubresource);
+		else ADD_COMMAND(CopyTexture, src, srcSubresource, dst, dstSubresource);
+	}
+
+	void RHICommandList::GenerateMips(RHITextureRef src)
+	{
+		COMMANDLIST_DEBUG_OUTPUT();
+		if (info.byPass) info.context->GenerateMips(src);
+		else ADD_COMMAND(GenerateMips, src);
+	}
+
+	void RHICommandList::TextureBarrier(const RHITextureBarrier& barrier)
+	{
+		COMMANDLIST_DEBUG_OUTPUT();
+		if (info.byPass) info.context->TextureBarrier(barrier);
+		else ADD_COMMAND(TextureBarrier, barrier);
+	}
+
 	void RHICommandImmediateGenerateMips::Execute(RHICommandContextImmediateRef context)
 	{
 		context->GenerateMips(src);
@@ -71,6 +113,36 @@ namespace GameEngine {
 	}
 
 	void RHICommandImmediateTextureBarrier::Execute(RHICommandContextImmediateRef context)
+	{
+		context->TextureBarrier(barrier);
+	}
+
+	void RHICommandBufferBarrier::Execute(RHICommandContextRef context)
+	{
+		context->BufferBarrier(barrier);
+	}
+
+	void RHICommandGenerateMips::Execute(RHICommandContextRef context)
+	{
+		context->GenerateMips(src);
+	}
+
+	void RHICommandBeginRenderPass::Execute(RHICommandContextRef context)
+	{
+		context->BeginRenderPass(renderPass);
+	}
+
+	void RHICommandEndRenderPass::Execute(RHICommandContextRef context)
+	{
+		context->EndRenderPass();
+	}
+
+	void RHICommandCopyTexture::Execute(RHICommandContextRef context)
+	{
+		context->CopyTexture(src, srcSubresource, dst, dstSubresource);
+	}
+
+	void RHICommandTextureBarrier::Execute(RHICommandContextRef context)
 	{
 		context->TextureBarrier(barrier);
 	}

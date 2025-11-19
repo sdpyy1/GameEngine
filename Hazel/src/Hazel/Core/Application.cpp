@@ -36,8 +36,7 @@ namespace GameEngine {
 		m_WindowManager->SetEventCallback(HZ_BIND_EVENT_FN(Application::OnEvent));
 
 		m_RenderSystem = std::make_shared<RenderSystem>();
-		m_RenderSystem->InitPass();
-
+		m_RenderSystem->InitPasses();
 	}
 
 	void Application::Tick()

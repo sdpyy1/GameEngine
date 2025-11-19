@@ -34,7 +34,13 @@ namespace GameEngine {
 
 	void GridPass::Build(RDGBuilder& builder)
 	{
-		builder.AddPass(GetName());
+		RDGRenderPassHandle pass = builder.CreateRenderPass(GetName())
+			.RootSignature(m_RootSignature)
+        .Execute([&](RDGPassContext context) {
+
+			LOG_TRACE("GRID");
+        })
+        .Finish();
 	}
 
 }

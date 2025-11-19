@@ -1,7 +1,7 @@
 #pragma once
 #include "Hazel/Renderer/RHI/RHI.h"
 #include "Hazel/Renderer/RHI/RHICommandList.h"
-
+#include "Hazel/Renderer/RenderPass/RenderPass.h"
 #include "Hazel/Core/Definations.h"
 namespace GameEngine
 {
@@ -9,10 +9,10 @@ namespace GameEngine
 	{
 	public:
 		RenderSystem();
+		void InitPasses();
 		void InitBaseResources();
 		void Tick(float timestep);
 		DynamicRHIRef GetRHI() { return m_DynamicRHI; }
-		void InitPass();
 
 	private:
 
@@ -30,6 +30,7 @@ namespace GameEngine
 			RHIFenceRef fence;
 		};
 		std::array<PerFrameBaseResource, FRAMES_IN_FLIGHT> m_PerFrameBaseResources;
+		std::array<std::shared_ptr<RenderPassNew>, PASS_TYPE_MAX_CNT> passes;
 
 	};
 

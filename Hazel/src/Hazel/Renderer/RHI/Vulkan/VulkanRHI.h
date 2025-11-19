@@ -95,7 +95,14 @@ namespace GameEngine
 	public:
 		VulkanRHICommandContext(RHICommandPoolRef pool);
 		virtual void BeginCommand() override final;
+		virtual void TextureBarrier(const RHITextureBarrier& barrier) override final;
 
+		virtual void BufferBarrier(const RHIBufferBarrier& barrier) override final;
+		virtual void BeginRenderPass(RHIRenderPassRef renderPass) override final;
+		virtual void CopyTexture(RHITextureRef src, TextureSubresourceLayers srcSubresource, RHITextureRef dst, TextureSubresourceLayers dstSubresource) override final;
+
+		virtual void GenerateMips(RHITextureRef src) override final;
+		virtual void EndRenderPass() override final;
 		virtual void EndCommand() override final;
 		virtual void Execute(RHIFenceRef fence, RHISemaphoreRef waitSemaphore, RHISemaphoreRef signalSemaphore) override final;
 
@@ -103,6 +110,8 @@ namespace GameEngine
 	private:
 		VkCommandBuffer handle;
 		std::shared_ptr<VulkanRHICommandPool> pool;
+		VulkanRHIRenderPass* renderPass;                // 运行时状态，随指令变化
+
 	};
 
 

@@ -6,7 +6,6 @@ namespace GameEngine {
     {
         VkRenderPassCache::CachedRenderPass ret;
 
-        // 查找缓存
         auto iter = cachedPasses.find(info);
         if (iter != cachedPasses.end())
         {
@@ -16,7 +15,6 @@ namespace GameEngine {
 
         LOG_WARN("VkRenderPass not found in cache, creating new.");
 
-        // C++17 传统初始化
         ret.pass = VULKAN_RHI->CreateVkRenderPass(info);
         cachedPasses[info] = ret;
 

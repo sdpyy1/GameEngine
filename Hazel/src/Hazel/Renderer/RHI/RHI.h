@@ -56,7 +56,14 @@ namespace GameEngine {
 		virtual void BeginCommand() = 0;
 		virtual void EndCommand() = 0;
 		virtual void Execute(RHIFenceRef waitFence, RHISemaphoreRef waitSemaphore, RHISemaphoreRef signalSemaphore) = 0;
+		virtual void TextureBarrier(const RHITextureBarrier& barrier) = 0;
 
+		virtual void BufferBarrier(const RHIBufferBarrier& barrier) = 0;
+		virtual void BeginRenderPass(RHIRenderPassRef renderPass) = 0;   //也可以运行时FindOrCreate相应的renderpass和framebuffer等，很多东西可以做中心化的查找表统一管理状态
+		virtual void CopyTexture(RHITextureRef src, TextureSubresourceLayers srcSubresource, RHITextureRef dst, TextureSubresourceLayers dstSubresource) = 0;
+		virtual void GenerateMips(RHITextureRef src) = 0;
+
+		virtual void EndRenderPass() = 0;
 	protected:
 		RHICommandPoolRef pool;
 	};

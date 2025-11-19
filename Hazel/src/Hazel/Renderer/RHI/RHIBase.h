@@ -4,6 +4,7 @@ namespace GameEngine {
 #define MAX_QUEUE_CNT 2					//每个队列族的最大队列数目
 #define MAX_SHADER_IN_OUT_VARIABLES 8	//允许着色器最大的输入和输出变量数目
 #define MAX_RENDER_TARGETS 8			//允许同时绑定的最大RT数目
+#define MAX_DESCRIPTOR_SETS 8			//允许绑定的最大描述符集数目
 
 #define RHI_DYNAMICRHI DynamicRHI::Get()
 
@@ -414,6 +415,9 @@ namespace GameEngine {
 		SHADER_FREQUENCY_MAX_ENUM = 0x7FFFFFFF, //
 	};
 	typedef uint32_t ShaderFrequency;
+
+
+	// TODO:???
 	enum RHIResourceState : uint32_t	
 	{
 		RESOURCE_STATE_UNDEFINED = 0,
@@ -958,4 +962,17 @@ namespace GameEngine {
 		uint32_t layers = 1;
 
 	} RHIRenderPassInfo;
+	typedef struct RHIBufferBarrier
+	{
+		RHIBufferRef buffer;
+		RHIResourceState srcState;
+		RHIResourceState dstState;
+
+		uint32_t offset = 0;
+		uint32_t size = 0;
+
+	} RHIBufferBarrier;
+
+
+
 }

@@ -3,6 +3,7 @@
 #include <Hazel/Core/macro.h>
 #include <GLFW/glfw3.h>
 #include "spirv_reflect.h"
+#include "Hazel/Renderer/RHI/RHIBase.h"
 namespace GameEngine {
 #define DYNAMICRHI DynamicRHI::Get()
 #define VULKAN_RHI std::static_pointer_cast<VulkanDynamicRHI>(DynamicRHI::Get()).get()
@@ -850,6 +851,10 @@ namespace GameEngine {
 
             return factor;
         }
+        static VkExtent2D ExtentToVk(const Extent2D& extent)
+        {
+            return { extent.width, extent.height };
+        }
         static VkColorComponentFlags ColorWriteMaskToVk(ColorWriteMasks mask)
         {
             VkColorComponentFlags flags = 0;
@@ -859,7 +864,20 @@ namespace GameEngine {
             if (mask & COLOR_MASK_ALPHA)     flags |= VK_COLOR_COMPONENT_A_BIT;
             return flags;
         }
+        static VkImageSubresourceLayers SubresourceToVk(const TextureSubresourceLayers& subresource)
+        {
+            return {
+                TextureAspectToVk(subresource.aspect),
+                subresource.mipLevel,
+                subresource.baseArrayLayer,
+                subresource.layerCount
+            };
+        }
 
+        static VkExtent3D ExtentToVk(const Extent3D& extent)
+        {
+            return { extent.width, extent.height, extent.depth};
+        }
 	}
 
 }
