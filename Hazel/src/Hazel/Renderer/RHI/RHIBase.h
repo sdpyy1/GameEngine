@@ -3,6 +3,7 @@
 namespace GameEngine {
 #define MAX_QUEUE_CNT 2					//每个队列族的最大队列数目
 #define MAX_SHADER_IN_OUT_VARIABLES 8	//允许着色器最大的输入和输出变量数目
+#define MAX_RENDER_TARGETS 8			//允许同时绑定的最大RT数目
 
 #define RHI_DYNAMICRHI DynamicRHI::Get()
 
@@ -23,6 +24,10 @@ namespace GameEngine {
 	typedef std::shared_ptr<class RHISampler> RHISamplerRef;
 	typedef std::shared_ptr<class RHIShader> RHIShaderRef;
 	typedef std::shared_ptr<class RHIBuffer> RHIBufferRef;
+	typedef std::shared_ptr<class RHIRootSignature> RHIRootSignatureRef;
+	typedef std::shared_ptr<class RHIDescriptorSet> RHIDescriptorSetRef;
+	typedef std::shared_ptr<class RHIGraphicsPipeline> RHIGraphicsPipelineRef;
+	typedef std::shared_ptr<class RHIRenderPass> RHIRenderPassRef;
 
 	enum API {
 		API_Vulkan,
@@ -427,6 +432,15 @@ namespace GameEngine {
 
 		RESOURCE_STATE_MAX_ENUM,	//
 	};
+	enum PrimitiveType : uint32_t
+	{
+		PRIMITIVE_TYPE_TRIANGLE_LIST = 0,
+		PRIMITIVE_TYPE_TRIANGLE_STRIP,
+		PRIMITIVE_TYPE_LINE_LIST,
+		PRIMITIVE_TYPE_POINT_LIST,
+
+		PRIMITIVE_TYPE_MAX_ENUM,	//
+	};
 	typedef struct ShaderResourceEntry
 	{
 		// std::string name;
@@ -552,6 +566,42 @@ namespace GameEngine {
 		ShaderFrequency frequency;
 		std::vector<uint8_t> code;
 	} RHIShaderInfo;
+	typedef struct PushConstantInfo
+	{
+		uint32_t size = 128;
+		ShaderFrequency frequency;
+	} PushConstantInfo;
+	typedef struct RHIDescriptorUpdateInfo
+	{
+		uint32_t binding = 0;
+		uint32_t index = 0;
+
+		ResourceType resourceType = RESOURCE_TYPE_NONE;
+
+		RHIBufferRef buffer;
+		RHITextureViewRef textureView;
+		RHISamplerRef sampler;
+		// RHITopLevelAccelerationStructureRef tlas;
+
+		uint64_t bufferOffset = 0;	// 仅buffer使用
+		uint64_t bufferRange = 0;
+
+	} RHIDescriptorUpdateInfo;
+	typedef struct RHIRootSignatureInfo
+	{
+		RHIRootSignatureInfo& AddPushConstant(const PushConstantInfo& pushConstant) { pushConstants.push_back(pushConstant); return *this; }
+		RHIRootSignatureInfo& AddEntry(const ShaderResourceEntry& entry);
+		RHIRootSignatureInfo& AddEntry(const RHIRootSignatureInfo& other);
+		RHIRootSignatureInfo& AddEntryFromReflect(RHIShaderRef shader);
+		const std::vector<PushConstantInfo>& GetPushConstants() const { return pushConstants; }
+		const std::vector<ShaderResourceEntry>& GetEntries() const { return entries; }
+
+	protected:
+		std::vector<ShaderResourceEntry> entries;
+		std::vector<PushConstantInfo> pushConstants;
+
+	} RHIRootSignatureInfo;
+
 
 	typedef struct RHITextureBarrier
 	{
@@ -620,5 +670,292 @@ namespace GameEngine {
 			return true;
 		}
 	}
+	typedef struct VertexElement
+	{
+		uint32_t streamIndex = 0;
+		uint32_t attributeIndex = 0;
+		RHIFormat format = FORMAT_UKNOWN;
+		uint32_t offset = 0;
+		uint32_t stride = 0;
+		bool useInstanceIndex = false;
 
+		bool __padding[3] = { 0 };
+
+		friend bool operator== (const VertexElement& a, const VertexElement& b)
+		{
+			return  a.streamIndex == b.streamIndex &&
+				a.attributeIndex == b.attributeIndex &&
+				a.format == b.format &&
+				a.offset == b.offset &&
+				a.stride == b.stride &&
+				a.useInstanceIndex == b.useInstanceIndex;
+		}
+
+	} VertexElement;
+	typedef struct VertexInputStateInfo
+	{
+		std::vector<VertexElement> vertexElements;
+
+		friend bool operator== (const VertexInputStateInfo& a, const VertexInputStateInfo& b)
+		{
+			if (a.vertexElements.size() != b.vertexElements.size()) return false;
+			for (uint32_t i = 0; i < a.vertexElements.size(); i++)
+			{
+				if (!(a.vertexElements[i] == b.vertexElements[i])) return false;
+			}
+			return true;
+		}
+
+	} VertexInputStateInfo;
+	enum RasterizerFillMode : uint32_t
+	{
+		FILL_MODE_POINT = 0,
+		FILL_MODE_WIREFRAME,
+		FILL_MODE_SOLID,
+
+		FILL_MODE_MAX_ENUM,  //
+	};
+	enum RasterizerCullMode : uint32_t
+	{
+		CULL_MODE_NONE = 0,
+		CULL_MODE_FRONT,
+		CULL_MODE_BACK,
+
+		CULL_MODE_MAX_ENUM,  //
+	};
+
+	enum RasterizerDepthClipMode : uint32_t
+	{
+		DEPTH_CLIP = 0,
+		DEPTH_CLAMP,
+
+		DEPTH_CLIP_MODE_MAX_ENUM,    //
+	};
+	typedef struct RHIRasterizerStateInfo
+	{
+		RasterizerFillMode fillMode = FILL_MODE_SOLID;
+		RasterizerCullMode cullMode = CULL_MODE_BACK;
+		RasterizerDepthClipMode depthClipMode = DEPTH_CLIP;
+
+		float depthBias = 0.0f;
+		float slopeScaleDepthBias = 0.0f;
+
+		friend bool operator== (const RHIRasterizerStateInfo& a, const RHIRasterizerStateInfo& b)
+		{
+			return 	a.fillMode == b.fillMode &&
+				a.cullMode == b.cullMode &&
+				a.depthClipMode == b.depthClipMode &&
+				a.depthBias == b.depthBias &&
+				a.slopeScaleDepthBias == b.slopeScaleDepthBias;
+		};
+
+	} RHIRasterizerStateInfo;
+
+
+	enum BlendOp : uint32_t
+	{
+		BLEND_OP_ADD = 0,
+		BLEND_OP_SUBTRACT,
+		BLEND_OP_REVERSE_SUBTRACT,
+		BLEND_OP_MIN,
+		BLEND_OP_MAX,
+
+		BLEND_OP_MAX_ENUM, //
+	};
+	enum BlendFactor : uint32_t
+	{
+		BLEND_FACTOR_ZERO = 0,
+		BLEND_FACTOR_ONE,
+		BLEND_FACTOR_SRC_COLOR,
+		BLEND_FACTOR_ONE_MINUS_SRC_COLOR,
+		BLEND_FACTOR_DST_COLOR,
+		BLEND_FACTOR_ONE_MINUS_DST_COLOR,
+		BLEND_FACTOR_SRC_ALPHA,
+		BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+		BLEND_FACTOR_DST_ALPHA,
+		BLEND_FACTOR_ONE_MINUS_DST_ALPHA,
+		BLEND_FACTOR_SRC_ALPHA_SATURATE,
+		BLEND_FACTOR_CONSTANT_COLOR,
+		BLEND_FACTOR_ONE_MINUS_CONSTANT_COLOR,
+
+		BLEND_FACTOR_MAX_ENUM, //
+	};
+	enum ColorWriteMaskBits : uint32_t
+	{
+		COLOR_MASK_RED = 0x01,
+		COLOR_MASK_GREEN = 0x02,
+		COLOR_MASK_BLUE = 0x04,
+		COLOR_MASK_ALPHA = 0x08,
+
+		COLOR_MASK_NONE = 0,
+		COLOR_MASK_RGB = COLOR_MASK_RED | COLOR_MASK_GREEN | COLOR_MASK_BLUE,
+		COLOR_MASK_RGBA = COLOR_MASK_RED | COLOR_MASK_GREEN | COLOR_MASK_BLUE | COLOR_MASK_ALPHA,
+		COLOR_MASK_RG = COLOR_MASK_RED | COLOR_MASK_GREEN,
+		COLOR_MASK_BA = COLOR_MASK_BLUE | COLOR_MASK_ALPHA,
+	};
+	typedef uint32_t ColorWriteMasks;
+	typedef struct RHIBlendStateInfo
+	{
+		struct RenderTarget
+		{
+			BlendOp colorBlendOp = BLEND_OP_ADD;
+			BlendFactor colorSrcBlend = BLEND_FACTOR_ONE;
+			BlendFactor colorDstBlend = BLEND_FACTOR_ZERO;
+
+			BlendOp alphaBlendOp = BLEND_OP_ADD;
+			BlendFactor alphaSrcBlend = BLEND_FACTOR_ONE;
+			BlendFactor alphaDstBlend = BLEND_FACTOR_ZERO;
+
+			ColorWriteMasks colorWriteMask = COLOR_MASK_RGBA;
+
+			bool enable = false;
+
+			bool __padding[3] = { 0 };
+
+			friend bool operator== (const RenderTarget& a, const RenderTarget& b)
+			{
+				return  a.colorBlendOp == b.colorBlendOp &&
+					a.colorSrcBlend == b.colorSrcBlend &&
+					a.colorDstBlend == b.colorDstBlend &&
+					a.alphaBlendOp == b.alphaBlendOp &&
+					a.alphaSrcBlend == b.alphaSrcBlend &&
+					a.alphaDstBlend == b.alphaDstBlend &&
+					a.colorWriteMask == b.colorWriteMask &&
+					a.enable == b.enable;
+			}
+		};
+
+		std::array<RenderTarget, MAX_RENDER_TARGETS> renderTargets;
+
+		friend bool operator== (const RHIBlendStateInfo& a, const RHIBlendStateInfo& b)
+		{
+			return a.renderTargets == b.renderTargets;
+		}
+
+	} RHIBlendStateInfo;
+	typedef struct RHIDepthStencilStateInfo
+	{
+		CompareFunction depthTest = COMPARE_FUNCTION_LESS_EQUAL;
+		bool enableDepthTest = true;
+		bool enableDepthWrite = true;
+
+		bool __padding[2] = { 0 };
+
+		// bool enableFrontFaceStencil = false;
+		// CompareFunction frontFaceStencilTest = COMPARE_FUNCTION_ALWAYS;
+		// StencilOp frontFaceStencilFailStencilOp = STENCIL_OP_KEEP;
+		// StencilOp frontFaceDepthFailStencilOp = STENCIL_OP_KEEP;
+		// StencilOp frontFacePassStencilOp = STENCIL_OP_KEEP;
+
+		// bool enableBackFaceStencil = false;
+		// CompareFunction backFaceStencilTest = COMPARE_FUNCTION_ALWAYS;
+		// StencilOp backFaceStencilFailStencilOp = STENCIL_OP_KEEP;
+		// StencilOp backFaceDepthFailStencilOp = STENCIL_OP_KEEP;
+		// StencilOp backFacePassStencilOp = STENCIL_OP_KEEP;
+
+		// uint8_t stencilReadMask = 0xFF;
+		// uint8_t stencilWriteMask = 0xFF;
+
+		friend bool operator== (const RHIDepthStencilStateInfo& a, const RHIDepthStencilStateInfo& b)
+		{
+			return 	a.depthTest == b.depthTest &&
+				a.enableDepthTest == b.enableDepthTest &&
+				a.enableDepthWrite == b.enableDepthWrite;
+			// a.enableFrontFaceStencil 		== b.enableFrontFaceStencil &&
+			// a.frontFaceStencilTest 			== b.frontFaceStencilTest &&
+			// a.frontFaceStencilFailStencilOp == b.frontFaceStencilFailStencilOp &&
+			// a.frontFaceDepthFailStencilOp 	== b.frontFaceDepthFailStencilOp &&
+			// a.frontFacePassStencilOp 		== b.frontFacePassStencilOp &&
+			// a.enableBackFaceStencil 		== b.enableBackFaceStencil &&
+			// a.backFaceStencilTest 			== b.backFaceStencilTest &&
+			// a.backFaceStencilFailStencilOp 	== b.backFaceStencilFailStencilOp &&
+			// a.backFaceDepthFailStencilOp 	== b.backFaceDepthFailStencilOp &&
+			// a.backFacePassStencilOp 		== b.backFacePassStencilOp &&
+			// a.stencilReadMask 				== b.stencilReadMask &&
+			// a.stencilWriteMask 				== b.stencilWriteMask;
+		}
+
+	} RHIDepthStencilStateInfo;
+	typedef struct RHIGraphicsPipelineInfo
+	{
+		RHIShaderRef					vertexShader;
+		RHIShaderRef					geometryShader;
+		RHIShaderRef	 				fragmentShader;
+
+		RHIRootSignatureRef				rootSignature;
+
+		VertexInputStateInfo            vertexInputState = {};
+		PrimitiveType					primitiveType = PRIMITIVE_TYPE_TRIANGLE_LIST;
+		RHIRasterizerStateInfo			rasterizerState = {};
+		RHIBlendStateInfo				blendState = {};
+		RHIDepthStencilStateInfo		depthStencilState = {};
+
+		std::array<RHIFormat, MAX_RENDER_TARGETS> colorAttachmentFormats = { FORMAT_UKNOWN };
+		RHIFormat						depthStencilAttachmentFormat = FORMAT_UKNOWN;
+
+		uint32_t 						__padding = FORMAT_UKNOWN;
+
+		// uint32_t						numSamples = 1;		// TODO
+		// uint8_t						subpassIndex = 0;	// 放弃支持sub pass
+
+		friend bool operator== (const RHIGraphicsPipelineInfo& a, const RHIGraphicsPipelineInfo& b)
+		{
+			return  a.vertexShader.get() == b.vertexShader.get() &&
+				a.geometryShader.get() == b.geometryShader.get() &&
+				a.fragmentShader.get() == b.fragmentShader.get() &&
+				a.rootSignature.get() == b.rootSignature.get() &&
+				a.vertexInputState == b.vertexInputState &&
+				a.primitiveType == b.primitiveType &&
+				a.rasterizerState == b.rasterizerState &&
+				a.blendState == b.blendState &&
+				a.depthStencilState == b.depthStencilState;
+		}
+
+	} RHIGraphicsPipelineInfo;
+	enum AttachmentLoadOp : uint32_t
+	{
+		ATTACHMENT_LOAD_OP_LOAD = 0,
+		ATTACHMENT_LOAD_OP_CLEAR,
+		ATTACHMENT_LOAD_OP_DONT_CARE,
+
+
+		// TODO:Delete this
+		Inherit, Clear, Load ,
+
+		ATTACHMENT_LOAD_OP_MAX_ENUM,	//
+	};
+	enum AttachmentStoreOp : uint32_t
+	{
+		ATTACHMENT_STORE_OP_STORE = 0,
+		ATTACHMENT_STORE_OP_DONT_CARE = 1,
+
+		ATTACHMENT_STORE_OP_MAX_ENUM, 	//
+	};
+	typedef struct Color4
+	{
+		float r = 0.0f;
+		float g = 0.0f;
+		float b = 0.0f;
+		float a = 0.0f;
+	} Color4;
+	struct AttachmentInfo
+	{
+		RHITextureViewRef	textureView = nullptr;
+
+		AttachmentLoadOp 	loadOp = ATTACHMENT_LOAD_OP_DONT_CARE;
+		AttachmentStoreOp	storeOp = ATTACHMENT_STORE_OP_DONT_CARE;
+
+		Color4				clearColor = { 0.0f, 0.0f, 0.0f, 0.0f };
+		float				clearDepth = 1.0f;
+		uint32_t			clearStencil = 0;
+	};
+	typedef struct RHIRenderPassInfo
+	{
+		std::array<AttachmentInfo, MAX_RENDER_TARGETS> colorAttachments = {};
+		AttachmentInfo depthStencilAttachment = {};
+
+		Extent2D extent = { 0, 0 };
+		uint32_t layers = 1;
+
+	} RHIRenderPassInfo;
 }

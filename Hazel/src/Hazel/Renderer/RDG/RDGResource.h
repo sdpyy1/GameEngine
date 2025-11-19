@@ -60,12 +60,16 @@ namespace GameEngine {
     class RDGTexture : public RDGResource
     {
     public:
-        RDGTexture(const RDGTextureDesc& InDesc, const std::string& InName) : RDGResource(RDG_RESOURCE_TYPE_TEXTURE)
+        RDGTexture(const std::string& InName) : RDGResource(RDG_RESOURCE_TYPE_TEXTURE)
+        {
+            Name = InName;
+        }
+        RDGTexture(const RHITextureInfo& InDesc, const std::string& InName) : RDGResource(RDG_RESOURCE_TYPE_TEXTURE)
         {
             Desc = InDesc;
             Name = InName;
         }
-        RDGTextureDesc Desc;
+        RHITextureInfo Desc;
         RHITextureRef m_RHITexture = nullptr;
 
     };
@@ -81,12 +85,16 @@ namespace GameEngine {
     class RDGBuffer : public RDGResource
     {
     public:
-        RDGBuffer(const RDGBufferDesc& InDesc, const std::string& InName): RDGResource(RDG_RESOURCE_TYPE_BUFFER) // 调用基类构造，标记类型
+        RDGBuffer(const std::string& InName) : RDGResource(RDG_RESOURCE_TYPE_BUFFER) // 调用基类构造，标记类型
+        {
+            Name = InName;
+        }
+        RDGBuffer(const RHIBufferInfo& InDesc, const std::string& InName): RDGResource(RDG_RESOURCE_TYPE_BUFFER) // 调用基类构造，标记类型
         {
             Desc = InDesc;
             Name = InName;
         }
-        RDGBufferDesc Desc;
+        RHIBufferInfo Desc;
 
         RHIBufferRef m_RHIBuffer = nullptr;
     };

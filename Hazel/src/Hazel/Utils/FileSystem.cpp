@@ -253,4 +253,29 @@ namespace GameEngine {
 		}
 		}
 	}
+
+	bool FileSystem::LoadBinary(const std::string& filename, std::vector<uint8_t>& data)
+	{
+		std::filesystem::path root;
+
+		std::string name = root.generic_string();
+		name.append(filename);
+
+		std::ifstream file(name, std::ios::ate | std::ios::binary);
+		if (!file.is_open())
+		{
+			LOG_WARN("Failed to load binary file {}!", filename.c_str());
+			return false;
+		}
+
+		size_t file_size = (size_t)file.tellg();
+		data.resize(file_size);
+
+		file.seekg(0);
+		file.read((char*)data.data(), file_size);
+		file.close();
+
+		return true;
+	}
+
 }

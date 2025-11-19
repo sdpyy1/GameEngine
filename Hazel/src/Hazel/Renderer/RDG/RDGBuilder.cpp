@@ -3,7 +3,7 @@
 
 namespace GameEngine { 
 
-    RDGResourceHandle RDGBuilder::CreateTexture(const RDGTextureDesc& Desc, const std::string& Name)
+    RDGResourceHandle RDGBuilder::CreateTexture(const RHITextureInfo& Desc, const std::string& Name)
     {
         RDGTextureRef Tex = std::make_shared<RDGTexture>(Desc, Name);
 
@@ -15,7 +15,14 @@ namespace GameEngine {
         m_RDGContext.registerTexture(Name, Tex);
         return Entry.Handle;
     }
-    RDGResourceHandle RDGBuilder::CreateBuffer(const RDGBufferDesc& Desc, const std::string& Name)
+
+	RDGTextureBuilder RDGBuilder::CreateTexture(const std::string& name)
+	{
+        RDGTextureRef tex = std::make_shared<RDGTexture>(name);
+        return RDGTextureBuilder(this, tex);
+	}
+
+	RDGResourceHandle RDGBuilder::CreateBuffer(const RHIBufferInfo& Desc, const std::string& Name)
     {
         RDGBufferRef Buf = std::make_shared<RDGBuffer>(Desc, Name);
 
@@ -29,12 +36,15 @@ namespace GameEngine {
         return Entry.Handle;
     }
 
+	RDGBufferBuilder RDGBuilder::CreateBuffer(const std::string& name)
+	{
+        RDGBufferRef buf = std::make_shared<RDGBuffer>(name);
+        return RDGBufferBuilder(this, buf);
+	}
+
     RDGRenderPassBuilder RDGBuilder::AddPass(const std::string& Name)
 	{
         RDGPassRef Pass = std::make_shared<RDGPass>(Name);
-        m_PassList.push_back(Pass);
-        m_RDGContext.registerPass(Name, Pass);
-
         return RDGRenderPassBuilder(this, Pass);
 	}
 

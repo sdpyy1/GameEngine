@@ -29,17 +29,20 @@ namespace GameEngine {
 		virtual RHISamplerRef CreateSampler(const RHISamplerInfo& info) = 0;
 		virtual RHIShaderRef CreateShader(const RHIShaderInfo& info) = 0;
 		virtual RHIBufferRef CreateBuffer(const RHIBufferInfo& info) = 0;
+		virtual RHIGraphicsPipelineRef CreateGraphicsPipeline(const RHIGraphicsPipelineInfo& info) = 0;
+		virtual RHIRenderPassRef CreateRenderPass(const RHIRenderPassInfo& info) = 0;
 
+		virtual RHIRootSignatureRef CreateRootSignature(const RHIRootSignatureInfo& info) = 0;
 
 		// Í¬²½
 		virtual RHIFenceRef CreateFence(bool signaled) = 0;
 
 		virtual RHISemaphoreRef CreateSemaphore() = 0;
 		virtual RHICommandListImmediateRef GetImmediateCommandList(bool start = false) = 0;
+		void RegisterResource(RHIResourceRef resource) { resourceMap[resource->GetType()].push_back(resource); }
 
     protected:
 		DynamicRHI(const RHIConfig& config) : m_Config(config) {};
-		void RegisterResource(RHIResourceRef resource) { resourceMap[resource->GetType()].push_back(resource); } 
 
 		std::array<std::vector<RHIResourceRef>, RHI_RESOURCE_TYPE_MAX_CNT> resourceMap;
         RHIConfig m_Config;

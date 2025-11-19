@@ -837,4 +837,516 @@ namespace GameEngine
 
 	}
 
+	VulkanRHIRootSignature::VulkanRHIRootSignature(const RHIRootSignatureInfo& info) : RHIRootSignature(info)
+	{
+        for (const ShaderResourceEntry& entry : info.GetEntries())
+        {
+            //描述符布局绑定信息
+            VkDescriptorSetLayoutBinding layoutBinding = {};
+            layoutBinding.binding = entry.binding;
+            layoutBinding.stageFlags = VulkanUtil::ShaderFrequencyToVkStageFlags(entry.frequency);
+            layoutBinding.descriptorType = VulkanUtil::ResourceTypeToVk(entry.type);
+            layoutBinding.descriptorCount = entry.size == 0 ? 8192 : entry.size;    //指定该绑定处的描述符数量，>1为数组（一个layout多个binding，一个binding多个descriptor）
+            //开启扩展后为最大可能的数量，且这种binding必须在layout的最后  
+            layoutBinding.pImmutableSamplers = nullptr;
+
+            if (setInfos.size() < entry.set + 1) setInfos.resize(entry.set + 1);
+            setInfos[entry.set].bindings.push_back(layoutBinding);
+        }
+
+        for (SetInfo& set : setInfos)
+        {
+            if (set.bindings.size() > 0)
+            {
+                //描述符布局信息
+                VkDescriptorSetLayoutCreateInfo layoutInfo;
+                layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+                layoutInfo.bindingCount = (uint32_t)set.bindings.size();
+                layoutInfo.pBindings = set.bindings.data();
+                layoutInfo.flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT_EXT;  //TODO 使得描述符可以实时更新
+
+                // 启用可变大小描述符数量标志位
+                //VkDescriptorBindingFlagsEXT descriptorBindingFlags = VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT_EXT;
+                std::vector<VkDescriptorBindingFlagsEXT> descriptorBindingFlags = {};
+                descriptorBindingFlags.resize((uint32_t)set.bindings.size());
+                for (auto& descriptorBindingFlag : descriptorBindingFlags)
+                {
+                    descriptorBindingFlag = VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT;  //允许 Variable Descriptor binding 的 Descriptor 在没有被动态访问时不指定为有效的描述符
+                }
+
+                // 用于bindless创建可变的binding descriptor数目
+                VkDescriptorSetLayoutBindingFlagsCreateInfo setLayoutBindingFlags{};
+                setLayoutBindingFlags.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO;
+                setLayoutBindingFlags.bindingCount = (uint32_t)set.bindings.size();
+                setLayoutBindingFlags.pBindingFlags = descriptorBindingFlags.data();
+
+                // 指定 Descriptor Set Layout CreateInfo 扩展
+                layoutInfo.pNext = &setLayoutBindingFlags;
+
+                if (vkCreateDescriptorSetLayout(VULKAN_DEVICE, &layoutInfo, nullptr, &set.layout) != VK_SUCCESS)
+                {
+                    LOG_ERROR("Failed to create descriptor set layout!");
+                }
+            }
+        }
+	}
+
+	RHIDescriptorSetRef VulkanRHIRootSignature::CreateDescriptorSet(uint32_t set)
+	{
+        if (setInfos.size() > set && setInfos[set].bindings.size() > 0)
+        {
+            RHIDescriptorSetRef descriptorSet = std::make_shared<VulkanRHIDescriptorSet>(setInfos[set].layout);
+            DYNAMICRHI->RegisterResource(descriptorSet);
+
+            return descriptorSet;
+        }
+
+        LOG_ERROR("Unable to find descriptor info!");
+        return nullptr;
+	}
+
+	void VulkanRHIRootSignature::Destroy()
+	{
+        for (SetInfo& set : setInfos)
+        {
+            vkDestroyDescriptorSetLayout(VULKAN_DEVICE, set.layout, nullptr);
+        }
+
+	}
+
+	VulkanRHIDescriptorSet::VulkanRHIDescriptorSet(VkDescriptorSetLayout setLayout) : RHIDescriptorSet()
+	{
+        //描述符集合信息
+        VkDescriptorSetLayout layouts[] = { setLayout };
+
+        VkDescriptorSetAllocateInfo allocInfo = {};
+        allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        allocInfo.descriptorPool = VULKAN_DESCPOOL;      //指定描述符池
+        allocInfo.descriptorSetCount = 1;
+        allocInfo.pSetLayouts = layouts;                                //指定描述符集合的布局
+
+        if (vkAllocateDescriptorSets(VULKAN_DEVICE, &allocInfo, &handle) != VK_SUCCESS)
+        {
+            LOG_ERROR("Failed to allocate descriptor set!");
+        }
+	}
+
+	GameEngine::RHIDescriptorSet& VulkanRHIDescriptorSet::UpdateDescriptor(const RHIDescriptorUpdateInfo& descriptorUpdateInfo)
+	{
+        //更新写入信息
+        VkWriteDescriptorSet descriptorWrite = {};
+        descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrite.dstSet = handle;
+        descriptorWrite.dstBinding = descriptorUpdateInfo.binding;
+        descriptorWrite.dstArrayElement = descriptorUpdateInfo.index;
+        descriptorWrite.descriptorType = VulkanUtil::ResourceTypeToVk(descriptorUpdateInfo.resourceType);
+        descriptorWrite.descriptorCount = 1;
+
+        VkDescriptorImageInfo imageDescriptor = {};
+        VkDescriptorBufferInfo bufferDescriptor = {};
+        VkWriteDescriptorSetAccelerationStructureKHR accelerationDescriptor = {};
+
+        switch (descriptorUpdateInfo.resourceType) {
+
+        case RESOURCE_TYPE_SAMPLER:
+            imageDescriptor.sampler = CAST<VulkanRHISampler>(descriptorUpdateInfo.sampler)->GetHandle();
+            descriptorWrite.pImageInfo = &imageDescriptor;
+            break;
+
+        case RESOURCE_TYPE_TEXTURE:
+        case RESOURCE_TYPE_RW_TEXTURE:
+        case RESOURCE_TYPE_TEXTURE_CUBE:
+            imageDescriptor.imageView = CAST<VulkanRHITextureView>(descriptorUpdateInfo.textureView)->GetHandle();
+            imageDescriptor.imageLayout = VulkanUtil::ResourceTypeToImageLayout(descriptorUpdateInfo.resourceType);
+            descriptorWrite.pImageInfo = &imageDescriptor;
+            break;
+
+        case RESOURCE_TYPE_COMBINED_IMAGE_SAMPLER:
+            imageDescriptor.sampler = CAST<VulkanRHISampler>(descriptorUpdateInfo.sampler)->GetHandle();
+            imageDescriptor.imageView = CAST<VulkanRHITextureView>(descriptorUpdateInfo.textureView)->GetHandle();
+            imageDescriptor.imageLayout = VulkanUtil::ResourceTypeToImageLayout(descriptorUpdateInfo.resourceType);
+            descriptorWrite.pImageInfo = &imageDescriptor;
+            break;
+
+        case RESOURCE_TYPE_BUFFER:
+        case RESOURCE_TYPE_RW_BUFFER:
+        case RESOURCE_TYPE_UNIFORM_BUFFER:
+            bufferDescriptor.buffer = CAST<VulkanRHIBuffer>(descriptorUpdateInfo.buffer)->GetHandle();
+            bufferDescriptor.offset = descriptorUpdateInfo.bufferOffset;
+            bufferDescriptor.range = (descriptorUpdateInfo.bufferRange > 0) ? descriptorUpdateInfo.bufferRange : VK_WHOLE_SIZE;
+            descriptorWrite.pBufferInfo = &bufferDescriptor;
+            break;
+
+        //case RESOURCE_TYPE_RAY_TRACING:
+        //    accelerationDescriptor.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR;
+        //    accelerationDescriptor.accelerationStructureCount = 1;
+        //    accelerationDescriptor.pAccelerationStructures = &ResourceCast(descriptorUpdateInfo.tlas)->GetHandle();
+        //    descriptorWrite.pNext = &accelerationDescriptor;
+        //    break;
+
+        default:    LOG_ERROR("Unsupported resource type!");
+        }
+
+        vkUpdateDescriptorSets(VULKAN_DEVICE, 1, &descriptorWrite, 0, nullptr);
+
+        return *this;
+	}
+
+	void VulkanRHIDescriptorSet::Destroy()
+	{
+        // TODO:
+	}
+
+	VulkanRHIGraphicsPipeline::VulkanRHIGraphicsPipeline(const RHIGraphicsPipelineInfo& info) : RHIGraphicsPipeline(info)
+	{
+        // 描述符 push constant
+        std::vector<VkPushConstantRange> pushConstants;
+        std::vector<VkDescriptorSetLayout> descriptorSetLayouts;
+        for (const auto& pushConstant : info.rootSignature->GetInfo().GetPushConstants())
+        {
+            pushConstants.push_back(VulkanUtil::GetPushConstantInfo(pushConstant));
+        }
+        for (const auto& setInfo : CAST<VulkanRHIRootSignature>(info.rootSignature)->GetSetInfos())
+        {
+            descriptorSetLayouts.push_back(setInfo.layout);
+        }
+        pipelineLayout = VulkanUtil::CreatePipelineLayout(VULKAN_DEVICE, descriptorSetLayouts, pushConstants);
+
+        // 着色器
+        std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
+        if (info.vertexShader)   shaderStages.push_back(CAST<VulkanRHIShader>(info.vertexShader)->GetShaderStageCreateInfo());
+        if (info.geometryShader) shaderStages.push_back(CAST<VulkanRHIShader>(info.geometryShader)->GetShaderStageCreateInfo());
+        if (info.fragmentShader) shaderStages.push_back(CAST<VulkanRHIShader>(info.fragmentShader)->GetShaderStageCreateInfo());
+
+        // renderPass
+        // 创建管线时需要指定一个renderPass，但是又没有一个严格的一一对应关系，使用时只需要renderPass彼此兼容
+        // 又一处设计失败？
+        uint32_t attachmentSize = 0;
+        VulkanUtil::VulkanRenderPassAttachments renderPassAttachments = {};
+        for (uint32_t i = 0; i < info.colorAttachmentFormats.size(); i++)
+        {
+            if (info.colorAttachmentFormats[i] == FORMAT_UKNOWN)
+                break;
+
+            attachmentSize++;
+
+            VkAttachmentDescription colorAttachment{};
+            colorAttachment.format = VulkanUtil::RHIFormatToVkFormat(info.colorAttachmentFormats[i]);
+            colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+            colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+            colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+
+            renderPassAttachments.colorAttachments.push_back(colorAttachment);
+        }
+
+        VkAttachmentDescription depthAttachment{};
+        depthAttachment.format = VulkanUtil::RHIFormatToVkFormat(info.depthStencilAttachmentFormat);
+        depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+        depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+
+        renderPassAttachments.depthStencilAttachment = depthAttachment;
+        VkRenderPass renderPass = VULKAN_RHI->FindOrCreateVkRenderPass(renderPassAttachments);
+
+
+        // 光栅固定管线状态
+        VkPipelineVertexInputStateCreateInfo vertexInputInfo = GetInputStateCreateInfo(info.vertexInputState);
+        VkPipelineInputAssemblyStateCreateInfo inputAssembly = GetPipelineInputAssemblyStateCreateInfo(info.primitiveType);
+        VkPipelineViewportStateCreateInfo viewportState = GetPipelineViewportStateCreateInfo();
+        VkPipelineRasterizationStateCreateInfo rasterizer = GetPipelineRasterizationStateCreateInfo(info.rasterizerState);
+        VkPipelineMultisampleStateCreateInfo multisampling = GetPipelineMultisampleStateCreateInfo();
+        VkPipelineColorBlendStateCreateInfo colorBlending = GetPipelineColorBlendStateCreateInfo(info.blendState, attachmentSize);
+        VkPipelineDepthStencilStateCreateInfo depthStencil = GetPipelineDepthStencilStateCreateInfo(info.depthStencilState);
+        VkPipelineDynamicStateCreateInfo dynamicState = GetPipelineDynamicStateCreateInfo();
+
+        GetDynamicInputStateCreateInfo(info.vertexInputState);
+
+
+        VkGraphicsPipelineCreateInfo pipelineInfo = {};
+        pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+        pipelineInfo.pVertexInputState = &vertexInputInfo;
+        pipelineInfo.pInputAssemblyState = &inputAssembly;
+        pipelineInfo.pViewportState = &viewportState;
+        pipelineInfo.pRasterizationState = &rasterizer;
+        pipelineInfo.pMultisampleState = &multisampling;
+        pipelineInfo.pDepthStencilState = &depthStencil;
+        pipelineInfo.pColorBlendState = &colorBlending;
+        pipelineInfo.pDynamicState = &dynamicState;
+        pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
+        pipelineInfo.basePipelineIndex = -1;
+        pipelineInfo.stageCount = (uint32_t)shaderStages.size();
+        pipelineInfo.pStages = shaderStages.data();
+        pipelineInfo.layout = pipelineLayout;
+        pipelineInfo.renderPass = renderPass;
+        pipelineInfo.subpass = 0;
+
+        if (vkCreateGraphicsPipelines(VULKAN_DEVICE, VK_NULL_HANDLE, 1, &pipelineInfo, VK_NULL_HANDLE, &handle) != VK_SUCCESS)
+        {
+            LOG_ERROR("Failed to create graphics pipeline!");
+        }
+
+	}
+
+	void VulkanRHIGraphicsPipeline::Bind(VkCommandBuffer commandBuffer)
+	{
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, handle);
+
+        vkCmdSetVertexInputEXT(commandBuffer,   // 加了一个动态绑定，暂时只为了不报错？
+            (uint32_t)dynamicBindingDescriptions.size(),
+            dynamicBindingDescriptions.data(),
+            (uint32_t)dynamicAttributeDescriptions.size(),
+            dynamicAttributeDescriptions.data());
+	}
+
+	void VulkanRHIGraphicsPipeline::Destroy()
+	{
+        vkDestroyPipelineLayout(VULKAN_DEVICE, pipelineLayout, nullptr);
+        vkDestroyPipeline(VULKAN_DEVICE, handle, nullptr);
+	}
+    VkPipelineVertexInputStateCreateInfo VulkanRHIGraphicsPipeline::GetInputStateCreateInfo(const VertexInputStateInfo& vertexInputState)
+    {
+        for (const VertexElement& vertexElement : vertexInputState.vertexElements)
+        {
+            uint8_t binding = vertexElement.streamIndex;
+            VkVertexInputAttributeDescription attributeDescription = {};
+            attributeDescription.binding = binding;
+            attributeDescription.location = vertexElement.attributeIndex;                                       // 对应layout location
+            attributeDescription.format = VulkanUtil::RHIFormatToVkFormat(vertexElement.format);   // 属性格式
+            attributeDescription.offset = vertexElement.offset;                                                 // 字段偏移
+            attributeDescriptions.push_back(attributeDescription);
+
+            while (bindingDescriptions.size() < vertexElement.streamIndex + 1) bindingDescriptions.push_back({});   // 下三项对所有同binding的vertexElement应该全部一致
+            bindingDescriptions[binding].binding = binding;
+            bindingDescriptions[binding].stride = vertexElement.stride;                                                                             //步长
+            bindingDescriptions[binding].inputRate = vertexElement.useInstanceIndex ? VK_VERTEX_INPUT_RATE_INSTANCE : VK_VERTEX_INPUT_RATE_VERTEX;  //输入速率，逐顶点/逐实例
+        }
+
+        VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
+        vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+        vertexInputInfo.vertexBindingDescriptionCount = (uint32_t)bindingDescriptions.size();
+        vertexInputInfo.pVertexBindingDescriptions = bindingDescriptions.data();
+        vertexInputInfo.vertexAttributeDescriptionCount = (uint32_t)attributeDescriptions.size();
+        vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
+
+        return vertexInputInfo;
+    }
+
+    VkPipelineInputAssemblyStateCreateInfo VulkanRHIGraphicsPipeline::GetPipelineInputAssemblyStateCreateInfo(const PrimitiveType& primitiveType)
+    {
+        // 输入Assembly信息
+        VkPipelineInputAssemblyStateCreateInfo inputAssembly = {};
+        inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+        inputAssembly.topology = VulkanUtil::PrimitiveTypeToVk(primitiveType);      // 图元拓扑
+        inputAssembly.primitiveRestartEnable = VK_FALSE;                            // 设为true，可以通过0xFFFF或者0xFFFFFFFF为特殊索引，分解_STRIP拓扑下的结构
+        inputAssembly.flags = 0;
+
+        return inputAssembly;
+    }
+
+    VkPipelineViewportStateCreateInfo VulkanRHIGraphicsPipeline::GetPipelineViewportStateCreateInfo()
+    {
+        // 视窗信息
+        // VkViewport viewport = {};
+        // viewport.x = 0.0f;
+        // viewport.y = 0.0f;
+        // viewport.width = (float)extent.width;
+        // viewport.height = (float)extent.height;
+        // viewport.minDepth = 0.0f;
+        // viewport.maxDepth = 1.0f;
+
+        // 裁剪矩形信息
+        // VkRect2D scissor = {};
+        // scissor.offset = { 0, 0 };
+        // scissor.extent = extent;
+
+        // 使用dynamic 不在这里创建
+        VkPipelineViewportStateCreateInfo viewportState = {};
+        viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+        viewportState.viewportCount = 1;
+        viewportState.pViewports = nullptr;
+        viewportState.scissorCount = 1;
+        viewportState.pScissors = nullptr;
+        viewportState.flags = 0;
+
+        return viewportState;
+    }
+
+    VkPipelineRasterizationStateCreateInfo VulkanRHIGraphicsPipeline::GetPipelineRasterizationStateCreateInfo(const RHIRasterizerStateInfo& rasterizerState)
+    {
+        // 光栅化信息
+        VkPipelineRasterizationStateCreateInfo rasterizer = {};
+        rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+        rasterizer.depthClampEnable = rasterizerState.depthClipMode == DEPTH_CLAMP ? VK_TRUE : VK_FALSE;            //对于超过远近裁剪平面的处理
+        rasterizer.rasterizerDiscardEnable = VK_FALSE;                                                              //禁止图元传输
+        rasterizer.polygonMode = VulkanUtil::FillModeToVk(rasterizerState.fillMode);                       //多边形的填充模式  
+        rasterizer.lineWidth = 1.0f;                                                                                //填充模式为线框时的线宽度  
+        rasterizer.cullMode = VulkanUtil::CullModeToVk(rasterizerState.cullMode);                          //裁剪模式
+        rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;                                                     //面手性
+
+        // rasterizer.depthBiasEnable = (  rasterizerState.depthBias > 0.0f || 
+        //                                 rasterizerState.slopeScaleDepthBias > 0.0f) ? VK_TRUE : VK_FALSE;        //深度缓冲的bias
+        rasterizer.depthBiasEnable = VK_TRUE;                                                                       //动态设置
+        rasterizer.depthBiasConstantFactor = rasterizerState.depthBias;
+        rasterizer.depthBiasClamp = 0.0f;
+        rasterizer.depthBiasSlopeFactor = rasterizerState.slopeScaleDepthBias;
+        rasterizer.flags = 0;
+
+        return rasterizer;
+    }
+
+    VkPipelineMultisampleStateCreateInfo VulkanRHIGraphicsPipeline::GetPipelineMultisampleStateCreateInfo()
+    {
+        // 多重采样信息
+        VkPipelineMultisampleStateCreateInfo multisampling = {};
+        multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+        multisampling.sampleShadingEnable = VK_FALSE;
+        multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;     // TODO 之后再支持
+        multisampling.minSampleShading = 1.0f;
+        multisampling.pSampleMask = nullptr;
+        multisampling.alphaToCoverageEnable = VK_FALSE;
+        multisampling.alphaToOneEnable = VK_FALSE;
+        multisampling.flags = 0;
+
+        return multisampling;
+    }
+
+    VkPipelineColorBlendStateCreateInfo VulkanRHIGraphicsPipeline::GetPipelineColorBlendStateCreateInfo(const RHIBlendStateInfo& blendState, uint32_t size)
+    {
+        //混合信息
+        for (uint32_t i = 0; i < size; i++)
+        {
+            auto& attachment = blendState.renderTargets[i];
+
+            VkPipelineColorBlendAttachmentState attachmentState = {};
+            attachmentState.blendEnable = attachment.enable;
+            attachmentState.colorBlendOp = VulkanUtil::BlendOpToVk(attachment.colorBlendOp);
+            attachmentState.srcColorBlendFactor = VulkanUtil::BlendFactorToVk(attachment.colorSrcBlend);
+            attachmentState.dstColorBlendFactor = VulkanUtil::BlendFactorToVk(attachment.colorDstBlend);
+            attachmentState.alphaBlendOp = VulkanUtil::BlendOpToVk(attachment.alphaBlendOp);
+            attachmentState.srcAlphaBlendFactor = VulkanUtil::BlendFactorToVk(attachment.alphaSrcBlend);
+            attachmentState.dstAlphaBlendFactor = VulkanUtil::BlendFactorToVk(attachment.alphaDstBlend);
+            attachmentState.colorWriteMask = VulkanUtil::ColorWriteMaskToVk(attachment.colorWriteMask);
+
+            blendStates.push_back(attachmentState);
+        }
+
+        VkPipelineColorBlendStateCreateInfo colorBlending = {};
+        colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+        colorBlending.logicOpEnable = VK_FALSE;
+        colorBlending.logicOp = VK_LOGIC_OP_COPY;
+        colorBlending.attachmentCount = (uint32_t)blendStates.size();
+        colorBlending.pAttachments = blendStates.data();
+        colorBlending.blendConstants[0] = 0.0f;
+        colorBlending.blendConstants[1] = 0.0f;
+        colorBlending.blendConstants[2] = 0.0f;
+        colorBlending.blendConstants[3] = 0.0f;
+
+        return colorBlending;
+    }
+
+    VkPipelineDepthStencilStateCreateInfo VulkanRHIGraphicsPipeline::GetPipelineDepthStencilStateCreateInfo(const RHIDepthStencilStateInfo& depthStencilState)
+    {
+        //深度/模板缓冲信息
+        VkPipelineDepthStencilStateCreateInfo depthStencil{};
+        depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+        depthStencil.depthTestEnable = depthStencilState.enableDepthTest;                                               //深度测试
+        depthStencil.depthWriteEnable = depthStencilState.enableDepthWrite;                                             //深度写入
+        depthStencil.depthCompareOp = VulkanUtil::CompareFunctionToVk(depthStencilState.depthTest);    //深度比较方式
+        depthStencil.depthBoundsTestEnable = VK_FALSE;              //边界检测
+        depthStencil.minDepthBounds = 0.0f;
+        depthStencil.maxDepthBounds = 1.0f;
+
+        depthStencil.stencilTestEnable = VK_FALSE;                  //模板测试
+        depthStencil.front = {};
+        depthStencil.back = {};
+
+        return depthStencil;
+    }
+
+    VkPipelineDynamicStateCreateInfo VulkanRHIGraphicsPipeline::GetPipelineDynamicStateCreateInfo()
+    {
+        VkPipelineDynamicStateCreateInfo dynamicState = {};
+        dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+        dynamicState.dynamicStateCount = (uint32_t)dynamicStates.size();
+        dynamicState.pDynamicStates = dynamicStates.data();
+
+        return dynamicState;
+    }
+
+    void VulkanRHIGraphicsPipeline::GetDynamicInputStateCreateInfo(const VertexInputStateInfo& vertexInputState)
+    {
+        // 跟静态的声明基本一样，但是填充的结构体不一样
+        for (const VertexElement& vertexElement : vertexInputState.vertexElements)
+        {
+            uint8_t binding = vertexElement.streamIndex;
+            VkVertexInputAttributeDescription2EXT dynamicAttributeDescription = {};
+            dynamicAttributeDescription.sType = VK_STRUCTURE_TYPE_VERTEX_INPUT_ATTRIBUTE_DESCRIPTION_2_EXT;
+            dynamicAttributeDescription.binding = binding;
+            dynamicAttributeDescription.location = vertexElement.attributeIndex;
+            dynamicAttributeDescription.format = VulkanUtil::RHIFormatToVkFormat(vertexElement.format);
+            dynamicAttributeDescription.offset = vertexElement.offset;
+            dynamicAttributeDescriptions.push_back(dynamicAttributeDescription);
+
+            while (dynamicBindingDescriptions.size() < vertexElement.streamIndex + 1) dynamicBindingDescriptions.push_back({});
+            dynamicBindingDescriptions[binding].sType = VK_STRUCTURE_TYPE_VERTEX_INPUT_BINDING_DESCRIPTION_2_EXT;
+            dynamicBindingDescriptions[binding].binding = binding;
+            dynamicBindingDescriptions[binding].stride = vertexElement.stride;
+            dynamicBindingDescriptions[binding].divisor = 1;    // 这是啥？
+            dynamicBindingDescriptions[binding].inputRate = vertexElement.useInstanceIndex ? VK_VERTEX_INPUT_RATE_INSTANCE : VK_VERTEX_INPUT_RATE_VERTEX;
+        }
+    }
+
+	VulkanRHIRenderPass::VulkanRHIRenderPass(const RHIRenderPassInfo& info) : RHIRenderPass(info)
+	{
+        // 创建renderpass
+        std::vector<VkImageView> imageViews;
+        VulkanUtil::VulkanRenderPassAttachments renderPassAttachments = {};
+        for (uint32_t i = 0; i < info.colorAttachments.size(); i++)
+        {
+            if (info.colorAttachments[i].textureView == nullptr)
+                break;  // attachment 不允许中间有空元素，检查到空就停止
+
+            VkAttachmentDescription colorAttachment{};
+            colorAttachment.format = VulkanUtil::RHIFormatToVkFormat(info.colorAttachments[i].textureView->GetInfo().format);
+            colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+            colorAttachment.loadOp = VulkanUtil::AttachmentLoadOpToVk(info.colorAttachments[i].loadOp);
+            colorAttachment.storeOp = VulkanUtil::AttachmentStoreOpToVk(info.colorAttachments[i].storeOp);
+
+            renderPassAttachments.colorAttachments.push_back(colorAttachment);
+
+            imageViews.push_back(CAST<VulkanRHITextureView>(info.colorAttachments[i].textureView)->GetHandle());
+        }
+
+        if (info.depthStencilAttachment.textureView != nullptr)
+        {
+            VkAttachmentDescription depthAttachment{};
+            depthAttachment.format = VulkanUtil::RHIFormatToVkFormat(info.depthStencilAttachment.textureView->GetInfo().format);
+            depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+            depthAttachment.loadOp = VulkanUtil::AttachmentLoadOpToVk(info.depthStencilAttachment.loadOp);
+            depthAttachment.storeOp = VulkanUtil::AttachmentStoreOpToVk(info.depthStencilAttachment.storeOp);
+
+            renderPassAttachments.depthStencilAttachment = depthAttachment;
+
+            imageViews.push_back(CAST<VulkanRHITextureView>(info.depthStencilAttachment.textureView)->GetHandle());
+        }
+        handle = VULKAN_RHI->FindOrCreateVkRenderPass(renderPassAttachments);
+
+        // 创建framebuffer  TODO:把FrameBuffer塞到RenderPass里了
+        VkFramebufferCreateInfo framebufferInfo = {};
+        framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        framebufferInfo.renderPass = handle;
+        framebufferInfo.attachmentCount = (uint32_t)imageViews.size();
+        framebufferInfo.pAttachments = imageViews.data();
+        framebufferInfo.width = info.extent.width;
+        framebufferInfo.height = info.extent.height;
+        framebufferInfo.layers = info.layers;
+
+        frameBuffer = VULKAN_RHI->FindOrCreateVkFramebuffer(framebufferInfo);
+	}
+
+	void VulkanRHIRenderPass::Destroy()
+	{
+
+	}
+
 }

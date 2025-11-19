@@ -14,12 +14,15 @@ namespace GameEngine {
         RDGPassRef getPass(const std::string& name) { return passes[name]; }
 	};
 	class RDGRenderPassBuilder;
+	class RDGTextureBuilder;
+	class RDGBufferBuilder;
 	class RDGBuilder
 	{
 	public:
-		RDGResourceHandle RDGBuilder::CreateTexture(const RDGTextureDesc& Desc, const std::string& Name);
-		RDGResourceHandle CreateBuffer(const RDGBufferDesc& Desc, const std::string& Name);
-
+		RDGResourceHandle RDGBuilder::CreateTexture(const RHITextureInfo& Desc, const std::string& Name);
+		RDGResourceHandle CreateBuffer(const RHIBufferInfo& Desc, const std::string& Name);
+		RDGTextureBuilder CreateTexture(const std::string& name);
+		RDGBufferBuilder CreateBuffer(const std::string& name);
 		RDGRenderPassBuilder AddPass(const std::string& Name);
 
 		RDGTextureRef GetTexture(const std::string& Name){return m_RDGContext.getTexture(Name);}
@@ -43,10 +46,38 @@ namespace GameEngine {
 	class RDGRenderPassBuilder {
 	public:
 		RDGRenderPassBuilder(RDGBuilder* builder, RDGPassRef pass);
+		RDGTextureRef ReadTexture(const std::string& name);
+		RDGTextureRef WriteTexture(const std::string& name);
+		RDGBufferRef ReadBuffer(const std::string& name);
+		RDGBufferRef WriteBuffer(const std::string& name);
 	private:
         RDGBuilder* m_Builder;
         RDGPassRef m_Pass;
 
 	};
+
+
+
+
+
+	class RDGTextureBuilder {
+	public:
+		RDGTextureBuilder(RDGBuilder* builder, RDGTextureRef texture) :m_Builder(builder), m_Texture(texture) {};
+
+	private:
+		RDGBuilder* m_Builder;
+		RDGTextureRef m_Texture;
+	};
+
+
+	class RDGBufferBuilder {
+	public:
+		RDGBufferBuilder(RDGBuilder* builder, RDGBufferRef buffer) :m_Builder(builder),m_Buffer(buffer){};
+	private:
+		RDGBuilder* m_Builder;
+		RDGBufferRef m_Buffer;
+	};
+
+
 }
 

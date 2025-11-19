@@ -1,7 +1,7 @@
 #include "hzpch.h"
 #include "RenderSystem.h"
 #include "Hazel/Core/Application.h"
-
+#include "Hazel/Renderer/RenderPass/GridPass.h"
 namespace GameEngine {
 	RenderSystem::RenderSystem()
 	{
@@ -42,6 +42,12 @@ namespace GameEngine {
 		CurCommandList->EndCommand();
 		CurCommandList->Execute(CurResource.fence, CurResource.startSemaphore, CurResource.finishSemaphore);
 		m_SwapChain->Present(CurResource.finishSemaphore);
+	}
+
+	void RenderSystem::InitPass()
+	{
+		GridPass a;
+		a.Init();
 	}
 
 }

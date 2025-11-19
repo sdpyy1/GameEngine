@@ -4,7 +4,9 @@
 #include <GLFW/glfw3.h>
 #include "spirv_reflect.h"
 namespace GameEngine {
+#define DYNAMICRHI DynamicRHI::Get()
 #define VULKAN_RHI std::static_pointer_cast<VulkanDynamicRHI>(DynamicRHI::Get()).get()
+#define VULKAN_DESCPOOL std::static_pointer_cast<VulkanDynamicRHI>(DynamicRHI::Get()).get()->GetDescriptorPool()
 #define VULKAN_INSTANCE (std::static_pointer_cast<VulkanDynamicRHI>(DynamicRHI::Get()).get())->GetInstance()
 #define VULKAN_PHYSICALDEVICE (std::static_pointer_cast<VulkanDynamicRHI>(DynamicRHI::Get()).get())->GetPhysicalDevice()
 #define VULKAN_DEVICE (std::static_pointer_cast<VulkanDynamicRHI>(DynamicRHI::Get()).get())->GetDevice()
@@ -34,7 +36,8 @@ namespace GameEngine {
         VK_KHR_SURFACE_EXTENSION_NAME,
         VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME,
         VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
-        VK_KHR_SWAPCHAIN_EXTENSION_NAME
+        VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+        "VK_EXT_vertex_input_dynamic_state"
     };
     static const char* RAY_TRACING_DEVICE_EXTENTIONS[] = {
         // Ray tracing related extensions required
@@ -663,6 +666,200 @@ namespace GameEngine {
 
             return usage;
         }
+        static VkShaderStageFlags ShaderFrequencyToVkStageFlags(ShaderFrequency frequency)
+        {
+            VkShaderStageFlags stageFlags = 0;
+            if (frequency & SHADER_FREQUENCY_COMPUTE)        stageFlags |= VK_SHADER_STAGE_COMPUTE_BIT;
+            if (frequency & SHADER_FREQUENCY_VERTEX)         stageFlags |= VK_SHADER_STAGE_VERTEX_BIT;
+            if (frequency & SHADER_FREQUENCY_FRAGMENT)       stageFlags |= VK_SHADER_STAGE_FRAGMENT_BIT;
+            if (frequency & SHADER_FREQUENCY_GEOMETRY)       stageFlags |= VK_SHADER_STAGE_GEOMETRY_BIT;
+            if (frequency & SHADER_FREQUENCY_RAY_GEN)        stageFlags |= VK_SHADER_STAGE_RAYGEN_BIT_KHR;
+            if (frequency & SHADER_FREQUENCY_CLOSEST_HIT)    stageFlags |= VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR;
+            if (frequency & SHADER_FREQUENCY_RAY_MISS)       stageFlags |= VK_SHADER_STAGE_MISS_BIT_KHR;
+            if (frequency & SHADER_FREQUENCY_INTERSECTION)   stageFlags |= VK_SHADER_STAGE_INTERSECTION_BIT_KHR;
+            if (frequency & SHADER_FREQUENCY_ANY_HIT)        stageFlags |= VK_SHADER_STAGE_ANY_HIT_BIT_KHR;
+            if (frequency & SHADER_FREQUENCY_MESH)           stageFlags |= VK_SHADER_STAGE_MESH_BIT_EXT;
+            return stageFlags;
+        }
+        static VkDescriptorType ResourceTypeToVk(ResourceType resourceType)
+        {
+            VkDescriptorType descriptorType;
+            switch (resourceType) {
+            case RESOURCE_TYPE_SAMPLER:                 descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;                        break;
+            case RESOURCE_TYPE_TEXTURE_CUBE:            descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;                  break;
+            case RESOURCE_TYPE_TEXTURE:                 descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;                  break;
+            case RESOURCE_TYPE_RW_TEXTURE:              descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;                  break;
+            case RESOURCE_TYPE_COMBINED_IMAGE_SAMPLER:  descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;         break;
+            case RESOURCE_TYPE_BUFFER:                  descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;                 break;
+            case RESOURCE_TYPE_RW_BUFFER:               descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;                 break;
+            case RESOURCE_TYPE_UNIFORM_BUFFER:          descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;                 break;
+            case RESOURCE_TYPE_TEXEL_BUFFER:            descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER;           break;
+            case RESOURCE_TYPE_RW_TEXEL_BUFFER:         descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER;           break;
+            case RESOURCE_TYPE_RAY_TRACING:             descriptorType = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;     break;
+            default:                                    LOG_ERROR("Unsupported resource type!");
+            }
+            return descriptorType;
+        }
+        static VkImageLayout ResourceTypeToImageLayout(ResourceType resourceType)
+        {
+            VkImageLayout imageLayout;
+            switch (resourceType) {
+
+            case RESOURCE_TYPE_TEXTURE:                 imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
+            case RESOURCE_TYPE_TEXTURE_CUBE:            imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
+            case RESOURCE_TYPE_RW_TEXTURE:              imageLayout = VK_IMAGE_LAYOUT_GENERAL;                          break;
+            case RESOURCE_TYPE_COMBINED_IMAGE_SAMPLER:  imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
+            default:                                    LOG_ERROR("Unsupported resource type!");
+            }
+            return imageLayout;
+        }
+        static VkAttachmentLoadOp AttachmentLoadOpToVk(AttachmentLoadOp loadOp)
+        {
+            VkAttachmentLoadOp op;
+            switch (loadOp) {
+            case ATTACHMENT_LOAD_OP_LOAD:           op = VK_ATTACHMENT_LOAD_OP_LOAD;        break;
+            case ATTACHMENT_LOAD_OP_CLEAR:          op = VK_ATTACHMENT_LOAD_OP_CLEAR;       break;
+            case ATTACHMENT_LOAD_OP_DONT_CARE:      op = VK_ATTACHMENT_LOAD_OP_DONT_CARE;   break;
+            default:                                LOG_ERROR("Unsupported attachment load op!");
+            }
+
+            return op;
+        }
+
+        static VkAttachmentStoreOp AttachmentStoreOpToVk(AttachmentStoreOp storeOp)
+        {
+            VkAttachmentStoreOp op;
+            switch (storeOp) {
+            case ATTACHMENT_STORE_OP_STORE:          op = VK_ATTACHMENT_STORE_OP_STORE;       break;
+            case ATTACHMENT_STORE_OP_DONT_CARE:      op = VK_ATTACHMENT_STORE_OP_DONT_CARE;   break;
+            default:                                 LOG_ERROR("Unsupported attachment store op!");
+            }
+
+            return op;
+        }
+
+        static VkPushConstantRange GetPushConstantInfo(const PushConstantInfo& pushConstant)
+        {
+            VkPushConstantRange pushConstantRange{};
+            pushConstantRange.stageFlags = ShaderFrequencyToVkStageFlags(pushConstant.frequency);
+            pushConstantRange.offset = 0;
+            pushConstantRange.size = pushConstant.size;
+
+            return pushConstantRange;
+        }
+        static VkPipelineLayout CreatePipelineLayout(VkDevice device,
+            const std::vector<VkDescriptorSetLayout>& descriptorSetLayouts,
+            const std::vector<VkPushConstantRange>& pushConstantRanges)
+        {
+            VkPipelineLayout layout;
+
+            // 管道布局信息
+            VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
+            pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+            pipelineLayoutInfo.setLayoutCount = (uint32_t)descriptorSetLayouts.size();
+            pipelineLayoutInfo.pSetLayouts = descriptorSetLayouts.data();
+            pipelineLayoutInfo.pushConstantRangeCount = (uint32_t)pushConstantRanges.size();
+            pipelineLayoutInfo.pPushConstantRanges = pushConstantRanges.data();
+
+            if (vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &layout) != VK_SUCCESS)
+            {
+                LOG_ERROR("Failed to create pipeline layout!");
+            }
+            return layout;
+        }
+        typedef struct VulkanRenderPassAttachments
+        {
+            std::vector<VkAttachmentDescription> colorAttachments;
+            VkAttachmentDescription depthStencilAttachment = {};
+
+        } VulkanRenderPassAttachments;
+
+
+        static VkPrimitiveTopology PrimitiveTypeToVk(PrimitiveType primitiveType)
+        {
+            VkPrimitiveTopology topology;
+            switch (primitiveType) {
+            case PRIMITIVE_TYPE_TRIANGLE_LIST:      topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;     break;
+            case PRIMITIVE_TYPE_TRIANGLE_STRIP:     topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP;    break;
+            case PRIMITIVE_TYPE_LINE_LIST:          topology = VK_PRIMITIVE_TOPOLOGY_LINE_LIST;         break;
+            case PRIMITIVE_TYPE_POINT_LIST:         topology = VK_PRIMITIVE_TOPOLOGY_POINT_LIST;        break;
+            default:                                LOG_ERROR("Unsupported primitive type!");
+            }
+
+            return topology;
+        }
+        static VkPolygonMode FillModeToVk(RasterizerFillMode fillMode)
+        {
+            VkPolygonMode mode;
+            switch (fillMode) {
+            case FILL_MODE_POINT:           mode = VK_POLYGON_MODE_POINT;   break;
+            case FILL_MODE_WIREFRAME:       mode = VK_POLYGON_MODE_LINE;    break;
+            case FILL_MODE_SOLID:           mode = VK_POLYGON_MODE_FILL;    break;
+            default:                        LOG_ERROR("Unsupported fill mode!");
+            }
+
+            return mode;
+        }
+
+        static VkCullModeFlags CullModeToVk(RasterizerCullMode cullMode)
+        {
+            VkCullModeFlags mode;
+            switch (cullMode) {
+            case CULL_MODE_NONE:        mode = VK_CULL_MODE_NONE;           break;
+            case CULL_MODE_FRONT:       mode = VK_CULL_MODE_FRONT_BIT;      break;  // 逆时针为正面
+            case CULL_MODE_BACK:        mode = VK_CULL_MODE_BACK_BIT;       break;
+            default:                    LOG_ERROR("Unsupported cull mode!");
+            }
+
+            return mode;
+        }
+
+        static VkBlendOp BlendOpToVk(BlendOp blendOp)
+        {
+            VkBlendOp op;
+            switch (blendOp) {
+            case BLEND_OP_ADD:                  op = VK_BLEND_OP_ADD;                   break;
+            case BLEND_OP_SUBTRACT:             op = VK_BLEND_OP_SUBTRACT;              break;
+            case BLEND_OP_REVERSE_SUBTRACT:     op = VK_BLEND_OP_REVERSE_SUBTRACT;      break;
+            case BLEND_OP_MIN:                  op = VK_BLEND_OP_MIN;                   break;
+            case BLEND_OP_MAX:                  op = VK_BLEND_OP_MAX;                   break;
+            default:                            LOG_ERROR("Unsupported blend op!");
+            }
+
+            return op;
+        }
+        static VkBlendFactor BlendFactorToVk(BlendFactor blendFactor)
+        {
+            VkBlendFactor factor;
+            switch (blendFactor) {
+            case BLEND_FACTOR_ZERO:                         factor = VK_BLEND_FACTOR_ZERO;                          break;
+            case BLEND_FACTOR_ONE:                          factor = VK_BLEND_FACTOR_ONE;                           break;
+            case BLEND_FACTOR_SRC_COLOR:                    factor = VK_BLEND_FACTOR_SRC_COLOR;                     break;
+            case BLEND_FACTOR_ONE_MINUS_SRC_COLOR:          factor = VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR;           break;
+            case BLEND_FACTOR_DST_COLOR:                    factor = VK_BLEND_FACTOR_DST_COLOR;                     break;
+            case BLEND_FACTOR_ONE_MINUS_DST_COLOR:          factor = VK_BLEND_FACTOR_ONE_MINUS_DST_COLOR;           break;
+            case BLEND_FACTOR_SRC_ALPHA:                    factor = VK_BLEND_FACTOR_SRC_ALPHA;                     break;
+            case BLEND_FACTOR_ONE_MINUS_SRC_ALPHA:          factor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;           break;
+            case BLEND_FACTOR_DST_ALPHA:                    factor = VK_BLEND_FACTOR_DST_ALPHA;                     break;
+            case BLEND_FACTOR_ONE_MINUS_DST_ALPHA:          factor = VK_BLEND_FACTOR_ONE_MINUS_DST_ALPHA;           break;
+            case BLEND_FACTOR_SRC_ALPHA_SATURATE:           factor = VK_BLEND_FACTOR_SRC_ALPHA_SATURATE;            break;
+            case BLEND_FACTOR_CONSTANT_COLOR:               factor = VK_BLEND_FACTOR_CONSTANT_COLOR;                break;
+            case BLEND_FACTOR_ONE_MINUS_CONSTANT_COLOR:     factor = VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_COLOR;      break;
+            default:                                        LOG_ERROR("Unsupported blend factor!");
+            }
+
+            return factor;
+        }
+        static VkColorComponentFlags ColorWriteMaskToVk(ColorWriteMasks mask)
+        {
+            VkColorComponentFlags flags = 0;
+            if (mask & COLOR_MASK_RED)       flags |= VK_COLOR_COMPONENT_R_BIT;
+            if (mask & COLOR_MASK_GREEN)     flags |= VK_COLOR_COMPONENT_G_BIT;
+            if (mask & COLOR_MASK_BLUE)      flags |= VK_COLOR_COMPONENT_B_BIT;
+            if (mask & COLOR_MASK_ALPHA)     flags |= VK_COLOR_COMPONENT_A_BIT;
+            return flags;
+        }
+
 	}
 
 }

@@ -139,6 +139,36 @@ namespace GameEngine {
 	protected:
 		RHISamplerInfo info;
 	};
+	class RHIDescriptorSet : public RHIResource
+	{
+	public:
+		RHIDescriptorSet() : RHIResource(RHI_DESCRIPTOR_SET) {}
+
+		virtual RHIDescriptorSet& UpdateDescriptor(const RHIDescriptorUpdateInfo& descriptorUpdateInfo) = 0;
+
+		RHIDescriptorSet& UpdateDescriptors(const std::vector<RHIDescriptorUpdateInfo>& descriptorUpdateInfos)
+		{
+			for (auto& info : descriptorUpdateInfos) UpdateDescriptor(info);
+			return *this;
+		};
+	};
+	class RHIRootSignature : public RHIResource	//对pipelinelayout, descriptorSetPool等的抽象
+	{
+	public:
+		RHIRootSignature(const RHIRootSignatureInfo& info)
+			: RHIResource(RHI_ROOT_SIGNATURE)
+			, info(info)
+		{
+		}
+
+		virtual RHIDescriptorSetRef CreateDescriptorSet(uint32_t set) = 0;
+
+		const RHIRootSignatureInfo& GetInfo() { return info; }
+
+	protected:
+		RHIRootSignatureInfo info;
+	};
+
 	class RHIShader : public RHIResource
 	{
 	public:
@@ -159,6 +189,34 @@ namespace GameEngine {
 	protected:
 		RHIShaderInfo info;
 		ShaderReflectInfo reflectInfo;
+	};
+	class RHIGraphicsPipeline : public RHIResource
+	{
+	public:
+		RHIGraphicsPipeline(const RHIGraphicsPipelineInfo& info)
+			: RHIResource(RHI_GRAPHICS_PIPELINE)
+			, info(info)
+		{
+		}
+
+		const RHIGraphicsPipelineInfo& GetInfo() { return info; }
+
+	protected:
+		RHIGraphicsPipelineInfo info;
+	};
+	class RHIRenderPass : public RHIResource	// 在vulkan里相当于renderpass和framebuffer的整体抽象
+	{
+	public:
+		RHIRenderPass(const RHIRenderPassInfo& info)
+			: RHIResource(RHI_RENDER_PASS)
+			, info(info)
+		{
+		}
+
+		const RHIRenderPassInfo& GetInfo() { return info; }
+
+	protected:
+		RHIRenderPassInfo info;
 	};
 	// ------------------------------------------------------------------------ 同步 ------------------------------------------------------------------------
 	class RHIFence : public RHIResource

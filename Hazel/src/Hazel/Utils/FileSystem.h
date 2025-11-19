@@ -55,7 +55,7 @@ namespace GameEngine {
 
 		static bool WriteBytes(const std::filesystem::path& filepath, const Buffer& buffer);
 		static Buffer ReadBytes(const std::filesystem::path& filepath);
-
+		static bool LoadBinary(const std::string& filename, std::vector<uint8_t>& data);
 		static std::filesystem::path GetUniqueFileName(const std::filesystem::path& filepath);
 		static uint64_t GetLastWriteTime(const std::filesystem::path& filepath);
 	public:

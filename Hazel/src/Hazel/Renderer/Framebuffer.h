@@ -5,7 +5,7 @@
 
 #include "Hazel/Renderer/RendererTypes.h"
 #include "Image.h"
-
+#include "RHI/RHIBase.h"
 namespace GameEngine {
 
 	class Framebuffer;
@@ -19,10 +19,7 @@ namespace GameEngine {
 		Zero_SrcColor
 	};
 
-	enum class AttachmentLoadOp
-	{
-		Inherit = 0, Clear = 1, Load = 2
-	};
+
 
 	struct FramebufferTextureSpecification
 	{

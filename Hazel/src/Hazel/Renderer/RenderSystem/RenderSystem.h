@@ -11,6 +11,9 @@ namespace GameEngine
 		RenderSystem();
 		void InitBaseResources();
 		void Tick(float timestep);
+		DynamicRHIRef GetRHI() { return m_DynamicRHI; }
+		void InitPass();
+
 	private:
 
 		DynamicRHIRef m_DynamicRHI;

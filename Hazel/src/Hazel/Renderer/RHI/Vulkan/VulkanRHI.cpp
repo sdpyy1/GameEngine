@@ -509,6 +509,122 @@ namespace GameEngine
         return buffer;
 	}
 
+	RHIRootSignatureRef VulkanDynamicRHI::CreateRootSignature(const RHIRootSignatureInfo& info)
+	{
+        RHIRootSignatureRef rootSignature = std::make_shared<VulkanRHIRootSignature>(info);
+        RegisterResource(rootSignature);
+
+        return rootSignature;
+	}
+
+	RHIGraphicsPipelineRef VulkanDynamicRHI::CreateGraphicsPipeline(const RHIGraphicsPipelineInfo& info)
+	{
+        RHIGraphicsPipelineRef graphicsPipeline = std::make_shared<VulkanRHIGraphicsPipeline>(info);
+        RegisterResource(graphicsPipeline);
+
+        return graphicsPipeline;
+	}
+
+	RHIRenderPassRef VulkanDynamicRHI::CreateRenderPass(const RHIRenderPassInfo& info)
+	{
+        RHIRenderPassRef renderPass = std::make_shared<VulkanRHIRenderPass>(info);
+        RegisterResource(renderPass);
+
+        return renderPass;
+	}
+
+	VkRenderPass VulkanDynamicRHI::CreateVkRenderPass(const VulkanUtil::VulkanRenderPassAttachments& info)
+	{
+        bool hasDepth = (info.depthStencilAttachment.format != VK_FORMAT_UNDEFINED);
+        std::vector<VkAttachmentDescription> attachments;
+        std::vector<VkAttachmentReference> colorReferences;
+        VkAttachmentReference depthReference = {};
+
+        for (const VkAttachmentDescription& attachment : info.colorAttachments)  attachments.push_back(attachment);
+        for (VkAttachmentDescription& attachment : attachments)
+        {
+            attachment.stencilLoadOp = attachment.loadOp;   // 写死
+            attachment.stencilStoreOp = attachment.storeOp;
+            attachment.initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+            attachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        }
+        if (hasDepth)
+        {
+            VkAttachmentDescription attachment = info.depthStencilAttachment;
+            attachment.stencilLoadOp = attachment.loadOp;   // 写死
+            attachment.stencilStoreOp = attachment.storeOp;
+            attachment.initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+            attachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+            attachments.push_back(attachment);
+        }
+
+        for (uint32_t i = 0; i < attachments.size(); i++) colorReferences.push_back({ i, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL });
+        VkAttachmentReference depthAttachmentReference = { (uint32_t)attachments.size() - 1, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL };
+
+        // 不支持subpass了 艹
+        VkSubpassDescription subpass = {};
+        subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        subpass.colorAttachmentCount = (uint32_t)colorReferences.size();
+        subpass.pColorAttachments = colorReferences.data();
+        subpass.pDepthStencilAttachment = hasDepth ? &depthAttachmentReference : nullptr;
+        subpass.inputAttachmentCount = 0;
+        subpass.pInputAttachments = nullptr;
+        subpass.preserveAttachmentCount = 0;
+        subpass.pPreserveAttachments = nullptr;
+        subpass.pResolveAttachments = nullptr;
+
+        // 屏障在外面显式的添加 不在pass里加了？
+        // std::vector<VkSubpassDependency> subpassDependencies(2);
+        // subpassDependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+        // subpassDependencies[0].dstSubpass = 0;
+        // subpassDependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+        // subpassDependencies[0].srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+        // subpassDependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        // subpassDependencies[0].srcStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+        // subpassDependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+
+        // subpassDependencies[1].srcSubpass = 0;
+        // subpassDependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
+        // subpassDependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+        // subpassDependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        // subpassDependencies[1].dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+        // subpassDependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        // subpassDependencies[1].dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+
+        VkRenderPassCreateInfo renderPassInfo = {};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+        renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+        renderPassInfo.pAttachments = attachments.data();
+        renderPassInfo.subpassCount = 1;
+        renderPassInfo.pSubpasses = &subpass;
+        renderPassInfo.dependencyCount = 0;
+        renderPassInfo.pDependencies = nullptr;
+
+        VkRenderPass renderPass;
+        if (vkCreateRenderPass(m_LogicalDevice, &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS)
+        {
+            LOG_ERROR("Failed to create render pass!");
+        }
+
+        // {
+        //     ScopeLock lock(sync);
+        //     renderPassMap.insert({info, renderPass});
+        // }
+        return renderPass;
+	}
+
+	VkFramebuffer VulkanDynamicRHI::CreateVkFramebuffer(const VkFramebufferCreateInfo& info)
+	{
+        VkFramebuffer frameBuffer;
+        if (vkCreateFramebuffer(m_LogicalDevice, &info, nullptr, &frameBuffer) != VK_SUCCESS)
+        {
+            LOG_ERROR("Failed to create framebuffer!");
+        }
+
+        return frameBuffer;
+	}
+
     VulkanRHICommandContext::VulkanRHICommandContext(RHICommandPoolRef pool): RHICommandContext(pool)
     {
         this->pool = std::static_pointer_cast<VulkanRHICommandPool>(pool);

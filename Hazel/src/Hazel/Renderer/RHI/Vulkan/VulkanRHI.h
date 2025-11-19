@@ -4,6 +4,7 @@
 #include "Hazel/Renderer/RHI/RHICommandList.h"
 #include "VulkanMemoryAllocator/vk_mem_alloc.h"
 #include "VulkanRHIResource.h"
+#include "VulkanRHICache.h"
 namespace GameEngine
 {
 	class VulkanDynamicRHI : public DynamicRHI
@@ -21,6 +22,9 @@ namespace GameEngine
 		virtual RHITextureRef CreateTexture(const RHITextureInfo& info) override final;
 		virtual RHITextureViewRef CreateTextureView(const RHITextureViewInfo& info) override final;
 		virtual RHIBufferRef CreateBuffer(const RHIBufferInfo& info) override final;
+		virtual RHIRootSignatureRef CreateRootSignature(const RHIRootSignatureInfo& info) override final;
+		virtual RHIGraphicsPipelineRef CreateGraphicsPipeline(const RHIGraphicsPipelineInfo& info) override final;
+		virtual RHIRenderPassRef CreateRenderPass(const RHIRenderPassInfo& info) override final;
 
 		virtual RHISamplerRef CreateSampler(const RHISamplerInfo& info) override final;
 		virtual RHIShaderRef CreateShader(const RHIShaderInfo& info) override final;
@@ -33,7 +37,12 @@ namespace GameEngine
 		inline VkPhysicalDevice GetPhysicalDevice() const { return m_PhysicalDevice; }
 		inline VkDevice GetDevice() const { return m_LogicalDevice; }
 		inline VmaAllocator GetVMA() const { return m_MemoryAllocator; }
+		inline VkDescriptorPool GetDescriptorPool() const { return m_DescriptorPool; }
+		VkRenderPass FindOrCreateVkRenderPass(const VulkanUtil::VulkanRenderPassAttachments& info) { return renderPassPool.Allocate(info).pass; }
+		VkRenderPass CreateVkRenderPass(const VulkanUtil::VulkanRenderPassAttachments& info);
 
+		VkFramebuffer FindOrCreateVkFramebuffer(const VkFramebufferCreateInfo& info) { return frameBufferPool.Allocate(info).frameBuffer; }
+		VkFramebuffer CreateVkFramebuffer(const VkFramebufferCreateInfo& info);
 	private:
 
 		void CreateInstance();
@@ -75,6 +84,10 @@ namespace GameEngine
 		// 立即模式命令队列
 		RHICommandContextImmediateRef m_ImmediateCommandContext;
 		RHICommandListImmediateRef m_ImmediateCommandList;
+
+		// 池化的renderPass和frameBuffer
+		VkRenderPassCache renderPassPool;
+		VkFramebufferCache frameBufferPool;
 	};
 
 

@@ -34,7 +34,9 @@ namespace GameEngine {
 
 		m_WindowManager = std::make_shared<WindowManager>(WindowSpec(m_Specification.Name, 1950, 1300));
 		m_WindowManager->SetEventCallback(HZ_BIND_EVENT_FN(Application::OnEvent));
+
 		m_RenderSystem = std::make_shared<RenderSystem>();
+		m_RenderSystem->InitPass();
 
 	}
 

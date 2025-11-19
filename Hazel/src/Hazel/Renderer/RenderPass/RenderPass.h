@@ -5,7 +5,7 @@ namespace GameEngine {
 	enum PassType
 	{
 
-
+		PASS_TYPE_GRID,
 		PASS_TYPE_MAX_CNT,	//
 	};
 
