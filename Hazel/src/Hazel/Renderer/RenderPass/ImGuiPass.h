@@ -1,6 +1,7 @@
 #pragma once
 #include "RenderPass.h"
 namespace GameEngine {
+	class ImGuiRendererManager;
 	class ImGuiPass :public RenderPassNew
 	{
 	public:
@@ -14,10 +15,7 @@ namespace GameEngine {
 		virtual std::string GetName() { return "ImGuiPass"; }
 		virtual PassType GetType() override final { return IMGUI_PASS; }
 	private:
-			RHIShaderRef m_VertShader;
-			RHIShaderRef m_FragShader;
-			RHIRootSignatureRef m_RootSignature;
-			RHIGraphicsPipelineRef m_Pipeline;
+		std::shared_ptr<ImGuiRendererManager> m_ImGuiRendererManager;
 	};
 
 }

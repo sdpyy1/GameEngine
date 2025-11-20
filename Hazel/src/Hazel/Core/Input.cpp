@@ -11,8 +11,7 @@
 namespace GameEngine {
 	bool Input::IsKeyDown(KeyCode keycode)
 	{
-		auto& window = static_cast<Window&>(*Application::Get().GetWindow());
-		GLFWwindow* win = static_cast<GLFWwindow*>(window.GetNativeWindow());
+		GLFWwindow* win = static_cast<GLFWwindow*>(APP_GLFWWINDOW);
 		ImGuiContext* context = ImGui::GetCurrentContext();
 		bool pressed = false;
 		for (ImGuiViewport* viewport : context->Viewports)

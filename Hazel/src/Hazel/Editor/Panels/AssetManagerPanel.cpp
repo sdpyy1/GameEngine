@@ -25,13 +25,13 @@ namespace GameEngine {
 		spec.GenerateMips = false;
 		spec.needYFlip = false;
 		std::filesystem::path dirIcon = "Assets/Icon/Entity.png";
-		m_EntityIcon = Texture2D::Create(spec, dirIcon);
+		/*m_EntityIcon = Texture2D::Create(spec, dirIcon);
 		dirIcon = "Assets/Icon/Sun.png";
 		m_DirLightIcon = Texture2D::Create(spec, dirIcon);
 		dirIcon = "Assets/Icon/Spotlight.png";
 		m_SpotLightIcon = Texture2D::Create(spec, dirIcon);
 		dirIcon = "Assets/Icon/img.png";
-		m_SkyLightIcon = Texture2D::Create(spec, dirIcon);
+		m_SkyLightIcon = Texture2D::Create(spec, dirIcon);*/
 	}
 
 	void AssetManagerPanel::SetContext(std::shared_ptr<Scene>& context)

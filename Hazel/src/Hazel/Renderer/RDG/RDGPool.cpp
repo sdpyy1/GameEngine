@@ -34,11 +34,10 @@ namespace GameEngine {
     RDGTexturePool::PooledTexture RDGTexturePool::Allocate(const RHITextureInfo& info)
     {
         RDGTexturePool::PooledTexture ret;
-
         RHITextureInfo tempInfo = info;
         if (tempInfo.mipLevels == 0) tempInfo.mipLevels = tempInfo.extent.MipSize();
 
-        auto& textures = pooledTextures[tempInfo];
+        auto& textures = pooledTextures[{tempInfo}];
         for (auto iter = textures.begin(); iter != textures.end(); iter++)
         {
             ret = *iter;
@@ -48,7 +47,7 @@ namespace GameEngine {
         }
 
         LOG_TRACE("RHITexture not found in cache, creating new.");
-        ret.texture = APP_DYNAMCIRHI->CreateTexture(tempInfo),
+        ret.texture = APP_DYNAMCIRHI->CreateTexture(tempInfo),   // 在释放资源时才会把texture放入池中
         ret.state = RESOURCE_STATE_UNDEFINED;
         allocatedSize++;
 
@@ -57,7 +56,7 @@ namespace GameEngine {
 
     void RDGTexturePool::Release(const RDGTexturePool::PooledTexture& pooledTexture)
     {
-        pooledTextures[pooledTexture.texture->GetInfo()].push_back(pooledTexture);
+        pooledTextures[{pooledTexture.texture->GetInfo()}].push_back(pooledTexture);
         pooledSize++;
     }
 

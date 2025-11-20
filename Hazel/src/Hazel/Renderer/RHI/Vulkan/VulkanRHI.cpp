@@ -475,13 +475,7 @@ namespace GameEngine
         ImGui_ImplVulkan_Init(&initInfo, tempPass);
 
         // Upload Fonts
-        {
-            ImGuiIO& io = ImGui::GetIO();
-
-            io.Fonts->AddFontFromFileTTF("Assets/Font/opensans/OpenSans-SemiBoldItalic.ttf", 18.0f, nullptr, io.Fonts->GetGlyphRangesChineseFull());
-            
-        }
-
+        io.Fonts->AddFontFromFileTTF("Assets/Font/opensans/OpenSans-SemiBoldItalic.ttf", 18.0f, nullptr, io.Fonts->GetGlyphRangesChineseFull());
         RHI_DYNAMICRHI->GetImmediateCommandList(true);
         RHI_DYNAMICRHI->GetImmediateCommandList()->UploadImGuiFonts();
         RHI_DYNAMICRHI->GetImmediateCommandList()->Flush();
@@ -628,7 +622,7 @@ namespace GameEngine
             VkAttachmentDescription desc = src; // 拷贝一份，避免修改原始结构
             // 为 color 附件选择合理的初始/最终 layout（可根据需要调整）
             if (desc.initialLayout == VK_IMAGE_LAYOUT_UNDEFINED)
-                desc.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED; // 让驱动在开始时 transition（更通用）
+                desc.initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL; // 让驱动在开始时 transition（更通用）
             // finalLayout 默认设置为 COLOR_ATTACHMENT_OPTIMAL；如果这是 swapchain image，需要调用方替换为 PRESENT_SRC_KHR
             if (desc.finalLayout == VK_IMAGE_LAYOUT_UNDEFINED)
                 desc.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
@@ -654,7 +648,7 @@ namespace GameEngine
             VkAttachmentDescription desc = info.depthStencilAttachment; // 拷贝
             // depth 初始/最终 layout：初始使用 UNDEFINED 更通用（表示可由 renderpass transition）
             if (desc.initialLayout == VK_IMAGE_LAYOUT_UNDEFINED)
-                desc.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+                desc.initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
             if (desc.finalLayout == VK_IMAGE_LAYOUT_UNDEFINED)
                 desc.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
@@ -699,8 +693,8 @@ namespace GameEngine
         renderPassInfo.pAttachments = attachments.data();
         renderPassInfo.subpassCount = 1;
         renderPassInfo.pSubpasses = &subpass;
-        renderPassInfo.dependencyCount = 1;
-        renderPassInfo.pDependencies = &dependency;
+        renderPassInfo.dependencyCount = 0;
+        renderPassInfo.pDependencies = nullptr;
 
         VkRenderPass renderPass = VK_NULL_HANDLE;
         VkResult result = vkCreateRenderPass(m_LogicalDevice, &renderPassInfo, nullptr, &renderPass);
@@ -712,7 +706,7 @@ namespace GameEngine
 
         return renderPass;
     }
-	VkFramebuffer VulkanDynamicRHI::CreateVkFramebuffer(const VkFramebufferCreateInfo& info)
+    VkFramebuffer VulkanDynamicRHI::CreateVkFramebuffer(const VkFramebufferCreateInfo& info)
 	{
         VkFramebuffer frameBuffer;
         if (vkCreateFramebuffer(m_LogicalDevice, &info, nullptr, &frameBuffer) != VK_SUCCESS)

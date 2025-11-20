@@ -34,7 +34,7 @@ namespace GameEngine {
     {
     public:
         RDGBuilder() = default;
-        RDGBuilder(RHICommandListRef command): command(command){}
+        RDGBuilder(RHICommandListRef command): command(command){}  // ¸øÒ»¸öcommandList
 
         ~RDGBuilder() {};
 

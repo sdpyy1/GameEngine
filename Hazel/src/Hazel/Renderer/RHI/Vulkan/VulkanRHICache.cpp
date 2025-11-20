@@ -9,7 +9,6 @@ namespace GameEngine {
         auto iter = cachedPasses.find(info);
         if (iter != cachedPasses.end())
         {
-            // LOG_DEBUG("VkRenderPass found in cache.");
             return iter->second;
         }
 
@@ -25,7 +24,7 @@ namespace GameEngine {
     {
         for (auto iter : cachedPasses)
         {
-            vkDestroyRenderPass(VULKAN_DEVICE, iter.second.pass, nullptr);
+            // vkDestroyRenderPass(VULKAN_DEVICE, iter.second.pass, nullptr); // TODO：关闭APP时这里会报错
         }
         cachedPasses.clear();
     }
@@ -53,7 +52,7 @@ namespace GameEngine {
     {
         for (auto iter : cachedFramebuffers)
         {
-            vkDestroyFramebuffer(VULKAN_DEVICE, iter.second.frameBuffer, nullptr);
+            // vkDestroyFramebuffer(VULKAN_DEVICE, iter.second.frameBuffer, nullptr); TODO:关闭APP时这里会报错
         }
         cachedFramebuffers.clear();
     }

@@ -129,7 +129,6 @@ namespace GameEngine {
         for (auto& pass : passes)
         {
             if (pass->isCulled || !pass) continue;
-            printf("rdg executing pass: %s\n", pass->Name().c_str());
 
             switch (pass->NodeType()) {
             case RDG_PASS_NODE_TYPE_RENDER:         ExecutePass(dynamic_cast<RDGRenderPassNodeRef>(pass));          break;
@@ -239,6 +238,7 @@ namespace GameEngine {
             if (edge->IsOutput()) return;    // 作为output声明时不需要view  TODO:???
             RHITextureViewInfo info;
             info.texture = Resolve(texture); // 创建资源
+
             info.format = texture->info.format;
             info.viewType = edge->viewType;
             info.subresource = edge->subresource;
@@ -362,7 +362,7 @@ namespace GameEngine {
         RHIRenderPassInfo renderPassInfo = {};
         PrepareRenderTarget(pass, renderPassInfo);   // 准备RenderPass需要的信息
 
-        RHIRenderPassRef renderPass = APP_DYNAMCIRHI->CreateRenderPass(renderPassInfo);   // 创建RenderPass和FrameBuffer
+        RHIRenderPassRef renderPass = APP_DYNAMCIRHI->CreateRenderPass(renderPassInfo); // 根据图创建RenderPass和FranmeBuffer
 
         // command->PushEvent(pass->Name(), { 0.0f, 0.0f, 0.0f });
 
@@ -370,7 +370,7 @@ namespace GameEngine {
 
         command->BeginRenderPass(renderPass);
 
-        RDGPassContext context;   // 在这准备的Context
+        RDGPassContext context;
         context.command = command;
         context.builder = this;
         context.descriptors = pass->descriptorSets;
@@ -572,7 +572,7 @@ namespace GameEngine {
         if (textureNode->IsImported()) return;
         if (textureNode->texture)
         {
-            // printf("rdg resource %s released: %lld, raw: %s\n", textureNode->Name().c_str(), (int64_t)textureNode->texture.get(), ToHex((uint64_t)textureNode->texture->RawHandle(), false).c_str());
+            // printf("rdg resource %s released", textureNode->Name().c_str());
 
             RDGTexturePool::Get()->Release({ textureNode->texture, state });
             textureNode->texture = nullptr;
@@ -896,7 +896,7 @@ namespace GameEngine {
         edge->clearColor = clearColor;
         edge->subresource = subresource;
         edge->asColor = true;
-        edge->binding = binding;  // 这传递Binding干毛
+        edge->binding = binding; 
         edge->viewType = subresource.layerCount > 1 ? VIEW_TYPE_2D_ARRAY : VIEW_TYPE_2D;
 
         graph->Link(pass, graph->GetNode(texture.ID()), edge);  // 输出

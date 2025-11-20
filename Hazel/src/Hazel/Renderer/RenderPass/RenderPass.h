@@ -2,6 +2,9 @@
 #include "string"
 #include "Hazel/Renderer/RDG/RDGBuilder.h"
 namespace GameEngine {
+
+
+	// °´Ë³Ðò
 	enum PassType
 	{
 		GRID_PASS,

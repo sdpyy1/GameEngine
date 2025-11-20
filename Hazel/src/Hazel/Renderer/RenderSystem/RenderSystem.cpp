@@ -23,20 +23,19 @@ namespace GameEngine {
 			m_PerFrameBaseResources[i].finishSemaphore = m_DynamicRHI->CreateSemaphore();
 			m_PerFrameBaseResources[i].fence = m_DynamicRHI->CreateFence(true);
 		}
-		m_DynamicRHI->InitImGui(APP_GLFWWINDOW);
 	}
 
 	void RenderSystem::Tick(float timestep)
 	{
 		auto& CurResource = m_PerFrameBaseResources[APP_FRAMEINDEX];
-
+		/// LOG_INFO("RenderSystem::Tick");
 		CurResource.fence->Wait();
 		RHITextureRef CurSwapchainTexture = m_SwapChain->GetNewFrame(nullptr, CurResource.startSemaphore);
 		RHICommandListRef CurCommandList = CurResource.commandList;
 		CurCommandList->BeginCommand();
 
 		RDGBuilder rdgBuilder = RDGBuilder(CurCommandList);
-		// 执行Pass 的 Build
+		// 构建图结构
 		for (auto& pass : passes) { if (pass) pass->Build(rdgBuilder); }
 		// 执行RDG
 		rdgBuilder.Execute();
@@ -48,10 +47,10 @@ namespace GameEngine {
 
 	void RenderSystem::InitPasses()
 	{
-		passes[IMGUI_PASS] = std::make_shared<ImGuiPass>();
-        passes[IMGUI_PASS]->Init();
 		passes[GRID_PASS] = std::make_shared<GridPass>();
 		passes[GRID_PASS]->Init();
+		passes[IMGUI_PASS] = std::make_shared<ImGuiPass>();
+        passes[IMGUI_PASS]->Init();
         passes[PRESENT_PASS] = std::make_shared<PresentPass>();
         passes[PRESENT_PASS]->Init();
 	}

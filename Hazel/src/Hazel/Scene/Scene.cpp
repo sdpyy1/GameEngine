@@ -21,7 +21,7 @@ namespace GameEngine {
 	}
 	void Scene::ShowDebugTexture()
 	{
-		UI::Image(Application::GetRendererManager()->GetTextureWhichNeedDebug(), ImGui::GetContentRegionAvail(), {0, 0}, {1, 1});
+		// UI::Image(Application::GetRendererManager()->GetTextureWhichNeedDebug(), ImGui::GetContentRegionAvail(), {0, 0}, {1, 1});
 	}
 
 	// 打包一帧的场景数据
@@ -118,7 +118,7 @@ namespace GameEngine {
 
 	void Scene::OutputViewport()
 	{
-		UI::Image(Application::GetRendererManager()->GetFinalImage(), ImGui::GetContentRegionAvail(), { 0, 0 }, { 1, 1 });
+		// UI::Image(Application::GetRendererManager()->GetFinalImage(), ImGui::GetContentRegionAvail(), { 0, 0 }, { 1, 1 });
 	}
 
 	void Scene::CollectRenderableEntities(std::shared_ptr<SceneRender>& SceneRender)

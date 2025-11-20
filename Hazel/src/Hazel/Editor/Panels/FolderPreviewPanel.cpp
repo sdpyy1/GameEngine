@@ -28,10 +28,10 @@ namespace GameEngine {
 		std::filesystem::path modelIcon = "Assets/Icon/pawn.png";
 		std::filesystem::path sceneIcon = "Assets/Icon/scene.png";
 
-		m_DirectoryIcon = Texture2D::Create(spec, dirIcon);
+		/*m_DirectoryIcon = Texture2D::Create(spec, dirIcon);
 		m_FileIcon = Texture2D::Create(spec, fileIcon);
 		m_ModelIcon = Texture2D::Create(spec, modelIcon);
-		m_SceneIcon = Texture2D::Create(spec, sceneIcon);
+		m_SceneIcon = Texture2D::Create(spec, sceneIcon);*/
 
 		// 默认使用分类模式，并默认选中 Scenes（右侧立即显示）
 		m_Mode = BrowserMode::Category;
@@ -183,7 +183,7 @@ namespace GameEngine {
 			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.2f, 0.5f, 0.7f, 0.45f));
 
 			ImGuiID imageBtnId = ImGui::GetID(("image_btn_" + name).c_str());
-			bool clicked = ImGui::ImageButtonEx(
+			/*bool clicked = ImGui::ImageButtonEx(
 				imageBtnId,
 				UI::GetImageId(icon->GetImage()),
 				ImVec2(thumbnailSize, thumbnailSize),
@@ -192,7 +192,7 @@ namespace GameEngine {
 				ImVec2(0, 0),
 				ImVec4(0, 0, 0, 0),
 				ImVec4(1, 1, 1, 1)
-			);
+			);*/
 
 			ImGui::PopStyleColor(3);
 			ImGui::SetItemAllowOverlap();
@@ -415,7 +415,7 @@ namespace GameEngine {
 
 			// 图标 + 分类名
 			ImGui::AlignTextToFramePadding();
-			ImGui::Image(UI::GetImageId(m_DirectoryIcon->GetImage()), ImVec2(16, 16), ImVec2(0, 1), ImVec2(1, 0));
+			// ImGui::Image(UI::GetImageId(m_DirectoryIcon->GetImage()), ImVec2(16, 16), ImVec2(0, 1), ImVec2(1, 0));
 			ImGui::SameLine();
 
 			if (ImGui::Selectable(category.Name.c_str(), isCategorySelected, ImGuiSelectableFlags_SpanAvailWidth))

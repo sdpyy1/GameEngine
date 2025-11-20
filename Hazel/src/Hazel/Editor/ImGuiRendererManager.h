@@ -9,8 +9,8 @@ namespace GameEngine {
 	class ImGuiRendererManager
 	{
 	public:
-		virtual void Begin() = 0;
-		virtual void End() = 0;
+		virtual void Begin() {};
+		virtual void End() {};
 		void SetDarkThemeV2Colors();
 		void Tick(float deltaTime);
 		void ImGuiCommand();

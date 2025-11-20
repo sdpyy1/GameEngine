@@ -421,21 +421,32 @@ namespace GameEngine
         imageInfo.arrayLayers = info.arrayLayers;
         if (info.type & RESOURCE_TYPE_TEXTURE_CUBE) imageInfo.arrayLayers = std::max(imageInfo.arrayLayers, (uint32_t)6);
         imageInfo.format = format;
-        imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+        imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL; // 物理布局方式
         imageInfo.usage = usage;
-        imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;   // 逻辑状态 / 访问规则的标记 不影响数据本身，但是会影响Vulkan如何使用它
         imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
         imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
         imageInfo.flags = flag; // Optional
 
         VmaAllocationCreateInfo allocationCreateInfo = {};
         allocationCreateInfo.usage = VulkanUtil::MemoryUsageToVma(info.memoryUsage);
-
         allocationInfo = {};
         if (vmaCreateImage(VULKAN_VMA, &imageInfo, &allocationCreateInfo, &handle, &allocation, &allocationInfo) != VK_SUCCESS)
         {
             LOG_ERROR("VMA failed to allocate image!");
         }
+
+#ifdef RHI_DEBUG_LOG
+        // 使用 {} 进行格式化的日志输出
+        LOG_TRACE("成功创建 Vulkan 图像: {}", info.debugName);
+        LOG_TRACE("  - 图像类型: {}", imageInfo.imageType);
+        LOG_TRACE("  - 分辨率: {}x{}x{}",
+            imageInfo.extent.width,
+            imageInfo.extent.height,
+            imageInfo.extent.depth);
+        LOG_TRACE("  - Mipmap 层级: {}", info.mipLevels);
+        LOG_TRACE("  - 数组层数: {}", info.arrayLayers);
+#endif
 	}
 
 	void VulkanRHITexture::Destroy()
@@ -1018,14 +1029,12 @@ namespace GameEngine
         if (info.geometryShader) shaderStages.push_back(CAST<VulkanRHIShader>(info.geometryShader)->GetShaderStageCreateInfo());
         if (info.fragmentShader) shaderStages.push_back(CAST<VulkanRHIShader>(info.fragmentShader)->GetShaderStageCreateInfo());
 
-        // renderPass
-        // 创建管线时需要指定一个renderPass，但是又没有一个严格的一一对应关系，使用时只需要renderPass彼此兼容
-        // 又一处设计失败？
+        // Pipeline创建需要一个RenderPass
         uint32_t attachmentSize = 0;
         VulkanUtil::VulkanRenderPassAttachments renderPassAttachments = {};
         for (uint32_t i = 0; i < info.colorAttachmentFormats.size(); i++)
         {
-            if (info.colorAttachmentFormats[i] == FORMAT_UKNOWN)
+            if (info.colorAttachmentFormats[i] == FORMAT_UKNOWN)  // 设计是 默认8个位置，判断到FORMAT_UKNOWN说明后续都没有了
                 break;
 
             attachmentSize++;
@@ -1045,7 +1054,7 @@ namespace GameEngine
         depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
         depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 
-        renderPassAttachments.depthStencilAttachment = depthAttachment;
+        renderPassAttachments.depthStencilAttachment = depthAttachment;  // 如果没有，格式是FORMAT_UKNOWN
         VkRenderPass renderPass = VULKAN_RHI->FindOrCreateVkRenderPass(renderPassAttachments);
 
 
@@ -1298,13 +1307,13 @@ namespace GameEngine
 
 	VulkanRHIRenderPass::VulkanRHIRenderPass(const RHIRenderPassInfo& info) : RHIRenderPass(info)
 	{
-        // 创建renderpass
+        // 创建renderpass 每个附件需要有ImageView
         std::vector<VkImageView> imageViews;
         VulkanUtil::VulkanRenderPassAttachments renderPassAttachments = {};
         for (uint32_t i = 0; i < info.colorAttachments.size(); i++)
         {
             if (info.colorAttachments[i].textureView == nullptr)
-                break;  // attachment 不允许中间有空元素，检查到空就停止
+                break;
 
             VkAttachmentDescription colorAttachment{};
             colorAttachment.format = VulkanUtil::RHIFormatToVkFormat(info.colorAttachments[i].textureView->GetInfo().format);
@@ -1316,7 +1325,7 @@ namespace GameEngine
 
             imageViews.push_back(CAST<VulkanRHITextureView>(info.colorAttachments[i].textureView)->GetHandle());
         }
-
+        // 深度附件需要有ImageView
         if (info.depthStencilAttachment.textureView != nullptr)
         {
             VkAttachmentDescription depthAttachment{};
@@ -1329,6 +1338,8 @@ namespace GameEngine
 
             imageViews.push_back(CAST<VulkanRHITextureView>(info.depthStencilAttachment.textureView)->GetHandle());
         }
+
+        // Pool中缓存RenderPass   imageViews最后一项是深度附件
         handle = VULKAN_RHI->FindOrCreateVkRenderPass(renderPassAttachments);
 
         // 创建framebuffer  TODO:把FrameBuffer塞到RenderPass里了

@@ -1,6 +1,11 @@
 #pragma once
 #include "Hazel/Core/Base.h"
 namespace GameEngine {
+
+// #define RHI_DEBUG_LOG 0   // 打印详细日志
+
+
+
 #define MAX_QUEUE_CNT 2					//每个队列族的最大队列数目
 #define MAX_SHADER_IN_OUT_VARIABLES 8	//允许着色器最大的输入和输出变量数目
 #define MAX_RENDER_TARGETS 8			//允许同时绑定的最大RT数目
@@ -86,13 +91,13 @@ namespace GameEngine {
 	enum RHIFormat : uint32_t
 	{
 		FORMAT_UKNOWN = 0,
-
+		// 	带伽马校正的色彩格式，存储时压缩、采样时解压缩
 		FORMAT_R8_SRGB,
 		FORMAT_R8G8_SRGB,
 		FORMAT_R8G8B8_SRGB,
 		FORMAT_R8G8B8A8_SRGB,
 		FORMAT_B8G8R8A8_SRGB,
-
+		// 存储高精度浮点数，支持小数和大范围数值
 		FORMAT_R16_SFLOAT,
 		FORMAT_R16G16_SFLOAT,
 		FORMAT_R16G16B16_SFLOAT,
@@ -101,7 +106,7 @@ namespace GameEngine {
 		FORMAT_R32G32_SFLOAT,
 		FORMAT_R32G32B32_SFLOAT,
 		FORMAT_R32G32B32A32_SFLOAT,
-
+		// 无符号归一化格式（0~255 映射到 0.0~1.0），存储整数、使用时转浮点
 		FORMAT_R8_UNORM,
 		FORMAT_R8G8_UNORM,
 		FORMAT_R8G8B8_UNORM,
@@ -110,7 +115,7 @@ namespace GameEngine {
 		FORMAT_R16G16_UNORM,
 		FORMAT_R16G16B16_UNORM,
 		FORMAT_R16G16B16A16_UNORM,
-
+		// 有符号归一化格式（-128~127 映射到 - 1.0~1.0），支持正负值
 		FORMAT_R8_SNORM,
 		FORMAT_R8G8_SNORM,
 		FORMAT_R8G8B8_SNORM,
@@ -119,7 +124,7 @@ namespace GameEngine {
 		FORMAT_R16G16_SNORM,
 		FORMAT_R16G16B16_SNORM,
 		FORMAT_R16G16B16A16_SNORM,
-
+		// 无符号整数格式（直接存储整数，不做归一化）	
 		FORMAT_R8_UINT,
 		FORMAT_R8G8_UINT,
 		FORMAT_R8G8B8_UINT,
@@ -132,7 +137,7 @@ namespace GameEngine {
 		FORMAT_R32G32_UINT,
 		FORMAT_R32G32B32_UINT,
 		FORMAT_R32G32B32A32_UINT,
-
+		// 有符号整数格式（存储正负整数）	
 		FORMAT_R8_SINT,
 		FORMAT_R8G8_SINT,
 		FORMAT_R8G8B8_SINT,
@@ -146,6 +151,7 @@ namespace GameEngine {
 		FORMAT_R32G32B32_SINT,
 		FORMAT_R32G32B32A32_SINT,
 
+		// 深度、模板
 		FORMAT_D32_SFLOAT,
 		FORMAT_D32_SFLOAT_S8_UINT,
 		FORMAT_D24_UNORM_S8_UINT,
@@ -355,10 +361,10 @@ namespace GameEngine {
 	typedef struct RHITextureViewInfo
 	{
 		RHITextureRef texture;
-		RHIFormat format = FORMAT_UKNOWN;			// 此时取texture的format
+		RHIFormat format = FORMAT_UKNOWN;
 		TextureViewType viewType = VIEW_TYPE_2D;
 
-		TextureSubresourceRange subresource;	// 此时取texture的默认range
+		TextureSubresourceRange subresource;
 
 		friend bool operator== (const RHITextureViewInfo& a, const RHITextureViewInfo& b)
 		{
@@ -537,8 +543,7 @@ namespace GameEngine {
 		MemoryUsage memoryUsage = MEMORY_USAGE_GPU_ONLY;
 		ResourceType type = RESOURCE_TYPE_TEXTURE;
 
-		TextureCreationFlags creationFlag = TEXTURE_CREATION_NONE;
-
+		TextureCreationFlags creationFlag = TEXTURE_CREATION_NONE; 
 		friend bool operator== (const RHITextureInfo& a, const RHITextureInfo& b)
 		{
 			return  a.format == b.format &&
@@ -551,6 +556,7 @@ namespace GameEngine {
 		}
 
 	} RHITextureInfo;
+
 	typedef struct RHICommandPoolInfo
 	{
 		RHIQueueRef queue;
@@ -848,8 +854,8 @@ namespace GameEngine {
 	typedef struct RHIDepthStencilStateInfo
 	{
 		CompareFunction depthTest = COMPARE_FUNCTION_LESS_EQUAL;
-		bool enableDepthTest = true;
-		bool enableDepthWrite = true;
+		bool enableDepthTest = false;
+		bool enableDepthWrite = false;
 
 		bool __padding[2] = { 0 };
 
