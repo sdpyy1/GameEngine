@@ -2,6 +2,10 @@
 #include "VulkanRHI.h"
 #include "VulkanUtil.h"
 #include "VulkanRHIResource.h"
+#include "backends/imgui_impl_glfw.h"
+#include "backends/imgui_impl_vulkan.h"
+#include <Hazel/Core/Definations.h>
+
 #define VMA_IMPLEMENTATION
 
 #define VULKAN_VERSION VK_API_VERSION_1_2
@@ -409,6 +413,70 @@ namespace GameEngine
 
     }
 
+    void VulkanDynamicRHI::InitImGui(GLFWwindow* window)
+    {
+
+        VulkanUtil::VulkanRenderPassAttachments attachmentInfo = {};
+        VkAttachmentDescription colorAttachment = {};
+        colorAttachment.format = VulkanUtil::RHIFormatToVkFormat(RHI_COLOR_FROMAT);
+        colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+        colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+
+        attachmentInfo.colorAttachments.push_back(colorAttachment);
+        VkAttachmentDescription depthAttachment = {};
+        depthAttachment.format = VulkanUtil::RHIFormatToVkFormat(RHI_DEPTH_FROMAT);
+        depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+        depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+
+        attachmentInfo.depthStencilAttachment = depthAttachment;
+        VkRenderPass tempPass = FindOrCreateVkRenderPass(attachmentInfo);
+
+        std::shared_ptr<VulkanRHIQueue> queue = CAST<VulkanRHIQueue>(m_Queues[QUEUE_TYPE_GRAPHICS][0]);
+
+        IMGUI_CHECKVERSION();
+        ImGui::CreateContext();
+        // ImPlot::CreateContext();
+        ImGuiIO& io = ImGui::GetIO();
+        io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
+        //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+        io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
+        io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows 
+        io.ConfigWindowsMoveFromTitleBarOnly = true;
+        ImGui::StyleColorsDark();
+        // When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
+        ImGuiStyle& style = ImGui::GetStyle();
+        if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+        {
+            style.WindowRounding = 0.0f;
+            style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+        }
+        style.Colors[ImGuiCol_WindowBg] = ImVec4(0.15f, 0.15f, 0.15f, style.Colors[ImGuiCol_WindowBg].w);
+        auto funcLoader = [](const char* funcName, void* engine)
+            {
+                PFN_vkVoidFunction instanceAddr = vkGetInstanceProcAddr(VULKAN_INSTANCE, funcName);
+                PFN_vkVoidFunction deviceAddr = vkGetDeviceProcAddr(VULKAN_DEVICE, funcName);
+                return deviceAddr ? deviceAddr : instanceAddr;
+            };
+        const bool funcsLoaded = ImGui_ImplVulkan_LoadFunctions(funcLoader, this);
+
+        ImGui_ImplGlfw_InitForVulkan(window, true);
+        ImGui_ImplVulkan_InitInfo initInfo = {};
+        initInfo.Instance = m_Instance;
+        initInfo.PhysicalDevice = m_PhysicalDevice;
+        initInfo.Device = m_LogicalDevice;
+        initInfo.QueueFamily = queue->GetQueueFamilyIndex();
+        initInfo.Queue = queue->GetHandle();
+        initInfo.DescriptorPool = m_DescriptorPool;
+        initInfo.PipelineCache = nullptr;
+        initInfo.MinImageCount = 2;
+        initInfo.ImageCount = 3;
+        initInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+        //ImGui_ImplVulkan_LoadFunctions();
+        ImGui_ImplVulkan_Init(&initInfo, tempPass);
+    }
+
 	RHISurfaceRef VulkanDynamicRHI::CreateSurface(GLFWwindow* window)
 	{
         RHISurfaceRef surface = std::make_shared<VulkanRHISurface>(window);
@@ -533,87 +601,107 @@ namespace GameEngine
         return renderPass;
 	}
 
-	VkRenderPass VulkanDynamicRHI::CreateVkRenderPass(const VulkanUtil::VulkanRenderPassAttachments& info)
-	{
+    VkRenderPass VulkanDynamicRHI::CreateVkRenderPass(const VulkanUtil::VulkanRenderPassAttachments& info)
+    {
+        // 是否有 depth 附件
         bool hasDepth = (info.depthStencilAttachment.format != VK_FORMAT_UNDEFINED);
+
         std::vector<VkAttachmentDescription> attachments;
         std::vector<VkAttachmentReference> colorReferences;
         VkAttachmentReference depthReference = {};
 
-        for (const VkAttachmentDescription& attachment : info.colorAttachments)  attachments.push_back(attachment);
-        for (VkAttachmentDescription& attachment : attachments)
+        uint32_t attachmentIndex = 0;
+
+        // --- 处理 color attachments（每个 color 一个 attachment + reference） ---
+        for (const VkAttachmentDescription& src : info.colorAttachments)
         {
-            attachment.stencilLoadOp = attachment.loadOp;   // 写死
-            attachment.stencilStoreOp = attachment.storeOp;
-            attachment.initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-            attachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+            VkAttachmentDescription desc = src; // 拷贝一份，避免修改原始结构
+            // 为 color 附件选择合理的初始/最终 layout（可根据需要调整）
+            if (desc.initialLayout == VK_IMAGE_LAYOUT_UNDEFINED)
+                desc.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED; // 让驱动在开始时 transition（更通用）
+            // finalLayout 默认设置为 COLOR_ATTACHMENT_OPTIMAL；如果这是 swapchain image，需要调用方替换为 PRESENT_SRC_KHR
+            if (desc.finalLayout == VK_IMAGE_LAYOUT_UNDEFINED)
+                desc.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+            // stencil 对 color 无效，但保留原来的 load/store 设置（如果应用需要，可以 override）
+            // 把默认的 stencil ops 也设置为 color 的 load/store，以避免未初始化行为
+            desc.stencilLoadOp = desc.stencilLoadOp == VK_ATTACHMENT_LOAD_OP_DONT_CARE ? VK_ATTACHMENT_LOAD_OP_DONT_CARE : desc.stencilLoadOp;
+            desc.stencilStoreOp = desc.stencilStoreOp == VK_ATTACHMENT_STORE_OP_DONT_CARE ? VK_ATTACHMENT_STORE_OP_DONT_CARE : desc.stencilStoreOp;
+
+            attachments.push_back(desc);
+
+            VkAttachmentReference cref{};
+            cref.attachment = attachmentIndex;
+            cref.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+            colorReferences.push_back(cref);
+
+            ++attachmentIndex;
         }
+
+        // --- 处理 depth stencil attachment（如果存在） ---
         if (hasDepth)
         {
-            VkAttachmentDescription attachment = info.depthStencilAttachment;
-            attachment.stencilLoadOp = attachment.loadOp;   // 写死
-            attachment.stencilStoreOp = attachment.storeOp;
-            attachment.initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-            attachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+            VkAttachmentDescription desc = info.depthStencilAttachment; // 拷贝
+            // depth 初始/最终 layout：初始使用 UNDEFINED 更通用（表示可由 renderpass transition）
+            if (desc.initialLayout == VK_IMAGE_LAYOUT_UNDEFINED)
+                desc.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            if (desc.finalLayout == VK_IMAGE_LAYOUT_UNDEFINED)
+                desc.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
-            attachments.push_back(attachment);
+            // stencil ops：通常 depth-stencil 需要设置 stencilLoad/Store 到合理值（这里保持与 loadOp/storeOp 一致）
+            desc.stencilLoadOp = desc.stencilLoadOp == VK_ATTACHMENT_LOAD_OP_DONT_CARE ? desc.loadOp : desc.stencilLoadOp;
+            desc.stencilStoreOp = desc.stencilStoreOp == VK_ATTACHMENT_STORE_OP_DONT_CARE ? desc.storeOp : desc.stencilStoreOp;
+
+            attachments.push_back(desc);
+
+            depthReference.attachment = attachmentIndex;
+            depthReference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+            ++attachmentIndex;
         }
 
-        for (uint32_t i = 0; i < attachments.size(); i++) colorReferences.push_back({ i, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL });
-        VkAttachmentReference depthAttachmentReference = { (uint32_t)attachments.size() - 1, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL };
-
-        // 不支持subpass了 艹
+        // --- 准备 subpass ---
         VkSubpassDescription subpass = {};
         subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-        subpass.colorAttachmentCount = (uint32_t)colorReferences.size();
-        subpass.pColorAttachments = colorReferences.data();
-        subpass.pDepthStencilAttachment = hasDepth ? &depthAttachmentReference : nullptr;
+        subpass.colorAttachmentCount = static_cast<uint32_t>(colorReferences.size());
+        subpass.pColorAttachments = colorReferences.empty() ? nullptr : colorReferences.data();
+        subpass.pDepthStencilAttachment = hasDepth ? &depthReference : nullptr;
         subpass.inputAttachmentCount = 0;
         subpass.pInputAttachments = nullptr;
         subpass.preserveAttachmentCount = 0;
         subpass.pPreserveAttachments = nullptr;
-        subpass.pResolveAttachments = nullptr;
+        subpass.pResolveAttachments = nullptr; // 若支持 MSAA，请在此提供 resolve attachments
 
-        // 屏障在外面显式的添加 不在pass里加了？
-        // std::vector<VkSubpassDependency> subpassDependencies(2);
-        // subpassDependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
-        // subpassDependencies[0].dstSubpass = 0;
-        // subpassDependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
-        // subpassDependencies[0].srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
-        // subpassDependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-        // subpassDependencies[0].srcStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-        // subpassDependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+        // --- Subpass dependency：外部 -> subpass，保证 layout 转换/写入可见性 ---
+        VkSubpassDependency dependency = {};
+        dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+        dependency.dstSubpass = 0;
+        dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+        dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+        dependency.srcAccessMask = 0;
+        dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        dependency.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 
-        // subpassDependencies[1].srcSubpass = 0;
-        // subpassDependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
-        // subpassDependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
-        // subpassDependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-        // subpassDependencies[1].dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
-        // subpassDependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        // subpassDependencies[1].dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-
+        // --- RenderPass create info ---
         VkRenderPassCreateInfo renderPassInfo = {};
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
         renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
         renderPassInfo.pAttachments = attachments.data();
         renderPassInfo.subpassCount = 1;
         renderPassInfo.pSubpasses = &subpass;
-        renderPassInfo.dependencyCount = 0;
-        renderPassInfo.pDependencies = nullptr;
+        renderPassInfo.dependencyCount = 1;
+        renderPassInfo.pDependencies = &dependency;
 
-        VkRenderPass renderPass;
-        if (vkCreateRenderPass(m_LogicalDevice, &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS)
+        VkRenderPass renderPass = VK_NULL_HANDLE;
+        VkResult result = vkCreateRenderPass(m_LogicalDevice, &renderPassInfo, nullptr, &renderPass);
+        if (result != VK_SUCCESS)
         {
-            LOG_ERROR("Failed to create render pass!");
+            LOG_ERROR("Failed to create render pass! VkResult = {0}", static_cast<int>(result));
+            return VK_NULL_HANDLE;
         }
 
-        // {
-        //     ScopeLock lock(sync);
-        //     renderPassMap.insert({info, renderPass});
-        // }
         return renderPass;
-	}
-
+    }
 	VkFramebuffer VulkanDynamicRHI::CreateVkFramebuffer(const VkFramebufferCreateInfo& info)
 	{
         VkFramebuffer frameBuffer;

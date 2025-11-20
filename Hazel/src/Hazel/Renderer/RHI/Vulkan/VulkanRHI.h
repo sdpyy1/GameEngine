@@ -14,6 +14,7 @@ namespace GameEngine
 		VulkanDynamicRHI(const RHIConfig& config);
 
 		virtual RHIQueueRef GetQueue(const RHIQueueInfo& info) override final;
+		virtual void InitImGui(GLFWwindow* window) override final;
 
 		virtual RHISurfaceRef CreateSurface(GLFWwindow* window) override final;
 		virtual RHISwapchainRef CreateSwapChain(const RHISwapchainInfo& info) override final;
@@ -68,7 +69,7 @@ namespace GameEngine
 		VkPhysicalDeviceRayTracingPipelinePropertiesKHR m_PhysicalDeviceRayTracingPipelineProperties;   //光追特性
 		std::vector<std::string> m_PhysicalDeviceSupportedExtensions;
 		// 逻辑设备
-		VkDevice m_LogicalDevice;
+		VkDevice m_LogicalDevice = nullptr;
 
 		// 队列
 		std::vector<VkQueueFamilyProperties> m_QueueFamilyProperties; // 所有队列族

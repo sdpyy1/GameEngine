@@ -21,6 +21,7 @@ namespace GameEngine {
 			m_PerFrameBaseResources[i].finishSemaphore = m_DynamicRHI->CreateSemaphore();
 			m_PerFrameBaseResources[i].fence = m_DynamicRHI->CreateFence(true);
 		}
+		m_DynamicRHI->InitImGui(APP_GLFWWINDOW);
 	}
 
 	void RenderSystem::Tick(float timestep)

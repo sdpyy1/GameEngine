@@ -5,6 +5,9 @@ namespace GameEngine {
 #define MAX_SHADER_IN_OUT_VARIABLES 8	//允许着色器最大的输入和输出变量数目
 #define MAX_RENDER_TARGETS 8			//允许同时绑定的最大RT数目
 #define MAX_DESCRIPTOR_SETS 8			//允许绑定的最大描述符集数目
+	
+#define RHI_COLOR_FROMAT FORMAT_R8G8B8A8_UNORM
+#define RHI_DEPTH_FROMAT FORMAT_D32_SFLOAT
 
 #define RHI_DYNAMICRHI DynamicRHI::Get()
 

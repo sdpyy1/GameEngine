@@ -17,6 +17,7 @@ namespace GameEngine {
 		static DynamicRHIRef Get(){return s_DynamicRHI;}
 
 		virtual void Tick();    // 更新资源计数，清理无引用且长时间未使用资源
+		virtual void InitImGui(GLFWwindow* window) = 0;
 
 		virtual void Destroy();
 		virtual RHIQueueRef GetQueue(const RHIQueueInfo& info) = 0;
