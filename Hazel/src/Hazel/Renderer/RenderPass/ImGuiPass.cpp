@@ -36,10 +36,7 @@ namespace GameEngine
                         ImGui_ImplVulkan_NewFrame();
                         ImGui_ImplGlfw_NewFrame();
                         ImGui::NewFrame();
-                        // m_ImGuiRendererManager->ImGuiCommand();
-                        ImGui::Begin("Test");
-                        ImGui::Text("Hello, World!");
-                        ImGui::End();
+                        m_ImGuiRendererManager->ImGuiCommand();
                         ImGui::Render();
                         command->ImGuiRenderDrawData();
                     })

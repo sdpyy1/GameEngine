@@ -75,7 +75,7 @@ namespace GameEngine {
 		auto& window = static_cast<Window&>(*Application::Get().GetWindow());
 
 		double x, y;
-		glfwGetCursorPos(static_cast<GLFWwindow*>(window.GetNativeWindow()), &x, &y);
+		glfwGetCursorPos(APP_GLFWWINDOW, &x, &y);
 		return { (float)x, (float)y };
 	}
 
@@ -84,12 +84,12 @@ namespace GameEngine {
 	void Input::SetCursorMode(CursorMode mode)
 	{
 		auto& window = static_cast<Window&>(*Application::Get().GetWindow());
-		glfwSetInputMode(static_cast<GLFWwindow*>(window.GetNativeWindow()), GLFW_CURSOR, GLFW_CURSOR_NORMAL + (int)mode);
+		glfwSetInputMode(APP_GLFWWINDOW, GLFW_CURSOR, GLFW_CURSOR_NORMAL + (int)mode);
 	}
 
 	CursorMode Input::GetCursorMode()
 	{
 		auto& window = static_cast<Window&>(*Application::Get().GetWindow());
-		return (CursorMode)(glfwGetInputMode(static_cast<GLFWwindow*>(window.GetNativeWindow()), GLFW_CURSOR) - GLFW_CURSOR_NORMAL);
+		return (CursorMode)(glfwGetInputMode(APP_GLFWWINDOW, GLFW_CURSOR) - GLFW_CURSOR_NORMAL);
 	}
 }

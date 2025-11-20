@@ -27,8 +27,8 @@ namespace GameEngine {
 
 
 		NFD::Init();
-		m_RendererManager = std::make_shared<RendererManager>();
-		AssetImporter::Init();*/
+		m_RendererManager = std::make_shared<RendererManager>();*/
+		AssetImporter::Init();
 
 		m_SceneManager = std::make_shared<SceneManager>();
 
@@ -47,7 +47,7 @@ namespace GameEngine {
 
 			float timestep = GetTimePreFrame();
 
-			// m_SceneManager->Tick(timestep);
+			m_SceneManager->Tick(timestep);
 
 			//if (!m_Minimized) {
 			//	m_RendererManager->Tick(timestep);
