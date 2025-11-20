@@ -1,6 +1,6 @@
 #pragma once
 #include "VulkanShader.h"
-#include "Hazel/Renderer/PipelineCompute.h"
+#include "Hazel/Renderer/old/PipelineCompute.h"
 namespace GameEngine
 {
 	class VulkanComputePipeline : public PipelineCompute

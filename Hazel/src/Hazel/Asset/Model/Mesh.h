@@ -2,8 +2,8 @@
 #include "Hazel/Asset/Asset.h"
 #include "Hazel/Asset/AssetManager.h"
 #include <Hazel/Math/AABB.h>
-#include <Hazel/Renderer/VertexBuffer.h>
-#include <Hazel/Renderer/IndexBuffer.h>
+#include <Hazel/Renderer/old/VertexBuffer.h>
+#include <Hazel/Renderer/old/IndexBuffer.h>
 #include "Hazel/Asset/Model/Material.h"
 #include "Hazel/Asset/Model/MaterialAsset.h"
 #include "Skeleton.h"

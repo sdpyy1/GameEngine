@@ -4,7 +4,7 @@
 #include "VulkanContext.h"
 #include "VulkanImage.h"
 #include "VulkanRenderer.h"
-#include "Hazel/Renderer/Renderer.h"
+#include "Hazel/Renderer/old/Renderer.h"
 #include "VulkanNativeCall.h"
 #include "Hazel/Asset/TextureImporter.h"
 #include "VulkanUtils.h"

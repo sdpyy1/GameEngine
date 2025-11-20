@@ -1,8 +1,8 @@
 #include "hzpch.h"
 #include "VulkanComputePass.h"
 #include "VulkanShader.h"
-#include <Hazel/Renderer/Texture.h>
-#include "Hazel/Renderer/Renderer.h"
+#include <Hazel/Renderer/old/Texture.h>
+#include "Hazel/Renderer/old/Renderer.h"
 #include "VulkanContext.h"
 #include "VulkanTexture.h"
 #include "VulkanComputePipeline.h"

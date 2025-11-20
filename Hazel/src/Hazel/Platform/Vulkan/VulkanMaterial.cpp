@@ -1,6 +1,6 @@
 #include "hzpch.h"
 #include "VulkanMaterial.h"
-#include <Hazel/Renderer/Shader.h>
+#include <Hazel/Renderer/old/Shader.h>
 #include "VulkanContext.h"
 #include "VulkanTexture.h"
 namespace GameEngine {

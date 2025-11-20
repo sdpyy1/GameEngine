@@ -1,6 +1,6 @@
 #pragma once
-#include "Hazel/Renderer/Renderer.h"
-#include "Hazel/Renderer/RenderContext.h"
+#include "Hazel/Renderer/old/Renderer.h"
+#include "Hazel/Renderer/old/RenderContext.h"
 #include "VulkanDevice.h"
 #include "VulkanSwapChain.h"
 namespace GameEngine {

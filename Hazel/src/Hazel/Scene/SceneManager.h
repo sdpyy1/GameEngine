@@ -1,7 +1,7 @@
 #pragma once
 #include "Hazel/Core/Timestep.h"
 #include "Scene.h"
-#include "Hazel/Renderer/EditorCamera.h"
+#include "Hazel/Renderer/old/EditorCamera.h"
 namespace GameEngine
 {
 	class SceneManager

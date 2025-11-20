@@ -2,7 +2,7 @@
 #include "VulkanFramebuffer.h"
 #include "VulkanContext.h"
 #include "VulkanUtils.h"
-#include "Hazel/Renderer/Renderer.h"
+#include "Hazel/Renderer/old/Renderer.h"
 #include "Hazel/Platform/Windows/WindowsWindow.h"
 
 namespace GameEngine {

@@ -4,12 +4,12 @@
 #include "Hazel/Core/Application.h"
 #include "Components.h"
 #include "ScriptableEntity.h"
-#include "Hazel/Renderer/Renderer.h"
+#include "Hazel/Renderer/old/Renderer.h"
 #define GLM_FORCE_DEPTH_ZERO_TO_FE
 #include <glm/glm.hpp>
 
 #include "Hazel/Utils/UIUtils.h"
-#include "Hazel/Renderer/RendererManager.h"
+#include "Hazel/Renderer/old/RendererManager.h"
 #include <imgui.h>
 #include <Hazel/Asset/AssetImporter.h>
 #include <Hazel/Asset/Model/Mesh.h>

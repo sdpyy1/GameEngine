@@ -5,7 +5,7 @@
 
 #include "Hazel/Platform/Vulkan/VulkanIndexBuffer.h"
 
-#include "Hazel/Renderer/RendererAPI.h"
+#include "Hazel/Renderer/old/RendererAPI.h"
 
 namespace GameEngine {
 

@@ -3,7 +3,7 @@
 #include "VulkanUtils.h"
 #include <GLFW/glfw3.h>
 #include <spdlog/fmt/ostr.h>
-#include "Hazel/Renderer/Renderer.h"
+#include "Hazel/Renderer/old/Renderer.h"
 #include "VulkanShader.h"
 static PFN_vkGetPhysicalDeviceSurfaceSupportKHR fpGetPhysicalDeviceSurfaceSupportKHR;
 static PFN_vkGetPhysicalDeviceSurfaceCapabilitiesKHR fpGetPhysicalDeviceSurfaceCapabilitiesKHR;

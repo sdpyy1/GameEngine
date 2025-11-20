@@ -1,6 +1,6 @@
 #include "hzpch.h"
 #include "VulkanComputePipeline.h"
-#include "Hazel/Renderer/Renderer.h"
+#include "Hazel/Renderer/old/Renderer.h"
 #include "VulkanContext.h"
 #include "VulkanUtils.h"
 #include "VulkanRenderCommandBuffer.h"

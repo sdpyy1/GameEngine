@@ -1,12 +1,12 @@
 #include "hzpch.h"
 #include "VulkanRenderer.h"
-#include <Hazel/Renderer/RendererCapabilities.h>
+#include <Hazel/Renderer/old/RendererCapabilities.h>
 #include "Vulkan.h"
-#include "Hazel/Renderer/Renderer.h"
+#include "Hazel/Renderer/old/Renderer.h"
 #include "VulkanContext.h"
 #include "VulkanUtils.h"
 #include <imgui.h>
-#include <Hazel/Renderer/IndexBuffer.h>
+#include <Hazel/Renderer/old/IndexBuffer.h>
 #include "VulkanNativeCall.h"
 #include "VulkanFramebuffer.h"
 #include "VulkanPipeline.h"

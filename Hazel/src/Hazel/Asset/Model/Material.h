@@ -1,7 +1,7 @@
 #pragma once
-#include <Hazel/Renderer/Shader.h>
-#include <Hazel/Renderer/Renderer.h>
-#include <Hazel/Renderer/Texture.h>
+#include <Hazel/Renderer/old/Shader.h>
+#include <Hazel/Renderer/old/Renderer.h>
+#include <Hazel/Renderer/old/Texture.h>
 namespace GameEngine {
 	struct MaterialPush {  // PushRange需要是16字节的整数倍
 		glm::vec3 AlbedoColor;

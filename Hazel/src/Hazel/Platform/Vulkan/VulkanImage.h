@@ -1,6 +1,6 @@
 #pragma once
 #include <vulkan/vulkan.h>
-#include "Hazel/Renderer/Image.h"
+#include "Hazel/Renderer/old/Image.h"
 #include "VulkanContext.h"
 #include "VulkanAllocator.h"
 #include <map>

@@ -1,11 +1,11 @@
 #pragma once
 
-#include "Hazel/Renderer/RendererCapabilities.h"
+#include "Hazel/Renderer/old/RendererCapabilities.h"
 #include <glm/glm.hpp>
 #include "RenderCommandBuffer.h"
 #include "RenderPass.h"
-#include "Hazel/Renderer/IndexBuffer.h"
-#include "Hazel/Renderer/ComputePass.h"
+#include "Hazel/Renderer/old/IndexBuffer.h"
+#include "Hazel/Renderer/old/ComputePass.h"
 namespace GameEngine {
 	class Material;
 	class MeshSource;

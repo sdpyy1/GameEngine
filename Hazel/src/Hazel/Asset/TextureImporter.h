@@ -1,5 +1,5 @@
 #pragma once
-#include "Hazel/Renderer/Texture.h"
+#include "Hazel/Renderer/old/Texture.h"
 
 #include <filesystem>
 namespace GameEngine {

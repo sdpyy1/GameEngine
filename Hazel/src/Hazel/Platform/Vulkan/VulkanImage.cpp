@@ -6,7 +6,7 @@
 #include <spdlog/fmt/ostr.h>
 #include "VulkanNativeCall.h"
 #include "VulkanRenderer.h"
-#include "Hazel/Renderer/Renderer.h"
+#include "Hazel/Renderer/old/Renderer.h"
 
 namespace GameEngine {
 	// ����ʱֻ�ᱣ����û��ʵ�ʴ���

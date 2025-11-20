@@ -2,7 +2,7 @@
 
 #include "Hazel/Core/Timestep.h"
 #include "Hazel/Core/UUID.h"
-#include "Hazel/Renderer/EditorCamera.h"
+#include "Hazel/Renderer/old/EditorCamera.h"
 #include "entt.hpp"
 
 class b2World;

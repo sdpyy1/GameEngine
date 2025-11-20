@@ -7,7 +7,7 @@
 #include "Hazel/Events/MouseEvent.h"
 #include "Hazel/Events/KeyEvent.h"
 
-#include "Hazel/Renderer/Renderer.h"
+#include "Hazel/Renderer/old/Renderer.h"
 
 #include "Hazel/Platform/Vulkan/VulkanContext.h"
 #include <imgui.h>

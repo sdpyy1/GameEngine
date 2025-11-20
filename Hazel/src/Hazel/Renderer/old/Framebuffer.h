@@ -3,9 +3,9 @@
 #include <glm/glm.hpp>
 #include <map>
 
-#include "Hazel/Renderer/RendererTypes.h"
+#include "Hazel/Renderer/old/RendererTypes.h"
 #include "Image.h"
-#include "RHI/RHIBase.h"
+#include "../RHI/RHIBase.h"
 namespace GameEngine {
 
 	class Framebuffer;

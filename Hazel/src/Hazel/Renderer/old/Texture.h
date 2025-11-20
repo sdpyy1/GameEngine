@@ -1,8 +1,8 @@
 #pragma once
 
 #include "Hazel/Core/Base.h"
-#include "Hazel/Renderer/Image.h"
-#include "Hazel/Renderer/RenderCommandBuffer.h"
+#include "Hazel/Renderer/old/Image.h"
+#include "Hazel/Renderer/old/RenderCommandBuffer.h"
 #include <string>
 
 namespace GameEngine {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Hazel/Renderer/UniformBuffer.h"
+#include "Hazel/Renderer/old/UniformBuffer.h"
 
 #include "VulkanAllocator.h"
 

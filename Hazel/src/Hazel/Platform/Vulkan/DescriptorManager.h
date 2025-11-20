@@ -1,7 +1,7 @@
 #pragma once
 #include "VulkanShader.h"
-#include "Hazel/Renderer/Renderer.h"
-#include <Hazel/Renderer/Image.h>
+#include "Hazel/Renderer/old/Renderer.h"
+#include <Hazel/Renderer/old/Image.h>
 namespace GameEngine
 {
 	class DescriptorManager

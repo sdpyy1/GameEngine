@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Hazel/Core/Window.h"
-#include "Hazel/Renderer/RenderContext.h"
+#include "Hazel/Renderer/old/RenderContext.h"
 #include "Hazel/Platform/Vulkan/VulkanSwapChain.h"
 struct GLFWcursor;
 namespace GameEngine {

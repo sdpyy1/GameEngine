@@ -2,7 +2,7 @@
 
 #include "Hazel/Core/Base.h"
 #include "Hazel/Events/Event.h"
-#include "Hazel/Renderer/RenderContext.h"
+#include "Hazel/Renderer/old/RenderContext.h"
 #include <sstream>
 #include "Hazel/Platform/Vulkan/VulkanSwapChain.h"
 namespace GameEngine {

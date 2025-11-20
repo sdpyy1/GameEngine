@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Hazel/Renderer/RenderCommandBuffer.h"
+#include "Hazel/Renderer/old/RenderCommandBuffer.h"
 #include "vulkan/vulkan.h"
 
 namespace GameEngine {

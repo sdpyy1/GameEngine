@@ -2,7 +2,7 @@
 #include "VulkanNativeCall.h"
 #include "VulkanContext.h"
 
-#include "Hazel/Renderer/RendererStats.h"
+#include "Hazel/Renderer/old/RendererStats.h"
 
 namespace GameEngine::Vulkan {
 

@@ -1,7 +1,7 @@
 #include "hzpch.h"
 #include "ComputePass.h"
 #include "Hazel/Platform/Vulkan/VulkanComputePass.h"
-#include "Hazel/Renderer/RendererAPI.h"
+#include "Hazel/Renderer/old/RendererAPI.h"
 
 namespace GameEngine
 {

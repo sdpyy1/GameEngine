@@ -1,15 +1,15 @@
 #pragma once
 
 #include "Hazel/Core/UUID.h"
-#include "Hazel/Renderer/Texture.h"
-#include "Hazel/Renderer/Font.h"
+#include "Hazel/Renderer/old/Texture.h"
+#include "Hazel/Renderer/old/Font.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <Hazel/Math/Math.h>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
-#include <Hazel/Renderer/EditorCamera.h>
+#include <Hazel/Renderer/old/EditorCamera.h>
 #include <Hazel/Asset/Model/Animation.h>
 
 namespace GameEngine {

@@ -2,10 +2,10 @@
 
 #include "Hazel/Core/Ref.h"
 
-#include "Hazel/Renderer/VertexBuffer.h"
-#include "Hazel/Renderer/Shader.h"
-#include "Hazel/Renderer/UniformBuffer.h"
-#include "Hazel/Renderer/Framebuffer.h"
+#include "Hazel/Renderer/old/VertexBuffer.h"
+#include "Hazel/Renderer/old/Shader.h"
+#include "Hazel/Renderer/old/UniformBuffer.h"
+#include "Hazel/Renderer/old/Framebuffer.h"
 
 namespace GameEngine {
 	enum class PrimitiveTopology

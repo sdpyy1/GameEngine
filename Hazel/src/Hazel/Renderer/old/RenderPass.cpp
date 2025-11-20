@@ -5,7 +5,7 @@
 
 #include "Hazel/Platform/Vulkan/VulkanRenderPass.h"
 
-#include "Hazel/Renderer/RendererAPI.h"
+#include "Hazel/Renderer/old/RendererAPI.h"
 
 namespace GameEngine {
 	Ref<RenderPass> RenderPass::Create(const RenderPassSpecification& spec)

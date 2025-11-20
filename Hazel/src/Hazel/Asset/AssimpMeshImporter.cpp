@@ -4,8 +4,8 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 #include <assimp/Importer.hpp>
-#include <Hazel/Renderer/Texture.h>
-#include <Hazel/Renderer/Renderer.h>
+#include <Hazel/Renderer/old/Texture.h>
+#include <Hazel/Renderer/old/Renderer.h>
 #include "Hazel/Asset/Model/Material.h"
 #include "Model/MaterialAsset.h"
 #include "Hazel/Asset/AssetManager.h"

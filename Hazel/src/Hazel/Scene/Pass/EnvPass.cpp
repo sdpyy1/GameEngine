@@ -1,6 +1,6 @@
 #include "hzpch.h"
 #include "EnvPass.h"
-#include "Hazel/Renderer/Renderer.h"
+#include "Hazel/Renderer/old/Renderer.h"
 #include "Hazel/Asset/Model/Material.h"
 namespace GameEngine{
 	void EnvPass::Init()

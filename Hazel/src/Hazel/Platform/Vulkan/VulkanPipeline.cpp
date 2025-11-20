@@ -6,7 +6,7 @@
 #include "VulkanFramebuffer.h"
 #include "VulkanUniformBuffer.h"
 #include "VulkanUtils.h"
-#include "Hazel/Renderer/Renderer.h"
+#include "Hazel/Renderer/old/Renderer.h"
 
 namespace GameEngine {
 	namespace Utils {

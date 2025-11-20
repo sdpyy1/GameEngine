@@ -8,7 +8,7 @@
 #include "examples/imgui_impl_vulkan_with_textures.h"
 #include "Hazel/Core/Application.h"
 #include <GLFW/glfw3.h>
-#include "Hazel/Renderer/Renderer.h"
+#include "Hazel/Renderer/old/Renderer.h"
 #include "Vulkan.h"
 #include "Hazel/Platform/Vulkan/VulkanContext.h"
 #include "VulkanUtils.h"

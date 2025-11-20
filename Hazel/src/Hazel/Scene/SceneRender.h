@@ -1,7 +1,7 @@
 #pragma once
 #include "Scene.h"
 #include "Hazel/Asset/Model/Mesh.h"
-#include <Hazel/Renderer/ComputePass.h>
+#include <Hazel/Renderer/old/ComputePass.h>
 #include "Pass/EnvPass.h"
 namespace GameEngine {
 

@@ -1,5 +1,5 @@
 #pragma once
-#include <Hazel/Renderer/ComputePass.h>
+#include <Hazel/Renderer/old/ComputePass.h>
 #include <unordered_map>
 namespace GameEngine{
 	struct EnvTextures {

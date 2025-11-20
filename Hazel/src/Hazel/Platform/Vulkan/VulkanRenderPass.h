@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Hazel/Renderer/RenderPass.h"
+#include "Hazel/Renderer/old/RenderPass.h"
 
 #include "vulkan/vulkan.h"
 #include "VulkanShader.h"

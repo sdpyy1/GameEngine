@@ -8,7 +8,7 @@
 #include "Hazel/Utils/UIUtils.h"
 #include "Hazel/Asset/AssetMetadata.h"
 #include "Hazel/Asset/AssetImporter.h"
-#include "Hazel/Renderer/Renderer.h"
+#include "Hazel/Renderer/old/Renderer.h"
 #include "Hazel/Scene/Scene.h"
 #include "Hazel/Scene/Entity.h"
 #include "Hazel/Asset/Model/Mesh.h"

@@ -2,7 +2,7 @@
 #include "Hazel/Asset/Model/Material.h"
 #include "Hazel/Platform/Vulkan/VulkanMaterial.h"
 
-#include "Hazel/Renderer/RendererAPI.h"
+#include "Hazel/Renderer/old/RendererAPI.h"
 
 namespace GameEngine {
 	Ref<Material> Material::Create(const Ref<Shader>& shader, const std::string& name)

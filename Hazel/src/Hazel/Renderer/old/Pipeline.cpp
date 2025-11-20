@@ -3,7 +3,7 @@
 
 #include "Renderer.h"
 
-#include "Hazel/Renderer/RendererAPI.h"
+#include "Hazel/Renderer/old/RendererAPI.h"
 #include <Hazel/Platform/Vulkan/VulkanPipeline.h>
 
 namespace GameEngine {

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Hazel/Renderer/UniformBufferSet.h"
-#include "Hazel/Renderer/Renderer.h"
+#include "Hazel/Renderer/old/UniformBufferSet.h"
+#include "Hazel/Renderer/old/Renderer.h"
 #include <map>
 
 namespace GameEngine {

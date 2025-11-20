@@ -1,11 +1,11 @@
 #include "hzpch.h"
 #include "Hazel/Core/Base.h"
 #include "ImGuiRendererManager.h"
-#include "Hazel/Renderer/Renderer.h"
+#include "Hazel/Renderer/old/Renderer.h"
 #include "Hazel/Platform/Vulkan/VulkanImGuiLayer.h"
-#include "Hazel/Renderer/RendererAPI.h"
+#include "Hazel/Renderer/old/RendererAPI.h"
 #include <imgui.h>
-#include "Hazel/Renderer/EditorCamera.h"
+#include "Hazel/Renderer/old/EditorCamera.h"
 #include "Hazel/Core/Input.h"
 #include <glm/gtc/type_ptr.hpp>
 #include <Hazel/Math/ray.h>

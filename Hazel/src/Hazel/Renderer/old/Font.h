@@ -3,7 +3,7 @@
 #include <filesystem>
 
 #include "Hazel/Core/Base.h"
-#include "Hazel/Renderer/Texture.h"
+#include "Hazel/Renderer/old/Texture.h"
 
 namespace GameEngine {
 

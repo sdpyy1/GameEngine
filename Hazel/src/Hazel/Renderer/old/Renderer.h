@@ -1,9 +1,9 @@
 #pragma once
 
-#include "Hazel/Renderer/RendererAPI.h"
+#include "Hazel/Renderer/old/RendererAPI.h"
 
-#include "Hazel/Renderer/Shader.h"
-#include "Hazel/Renderer/RenderContext.h"
+#include "Hazel/Renderer/old/Shader.h"
+#include "Hazel/Renderer/old/RenderContext.h"
 #include "Hazel/Core/Application.h"
 #include "RendererConfig.h"
 #include <Hazel/Core/RenderThread.h>

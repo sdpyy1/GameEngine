@@ -1,6 +1,6 @@
 #include "hzpch.h"
 #include "PipelineCompute.h"
-#include "Hazel/Renderer/RendererAPI.h"
+#include "Hazel/Renderer/old/RendererAPI.h"
 #include <Hazel/Platform/Vulkan/VulkanComputePipeline.h>
 namespace GameEngine {
 	Ref<PipelineCompute> PipelineCompute::Create(Ref<Shader> computeShader)

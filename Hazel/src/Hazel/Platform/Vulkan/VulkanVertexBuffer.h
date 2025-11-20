@@ -1,5 +1,5 @@
 #pragma once
-#include "Hazel/Renderer/VertexBuffer.h"
+#include "Hazel/Renderer/old/VertexBuffer.h"
 
 #include "Hazel/Core/Buffer.h"
 

@@ -1,6 +1,6 @@
 #include "hzpch.h"
 #include "MaterialAsset.h"
-#include "Hazel/Renderer/Renderer.h"
+#include "Hazel/Renderer/old/Renderer.h"
 #include "Hazel/Asset/AssetManager.h"
 
 namespace GameEngine{
