@@ -99,6 +99,11 @@ namespace GameEngine {
 		ADD_COMMAND_IMMEDIATE(TextureBarrier, barrier);
 	}
 
+	void RHICommandListImmediate::UploadImGuiFonts()
+	{
+		ADD_COMMAND_IMMEDIATE(UploadImGuiFonts);
+	}
+
 	void RHICommandListImmediate::Flush()
 	{
 		// LOG_DEBUG("RHICommandListImmediate Flushed.");
@@ -356,5 +361,19 @@ namespace GameEngine {
 		COMMANDLIST_DEBUG_OUTPUT();
 		if (info.byPass) info.context->DrawIndexedIndirect(argumentBuffer, offset, drawCount);
 		else ADD_COMMAND(DrawIndexedIndirect, argumentBuffer, offset, drawCount);
+	}
+	void RHICommandList::ImGuiRenderDrawData()
+	{
+		COMMANDLIST_DEBUG_OUTPUT();
+		if (info.byPass) info.context->ImGuiRenderDrawData();
+		else ADD_COMMAND(ImGuiRenderDrawData);
+	}
+	void RHICommandImGuiRenderDrawData::Execute(RHICommandContextRef context)
+	{
+		context->ImGuiRenderDrawData();
+	}
+	void RHICommandImmediateUploadImGuiFonts::Execute(RHICommandContextImmediateRef context)
+	{
+		context->ImGuiUploadFonts();
 	}
 }

@@ -129,7 +129,7 @@ namespace GameEngine {
         for (auto& pass : passes)
         {
             if (pass->isCulled || !pass) continue;
-            // printf("rdg executing pass: %s\n", pass->Name().c_str());
+            printf("rdg executing pass: %s\n", pass->Name().c_str());
 
             switch (pass->NodeType()) {
             case RDG_PASS_NODE_TYPE_RENDER:         ExecutePass(dynamic_cast<RDGRenderPassNodeRef>(pass));          break;

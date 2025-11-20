@@ -4,8 +4,9 @@
 namespace GameEngine {
 	enum PassType
 	{
-
-		PASS_TYPE_GRID,
+		GRID_PASS,
+		IMGUI_PASS,
+		PRESENT_PASS,
 		PASS_TYPE_MAX_CNT,	//
 	};
 

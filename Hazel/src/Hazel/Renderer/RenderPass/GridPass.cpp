@@ -63,7 +63,7 @@ namespace GameEngine {
 			command->BindDescriptorSet(context.descriptors[0], 0);
 			command->Draw(3,1,0,0);
 
-        })
+        }).OutputReadWrite(outColor)
         .Finish();
 	}
 

@@ -1,11 +1,12 @@
 #pragma once
 #include <Hazel/Platform/Vulkan/VulkanImage.h>
-#include <examples/imgui_impl_vulkan_with_textures.h>
+#include "imgui.h"
+// #include <examples/imgui_impl_vulkan_with_textures.h>
 namespace GameEngine {
 	namespace UI {
 		static void Image(const Ref<Image2D>& image, const ImVec2& size, const ImVec2& uv0, const ImVec2& uv1, const ImVec4& tint_col = { 1,1,1,1 }, const ImVec4& border_col = { 0,0,0,0 })
 		{
-			VERIFY(image, "Image is null");
+			/*VERIFY(image, "Image is null");
 			if (RendererAPI::Current() == RendererAPI::Type::Vulkan)
 			{
 				Ref<VulkanImage2D> vulkanImage = image.As<VulkanImage2D>();
@@ -14,11 +15,11 @@ namespace GameEngine {
 					return;
 				const auto textureID = ImGui_ImplVulkan_AddTexture(imageInfo.Sampler, imageInfo.ImageView, vulkanImage->GetDescriptorInfoVulkan().imageLayout);
 				ImGui::Image(textureID, size, uv0, uv1, tint_col, border_col);
-			}
+			}*/
 		}
 		static ImTextureID GetImageId(const Ref<Image2D>& image)
 		{
-			VERIFY(image, "Image is null");
+			/*VERIFY(image, "Image is null");
 			if (RendererAPI::Current() == RendererAPI::Type::Vulkan)
 			{
 				Ref<VulkanImage2D> vulkanImage = image.As<VulkanImage2D>();
@@ -26,7 +27,8 @@ namespace GameEngine {
 				if (!imageInfo.ImageView)
 					return 0;
 				return ImGui_ImplVulkan_AddTexture(imageInfo.Sampler, imageInfo.ImageView, vulkanImage->GetDescriptorInfoVulkan().imageLayout);
-			}
+			}*/
+			return 0;
 		}
 	}
 }

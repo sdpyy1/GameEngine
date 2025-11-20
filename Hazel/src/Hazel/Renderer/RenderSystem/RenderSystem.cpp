@@ -2,6 +2,8 @@
 #include "RenderSystem.h"
 #include "Hazel/Core/Application.h"
 #include "Hazel/Renderer/RenderPass/GridPass.h"
+#include <Hazel/Renderer/RenderPass/ImGuiPass.h>
+#include <Hazel/Renderer/RenderPass/PresentPass.h>
 namespace GameEngine {
 	RenderSystem::RenderSystem()
 	{
@@ -10,7 +12,7 @@ namespace GameEngine {
 
 	void RenderSystem::InitBaseResources()
 	{
-		m_DynamicRHI = DynamicRHI::Init({ API_Vulkan,true,false });
+		m_DynamicRHI = DynamicRHI::Init({ API_Vulkan,true,true });
 		m_Surface = m_DynamicRHI->CreateSurface(APP_GLFWWINDOW);
 		m_GraphicsQueue = m_DynamicRHI->GetQueue({ QUEUE_TYPE_GRAPHICS, 0 });
 		m_SwapChain = m_DynamicRHI->CreateSwapChain({ m_Surface, m_GraphicsQueue, FRAMES_IN_FLIGHT, m_Surface->GetExetent(), SWAPCHAIN_COLOR_FORMAT });
@@ -46,8 +48,12 @@ namespace GameEngine {
 
 	void RenderSystem::InitPasses()
 	{
-		passes[PASS_TYPE_GRID] = std::make_shared<GridPass>();
-		passes[PASS_TYPE_GRID]->Init();
+		passes[IMGUI_PASS] = std::make_shared<ImGuiPass>();
+        passes[IMGUI_PASS]->Init();
+		passes[GRID_PASS] = std::make_shared<GridPass>();
+		passes[GRID_PASS]->Init();
+        passes[PRESENT_PASS] = std::make_shared<PresentPass>();
+        passes[PRESENT_PASS]->Init();
 	}
 
 }

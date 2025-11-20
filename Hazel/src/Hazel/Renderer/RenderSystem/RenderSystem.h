@@ -12,6 +12,7 @@ namespace GameEngine
 		void InitPasses();
 		void InitBaseResources();
 		void Tick(float timestep);
+		RHISwapchainRef GetSwapChain() { return m_SwapChain; }
 		DynamicRHIRef GetRHI() { return m_DynamicRHI; }
 
 	private:

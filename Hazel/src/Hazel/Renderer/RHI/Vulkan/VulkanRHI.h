@@ -141,6 +141,7 @@ namespace GameEngine
 		virtual void DrawIndirect(RHIBufferRef argumentBuffer, uint32_t offset, uint32_t drawCount) override final;
 
 		virtual void DrawIndexedIndirect(RHIBufferRef argumentBuffer, uint32_t offset, uint32_t drawCount) override final;
+		virtual void ImGuiRenderDrawData() override final;
 
 		virtual void* RawHandle() override final { return handle; }
 
@@ -163,6 +164,7 @@ namespace GameEngine
 
 		virtual void Flush() override final;
 		virtual void GenerateMips(RHITextureRef src) override final;
+		virtual void ImGuiUploadFonts() override final;
 
 		virtual void TextureBarrier(const RHITextureBarrier& barrier) override final;
 

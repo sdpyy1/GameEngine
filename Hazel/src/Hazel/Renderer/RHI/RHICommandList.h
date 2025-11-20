@@ -407,6 +407,12 @@ namespace GameEngine
 
         virtual void Execute(RHICommandContextRef context) override final;
     };
+    struct RHICommandImGuiRenderDrawData : public RHICommand
+    {
+        RHICommandImGuiRenderDrawData() {}
+
+        virtual void Execute(RHICommandContextRef context) override final;
+    };
     /*RHICommandList是RHICommand的载体，方法通过RHICommandList调用后会根据配置选择是直接执行命令还是缓存命令*/
     class RHICommandList {
     public:
@@ -456,6 +462,7 @@ namespace GameEngine
         void DrawIndirect(RHIBufferRef argumentBuffer, uint32_t offset, uint32_t drawCount);
 
         void DrawIndexedIndirect(RHIBufferRef argumentBuffer, uint32_t offset, uint32_t drawCount);
+        void ImGuiRenderDrawData();
 
     protected:
         inline void AddCommand(RHICommand* command) { commands.push_back(command); }
@@ -469,7 +476,12 @@ namespace GameEngine
 #endif
     };
 
+    struct RHICommandImmediateUploadImGuiFonts : public RHICommandImmediate
+    {
+        RHICommandImmediateUploadImGuiFonts() {}
 
+        virtual void Execute(RHICommandContextImmediateRef context) override final;
+    };
     class RHICommandListImmediate
     {
     public:
@@ -478,6 +490,7 @@ namespace GameEngine
         void Flush(); // 立即执行缓存的API命令
         void GenerateMips(RHITextureRef src);
         void TextureBarrier(const RHITextureBarrier& barrier);
+        void UploadImGuiFonts();
     protected:
         CommandListImmediateInfo info;
 

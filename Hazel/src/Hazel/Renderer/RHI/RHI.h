@@ -99,6 +99,9 @@ namespace GameEngine {
 
 		virtual void DrawIndexedIndirect(RHIBufferRef argumentBuffer, uint32_t offset, uint32_t drawCount) = 0;
 		virtual void EndRenderPass() = 0;
+
+		virtual void ImGuiRenderDrawData() = 0;
+
 	protected:
 		RHICommandPoolRef pool;
 	};
@@ -113,6 +116,7 @@ namespace GameEngine {
 		virtual void Flush() = 0;
 		virtual void GenerateMips(RHITextureRef src) = 0;
 		virtual void TextureBarrier(const RHITextureBarrier& barrier) = 0;
+		virtual void ImGuiUploadFonts() = 0;
 
 	};
 

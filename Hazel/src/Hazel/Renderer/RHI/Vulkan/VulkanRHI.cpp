@@ -437,7 +437,6 @@ namespace GameEngine
 
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
-        // ImPlot::CreateContext();
         ImGuiIO& io = ImGui::GetIO();
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
         //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
@@ -470,11 +469,22 @@ namespace GameEngine
         initInfo.Queue = queue->GetHandle();
         initInfo.DescriptorPool = m_DescriptorPool;
         initInfo.PipelineCache = nullptr;
-        initInfo.MinImageCount = 2;
-        initInfo.ImageCount = 3;
+        initInfo.MinImageCount = FRAMES_IN_FLIGHT;
+        initInfo.ImageCount = FRAMES_IN_FLIGHT;
         initInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
-        //ImGui_ImplVulkan_LoadFunctions();
         ImGui_ImplVulkan_Init(&initInfo, tempPass);
+
+        // Upload Fonts
+        {
+            ImGuiIO& io = ImGui::GetIO();
+
+            io.Fonts->AddFontFromFileTTF("Assets/Font/opensans/OpenSans-SemiBoldItalic.ttf", 18.0f, nullptr, io.Fonts->GetGlyphRangesChineseFull());
+            
+        }
+
+        RHI_DYNAMICRHI->GetImmediateCommandList(true);
+        RHI_DYNAMICRHI->GetImmediateCommandList()->UploadImGuiFonts();
+        RHI_DYNAMICRHI->GetImmediateCommandList()->Flush();
     }
 
 	RHISurfaceRef VulkanDynamicRHI::CreateSurface(GLFWwindow* window)
@@ -1234,6 +1244,11 @@ namespace GameEngine
         // vkCmdDrawIndexedIndirect(handle, ResourceCast(argumentBuffer)->GetHandle(), offset, drawCount, sizeof(RHIIndexedIndirectCommand));
     }
 
+    void VulkanRHICommandContext::ImGuiRenderDrawData()
+    {
+        ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), handle);
+    }
+
 	void VulkanRHICommandContextImmediate::Flush()
 	{
         EndSingleTimeCommand();
@@ -1329,6 +1344,12 @@ namespace GameEngine
         //    }
         //}
 	}
+
+    void VulkanRHICommandContextImmediate::ImGuiUploadFonts()
+    {
+        ImGui_ImplVulkan_CreateFontsTexture(handle);
+
+    }
 
 }
 

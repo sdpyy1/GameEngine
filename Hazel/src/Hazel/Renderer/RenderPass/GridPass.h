@@ -12,7 +12,7 @@ namespace GameEngine {
 		virtual void Build(RDGBuilder& builder) override final;
 
 		virtual std::string GetName() { return "GridPass"; }
-		virtual PassType GetType() override final { return PASS_TYPE_GRID; }
+		virtual PassType GetType() override final { return GRID_PASS; }
 	private:
 		RHIShaderRef m_VertShader;
 		RHIShaderRef m_FragShader;
