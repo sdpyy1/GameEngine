@@ -10,7 +10,7 @@ namespace GameEngine {
 			TEXTURE_TYPE_3D
 		};
 		struct TextureSpce {
-			std::filesystem::path path;
+			std::string path;
             TextureType type = TEXTURE_TYPE_2D;
 			Extent3D extent = {1,1,0};
             RHIFormat format = FORMAT_R8G8B8A8_SRGB;   // ×Ô¶¯Ù¤Âí
@@ -18,6 +18,7 @@ namespace GameEngine {
             uint32_t mipLevels = 1;
             uint32_t arrayLayers = 1;
             bool generateMipmap = false;
+			uint32_t textureID = 0;
 			RHITextureRef texture;
 			RHITextureViewRef textureView;
 		};

@@ -56,7 +56,6 @@ namespace GameEngine {
 		static bool WriteBytes(const std::filesystem::path& filepath, const Buffer& buffer);
 		static Buffer ReadBytes(const std::filesystem::path& filepath);
 		static bool LoadBinary(const std::string& filename, std::vector<uint8_t>& data);
-		static bool LoadBinary(const std::filesystem::path& filename, std::vector<uint8_t>& data);
 		static std::filesystem::path GetUniqueFileName(const std::filesystem::path& filepath);
 		static uint64_t GetLastWriteTime(const std::filesystem::path& filepath);
 	public:
@@ -71,7 +70,7 @@ namespace GameEngine {
 		static std::filesystem::path SaveFileDialog(const std::initializer_list<FileDialogFilterItem> inFilters = {});
 
 		static std::filesystem::path GetPersistentStoragePath();
-
+		static std::string GetShaderPath(){ return "Assets/Shaders/";}
 	public:
 		static bool HasEnvironmentVariable(const std::string& key);
 		static bool SetEnvironmentVariable(const std::string& key, const std::string& value);

@@ -3,6 +3,7 @@
 #include "Hazel/Renderer/RHI/RHICommandList.h"
 #include "Hazel/Renderer/RenderPass/RenderPass.h"
 #include "Hazel/Core/Definations.h"
+#include <Hazel/Renderer/RenderResource/RenderResourceManager.h>
 namespace GameEngine
 {
 	class RenderSystem
@@ -10,13 +11,12 @@ namespace GameEngine
 	public:
 		RenderSystem();
 		void InitPasses();
-		void InitBaseResources();
 		void Tick(float timestep);
 		RHISwapchainRef GetSwapChain() { return m_SwapChain; }
 		DynamicRHIRef GetRHI() { return m_DynamicRHI; }
 
 	private:
-
+		std::shared_ptr<RenderResourceManager> m_RenderResourceManager;
 		DynamicRHIRef m_DynamicRHI;
 		RHISurfaceRef m_Surface;
 		RHIQueueRef m_GraphicsQueue;

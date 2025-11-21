@@ -22,12 +22,9 @@ namespace GameEngine {
 		ASSERT(!s_Instance, "Application already exists!");
 		s_Instance = this;
 
-		/*m_GLFWWindow = Window::Create(WindowProps(m_Specification.Name, 1950, 1300)); 
-		m_GLFWWindow->SetEventCallback(HZ_BIND_EVENT_FN(Application::OnEvent));
-
 
 		NFD::Init();
-		m_RendererManager = std::make_shared<RendererManager>();*/
+		// m_RendererManager = std::make_shared<RendererManager>();
 		AssetImporter::Init();
 
 		m_SceneManager = std::make_shared<SceneManager>();

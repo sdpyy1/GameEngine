@@ -100,6 +100,7 @@ namespace GameEngine::V2
 
 		APP_DYNAMICRHI->GetImmediateCommandList()->Flush();
 
+		// bindless
 
 
 	}

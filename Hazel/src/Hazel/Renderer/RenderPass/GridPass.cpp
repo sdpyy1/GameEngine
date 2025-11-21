@@ -1,24 +1,16 @@
 #include "hzpch.h"
 #include "GridPass.h"
 #include <Hazel/Core/Application.h>
-#include "Hazel/Utils/FileSystem.h"
+#include "Hazel/Renderer/RenderResource/Shader.h"
 namespace GameEngine {
 	void GridPass::Init()
 	{
 		auto RHI = APP_DYNAMICRHI;
-		std::vector<uint8_t> m_Data;
-		std::filesystem::path path = "Assets/Shader/spv/gridVert.spv";
-		FileSystem::LoadBinary(path, m_Data);
-		RHIShaderInfo info;
-		info.code = m_Data;
-		info.frequency = SHADER_FREQUENCY_VERTEX;
-		m_VertShader = RHI->CreateShader(info);
-		m_Data.clear();
-		path = "Assets/Shader/spv/gridFrag.spv";
-        FileSystem::LoadBinary(path, m_Data);
-        info.code = m_Data;
-        info.frequency = SHADER_FREQUENCY_FRAGMENT;
-        m_FragShader = RHI->CreateShader(info);
+		std::string vertPath ="Assets/Shader/spv/gridVert.spv";
+		std::string fragPath = "Assets/Shader/spv/gridFrag.spv";
+		m_VertShader = V2::Shader(vertPath, SHADER_FREQUENCY_VERTEX).GetRHIShader();
+		m_FragShader = V2::Shader(fragPath, SHADER_FREQUENCY_FRAGMENT).GetRHIShader();
+
 
 		RHIRootSignatureInfo rootSignatureInfo = {};
 		rootSignatureInfo.AddEntryFromReflect(m_VertShader).AddEntryFromReflect(m_FragShader);
