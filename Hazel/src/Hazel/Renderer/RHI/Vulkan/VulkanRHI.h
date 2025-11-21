@@ -165,6 +165,7 @@ namespace GameEngine
 		virtual void Flush() override final;
 		virtual void GenerateMips(RHITextureRef src) override final;
 		virtual void ImGuiUploadFonts() override final;
+		virtual void CopyBufferToTexture(RHIBufferRef src, uint64_t srcOffset, RHITextureRef dst, TextureSubresourceLayers dstSubresource) override final;
 
 		virtual void TextureBarrier(const RHITextureBarrier& barrier) override final;
 

@@ -362,7 +362,7 @@ namespace GameEngine {
         RHIRenderPassInfo renderPassInfo = {};
         PrepareRenderTarget(pass, renderPassInfo);   // 准备RenderPass需要的信息
 
-        RHIRenderPassRef renderPass = APP_DYNAMCIRHI->CreateRenderPass(renderPassInfo); // 根据图创建RenderPass和FranmeBuffer
+        RHIRenderPassRef renderPass = APP_DYNAMICRHI->CreateRenderPass(renderPassInfo); // 根据图创建RenderPass和FranmeBuffer
 
         // command->PushEvent(pass->Name(), { 0.0f, 0.0f, 0.0f });
 

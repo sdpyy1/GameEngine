@@ -4,15 +4,18 @@
 #include <backends/imgui_impl_vulkan.h>
 #include <backends/imgui_impl_glfw.h>
 #include <Hazel/Editor/ImGuiRendererManager.h>
-
+#include "Hazel/Renderer/RenderResource/Texture.h"
 namespace GameEngine
 {
     void ImGuiPass::Init()
     {
-        APP_DYNAMCIRHI->InitImGui(APP_GLFWWINDOW);
+        APP_DYNAMICRHI->InitImGui(APP_GLFWWINDOW);
 
         m_ImGuiRendererManager = std::make_shared<ImGuiRendererManager>();
-        m_ImGuiRendererManager->pre();
+        V2::TextureSpce textureSpec;
+        textureSpec.generateMipmap = true;
+        textureSpec.path = "Assets/Texture/BRDF_LUT.png";
+        V2::Texture texture = V2::Texture(textureSpec);
     }
     void ImGuiPass::Build(RDGBuilder& builder)
 	{
@@ -36,7 +39,8 @@ namespace GameEngine
                         ImGui_ImplVulkan_NewFrame();
                         ImGui_ImplGlfw_NewFrame();
                         ImGui::NewFrame();
-                        m_ImGuiRendererManager->ImGuiCommand();
+                        // m_ImGuiRendererManager->ImGuiCommand();
+                        ImGui::Text("ddd");
                         ImGui::Render();
                         command->ImGuiRenderDrawData();
                     })

@@ -2,12 +2,12 @@
 
 #include "UniformBufferSet.h"
 
-#include "Hazel/Renderer/Renderer.h"
+#include "Hazel/Renderer/old/Renderer.h"
 
 #include "StorageBufferSet.h"
 
 #include "Hazel/Platform/Vulkan/VulkanStorageBufferSet.h"
-#include "Hazel/Renderer/RendererAPI.h"
+#include "Hazel/Renderer/old/RendererAPI.h"
 
 namespace GameEngine {
 

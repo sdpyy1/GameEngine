@@ -376,4 +376,16 @@ namespace GameEngine {
 	{
 		context->ImGuiUploadFonts();
 	}
+
+
+	void RHICommandListImmediate::CopyBufferToTexture(RHIBufferRef src, uint64_t srcOffset, RHITextureRef dst, TextureSubresourceLayers dstSubresource)
+	{
+		ADD_COMMAND_IMMEDIATE(CopyBufferToTexture, src, srcOffset, dst, dstSubresource);
+	}
+
+	void RHICommandImmediateCopyBufferToTexture::Execute(RHICommandContextImmediateRef context)
+	{
+		context->CopyBufferToTexture(src, srcOffset, dst, dstSubresource);
+	}
+
 }

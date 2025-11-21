@@ -1,7 +1,7 @@
 #include "hzpch.h"
 #include "StorageBuffer.h"
 
-#include "Hazel/Renderer/RendererAPI.h"
+#include "Hazel/Renderer/old/RendererAPI.h"
 #include <Hazel/Platform/Vulkan/VulkanStorageBuffer.h>
 
 namespace GameEngine {

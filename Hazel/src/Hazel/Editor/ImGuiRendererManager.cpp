@@ -57,10 +57,7 @@ namespace GameEngine {
 	}
 	void ImGuiRendererManager::pre()
 	{ 
-		m_AssetManagerPanel.SetContext(Application::GetSceneManager()->GetActiveScene());
-		m_FolderPreviewPanel.SetContext(Application::GetSceneManager()->GetActiveScene());
-		m_SelectedEntity = {};
-		m_GizmoType = -1;
+		
 	}
 	void ImGuiRendererManager::SetScene(std::shared_ptr<Scene> activeScene) {
 	}
@@ -495,6 +492,14 @@ namespace GameEngine {
         EventDispatcher dispatcher(e);
         dispatcher.Dispatch<MouseButtonPressedEvent>(HZ_BIND_EVENT_FN(ImGuiRendererManager::OnMouseButtonPressed));
 		return false;
+	}
+
+	ImGuiRendererManager::ImGuiRendererManager()
+	{
+		m_AssetManagerPanel.SetContext(Application::GetSceneManager()->GetActiveScene());
+		m_FolderPreviewPanel.SetContext(Application::GetSceneManager()->GetActiveScene());
+		m_SelectedEntity = {};
+		m_GizmoType = -1;
 	}
 
 }

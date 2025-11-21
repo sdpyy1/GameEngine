@@ -1,7 +1,7 @@
 #include "hzpch.h"
-#include "Hazel/Renderer/RenderContext.h"
+#include "Hazel/Renderer/old/RenderContext.h"
 
-#include "Hazel/Renderer/Renderer.h"
+#include "Hazel/Renderer/old/Renderer.h"
 #include "Hazel/Platform/Vulkan/VulkanContext.h"
 #include <Hazel/Core/Application.h>
 #include <Hazel/Platform/OpenGL/OpenGLContext.h>

@@ -19,7 +19,7 @@ namespace GameEngine {
         }
 
         LOG_TRACE("RHIBuffer not found in cache, creating new.");
-        ret.buffer = APP_DYNAMCIRHI->CreateBuffer(info);
+        ret.buffer = APP_DYNAMICRHI->CreateBuffer(info);
         ret.state = RESOURCE_STATE_UNDEFINED;
         allocatedSize++;
         return ret;
@@ -47,7 +47,7 @@ namespace GameEngine {
         }
 
         LOG_TRACE("RHITexture not found in cache, creating new.");
-        ret.texture = APP_DYNAMCIRHI->CreateTexture(tempInfo),   // 在释放资源时才会把texture放入池中
+        ret.texture = APP_DYNAMICRHI->CreateTexture(tempInfo),   // 在释放资源时才会把texture放入池中
         ret.state = RESOURCE_STATE_UNDEFINED;
         allocatedSize++;
 
@@ -77,7 +77,7 @@ namespace GameEngine {
         }
 
         LOG_TRACE("RHITextureView not found in cache, creating new.");
-        ret.textureView = APP_DYNAMCIRHI->CreateTextureView(actualInfo);
+        ret.textureView = APP_DYNAMICRHI->CreateTextureView(actualInfo);
         allocatedSize++;
 
         return ret;

@@ -33,9 +33,8 @@ namespace GameEngine {
     };
 #ifdef HZ_PLATFORM_WINDOWS
 #define VK_KHR_WIN32_SURFACE_EXTENSION_NAME "VK_KHR_win32_surface"
-#elif defined(HZ_PLATFORM_LINUX)
-#define VK_KHR_WIN32_SURFACE_EXTENSION_NAME "VK_KHR_xcb_surface"
 #endif
+
     static const char* INSTANCE_EXTENTIONS[] = {
         VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
         VK_KHR_SURFACE_EXTENSION_NAME,
@@ -183,7 +182,7 @@ namespace GameEngine {
             case RESOURCE_STATE_SHADER_RESOURCE:                accessFlags = VK_ACCESS_SHADER_READ_BIT;                                break;
             case RESOURCE_STATE_INDIRECT_ARGUMENT:              accessFlags = VK_ACCESS_INDIRECT_COMMAND_READ_BIT;                      break;
             case RESOURCE_STATE_PRESENT:                        accessFlags = VK_ACCESS_NONE;                                           break;      // ÎÞÐ§£¿ 
-            case RESOURCE_STATE_ACCELERATION_STRUCTURE:         accessFlags = VK_ACCESS_ACCELERATION_STRUCTURE_READ_BIT_KHR | VK_ACCESS_ACCELERATION_STRUCTURE_WRITE_BIT_KHR;   break;
+            // case RESOURCE_STATE_ACCELERATION_STRUCTURE:         accessFlags = VK_ACCESS_ACCELERATION_STRUCTURE_READ_BIT_KHR | VK_ACCESS_ACCELERATION_STRUCTURE_WRITE_BIT_KHR;   break;
             default:                                            LOG_ERROR("Unsupported resource state!");
             }
             return accessFlags;
@@ -218,15 +217,17 @@ namespace GameEngine {
             if (accessFlags & (VK_ACCESS_INDEX_READ_BIT |
                 VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT))           flags |= VK_PIPELINE_STAGE_VERTEX_INPUT_BIT;                     // 0x00000004
 
-            if (accessFlags & (VK_ACCESS_UNIFORM_READ_BIT |
-                VK_ACCESS_SHADER_READ_BIT |
-                VK_ACCESS_SHADER_WRITE_BIT))                    flags |= VK_PIPELINE_STAGE_VERTEX_SHADER_BIT |                   // 0x00000008
-                VK_PIPELINE_STAGE_TESSELLATION_CONTROL_SHADER_BIT |     // 0x00000010
-                VK_PIPELINE_STAGE_TESSELLATION_EVALUATION_SHADER_BIT |  // 0x00000020
-                VK_PIPELINE_STAGE_GEOMETRY_SHADER_BIT |                 // 0x00000040
-                VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT |                 // 0x00000080
-                VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT |                  // 0x00000800
-                VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR;           // 0x00200000
+            if (accessFlags & (VK_ACCESS_UNIFORM_READ_BIT |VK_ACCESS_SHADER_READ_BIT |VK_ACCESS_SHADER_WRITE_BIT)) {
+                flags |= VK_PIPELINE_STAGE_VERTEX_SHADER_BIT |                   // 0x00000008
+                    VK_PIPELINE_STAGE_TESSELLATION_CONTROL_SHADER_BIT |     // 0x00000010
+                    VK_PIPELINE_STAGE_TESSELLATION_EVALUATION_SHADER_BIT |  // 0x00000020
+                    VK_PIPELINE_STAGE_GEOMETRY_SHADER_BIT |                 // 0x00000040
+                    VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT |                 // 0x00000080
+                    VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
+                if (DYNAMICRHI->isEnableRayTracing()) {
+                    flags |= VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR;
+                }
+            }// 0x00200000
 
             if (accessFlags & VK_ACCESS_INPUT_ATTACHMENT_READ_BIT)            flags |= VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;                  // 0x00000080
 

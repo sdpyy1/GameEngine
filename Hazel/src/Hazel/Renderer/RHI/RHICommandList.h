@@ -482,6 +482,24 @@ namespace GameEngine
 
         virtual void Execute(RHICommandContextImmediateRef context) override final;
     };
+    struct RHICommandImmediateCopyBufferToTexture : public RHICommandImmediate
+    {
+        RHIBufferRef src;
+        uint64_t srcOffset;
+        RHITextureRef dst;
+        TextureSubresourceLayers dstSubresource;
+
+        RHICommandImmediateCopyBufferToTexture(RHIBufferRef src, uint64_t srcOffset, RHITextureRef dst, TextureSubresourceLayers dstSubresource)
+            : src(src)
+            , srcOffset(srcOffset)
+            , dst(dst)
+            , dstSubresource(dstSubresource)
+        {
+        }
+
+        virtual void Execute(RHICommandContextImmediateRef context) override final;
+    };
+
     class RHICommandListImmediate
     {
     public:
@@ -490,7 +508,10 @@ namespace GameEngine
         void Flush(); // Á¢¼´Ö´ÐÐ»º´æµÄAPIÃüÁî
         void GenerateMips(RHITextureRef src);
         void TextureBarrier(const RHITextureBarrier& barrier);
+        void CopyBufferToTexture(RHIBufferRef src, uint64_t srcOffset, RHITextureRef dst, TextureSubresourceLayers dstSubresource);
         void UploadImGuiFonts();
+
+
     protected:
         CommandListImmediateInfo info;
 

@@ -1,7 +1,7 @@
 #include "hzpch.h"
-#include "Hazel/Renderer/Shader.h"
+#include "Hazel/Renderer/old/Shader.h"
 
-#include "Hazel/Renderer/Renderer.h"
+#include "Hazel/Renderer/old/Renderer.h"
 #include <Hazel/Platform/Vulkan/VulkanShader.h>
 
 namespace GameEngine {

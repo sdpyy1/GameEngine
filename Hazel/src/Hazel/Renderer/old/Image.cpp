@@ -1,6 +1,6 @@
 #include "hzpch.h"
 #include "Image.h"
-#include "Hazel/Renderer/RendererAPI.h"
+#include "Hazel/Renderer/old/RendererAPI.h"
 #include <Hazel/Platform/Vulkan/VulkanImage.h>
 namespace GameEngine {
 	Ref<Image2D> Image2D::Create(const ImageSpecification& specification, Buffer buffer)

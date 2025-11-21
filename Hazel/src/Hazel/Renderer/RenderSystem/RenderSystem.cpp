@@ -12,7 +12,7 @@ namespace GameEngine {
 
 	void RenderSystem::InitBaseResources()
 	{
-		m_DynamicRHI = DynamicRHI::Init({ API_Vulkan,true,true });
+		m_DynamicRHI = DynamicRHI::Init({ API_Vulkan,true,false });
 		m_Surface = m_DynamicRHI->CreateSurface(APP_GLFWWINDOW);
 		m_GraphicsQueue = m_DynamicRHI->GetQueue({ QUEUE_TYPE_GRAPHICS, 0 });
 		m_SwapChain = m_DynamicRHI->CreateSwapChain({ m_Surface, m_GraphicsQueue, FRAMES_IN_FLIGHT, m_Surface->GetExetent(), SWAPCHAIN_COLOR_FORMAT });

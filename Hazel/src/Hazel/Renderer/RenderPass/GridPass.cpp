@@ -5,15 +5,17 @@
 namespace GameEngine {
 	void GridPass::Init()
 	{
-		auto RHI = APP_DYNAMCIRHI;
+		auto RHI = APP_DYNAMICRHI;
 		std::vector<uint8_t> m_Data;
-		FileSystem::LoadBinary("Assets/Shader/spv/gridVert.spv", m_Data);
+		std::filesystem::path path = "Assets/Shader/spv/gridVert.spv";
+		FileSystem::LoadBinary(path, m_Data);
 		RHIShaderInfo info;
 		info.code = m_Data;
 		info.frequency = SHADER_FREQUENCY_VERTEX;
 		m_VertShader = RHI->CreateShader(info);
 		m_Data.clear();
-        FileSystem::LoadBinary("Assets/Shader/spv/gridFrag.spv", m_Data);
+		path = "Assets/Shader/spv/gridFrag.spv";
+        FileSystem::LoadBinary(path, m_Data);
         info.code = m_Data;
         info.frequency = SHADER_FREQUENCY_FRAGMENT;
         m_FragShader = RHI->CreateShader(info);

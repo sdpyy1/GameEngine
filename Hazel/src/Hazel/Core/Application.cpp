@@ -5,10 +5,10 @@
 #include "Hazel/Core/Application.h"
 #include "Hazel/Events/Event.h"
 #include "Hazel/Events/ApplicationEvent.h"
-#include "Hazel/Renderer/Renderer.h"
+#include "Hazel/Renderer/old/Renderer.h"
 #include "Hazel/Asset/AssetImporter.h"
 #include "Hazel/Scene/SceneManager.h"
-#include <Hazel/Renderer/RendererManager.h>
+#include <Hazel/Renderer/old/RendererManager.h>
 #include "Hazel/Platform/Windows/WindowsWindow.h"
 #include "Hazel/Core/Window.h"
 

@@ -1,7 +1,7 @@
 ﻿#include "hzpch.h"
-#include "Hazel/Renderer/Renderer.h"
+#include "Hazel/Renderer/old/Renderer.h"
 #include "Hazel/Platform/Vulkan/VulkanRenderer.h"
-#include "Hazel/Renderer/RendererAPI.h"
+#include "Hazel/Renderer/old/RendererAPI.h"
 #include <glm/gtc/random.hpp>
 #include <imgui.h>
 #include <Hazel/Platform/Vulkan/VulkanImage.h>

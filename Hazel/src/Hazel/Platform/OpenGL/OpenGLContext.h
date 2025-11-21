@@ -1,5 +1,5 @@
 #pragma once
-#include "Hazel/Renderer/RenderContext.h"
+#include "Hazel/Renderer/old/RenderContext.h"
 struct GLFWwindow;
 namespace GameEngine {
 	class OpenGLContext : public RenderContext

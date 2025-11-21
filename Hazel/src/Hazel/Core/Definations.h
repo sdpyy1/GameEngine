@@ -6,7 +6,7 @@ namespace GameEngine {
 #define APP_GLFWWINDOW Application::GetWindowManager()->GetGLFWWindow()
 #define APP_RENDERSYSTEM Application::GetRenderSystem()
 #define APP_SWAPCHAIN Application::GetRenderSystem()->GetSwapChain()
-#define APP_DYNAMCIRHI Application::GetRenderSystem()->GetRHI()
+#define APP_DYNAMICRHI Application::GetRenderSystem()->GetRHI()
 #define APP_WINDOWMINIMIZED Application::Get().isMinimized()
 #define APP_WINDOWSIZE Application::Get().GetWindowManager()->GetWindowSize()
 

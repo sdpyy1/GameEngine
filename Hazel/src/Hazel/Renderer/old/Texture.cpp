@@ -1,7 +1,7 @@
 #include "hzpch.h"
-#include "Hazel/Renderer/Texture.h"
+#include "Hazel/Renderer/old/Texture.h"
 
-#include "Hazel/Renderer/Renderer.h"
+#include "Hazel/Renderer/old/Renderer.h"
 #include "Hazel/Platform/Vulkan/VulkanTexture.h"
 
 namespace GameEngine {

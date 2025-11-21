@@ -1,7 +1,7 @@
 #include "hzpch.h"
 #include "UniformBuffer.h"
 
-#include "Hazel/Renderer/Renderer.h"
+#include "Hazel/Renderer/old/Renderer.h"
 #include <Hazel/Platform/Vulkan/VulkanUniformBuffer.h>
 
 namespace GameEngine {

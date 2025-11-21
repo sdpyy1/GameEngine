@@ -9,6 +9,7 @@ namespace GameEngine {
 	class ImGuiRendererManager
 	{
 	public:
+		ImGuiRendererManager();
 		virtual void Begin() {};
 		virtual void End() {};
 		void SetDarkThemeV2Colors();

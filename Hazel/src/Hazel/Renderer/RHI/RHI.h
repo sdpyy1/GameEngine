@@ -41,7 +41,8 @@ namespace GameEngine {
 		virtual RHISemaphoreRef CreateSemaphore() = 0;
 		virtual RHICommandListImmediateRef GetImmediateCommandList(bool start = false) = 0;
 		void RegisterResource(RHIResourceRef resource) { resourceMap[resource->GetType()].push_back(resource); }
-
+		RHIConfig& GetConfig() { return m_Config; }
+		bool isEnableRayTracing() { return m_Config.enableRayTracing; }
     protected:
 		DynamicRHI(const RHIConfig& config) : m_Config(config) {};
 
@@ -116,6 +117,11 @@ namespace GameEngine {
 		virtual void Flush() = 0;
 		virtual void GenerateMips(RHITextureRef src) = 0;
 		virtual void TextureBarrier(const RHITextureBarrier& barrier) = 0;
+
+		virtual void CopyBufferToTexture(RHIBufferRef src, uint64_t srcOffset, RHITextureRef dst, TextureSubresourceLayers dstSubresource) = 0;
+
+
+
 		virtual void ImGuiUploadFonts() = 0;
 
 	};

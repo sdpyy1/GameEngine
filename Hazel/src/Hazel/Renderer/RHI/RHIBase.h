@@ -177,6 +177,9 @@ namespace GameEngine {
 		BUFFER_CREATION_MAX_ENUM = 0x7FFFFFFF,	//
 	};
 	typedef uint32_t BufferCreationFlags;
+
+
+	// TODO: ???
 	enum ResourceTypeBits : uint32_t
 	{
 		RESOURCE_TYPE_NONE = 0x00000000,

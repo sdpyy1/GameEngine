@@ -228,7 +228,10 @@ namespace GameEngine
             if (!VulkanUtil::IsExtensionSupported(m_PhysicalDeviceSupportedExtensions, extention)) continue;
             deviceExtentions.push_back(extention);
         };
-        if (m_Config.enableRayTracing) { for (auto extention : RAY_TRACING_DEVICE_EXTENTIONS) deviceExtentions.push_back(extention); }
+        if (m_Config.enableRayTracing) { 
+            for (auto extention : RAY_TRACING_DEVICE_EXTENTIONS)
+                deviceExtentions.push_back(extention);  // TODO：不检查直接添加不会报错，但是RenderDoc会报错，但是检查添加了，直接运行也会报错
+        }
         createInfo.enabledExtensionCount = (uint32_t)deviceExtentions.size();
         createInfo.ppEnabledExtensionNames = deviceExtentions.data();
 
@@ -1293,50 +1296,53 @@ namespace GameEngine
 
         oldHandle = handle;
 	}
+    void GenerateMipsFun(VkCommandBuffer commandBuffer, RHITextureRef src)
+    {
+        //总计生成的mip层数
+        uint32_t mipLevels = src->GetInfo().mipLevels;
 
+        VkImageSubresourceRange transition = {};
+        transition.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+            transition.baseMipLevel = 0;
+        transition.levelCount = 1;
+        transition.baseArrayLayer = 0;
+        transition.layerCount = 1;
+
+        for (uint32_t i = 0; i < src->GetInfo().arrayLayers; i++)
+        {
+            transition.baseMipLevel = 0;
+            transition.baseArrayLayer = i;
+
+            // 先将后面的层全设置到dst
+            TextureBarrier(commandBuffer,
+                { src,
+                RESOURCE_STATE_TRANSFER_SRC, RESOURCE_STATE_TRANSFER_DST,
+                        {TEXTURE_ASPECT_COLOR, 1, mipLevels - 1, transition.baseArrayLayer, transition.layerCount} });
+
+            //循环生成各级mip，并将对应层级转到srcLayout
+            for (uint32_t i = 1; i < mipLevels; i++)    //总共mipLevels级，只需要mipLevels-1次blit
+            {
+                BlitTexture(
+                    commandBuffer,
+                    src,
+                    src,
+                    { transition.aspectMask, transition.baseMipLevel, transition.baseArrayLayer, transition.layerCount },
+                    { transition.aspectMask, transition.baseMipLevel + 1, transition.baseArrayLayer, transition.layerCount },
+                    FILTER_TYPE_LINEAR);
+
+                // 将生成后的层级设置到src
+                TextureBarrier(commandBuffer,
+                    { src,
+                    RESOURCE_STATE_TRANSFER_DST, RESOURCE_STATE_TRANSFER_SRC,
+                            {TEXTURE_ASPECT_COLOR, transition.baseMipLevel + 1, 1, transition.baseArrayLayer, transition.layerCount} });
+
+                transition.baseMipLevel++;
+            }
+        }
+    }
 	void VulkanRHICommandContextImmediate::GenerateMips(RHITextureRef src)
 	{
-        //总计生成的mip层数
-        //uint32_t mipLevels = src->GetInfo().mipLevels;
-
-        //VkImageSubresourceRange transition = {};
-        //transition.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-        //    transition.baseMipLevel = 0;
-        //transition.levelCount = 1;
-        //transition.baseArrayLayer = 0;
-        //transition.layerCount = 1;
-
-        //for (uint32_t i = 0; i < src->GetInfo().arrayLayers; i++)
-        //{
-        //    transition.baseMipLevel = 0;
-        //    transition.baseArrayLayer = i;
-
-        //    // 先将后面的层全设置到dst
-        //    TextureBarrier(handle,
-        //        { src,
-        //        RESOURCE_STATE_TRANSFER_SRC, RESOURCE_STATE_TRANSFER_DST,
-        //                {TEXTURE_ASPECT_COLOR, 1, mipLevels - 1, transition.baseArrayLayer, transition.layerCount} });
-
-        //    //循环生成各级mip，并将对应层级转到srcLayout
-        //    for (uint32_t i = 1; i < mipLevels; i++)    //总共mipLevels级，只需要mipLevels-1次blit
-        //    {
-        //        BlitTexture(
-        //            commandBuffer,
-        //            src,
-        //            src,
-        //            { transition.aspectMask, transition.baseMipLevel, transition.baseArrayLayer, transition.layerCount },
-        //            { transition.aspectMask, transition.baseMipLevel + 1, transition.baseArrayLayer, transition.layerCount },
-        //            FILTER_TYPE_LINEAR);
-
-        //        // 将生成后的层级设置到src
-        //        TextureBarrier(commandBuffer,
-        //            { src,
-        //            RESOURCE_STATE_TRANSFER_DST, RESOURCE_STATE_TRANSFER_SRC,
-        //                    {TEXTURE_ASPECT_COLOR, transition.baseMipLevel + 1, 1, transition.baseArrayLayer, transition.layerCount} });
-
-        //        transition.baseMipLevel++;
-        //    }
-        //}
+        GenerateMipsFun(handle, src);
 	}
 
     void VulkanRHICommandContextImmediate::ImGuiUploadFonts()
@@ -1344,6 +1350,22 @@ namespace GameEngine
         ImGui_ImplVulkan_CreateFontsTexture(handle);
 
     }
+
+	void VulkanRHICommandContextImmediate::CopyBufferToTexture(RHIBufferRef src, uint64_t srcOffset, RHITextureRef dst, TextureSubresourceLayers dstSubresource)
+	{
+        VkBufferImageCopy copy = {};
+        copy.bufferOffset = srcOffset;
+        copy.bufferRowLength = 0;
+        copy.bufferImageHeight = 0;
+        copy.imageSubresource = VulkanUtil::SubresourceToVk(dstSubresource);
+        copy.imageOffset = { 0, 0, 0 };
+        copy.imageExtent = VulkanUtil::ExtentToVk(dst->MipExtent(dstSubresource.mipLevel));
+
+        vkCmdCopyBufferToImage(handle,
+            CAST<VulkanRHIBuffer>(src)->GetHandle(),
+            CAST<VulkanRHITexture>(dst)->GetHandle(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+            1, &copy);
+	}
 
 }
 

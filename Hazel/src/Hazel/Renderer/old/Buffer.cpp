@@ -1,7 +1,7 @@
 #include "hzpch.h"
-#include "Hazel/Renderer/Buffer.h"
+#include "Hazel/Renderer/old/Buffer.h"
 
-#include "Hazel/Renderer/Renderer.h"
+#include "Hazel/Renderer/old/Renderer.h"
 
 namespace GameEngine {
 }
