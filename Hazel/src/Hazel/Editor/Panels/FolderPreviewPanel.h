@@ -40,20 +40,25 @@ namespace GameEngine {
 		std::filesystem::path m_AssetsDir;
 		std::filesystem::path m_CurrentDir;
 		std::shared_ptr<Scene> m_Context;
-		std::unordered_set<std::string> m_ExpandedFolders; // ��չ���ļ���·��
+		std::unordered_set<std::string> m_ExpandedFolders;
 
-		Ref<Texture2D> m_DirectoryIcon;
-		Ref<Texture2D> m_FileIcon;
-		Ref<Texture2D> m_SceneIcon;
-		Ref<Texture2D> m_ModelIcon;
-		std::filesystem::path m_SelectedFile;   // ��ǰѡ�е��ļ�
-		std::string m_SelectedCategory;         // ��ǰѡ�еķ���
+		IconData m_DirectoryIcon;
+		IconData m_FileIcon;
+		IconData m_SceneIcon;
+		IconData m_ModelIcon;
+		IconData m_PreviewTexture;
+
+
+
+
+
+		std::filesystem::path m_SelectedFile;
+		std::string m_SelectedCategory;
 		std::vector<std::filesystem::path> m_ModelFiles;
 		std::vector<std::filesystem::path> m_TextureFiles;
 		std::vector<std::filesystem::path> m_SceneFiles;
 		std::vector<std::filesystem::path> m_CategoryPreviewFiles;
 
-		Ref<Texture2D> m_PreviewTexture;
 		bool m_ShowPreview = false;
 		std::filesystem::path m_PreviewPath;
 	};

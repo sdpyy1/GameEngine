@@ -23,7 +23,6 @@ namespace GameEngine {
         pipelineInfo.fragmentShader = m_FragShader;
 		pipelineInfo.colorAttachmentFormats[0] = FORMAT_R8G8B8A8_UNORM;
 		m_Pipeline = RHI->CreateGraphicsPipeline(pipelineInfo);
-		LOG_INFO("GridPass::Init()");
 	}
 
 	void GridPass::Build(RDGBuilder& builder)
@@ -45,23 +44,23 @@ namespace GameEngine {
 		// 创建Pass结点
 		RDGRenderPassHandle pass = builder.CreateRenderPass(GetName())
 			.Read(0, 0, 0, cameraData)
-			.Read(0,1,0,outDepth)  // TODO:现在创建时图片，但是Shader我之前都是绑定联合采样器纹理。。。
+			// .Read(0,1,0,outDepth)  // TODO:现在创建是图片，但是Shader我之前都是绑定联合采样器纹理。。。
 			.RootSignature(m_RootSignature)
 			.Color(0, outColor, ATTACHMENT_LOAD_OP_CLEAR, ATTACHMENT_STORE_OP_STORE)
 			.Execute([&](RDGPassContext context) {
-			auto [w, h] = APP_WINDOWSIZE;
+				auto [w, h] = APP_WINDOWSIZE;
 
-			RHICommandListRef command = context.command;
+				RHICommandListRef command = context.command;
 
-			command->SetGraphicsPipeline(m_Pipeline);
-			command->SetViewport({ 0, 0 }, { w, h });
-			command->SetScissor({ 0, 0 }, { w, h });
-			command->SetDepthBias(0.0f, 0.0f, 0.0f);
-			command->BindDescriptorSet(context.descriptors[0], 0);
-			command->Draw(6,1,0,0);
+				command->SetGraphicsPipeline(m_Pipeline);
+				command->SetViewport({ 0, 0 }, { w, h });
+				command->SetScissor({ 0, 0 }, { w, h });
+				command->SetDepthBias(0.0f, 0.0f, 0.0f);
+				command->BindDescriptorSet(context.descriptors[0], 0);
+				command->Draw(6,1,0,0);
 
-        })
-        .Finish();
+			})
+			.Finish();
 	}
 
 }

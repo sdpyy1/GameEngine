@@ -23,15 +23,12 @@ namespace GameEngine {
 		spec.DebugName = "FolderIcons";
 		spec.GenerateMips = false;
 
-		std::filesystem::path dirIcon = "Assets/Icon/DirectoryIcon.png";
-		std::filesystem::path fileIcon = "Assets/Icon/FileIcon.png";
-		std::filesystem::path modelIcon = "Assets/Icon/pawn.png";
-		std::filesystem::path sceneIcon = "Assets/Icon/scene.png";
 
-		/*m_DirectoryIcon = Texture2D::Create(spec, dirIcon);
-		m_FileIcon = Texture2D::Create(spec, fileIcon);
-		m_ModelIcon = Texture2D::Create(spec, modelIcon);
-		m_SceneIcon = Texture2D::Create(spec, sceneIcon);*/
+		m_DirectoryIcon.LoadIconData("Assets/Icon/DirectoryIcon.png");
+        m_FileIcon.LoadIconData("Assets/Icon/FileIcon.png");
+        m_ModelIcon.LoadIconData("Assets/Icon/pawn.png");
+        m_SceneIcon.LoadIconData("Assets/Icon/scene.png");
+
 
 		// 默认使用分类模式，并默认选中 Scenes（右侧立即显示）
 		m_Mode = BrowserMode::Category;
@@ -75,9 +72,7 @@ namespace GameEngine {
 		else if (ext == ".png" || ext == ".jpg" || ext == ".jpeg")
 		{
 			LOG_INFO("Preview texture: {}", path.string());
-			TextureSpecification spec;
-			spec.DebugName = "PreviewImage";
-			m_PreviewTexture = Texture2D::Create(spec, path);
+			m_PreviewTexture.LoadIconData(path.string());
 			m_PreviewPath = path;
 			m_ShowPreview = true;
 		}
@@ -157,7 +152,7 @@ namespace GameEngine {
 			ImGui::BeginGroup();
 
 			// 图标选择
-			Ref<Texture2D> icon;
+			IconData icon;
 			if (std::filesystem::is_directory(path))
 			{
 				icon = m_DirectoryIcon; // 文件夹使用目录图标
@@ -183,16 +178,16 @@ namespace GameEngine {
 			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.2f, 0.5f, 0.7f, 0.45f));
 
 			ImGuiID imageBtnId = ImGui::GetID(("image_btn_" + name).c_str());
-			/*bool clicked = ImGui::ImageButtonEx(
+			bool clicked = ImGui::ImageButtonEx(
 				imageBtnId,
-				UI::GetImageId(icon->GetImage()),
+				icon.textureID->RawHandle(),
 				ImVec2(thumbnailSize, thumbnailSize),
 				ImVec2(0, 1),
 				ImVec2(1, 0),
 				ImVec2(0, 0),
 				ImVec4(0, 0, 0, 0),
 				ImVec4(1, 1, 1, 1)
-			);*/
+			);
 
 			ImGui::PopStyleColor(3);
 			ImGui::SetItemAllowOverlap();
@@ -202,7 +197,7 @@ namespace GameEngine {
 			{
 				std::string absPath = std::filesystem::absolute(path).string();
 				ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", absPath.c_str(), absPath.size() + 1);
-				ImGui::Image(UI::GetImageId(icon->GetImage()), ImVec2(32, 32), ImVec2(0, 1), ImVec2(1, 0));
+				ImGui::Image(icon.textureID->RawHandle(), ImVec2(32, 32), ImVec2(0, 1), ImVec2(1, 0));
 				ImGui::Text("Dragging: %s", absPath.c_str());
 				ImGui::EndDragDropSource();
 			}
@@ -253,18 +248,18 @@ namespace GameEngine {
 		bool open = m_ShowPreview;
 		ImGui::Begin("Image Preview", &open, ImGuiWindowFlags_AlwaysAutoResize);
 
-		if (m_PreviewTexture)
+		if (m_PreviewTexture.icon)
 		{
 			ImGui::Text("Path: %s", m_PreviewPath.filename().string().c_str());
 			ImGui::Separator();
 
 			float maxWidth = 512.0f;
-			float texWidth = (float)m_PreviewTexture->GetWidth();
-			float texHeight = (float)m_PreviewTexture->GetHeight();
+			float texWidth = (float)m_PreviewTexture.icon->GetWidth();
+			float texHeight = (float)m_PreviewTexture.icon->GetHeight();
 			float aspect = texHeight / texWidth;
 
 			ImVec2 size = ImVec2(std::min(texWidth, maxWidth), std::min(texWidth, maxWidth) * aspect);
-			ImGui::Image(UI::GetImageId(m_PreviewTexture->GetImage()), size);
+			ImGui::Image(m_PreviewTexture.textureID->RawHandle(), size);
 		}
 		else
 		{
@@ -276,9 +271,9 @@ namespace GameEngine {
 		if (!open)
 		{
 			m_ShowPreview = false;
-			Renderer::SubmitResourceFree([texture = m_PreviewTexture]() mutable {
+			/*Renderer::SubmitResourceFree([texture = m_PreviewTexture]() mutable {
 				texture = nullptr;
-				});
+				});*/
 			LOG_INFO("Closed preview window, texture destroyed.");
 		}
 	}
@@ -302,7 +297,7 @@ namespace GameEngine {
 			ImGui::PushID(folderName.c_str());
 
 			ImGui::AlignTextToFramePadding();
-			ImGui::Image(UI::GetImageId(m_DirectoryIcon->GetImage()), ImVec2(16, 16), ImVec2(0, 1), ImVec2(1, 0));
+			ImGui::Image(m_DirectoryIcon.textureID->RawHandle(), ImVec2(16, 16), ImVec2(0, 1), ImVec2(1, 0));
 			ImGui::SameLine();
 			bool clicked = ImGui::Selectable(folderName.c_str(), path == m_CurrentDir, ImGuiSelectableFlags_SpanAvailWidth);
 

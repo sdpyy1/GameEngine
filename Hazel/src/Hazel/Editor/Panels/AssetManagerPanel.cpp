@@ -19,19 +19,10 @@
 namespace GameEngine {
 	AssetManagerPanel::AssetManagerPanel()
 	{
-		TextureSpecification spec;
-		spec.Format = ImageFormat::SRGBA;
-		spec.DebugName = "EntityIcons";
-		spec.GenerateMips = false;
-		spec.needYFlip = false;
-		std::filesystem::path dirIcon = "Assets/Icon/Entity.png";
-		/*m_EntityIcon = Texture2D::Create(spec, dirIcon);
-		dirIcon = "Assets/Icon/Sun.png";
-		m_DirLightIcon = Texture2D::Create(spec, dirIcon);
-		dirIcon = "Assets/Icon/Spotlight.png";
-		m_SpotLightIcon = Texture2D::Create(spec, dirIcon);
-		dirIcon = "Assets/Icon/img.png";
-		m_SkyLightIcon = Texture2D::Create(spec, dirIcon);*/
+		m_EntityIcon.LoadIconData("Assets/Icon/Entity.png",false);
+		m_DirLightIcon.LoadIconData("Assets/Icon/Sun.png", false);
+		m_SpotLightIcon.LoadIconData("Assets/Icon/Spotlight.png", false);
+		m_SkyLightIcon.LoadIconData("Assets/Icon/img.png", false);
 	}
 
 	void AssetManagerPanel::SetContext(std::shared_ptr<Scene>& context)
@@ -113,15 +104,15 @@ namespace GameEngine {
 		ImGui::SameLine(0.0f, iconSpacing);
 
 		// 绘制图标（保持不变）
-		Ref<Texture2D> icon = m_EntityIcon;
+		IconData icon = m_EntityIcon;
 		if (entity.HasComponent<DirectionalLightComponent>())
 			icon = m_DirLightIcon;
 		if (entity.HasComponent<SpotLightComponent>())
 			icon = m_SpotLightIcon;
 		if (entity.HasComponent<SkyComponent>())
 			icon = m_SkyLightIcon;
-		if (icon)
-			ImGui::Image(UI::GetImageId(icon->GetImage()), { iconSize, iconSize });
+		ImGui::Image(icon.textureID->RawHandle(), { iconSize, iconSize });
+
 
 		ImGui::SameLine(0.0f, iconSpacing);
 

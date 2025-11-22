@@ -25,7 +25,6 @@ namespace GameEngine {
 		bool OnMouseButtonPressed(MouseButtonPressedEvent& event);
 		std::pair<float, float> GetMouseViewportSpace(); // NDC×ø±ê
 		std::pair<glm::vec3, glm::vec3> CastRay(EditorCamera& camera, float mx, float my);
-		void pre();
 		void SetScene(std::shared_ptr<Scene> activeScene);
 	private:
 

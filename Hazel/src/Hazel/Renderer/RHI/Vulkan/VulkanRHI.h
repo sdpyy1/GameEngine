@@ -12,6 +12,8 @@ namespace GameEngine
 	public:
 		VulkanDynamicRHI() = delete;
 		VulkanDynamicRHI(const RHIConfig& config);
+		virtual RHIDescriptorSetRef GetImGuiTextId(RHITextureViewRef textureView) override final;
+
 		virtual RHISurfaceRef CreateSurface(GLFWwindow* window) override final;
 		virtual RHISwapchainRef CreateSwapChain(const RHISwapchainInfo& info) override final;
 		virtual RHICommandPoolRef CreateCommandPool(const RHICommandPoolInfo& info) override final;

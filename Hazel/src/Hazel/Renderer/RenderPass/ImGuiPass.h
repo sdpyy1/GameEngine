@@ -1,5 +1,7 @@
 #pragma once
 #include "RenderPass.h"
+#include "Hazel/Renderer/RenderResource/Texture.h"
+
 namespace GameEngine {
 	class ImGuiRendererManager;
 	class ImGuiPass :public RenderPassNew

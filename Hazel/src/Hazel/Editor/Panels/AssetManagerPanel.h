@@ -27,10 +27,10 @@ namespace GameEngine {
 		Entity m_SelectionContext;
 		Entity m_RenameEntity;
 		char m_RenameBuffer[256]{};
-		Ref<Texture2D> m_EntityIcon;
-		Ref<Texture2D> m_DirLightIcon;
-		Ref<Texture2D> m_SpotLightIcon;
-		Ref<Texture2D> m_SkyLightIcon;
+		IconData m_EntityIcon;
+		IconData m_DirLightIcon;
+		IconData m_SpotLightIcon;
+		IconData m_SkyLightIcon;
 		template<typename T, typename UIFunction>
 		void DrawComponent(const std::string& name, Entity entity, UIFunction uiFunction);
 		template<typename T>

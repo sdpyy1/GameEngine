@@ -33,13 +33,43 @@ namespace GameEngine {
     enum GlobalResourceBindingID {
         GLORBAL_RESOURCE_BINDING_SETTING = 0,
         GLORBAL_RESOURCE_BINDING_CAMERA,
-        GLORBAL_RESOURCE_BINDING_BINDLESS_TEXUTE_2D,
+
+
+        PER_FRAME_BINDING_BINDLESS_POSITION,
+        PER_FRAME_BINDING_BINDLESS_NORMAL,
+        PER_FRAME_BINDING_BINDLESS_TANGENT,
+        PER_FRAME_BINDING_BINDLESS_TEXCOORD,
+        PER_FRAME_BINDING_BINDLESS_COLOR,
+        PER_FRAME_BINDING_BINDLESS_BONE_INDEX,
+        PER_FRAME_BINDING_BINDLESS_BONE_WEIGHT,
+        PER_FRAME_BINDING_BINDLESS_ANIMATION,
+        PER_FRAME_BINDING_BINDLESS_INDEX,
+
+        PER_FRAME_BINDING_BINDLESS_SAMPLER,
+        PER_FRAME_BINDING_BINDLESS_TEXTURE_1D,
+        PER_FRAME_BINDING_BINDLESS_TEXTURE_1D_ARRAY,
+        PER_FRAME_BINDING_BINDLESS_TEXTURE_2D,
+        PER_FRAME_BINDING_BINDLESS_TEXTURE_2D_ARRAY,
+        PER_FRAME_BINDING_BINDLESS_TEXTURE_CUBE,
+        PER_FRAME_BINDING_BINDLESS_TEXTURE_3D,
     };
     struct GlobalResourcesPreFrame
     {
         RHIDescriptorSetRef descriptorSet;
         RenderBuffer<V2::CameraData> cameraDataBuffer;
     };
+    typedef struct BindlessResourceInfo
+    {
+        ResourceType resourceType = RESOURCE_TYPE_NONE;
+
+        RHIBufferRef buffer;
+        RHITextureViewRef textureView;
+        RHISamplerRef sampler;
+        //TODO 光追加速结构
+
+        uint64_t bufferOffset = 0;	// 仅buffer使用
+        uint64_t bufferRange = 0;
+    } BindlessResourceInfo;
 	class RenderResourceManager
 	{
 		public:
@@ -48,11 +78,18 @@ namespace GameEngine {
             void InitGlobalResources();
             void Tick();
 
+            // ID
+            uint32_t RenderResourceManager::AllocateBindlessID(const BindlessResourceInfo& resoruceInfo, BindlessSlot slot);
+            void ReleaseBindlessID(uint32_t id, BindlessSlot slot);
 
 
+
+
+
+
+            // 各种Buffer数据
             void RenderResourceManager::SetCameraInfo();
             RenderBuffer<V2::CameraData>& GetCameraDataBuffer() { return m_GlobalResources[APP_FRAMEINDEX].cameraDataBuffer; }
-
 
 
 
@@ -69,7 +106,6 @@ namespace GameEngine {
 
 
         SceneInfo m_SceneInfoFromScene;
-
 	};
 }
 

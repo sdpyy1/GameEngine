@@ -161,6 +161,7 @@ namespace GameEngine {
 	{
 	public:
 		VulkanRHIDescriptorSet(VkDescriptorSetLayout setLayout);
+		VulkanRHIDescriptorSet(VkDescriptorSet aSet);   // ImGUI×¨ÓÃ
 
 		virtual RHIDescriptorSet& UpdateDescriptor(const RHIDescriptorUpdateInfo& descriptorUpdateInfo) override final;
 

@@ -10,6 +10,19 @@ namespace GameEngine::V2
 	Texture::Texture(TextureSpce& spec) : m_Spec(spec)
 	{
 		LoadFromFile();
+	}		
+	BindlessSlot TextureTypeToBindlessSlot(TextureType type)
+	{
+		BindlessSlot slot;
+		switch (type) {
+		case TEXTURE_TYPE_2D:           slot = BINDLESS_SLOT_TEXTURE_2D;        break;
+		case TEXTURE_TYPE_2D_ARRAY:     slot = BINDLESS_SLOT_TEXTURE_2D_ARRAY;  break;
+		case TEXTURE_TYPE_CUBE:         slot = BINDLESS_SLOT_TEXTURE_CUBE;      break;
+		case TEXTURE_TYPE_3D:           slot = BINDLESS_SLOT_TEXTURE_3D;        break;
+		default:                        LOG_ERROR("Unsupported texture type!");
+		}
+
+		return slot;
 	}
 	TextureViewType TextureTypeToViewType(TextureType type)
 	{
@@ -37,8 +50,13 @@ namespace GameEngine::V2
 		std::vector<uint8_t> data;
 		FileSystem::LoadBinary(m_Spec.path, data);
 		int width, height, channels;
+		if (m_Spec.yFlip) {
+			stbi_set_flip_vertically_on_load(true);
+		}
 		stbi_info_from_memory(data.data(), data.size(), &width, &height, &channels);
 		stbi_uc* pixels = stbi_load_from_memory(data.data(), data.size(), &width, &height, &channels, 4);
+		stbi_set_flip_vertically_on_load(false);
+
 		uint32_t bufferSize = width * height * sizeof(uint32_t);
 		m_Spec.extent = { (uint32_t)width,(uint32_t)height,1 };
 		if (m_Spec.generateMipmap) {
@@ -97,13 +115,26 @@ namespace GameEngine::V2
 			APP_DYNAMICRHI->GetImmediateCommandList()->TextureBarrier({ m_Spec.texture,
 				RESOURCE_STATE_TRANSFER_SRC, RESOURCE_STATE_SHADER_RESOURCE,
 						{TEXTURE_ASPECT_COLOR, 0, m_Spec.mipLevels, 0, m_Spec.arrayLayers} });
-        }
+		}
+		else { // 也需要转到Shader读取布局
+			APP_DYNAMICRHI->GetImmediateCommandList(true)->TextureBarrier(
+				{ m_Spec.texture,
+				RESOURCE_STATE_TRANSFER_DST, RESOURCE_STATE_SHADER_RESOURCE,
+				{TEXTURE_ASPECT_COLOR, 0, m_Spec.mipLevels, 0, 1} });
+		}
 
 		APP_DYNAMICRHI->GetImmediateCommandList()->Flush();
 
 		// bindless
+		BindlessResourceInfo bindlessResourceInfo;
+        bindlessResourceInfo.textureView = m_Spec.textureView;
+        bindlessResourceInfo.resourceType = RESOURCE_TYPE_TEXTURE;
+		m_Spec.bindlessId = RENDER_RENDERRESOURCE->AllocateBindlessID(bindlessResourceInfo, TextureTypeToBindlessSlot(m_Spec.type));		
+	}
 
-
+	RHIDescriptorSetRef Texture::GetImGuiID()
+	{
+		return APP_DYNAMICRHI->GetImGuiTextId(m_Spec.textureView);
 	}
 
 }

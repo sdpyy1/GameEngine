@@ -55,10 +55,6 @@ namespace GameEngine {
 		ASSERT(false, "Unknown RendererAPI");
 		return nullptr;
 	}
-	void ImGuiRendererManager::pre()
-	{ 
-		
-	}
 	void ImGuiRendererManager::SetScene(std::shared_ptr<Scene> activeScene) {
 	}
 

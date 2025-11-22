@@ -18,7 +18,7 @@ namespace GameEngine {
 
 		virtual void Tick();    // 更新资源计数，清理无引用且长时间未使用资源
 		virtual void InitImGui(GLFWwindow* window) = 0;
-
+		virtual RHIDescriptorSetRef GetImGuiTextId(RHITextureViewRef textureView) = 0;
 		virtual void Destroy();
 		virtual RHIQueueRef GetQueue(const RHIQueueInfo& info) = 0;
 		virtual RHISurfaceRef CreateSurface(GLFWwindow* window) = 0;
@@ -32,12 +32,10 @@ namespace GameEngine {
 		virtual RHIBufferRef CreateBuffer(const RHIBufferInfo& info) = 0;
 		virtual RHIGraphicsPipelineRef CreateGraphicsPipeline(const RHIGraphicsPipelineInfo& info) = 0;
 		virtual RHIRenderPassRef CreateRenderPass(const RHIRenderPassInfo& info) = 0;
-
 		virtual RHIRootSignatureRef CreateRootSignature(const RHIRootSignatureInfo& info) = 0;
 
 		// 同步
 		virtual RHIFenceRef CreateFence(bool signaled) = 0;
-
 		virtual RHISemaphoreRef CreateSemaphore() = 0;
 		virtual RHICommandListImmediateRef GetImmediateCommandList(bool start = false) = 0;
 		void RegisterResource(RHIResourceRef resource) { resourceMap[resource->GetType()].push_back(resource); }

@@ -720,6 +720,22 @@ namespace GameEngine
         return frameBuffer;
 	}
 
+	RHIDescriptorSetRef VulkanDynamicRHI::GetImGuiTextId(RHITextureViewRef textureView)
+	{
+        static RHISamplerRef sampler = nullptr; // 用同一个采样器即可
+        if (!sampler) {
+            RHISamplerInfo samplerInfo;
+            samplerInfo.addressModeU = ADDRESS_MODE_CLAMP_TO_EDGE;
+            samplerInfo.addressModeV = ADDRESS_MODE_CLAMP_TO_EDGE;
+            samplerInfo.addressModeW = ADDRESS_MODE_CLAMP_TO_EDGE;
+            sampler = DYNAMICRHI->CreateSampler(samplerInfo);
+        }
+
+        VkDescriptorSet texId= ImGui_ImplVulkan_AddTexture((VkSampler)sampler->RawHandle(),(VkImageView)textureView->RawHandle(),VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+        return std::make_shared<VulkanRHIDescriptorSet>(texId);
+	}
+
     VulkanRHICommandContext::VulkanRHICommandContext(RHICommandPoolRef pool): RHICommandContext(pool)
     {
         this->pool = std::static_pointer_cast<VulkanRHICommandPool>(pool);

@@ -15,7 +15,6 @@ namespace GameEngine {
 
 
 		m_ImGuiRendererManager = ImGuiRendererManager::Create();
-		m_ImGuiRendererManager->pre();
 		m_SceneRender = std::make_shared<SceneRender>();
 		m_RenderThread.Pump();
 	}

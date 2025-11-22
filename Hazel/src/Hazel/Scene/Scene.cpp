@@ -118,7 +118,10 @@ namespace GameEngine {
 
 	void Scene::OutputViewport()
 	{
-		// UI::Image(Application::GetRendererManager()->GetFinalImage(), ImGui::GetContentRegionAvail(), { 0, 0 }, { 1, 1 });
+		IconData iconData;
+		iconData.LoadIconData("Assets/Texture/texture.jpg",false);
+		//UI::Image(Application::GetRendererManager()->GetFinalImage(), ImGui::GetContentRegionAvail(), { 0, 0 }, { 1, 1 });
+		ImGui::Image(iconData.textureID->RawHandle(), ImGui::GetContentRegionAvail(), { 0, 0 }, { 1, 1 });
 	}
 
 	void Scene::CollectRenderableEntities(std::shared_ptr<SceneRender>& SceneRender)

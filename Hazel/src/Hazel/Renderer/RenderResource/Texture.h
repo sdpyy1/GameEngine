@@ -9,6 +9,7 @@ namespace GameEngine {
 			TEXTURE_TYPE_CUBE,
 			TEXTURE_TYPE_3D
 		};
+
 		struct TextureSpce {
 			std::string path;
             TextureType type = TEXTURE_TYPE_2D;
@@ -21,16 +22,20 @@ namespace GameEngine {
 			uint32_t textureID = 0;
 			RHITextureRef texture;
 			RHITextureViewRef textureView;
+			uint32_t bindlessId;
+			bool yFlip = false;
 		};
 		class Texture {
 		public:
 			Texture(TextureSpce& spec);
 			void LoadFromFile();
-
+			RHIDescriptorSetRef GetImGuiID();
+			uint32_t GetWidth() { return m_Spec.extent.width; }
+            uint32_t GetHeight() { return m_Spec.extent.height; }
 		private:
 			TextureSpce m_Spec;
 		};
-
+		typedef std::shared_ptr<Texture> TextureRef;
 		
 	}
 

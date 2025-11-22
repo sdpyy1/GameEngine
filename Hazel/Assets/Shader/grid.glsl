@@ -20,7 +20,6 @@ layout(set = 0,binding = 0) uniform CameraDataUniform {
 } u_CameraData;
 // ÃèÊö·û¼¯
 layout (set = 0, binding = 1) uniform sampler2D inDepth;
-
 #ifdef VERTEX_SHADER
 layout(location = 0) out vec3 nearPoint; 
 layout(location = 1) out vec3 farPoint; 

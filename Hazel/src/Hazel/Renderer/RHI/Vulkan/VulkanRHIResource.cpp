@@ -942,6 +942,11 @@ namespace GameEngine
         }
 	}
 
+	VulkanRHIDescriptorSet::VulkanRHIDescriptorSet(VkDescriptorSet aSet)
+	{
+        handle = aSet;
+	}
+
 	GameEngine::RHIDescriptorSet& VulkanRHIDescriptorSet::UpdateDescriptor(const RHIDescriptorUpdateInfo& descriptorUpdateInfo)
 	{
         //更新写入信息
