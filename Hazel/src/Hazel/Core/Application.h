@@ -2,7 +2,6 @@
 #include "Hazel/Core/Base.h"
 #include "Hazel/Core/Definations.h"
 #include "Hazel/Window/WindowManager.h"
-#include "Hazel/Renderer/RenderSystem/RenderSystem.h"
 namespace GameEngine
 {
     class SceneManager;
@@ -14,6 +13,7 @@ namespace GameEngine
     class Window;
     class WindowsWindow;
     class RenderContext;
+    class RenderSystem;
     struct ApplicationCommandLineArgs
     {
         int Count = 0;
@@ -52,7 +52,7 @@ namespace GameEngine
 
         static Application& Get() { return *s_Instance; }
         static std::shared_ptr<SceneManager> GetSceneManager() { return Get().m_SceneManager; }
-        static std::shared_ptr<RendererManager> GetRendererManager() { return Get().m_RendererManager; }
+        static std::shared_ptr<RendererManager> GetRendererManager();
 
     private:
         bool OnWindowClose(WindowCloseEvent& e);
@@ -80,7 +80,7 @@ namespace GameEngine
     // New
     public:
         static std::shared_ptr<WindowManager> GetWindowManager() { return Get().m_WindowManager; }
-        static std::shared_ptr<RenderSystem> GetRenderSystem() { return Get().m_RenderSystem; }
+        static std::shared_ptr<RenderSystem> GetRenderSystem();
         static uint32_t GetFrameIndex() { return Get().m_CurrentFrameIndex; }
     private:
         std::shared_ptr<WindowManager> m_WindowManager;

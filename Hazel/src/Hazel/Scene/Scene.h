@@ -112,7 +112,7 @@ namespace GameEngine {
 		entt::registry& GetRegistry() { return m_Registry; }
 		Entity BuildDynamicMeshEntity(Ref<MeshSource> mesh, Entity& root, const std::filesystem::path& path);
 		RenderSettingData& GetRenderSettingData() { return m_SceneInfo.RenderSettingData; }
-		SceneInfo GetSceneInfo() { return m_SceneInfo; }
+		SceneInfo& GetSceneInfo() { return m_SceneInfo; }
 		glm::mat4 GetWorldSpaceTransformMatrix(Entity entity);
 
 	private:

@@ -12,6 +12,7 @@ namespace GameEngine
 
 		std::shared_ptr<EditorCamera> GetEditorCamera() { return m_EditorCamera; };
 		std::shared_ptr<Scene> GetActiveScene() { return m_CurrentScene; };
+		SceneInfo GetSceneInfo(){return m_CurrentScene->GetSceneInfo();}
 		bool OpenScene();
 		bool OpenScene(const std::filesystem::path& filepath);
 		void SaveScene();

@@ -5,6 +5,8 @@
 #include <backends/imgui_impl_glfw.h>
 #include <Hazel/Editor/ImGuiRendererManager.h>
 #include "Hazel/Renderer/RenderResource/Texture.h"
+#include "Hazel/Renderer/RenderSystem/RenderSystem.h"
+
 namespace GameEngine
 {
     void ImGuiPass::Init()

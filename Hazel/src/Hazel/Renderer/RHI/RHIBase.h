@@ -171,7 +171,7 @@ namespace GameEngine {
 	enum BufferCreationFlagBits : uint32_t
 	{
 		BUFFER_CREATION_NONE = 0x00000000,
-		BUFFER_CREATION_PERSISTENT_MAP = 0x00000001,
+		BUFFER_CREATION_PERSISTENT_MAP = 0x00000001,   // 强制持久映射，可由allocationInfo.pMappedData直接访问
 		BUFFER_CREATION_FORCE_ALIGNMENT = 0x00000002,	// 使用256字节的内存对齐
 
 		BUFFER_CREATION_MAX_ENUM = 0x7FFFFFFF,	//

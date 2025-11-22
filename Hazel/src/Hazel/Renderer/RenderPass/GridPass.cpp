@@ -2,6 +2,8 @@
 #include "GridPass.h"
 #include <Hazel/Core/Application.h>
 #include "Hazel/Renderer/RenderResource/Shader.h"
+#include "Hazel/Renderer/RenderSystem/RenderSystem.h"
+
 namespace GameEngine {
 	void GridPass::Init()
 	{
@@ -37,9 +39,13 @@ namespace GameEngine {
 			.Format(FORMAT_D32_SFLOAT)
 			.AllowDepthStencil()
 			.Finish();
-
+		RDGBufferHandle cameraData = builder.CreateBuffer("CameraData")
+			.Import(RENDER_RENDERRESOURCE->GetCameraDataBuffer().GetRHIBuffer(), RESOURCE_STATE_UNORDERED_ACCESS)
+			.Finish();
 		// 创建Pass结点
 		RDGRenderPassHandle pass = builder.CreateRenderPass(GetName())
+			.Read(0, 0, 0, cameraData)
+			.Read(0,1,0,outDepth)  // TODO:现在创建时图片，但是Shader我之前都是绑定联合采样器纹理。。。
 			.RootSignature(m_RootSignature)
 			.Color(0, outColor, ATTACHMENT_LOAD_OP_CLEAR, ATTACHMENT_STORE_OP_STORE)
 			.Execute([&](RDGPassContext context) {

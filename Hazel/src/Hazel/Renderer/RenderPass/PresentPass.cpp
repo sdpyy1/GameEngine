@@ -1,6 +1,8 @@
 #include "hzpch.h"
 #include "PresentPass.h"
 #include "Hazel/Core/Application.h"
+#include "Hazel/Renderer/RenderSystem/RenderSystem.h"
+
 namespace GameEngine
 { 
 	void PresentPass::Init()

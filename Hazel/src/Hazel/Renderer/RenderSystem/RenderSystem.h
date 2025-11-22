@@ -4,6 +4,7 @@
 #include "Hazel/Renderer/RenderPass/RenderPass.h"
 #include "Hazel/Core/Definations.h"
 #include <Hazel/Renderer/RenderResource/RenderResourceManager.h>
+#define RENDER_RENDERRESOURCE APP_RENDERSYSTEM->GetRenderResourceManager()
 namespace GameEngine
 {
 	class RenderSystem
@@ -14,7 +15,7 @@ namespace GameEngine
 		void Tick(float timestep);
 		RHISwapchainRef GetSwapChain() { return m_SwapChain; }
 		DynamicRHIRef GetRHI() { return m_DynamicRHI; }
-
+		std::shared_ptr<RenderResourceManager> GetRenderResourceManager() { return m_RenderResourceManager; }
 	private:
 		std::shared_ptr<RenderResourceManager> m_RenderResourceManager;
 		DynamicRHIRef m_DynamicRHI;

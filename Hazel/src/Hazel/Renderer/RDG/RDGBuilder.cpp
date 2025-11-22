@@ -3,6 +3,8 @@
 #include "Hazel/Renderer/RHI/RHIResource.h"
 #include "RDGPool.h"
 #include "Hazel/Core/Application.h"
+#include "Hazel/Renderer/RenderSystem/RenderSystem.h"
+
 namespace GameEngine { 
 
     RDGPassNodeRef RDGBlackBoard::Pass(std::string name)

@@ -11,6 +11,7 @@
 #include <Hazel/Renderer/old/RendererManager.h>
 #include "Hazel/Platform/Windows/WindowsWindow.h"
 #include "Hazel/Core/Window.h"
+#include "Hazel/Renderer/RenderSystem/RenderSystem.h"
 
 namespace GameEngine {
 	Application* Application::s_Instance = nullptr;
@@ -123,6 +124,16 @@ namespace GameEngine {
 	GameEngine::Ref<GameEngine::RenderContext> Application::GetRenderContext()
 	{
 		return GetWindow()->GetRenderContext();
+	}
+
+	std::shared_ptr<GameEngine::RendererManager> Application::GetRendererManager()
+	{
+		return Get().m_RendererManager;
+	}
+
+	std::shared_ptr<GameEngine::RenderSystem> Application::GetRenderSystem()
+	{
+		return Get().m_RenderSystem;
 	}
 
 }

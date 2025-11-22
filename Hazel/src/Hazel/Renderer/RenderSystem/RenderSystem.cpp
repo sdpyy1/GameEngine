@@ -22,6 +22,7 @@ namespace GameEngine {
 
 	void RenderSystem::Tick(float timestep)
 	{
+		m_RenderResourceManager->Tick();
 		auto& CurResource = m_PerFrameBaseResources[APP_FRAMEINDEX];
 		/// LOG_INFO("RenderSystem::Tick");
 		CurResource.fence->Wait();

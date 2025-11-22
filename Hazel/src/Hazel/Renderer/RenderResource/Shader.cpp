@@ -2,6 +2,8 @@
 #include "Shader.h"
 #include "Hazel/Utils/FileSystem.h"
 #include "Hazel/Core/Application.h"
+#include "Hazel/Renderer/RenderSystem/RenderSystem.h"
+
 namespace GameEngine::V2 {
 	Shader::Shader(const std::string& path, ShaderFrequency frequency, const std::string& entry): m_Path(path), m_Entry(entry), m_Frequency(frequency)
 	{

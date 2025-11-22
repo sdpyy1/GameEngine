@@ -776,7 +776,7 @@ namespace GameEngine
         bufferInfo.usage = usage;
         bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
         bufferInfo.queueFamilyIndexCount = 0,
-            bufferInfo.pQueueFamilyIndices = NULL;
+        bufferInfo.pQueueFamilyIndices = NULL;
 
         VmaAllocationCreateInfo allocationCreateInfo = {};
         allocationCreateInfo.usage = VulkanUtil::MemoryUsageToVma(info.memoryUsage);

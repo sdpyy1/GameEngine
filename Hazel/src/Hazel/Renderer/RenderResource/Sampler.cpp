@@ -1,6 +1,7 @@
 #include "hzpch.h"
 #include "Sampler.h"
 #include "Hazel/Core/Application.h"
+#include "Hazel/Renderer/RenderSystem/RenderSystem.h"
 
 namespace GameEngine {
     Sampler::Sampler()

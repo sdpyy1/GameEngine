@@ -2,7 +2,10 @@
 #include "Hazel/Utils/IndexAllocator.h"
 #include <Hazel/Renderer/RHI/RHI.h>
 #include <Hazel/Renderer/RHI/RHIResource.h>
+#include "RenderBuffer.h"
 #include "Hazel/Core/Definations.h"
+#include "RenderStruct.h"
+#include "Hazel/Scene/Scene.h"
 namespace GameEngine {
     // 使用Bindless的资源
     enum BindlessSlot
@@ -35,6 +38,7 @@ namespace GameEngine {
     struct GlobalResourcesPreFrame
     {
         RHIDescriptorSetRef descriptorSet;
+        RenderBuffer<V2::CameraData> cameraDataBuffer;
     };
 	class RenderResourceManager
 	{
@@ -42,15 +46,29 @@ namespace GameEngine {
             RenderResourceManager();
             ~RenderResourceManager() {};
             void InitGlobalResources();
+            void Tick();
+
+
+
+            void RenderResourceManager::SetCameraInfo();
+            RenderBuffer<V2::CameraData>& GetCameraDataBuffer() { return m_GlobalResources[APP_FRAMEINDEX].cameraDataBuffer; }
+
+
+
+
+
+
+
+
 	private:
 
-
-    
-
-       std::array<GlobalResourcesPreFrame, FRAMES_IN_FLIGHT> GlobalResources;
-
+        std::array<GlobalResourcesPreFrame, FRAMES_IN_FLIGHT> m_GlobalResources;
 		std::array<IndexAllocator, BINDLESS_SLOT_MAX_ENUM> bindlessIDAlloctor; // 每种资源一个ID分配器
-        RHIRootSignatureRef GlobalResourceRootSignature; 
+        RHIRootSignatureRef m_GlobalResourceRootSignature; 
+
+
+
+        SceneInfo m_SceneInfoFromScene;
 
 	};
 }
