@@ -1,6 +1,3 @@
-# 分支
-- Hazel3D: 老版渲染架构，耦合度太高，舍弃，这个分支目前用于学习新的Pass
-- UE：参考UE架构构建新版渲染，目前还在搭建RHI框架
 # Vukan架构
 
 1. RenderPass(不是Vulkan的RenderPass，更抽象的指一个Pass所有的信息)->Pipeline->FBO/Shader->RenderPass
