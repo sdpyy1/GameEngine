@@ -225,7 +225,7 @@ namespace Hazel {
 
 		if (!m_Spec.bindings.empty()) {
 			createDescriptorSetLayout();
-			createDescriptorPool({ {0,100},{1,500} });
+			createDescriptorPool({ {0,5000},{1,5000} });
 			createDescriptorSet();
 		}
 		else {
